@@ -1,0 +1,10 @@
+{
+  "name": "@enura/config",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "tsconfig.base.json",
+    "eslint-base.js",
+    "prettier.config.js"
+  ]
+}
