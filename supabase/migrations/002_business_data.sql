@@ -41,7 +41,7 @@ DO $$ BEGIN CREATE TYPE cashflow_type AS ENUM ('income', 'expense'); EXCEPTION W
 
 -- ---- Connectors ----
 CREATE TABLE IF NOT EXISTS connectors (
-    id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id             UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     type                  connector_type NOT NULL,
     name                  TEXT NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS connectors (
 
 -- ---- Connector Sync Log ----
 CREATE TABLE IF NOT EXISTS connector_sync_log (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     connector_id    UUID NOT NULL REFERENCES connectors(id) ON DELETE CASCADE,
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     status          sync_status NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS connector_sync_log (
 
 -- ---- Team Members ----
 CREATE TABLE IF NOT EXISTS team_members (
-    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     profile_id        UUID REFERENCES profiles(id),
     external_id       TEXT,
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS team_members (
 
 -- ---- Leads ----
 CREATE TABLE IF NOT EXISTS leads (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     external_id     TEXT,
     first_name      TEXT,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS leads (
 
 -- ---- Offers ----
 CREATE TABLE IF NOT EXISTS offers (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     external_id     TEXT,
     lead_id         UUID REFERENCES leads(id),
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS offers (
 
 -- ---- Calls (composite PK for TimescaleDB partitioning) ----
 CREATE TABLE IF NOT EXISTS calls (
-    id              UUID NOT NULL DEFAULT uuid_generate_v4(),
+    id              UUID NOT NULL DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     external_id     TEXT,
     team_member_id  UUID REFERENCES team_members(id),
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS calls (
 
 -- ---- Call Analysis ----
 CREATE TABLE IF NOT EXISTS call_analysis (
-    id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id            UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     call_id              UUID NOT NULL,
     call_started_at      TIMESTAMPTZ NOT NULL,
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS call_analysis (
 
 -- ---- Invoices ----
 CREATE TABLE IF NOT EXISTS invoices (
-    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     external_id       TEXT,
     offer_id          UUID REFERENCES offers(id),
@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 
 -- ---- Phase Definitions (27-phase Kanban) ----
 CREATE TABLE IF NOT EXISTS phase_definitions (
-    id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id            UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     phase_number         SMALLINT NOT NULL,
     name                 TEXT NOT NULL,
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS phase_definitions (
 
 -- ---- Projects ----
 CREATE TABLE IF NOT EXISTS projects (
-    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     external_id       TEXT,
     lead_id           UUID REFERENCES leads(id),
@@ -231,7 +231,7 @@ END $$;
 
 -- ---- Project Phase History ----
 CREATE TABLE IF NOT EXISTS project_phase_history (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id  UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     from_phase  INTEGER,
@@ -243,7 +243,7 @@ CREATE TABLE IF NOT EXISTS project_phase_history (
 
 -- ---- KPI Snapshots (composite PK for TimescaleDB) ----
 CREATE TABLE IF NOT EXISTS kpi_snapshots (
-    id              UUID NOT NULL DEFAULT uuid_generate_v4(),
+    id              UUID NOT NULL DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     snapshot_type   TEXT NOT NULL,
     entity_id       UUID,
@@ -255,7 +255,7 @@ CREATE TABLE IF NOT EXISTS kpi_snapshots (
 
 -- ---- Cashflow Entries (composite PK for TimescaleDB) ----
 CREATE TABLE IF NOT EXISTS cashflow_entries (
-    id              UUID NOT NULL DEFAULT uuid_generate_v4(),
+    id              UUID NOT NULL DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     entry_date      DATE NOT NULL,
     type            cashflow_type NOT NULL,
@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS cashflow_entries (
 
 -- ---- Calendar Events (composite PK for TimescaleDB) ----
 CREATE TABLE IF NOT EXISTS calendar_events (
-    id              UUID NOT NULL DEFAULT uuid_generate_v4(),
+    id              UUID NOT NULL DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     external_id     TEXT,
     team_member_id  UUID REFERENCES team_members(id),
@@ -286,7 +286,7 @@ CREATE TABLE IF NOT EXISTS calendar_events (
 
 -- ---- Payments ----
 CREATE TABLE IF NOT EXISTS payments (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     invoice_id      UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
     amount_chf      DECIMAL(12,2) NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE IF NOT EXISTS payments (
 
 -- ---- Cashflow Uploads (tracks Excel uploads) ----
 CREATE TABLE IF NOT EXISTS cashflow_uploads (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     uploaded_by     UUID REFERENCES profiles(id),
     file_name       TEXT NOT NULL,
@@ -313,7 +313,7 @@ CREATE TABLE IF NOT EXISTS cashflow_uploads (
 
 -- ---- Offer Notes ----
 CREATE TABLE IF NOT EXISTS offer_notes (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     offer_id        UUID NOT NULL REFERENCES offers(id) ON DELETE CASCADE,
     author_id       UUID REFERENCES profiles(id),
@@ -324,7 +324,7 @@ CREATE TABLE IF NOT EXISTS offer_notes (
 
 -- ---- Call Scripts ----
 CREATE TABLE IF NOT EXISTS call_scripts (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     name            TEXT NOT NULL,
     content         TEXT NOT NULL,

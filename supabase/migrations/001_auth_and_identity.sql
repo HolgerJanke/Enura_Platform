@@ -31,7 +31,7 @@ END $$;
 
 -- Tenants
 CREATE TABLE IF NOT EXISTS tenants (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     slug        TEXT NOT NULL UNIQUE,
     name        TEXT NOT NULL,
     status      tenant_status NOT NULL DEFAULT 'active',
@@ -44,7 +44,7 @@ CREATE INDEX IF NOT EXISTS idx_tenants_slug ON tenants(slug);
 
 -- Tenant Brandings
 CREATE TABLE IF NOT EXISTS tenant_brandings (
-    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID NOT NULL UNIQUE REFERENCES tenants(id) ON DELETE CASCADE,
     primary_color     TEXT NOT NULL DEFAULT '#1A56DB',
     secondary_color   TEXT NOT NULL DEFAULT '#1A1A1A',
@@ -88,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_tenant ON profiles(tenant_id);
 
 -- Roles
 CREATE TABLE IF NOT EXISTS roles (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id   UUID REFERENCES tenants(id) ON DELETE CASCADE,
     key         TEXT NOT NULL,
     label       TEXT NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS roles (
 
 -- Permissions
 CREATE TABLE IF NOT EXISTS permissions (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     key         TEXT NOT NULL UNIQUE,
     label       TEXT NOT NULL,
     description TEXT,
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS permissions (
 
 -- Role Permissions
 CREATE TABLE IF NOT EXISTS role_permissions (
-    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role_id       UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     permission_id UUID NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 
 -- Profile Roles
 CREATE TABLE IF NOT EXISTS profile_roles (
-    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     role_id    UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -132,14 +132,14 @@ CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON role_permissions(role_id
 
 -- Holding Admins
 CREATE TABLE IF NOT EXISTS holding_admins (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Audit Log (simplified — regular table, NOT a hypertable for Phase 2)
 CREATE TABLE IF NOT EXISTS audit_log (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES tenants(id),
     actor_id UUID REFERENCES profiles(id),
     action TEXT NOT NULL,

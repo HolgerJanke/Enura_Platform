@@ -3,8 +3,8 @@
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.impersonation_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  token UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   admin_id UUID NOT NULL REFERENCES public.profiles(id),
   target_user_id UUID NOT NULL REFERENCES public.profiles(id),
   reason TEXT NOT NULL,

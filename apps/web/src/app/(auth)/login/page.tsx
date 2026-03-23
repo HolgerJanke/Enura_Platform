@@ -1,7 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useFormState, useFormStatus } from 'react-dom'
 import { loginAction } from './actions'
 
 function SubmitButton() {
@@ -46,7 +45,7 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
-  const [state, formAction] = useActionState(loginAction, { error: null })
+  const [state, formAction] = useFormState(loginAction, { error: null })
 
   return (
     <div className="bg-brand-surface rounded-brand p-8 shadow-sm border border-gray-200">

@@ -1,7 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useFormState, useFormStatus } from 'react-dom'
 import { useState, useMemo, useCallback } from 'react'
 import { resetPasswordAction } from './actions'
 
@@ -83,7 +82,7 @@ function SubmitButton() {
 }
 
 export default function ResetPasswordPage() {
-  const [state, formAction] = useActionState(resetPasswordAction, { error: null })
+  const [state, formAction] = useFormState(resetPasswordAction, { error: null })
   const [passwordValue, setPasswordValue] = useState('')
 
   const requirementsMet = useMemo(

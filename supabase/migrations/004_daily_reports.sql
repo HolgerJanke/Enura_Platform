@@ -3,7 +3,7 @@
 
 -- Daily reports archive
 CREATE TABLE IF NOT EXISTS public.daily_reports (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   report_date DATE NOT NULL,
   report_json JSONB NOT NULL,

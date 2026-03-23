@@ -12,7 +12,7 @@
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS email_activity (
-    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     team_member_id    UUID NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
     activity_date     DATE NOT NULL,

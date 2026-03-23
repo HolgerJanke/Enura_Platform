@@ -52,7 +52,7 @@ CREATE TRIGGER trg_init_tenant_settings
 
 -- Transcription usage tracking
 CREATE TABLE IF NOT EXISTS public.transcription_usage (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   month DATE NOT NULL,
   total_minutes NUMERIC(10,2) NOT NULL DEFAULT 0,

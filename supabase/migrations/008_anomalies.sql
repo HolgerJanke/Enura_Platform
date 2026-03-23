@@ -3,7 +3,7 @@
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.anomalies (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   severity TEXT NOT NULL CHECK (severity IN ('critical','warning','info')),
