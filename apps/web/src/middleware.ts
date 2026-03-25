@@ -9,7 +9,7 @@ import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 // NEXT_PUBLIC_ prefix required for edge runtime (middleware) on Vercel
 const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || process.env.MOCK_AUTH === 'true'
 
-const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa']
+const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/debug']
 const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/health']
 
 /** Mock tenant data — only used when MOCK_AUTH=true */
