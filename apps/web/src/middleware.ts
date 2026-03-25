@@ -358,18 +358,18 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!tenant) {
-    if (isPublicPath(pathname)) {
-      const response = NextResponse.next({ request })
-      setTenantHeaders(response, {
-        tenantId: '',
-        tenantSlug: subdomain,
-        tenantName: subdomain,
-        isHolding: false,
-        brandCSS: buildCSSVarString(defaultBrandTokens),
-      })
-      return response
-    }
-    return NextResponse.rewrite(new URL('/not-found', request.url))
+    // Tenant fetch failed — use default branding and continue anyway
+    // The server components will handle tenant resolution
+    const response = getResponse()
+    setTenantHeaders(response, {
+      tenantId: '',
+      tenantSlug: subdomain,
+      tenantName: subdomain,
+      isHolding: false,
+      brandCSS: buildCSSVarString(defaultBrandTokens),
+    })
+    response.headers.set('x-debug-tenant', `not-found, url=${supabaseUrl ? 'set' : 'missing'}`)
+    return response
   }
 
   // Get the response AFTER all Supabase calls (cookies may have been updated)
