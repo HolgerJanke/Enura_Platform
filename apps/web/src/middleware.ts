@@ -247,11 +247,14 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   // Create Supabase middleware client — this handles cookie forwarding
   const { supabase, getResponse } = createSupabaseMiddlewareClient(request)
 
-  // IMPORTANT: Always call getUser() first so cookies are refreshed.
-  // Do NOT use getSession() — it reads from cookies without server validation.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Try to get the current user — may fail if no session exists (that's OK)
+  let user: { id: string } | null = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // No session or auth error — continue without user
+  }
 
   // -----------------------------------------------------------------------
   // Admin / Holding portal
