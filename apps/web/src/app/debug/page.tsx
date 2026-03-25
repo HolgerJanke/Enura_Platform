@@ -11,6 +11,30 @@ export default async function DebugPage() {
   let profileStatus = 'unknown'
   let rolesStatus = 'unknown'
   let tenantQueryStatus = 'unknown'
+  let directFetchStatus = 'unknown'
+  let envStatus = 'unknown'
+
+  // Test direct REST fetch (same as middleware does)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  envStatus = `URL=${supabaseUrl ? 'set' : 'MISSING'}, KEY=${supabaseKey ? supabaseKey.slice(0, 15) + '...' : 'MISSING'}`
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/tenants?slug=eq.alpen-energie&status=eq.active&select=id,slug,name,status&limit=1`,
+      {
+        headers: {
+          apikey: supabaseKey ?? '',
+          Authorization: `Bearer ${supabaseKey ?? ''}`,
+        },
+        cache: 'no-store',
+      },
+    )
+    const body = await res.text()
+    directFetchStatus = `status=${res.status}, body=${body.slice(0, 200)}`
+  } catch (err) {
+    directFetchStatus = `error: ${err instanceof Error ? err.message : String(err)}`
+  }
 
   try {
     const supabase = createSupabaseServerClient()
@@ -57,6 +81,8 @@ export default async function DebugPage() {
         tenantId,
         tenantSlug,
         userId,
+        envStatus,
+        directFetchStatus,
         authStatus,
         tenantQueryStatus,
         profileStatus,
