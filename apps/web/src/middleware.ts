@@ -312,28 +312,43 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   }
 
   // Fetch tenant from Supabase
-  const { data: tenant } = await supabase
+  const { data: tenantData, error: tenantError } = await supabase
     .from('tenants')
     .select('id, slug, name, status')
     .eq('slug', subdomain)
     .eq('status', 'active')
-    .single<TenantRow>()
+    .single()
 
-  if (!tenant) {
+  if (tenantError || !tenantData) {
+    console.error('[middleware] Tenant lookup failed:', subdomain, tenantError?.message)
+    // Fall back to default branding on login page instead of 404
+    if (isPublicPath(pathname)) {
+      const response = NextResponse.next({ request })
+      setTenantHeaders(response, {
+        tenantId: '',
+        tenantSlug: subdomain,
+        tenantName: subdomain,
+        isHolding: false,
+        brandCSS: buildCSSVarString(defaultBrandTokens),
+      })
+      return response
+    }
     return NextResponse.rewrite(new URL('/not-found', request.url))
   }
 
+  const tenant = tenantData as unknown as TenantRow
+
   // Fetch branding
-  const { data: branding } = await supabase
+  const { data: brandingData } = await supabase
     .from('tenant_brandings')
     .select(
       'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled',
     )
     .eq('tenant_id', tenant.id)
-    .single<TenantBrandingRow>()
+    .single()
 
-  const brandTokens = branding
-    ? brandTokensFromRow(branding)
+  const brandTokens = brandingData
+    ? brandTokensFromRow(brandingData as unknown as Parameters<typeof brandTokensFromRow>[0])
     : defaultBrandTokens
 
   // Get the response AFTER all Supabase calls (cookies may have been updated)
