@@ -440,11 +440,16 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     if (MOCK_AUTH) {
       return handleMockAuth(request)
     }
-    return await handleSupabaseAuth(request)
+    const result = await handleSupabaseAuth(request)
+    result.headers.set('x-debug-middleware', 'ok')
+    return result
   } catch (error) {
     // Never throw from middleware — redirect to login on unexpected errors
-    console.error('[middleware] Unerwarteter Fehler:', error)
-    return NextResponse.redirect(new URL('/login', request.url))
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[middleware] Unerwarteter Fehler:', msg)
+    const response = NextResponse.redirect(new URL('/login', request.url))
+    response.headers.set('x-debug-error', msg.slice(0, 200))
+    return response
   }
 }
 
