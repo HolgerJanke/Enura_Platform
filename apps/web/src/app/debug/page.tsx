@@ -10,11 +10,23 @@ export default async function DebugPage() {
   let authStatus = 'unknown'
   let profileStatus = 'unknown'
   let rolesStatus = 'unknown'
+  let tenantQueryStatus = 'unknown'
 
   try {
     const supabase = createSupabaseServerClient()
     const { data: { user }, error } = await supabase.auth.getUser()
     authStatus = user ? `authenticated: ${user.id}` : `no user: ${error?.message ?? 'null'}`
+
+    // Test tenant query (same as middleware does)
+    const { data: tenantData, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id, slug, name, status')
+      .eq('slug', 'alpen-energie')
+      .eq('status', 'active')
+      .single()
+    tenantQueryStatus = tenantData
+      ? `found: ${JSON.stringify(tenantData)}`
+      : `error: ${tenantError?.message ?? 'null'} (code: ${tenantError?.code ?? 'none'})`
 
     if (user) {
       const { data: profile, error: profileError } = await supabase
@@ -46,6 +58,7 @@ export default async function DebugPage() {
         tenantSlug,
         userId,
         authStatus,
+        tenantQueryStatus,
         profileStatus,
         rolesStatus,
       }, null, 2)}</pre>
