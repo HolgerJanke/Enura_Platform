@@ -56,19 +56,26 @@ function isAdminHost(hostname: string): boolean {
 }
 
 function getSubdomain(hostname: string): string | null {
+  const defaultSlug = process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+
   // Localhost development — use env default
   if (
     hostname.startsWith('localhost') ||
     hostname.startsWith('127.0.0.1')
   ) {
-    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+    return defaultSlug
   }
 
   const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'platform.com'
 
-  // Root domain — no subdomain
+  // Vercel preview/production domains — use env default
+  if (hostname.endsWith('.vercel.app')) {
+    return defaultSlug
+  }
+
+  // Root domain — use env default (single-tenant mode)
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
-    return null
+    return defaultSlug
   }
 
   // Extract subdomain (first part before root domain)
