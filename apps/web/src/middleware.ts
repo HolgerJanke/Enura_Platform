@@ -384,41 +384,12 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   })
 
   // -----------------------------------------------------------------------
-  // Auth gates (except public paths)
+  // Auth gate: redirect unauthenticated users to login
+  // Profile gates (password reset, TOTP) are handled by server components
+  // because Supabase client queries don't work in Vercel edge middleware
   // -----------------------------------------------------------------------
-  if (!isPublicPath(pathname)) {
-    if (!user) {
-      return redirectTo(request, '/login')
-    }
-
-    // Fetch profile for password-reset and TOTP gates
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('must_reset_password, totp_enabled')
-      .eq('id', user.id)
-      .single<ProfileRow>()
-
-    if (profile) {
-      // Gate 1: Password must be reset
-      if (profile.must_reset_password && pathname !== '/reset-password') {
-        return redirectTo(request, '/reset-password')
-      }
-
-      // Gate 2: TOTP must be enrolled (only check after password is set)
-      if (
-        !profile.totp_enabled &&
-        pathname !== '/enrol-2fa' &&
-        !profile.must_reset_password
-      ) {
-        return redirectTo(request, '/enrol-2fa')
-      }
-    }
-
-    // Gate 3: MFA assurance level
-    const mfaRedirect = await checkMfaLevel(supabase, pathname)
-    if (mfaRedirect) {
-      return redirectTo(request, mfaRedirect)
-    }
+  if (!isPublicPath(pathname) && !user) {
+    return redirectTo(request, '/login')
   }
 
   return response
