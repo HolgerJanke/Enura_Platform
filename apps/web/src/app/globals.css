@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #1A56DB;
+  --brand-secondary: #1A1A1A;
+  --brand-accent: #F3A917;
+  --brand-background: #FFFFFF;
+  --brand-surface: #F9FAFB;
+  --brand-text-primary: #111827;
+  --brand-text-secondary: #6B7280;
+  --brand-font: 'Inter', system-ui, sans-serif;
+  --brand-radius: 8px;
+}
+
+body {
+  font-family: var(--brand-font);
+}

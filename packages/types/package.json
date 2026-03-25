@@ -1,0 +1,33 @@
+{
+  "name": "@enura/types",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ --ext .ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.12",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@enura/config": "workspace:*",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-import": "^2.31.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
