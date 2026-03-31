@@ -98,7 +98,7 @@ type UserSpec = {
   firstName: string
   lastName: string
   roleKey: string
-  tenantId?: string
+  companyId?: string
 }
 
 async function createUser(spec: UserSpec): Promise<string> {
@@ -107,7 +107,7 @@ async function createUser(spec: UserSpec): Promise<string> {
     email: spec.email,
     password: spec.password,
     email_confirm: true,
-    user_metadata: spec.tenantId ? { tenant_id: spec.tenantId } : {},
+    user_metadata: spec.companyId ? { company_id: spec.companyId } : {},
   })
 
   if (error) {
@@ -126,7 +126,8 @@ async function createUser(spec: UserSpec): Promise<string> {
   // Create profile
   await supabase.from('profiles').upsert({
     id: userId,
-    tenant_id: spec.tenantId ?? null,
+    company_id: spec.companyId ?? null,
+    holding_id: spec.companyId ? holdingId : null,
     first_name: spec.firstName,
     last_name: spec.lastName,
     must_reset_password: false, // Skip in dev
@@ -137,21 +138,21 @@ async function createUser(spec: UserSpec): Promise<string> {
   return userId
 }
 
-async function assignRole(profileId: string, tenantId: string | null, roleKey: string) {
+async function assignRole(profileId: string, companyId: string | null, roleKey: string) {
   const query = supabase
     .from('roles')
     .select('id')
     .eq('key', roleKey)
 
-  if (tenantId) {
-    query.eq('tenant_id', tenantId)
+  if (companyId) {
+    query.eq('company_id', companyId)
   } else {
-    query.is('tenant_id', null)
+    query.is('company_id', null)
   }
 
   const { data: role } = await query.single()
   if (!role) {
-    console.warn(`  ⚠ Role "${roleKey}" not found for tenant ${tenantId ?? 'global'}`)
+    console.warn(`  ⚠ Role "${roleKey}" not found for tenant ${companyId ?? 'global'}`)
     return
   }
 
@@ -161,23 +162,48 @@ async function assignRole(profileId: string, tenantId: string | null, roleKey: s
   )
 }
 
+const DEFAULT_HOLDING_ID = '00000000-0000-0000-0000-000000000010'
+let holdingId = DEFAULT_HOLDING_ID
+
+async function ensureHolding() {
+  const { data: existing } = await supabase
+    .from('holdings')
+    .select('id')
+    .eq('id', DEFAULT_HOLDING_ID)
+    .maybeSingle()
+
+  if (existing) {
+    holdingId = existing.id
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('holdings')
+    .insert({ id: DEFAULT_HOLDING_ID, name: 'Alpen Gruppe', slug: 'alpen-gruppe', status: 'active' })
+    .select()
+    .single()
+
+  if (error) throw error
+  holdingId = data.id
+}
+
 async function createTenant(name: string, slug: string, branding: {
   primary: string; secondary: string; accent: string; font: string
 }) {
   const { data: existing } = await supabase
-    .from('tenants')
+    .from('companies')
     .select('id')
     .eq('slug', slug)
     .maybeSingle()
 
   if (existing) {
-    console.log(`  ℹ Tenant "${slug}" already exists`)
+    console.log(`  ℹ Company "${slug}" already exists`)
     return existing.id
   }
 
   const { data: tenant, error } = await supabase
-    .from('tenants')
-    .insert({ name, slug })
+    .from('companies')
+    .insert({ name, slug, holding_id: holdingId })
     .select()
     .single()
 
@@ -185,14 +211,14 @@ async function createTenant(name: string, slug: string, branding: {
 
   // Update branding (auto-created by trigger)
   await supabase
-    .from('tenant_brandings')
+    .from('company_branding')
     .update({
       primary_color: branding.primary,
       secondary_color: branding.secondary,
       accent_color: branding.accent,
       font_family: branding.font,
     })
-    .eq('tenant_id', tenant.id)
+    .eq('company_id', tenant.id)
 
   return tenant.id
 }
@@ -299,7 +325,7 @@ const PHASE_DEFINITIONS = [
 // =============================================================================
 
 async function seedTeamMembers(
-  tenantId: string,
+  companyId: string,
   userMap: Map<string, string>,
 ): Promise<Map<string, string>> {
   console.log('\n👥 Seeding team members...')
@@ -307,7 +333,8 @@ async function seedTeamMembers(
   const teamMembers = [
     {
       id: deterministicUUID('tm-setter-1'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       profile_id: userMap.get('l.weber@alpen-energie.ch') ?? null,
       external_id: 'reonic-tm-001',
       first_name: 'Lukas',
@@ -320,7 +347,8 @@ async function seedTeamMembers(
     },
     {
       id: deterministicUUID('tm-setter-2'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       profile_id: userMap.get('s.meier@alpen-energie.ch') ?? null,
       external_id: 'reonic-tm-002',
       first_name: 'Sarah',
@@ -333,7 +361,8 @@ async function seedTeamMembers(
     },
     {
       id: deterministicUUID('tm-berater-1'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       profile_id: userMap.get('t.mueller@alpen-energie.ch') ?? null,
       external_id: 'reonic-tm-003',
       first_name: 'Thomas',
@@ -346,7 +375,8 @@ async function seedTeamMembers(
     },
     {
       id: deterministicUUID('tm-berater-2'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       profile_id: userMap.get('m.bernasconi@alpen-energie.ch') ?? null,
       external_id: 'reonic-tm-004',
       first_name: 'Marco',
@@ -359,7 +389,8 @@ async function seedTeamMembers(
     },
     {
       id: deterministicUUID('tm-innendienst-1'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       profile_id: userMap.get('s.brunner@alpen-energie.ch') ?? null,
       external_id: 'reonic-tm-005',
       first_name: 'Sandra',
@@ -372,7 +403,8 @@ async function seedTeamMembers(
     },
     {
       id: deterministicUUID('tm-bau-1'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       profile_id: userMap.get('r.keller@alpen-energie.ch') ?? null,
       external_id: 'reonic-tm-006',
       first_name: 'Reto',
@@ -399,12 +431,13 @@ async function seedTeamMembers(
   return tmMap
 }
 
-async function seedPhaseDefinitions(tenantId: string): Promise<Map<number, string>> {
+async function seedPhaseDefinitions(companyId: string): Promise<Map<number, string>> {
   console.log('\n📋 Seeding phase definitions (27 phases)...')
 
   const phases = PHASE_DEFINITIONS.map(p => ({
     id: deterministicUUID(`phase-${p.phase_number}`),
-    tenant_id: tenantId,
+    company_id: companyId,
+    holding_id: holdingId,
     phase_number: p.phase_number,
     name: p.name,
     color: p.color,
@@ -413,7 +446,7 @@ async function seedPhaseDefinitions(tenantId: string): Promise<Map<number, strin
 
   const { error } = await supabase
     .from('phase_definitions')
-    .upsert(phases, { onConflict: 'tenant_id,phase_number' })
+    .upsert(phases, { onConflict: 'company_id,phase_number' })
 
   if (error) throw new Error(`Failed to seed phase definitions: ${error.message}`)
 
@@ -426,7 +459,7 @@ async function seedPhaseDefinitions(tenantId: string): Promise<Map<number, strin
 }
 
 async function seedLeads(
-  tenantId: string,
+  companyId: string,
   setterIds: string[],
 ): Promise<string[]> {
   console.log('\n📌 Seeding leads...')
@@ -440,7 +473,8 @@ async function seedLeads(
     const lastName = randomChoice(SWISS_LAST_NAMES)
     leads.push({
       id: deterministicUUID(`lead-qualified-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-lead-q${String(i + 1).padStart(3, '0')}`,
       first_name: firstName,
       last_name: lastName,
@@ -466,7 +500,8 @@ async function seedLeads(
     const lastName = randomChoice(SWISS_LAST_NAMES)
     leads.push({
       id: deterministicUUID(`lead-appt-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-lead-a${String(i + 1).padStart(3, '0')}`,
       first_name: firstName,
       last_name: lastName,
@@ -496,7 +531,8 @@ async function seedLeads(
       : daysAgo(randomInt(1, 10)).toISOString()
     leads.push({
       id: deterministicUUID(`lead-new-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-lead-n${String(i + 1).padStart(3, '0')}`,
       first_name: firstName,
       last_name: lastName,
@@ -521,7 +557,8 @@ async function seedLeads(
     const lastName = randomChoice(SWISS_LAST_NAMES)
     leads.push({
       id: deterministicUUID(`lead-lost-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-lead-l${String(i + 1).padStart(3, '0')}`,
       first_name: firstName,
       last_name: lastName,
@@ -546,7 +583,8 @@ async function seedLeads(
     const lastName = randomChoice(SWISS_LAST_NAMES)
     leads.push({
       id: deterministicUUID(`lead-won-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-lead-w${String(i + 1).padStart(3, '0')}`,
       first_name: firstName,
       last_name: lastName,
@@ -576,7 +614,7 @@ async function seedLeads(
 }
 
 async function seedOffers(
-  tenantId: string,
+  companyId: string,
   leadIds: string[],
   beraterIds: string[],
 ): Promise<string[]> {
@@ -597,7 +635,8 @@ async function seedOffers(
     const decidedDate = daysAgo(randomInt(5, 29))
     offers.push({
       id: deterministicUUID(`offer-won-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-offer-w${String(i + 1).padStart(3, '0')}`,
       lead_id: eligibleLeadIds[i % eligibleLeadIds.length],
       berater_id: randomChoice(beraterIds),
@@ -619,7 +658,8 @@ async function seedOffers(
     const amount = randomInt(22000, 60000)
     offers.push({
       id: deterministicUUID(`offer-neg-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-offer-n${String(i + 1).padStart(3, '0')}`,
       lead_id: eligibleLeadIds[(8 + i) % eligibleLeadIds.length],
       berater_id: randomChoice(beraterIds),
@@ -640,7 +680,8 @@ async function seedOffers(
     const amount = randomInt(15000, 40000)
     offers.push({
       id: deterministicUUID(`offer-sent-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-offer-s${String(i + 1).padStart(3, '0')}`,
       lead_id: eligibleLeadIds[(13 + i) % eligibleLeadIds.length],
       berater_id: randomChoice(beraterIds),
@@ -661,7 +702,8 @@ async function seedOffers(
     const amount = randomInt(20000, 50000)
     offers.push({
       id: deterministicUUID(`offer-lost-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-offer-l${String(i + 1).padStart(3, '0')}`,
       lead_id: eligibleLeadIds[(17 + i) % eligibleLeadIds.length],
       berater_id: randomChoice(beraterIds),
@@ -681,7 +723,8 @@ async function seedOffers(
     const lastName = randomChoice(SWISS_LAST_NAMES)
     offers.push({
       id: deterministicUUID('offer-expired-0'),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: 'reonic-offer-e001',
       lead_id: eligibleLeadIds[19 % eligibleLeadIds.length],
       berater_id: randomChoice(beraterIds),
@@ -706,7 +749,7 @@ async function seedOffers(
 }
 
 async function seedCalls(
-  tenantId: string,
+  companyId: string,
   setterIds: string[],
 ): Promise<number> {
   console.log('\n📞 Seeding calls...')
@@ -742,7 +785,8 @@ async function seedCalls(
 
       calls.push({
         id: deterministicUUID(`call-${callIndex}`),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: holdingId,
         external_id: `3cx-call-${String(callIndex + 1).padStart(4, '0')}`,
         team_member_id: setterId,
         direction,
@@ -774,7 +818,7 @@ async function seedCalls(
 }
 
 async function seedProjects(
-  tenantId: string,
+  companyId: string,
   wonOfferIds: string[],
   beraterIds: string[],
   phaseMap: Map<number, string>,
@@ -812,7 +856,8 @@ async function seedProjects(
 
     projects.push({
       id: deterministicUUID(`project-${i}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       external_id: `reonic-proj-${String(i + 1).padStart(3, '0')}`,
       lead_id: leadIds[i % leadIds.length],
       offer_id: wonOfferIds[i % wonOfferIds.length],
@@ -843,7 +888,7 @@ async function seedProjects(
 }
 
 async function seedInvoices(
-  tenantId: string,
+  companyId: string,
   offerIds: string[],
 ): Promise<number> {
   console.log('\n🧾 Seeding invoices...')
@@ -892,7 +937,8 @@ async function seedInvoices(
 
       invoices.push({
         id: deterministicUUID(`invoice-${invoiceNum}`),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: holdingId,
         external_id: `bexio-inv-${String(invoiceNum).padStart(3, '0')}`,
         offer_id: offerIds[invoiceNum % offerIds.length] ?? null,
         invoice_number: `RE-2026-${String(invoiceNum).padStart(3, '0')}`,
@@ -922,7 +968,7 @@ async function seedInvoices(
 }
 
 async function seedKpiSnapshots(
-  tenantId: string,
+  companyId: string,
   setterIds: string[],
 ): Promise<number> {
   console.log('\n📊 Seeding KPI snapshots...')
@@ -939,7 +985,8 @@ async function seedKpiSnapshots(
       const appointments = randomInt(1, 5)
       snapshots.push({
         id: deterministicUUID(`kpi-setter-${setterId}-${day}`),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: holdingId,
         snapshot_type: 'setter_daily',
         entity_id: setterId,
         period_date: periodDate,
@@ -959,7 +1006,8 @@ async function seedKpiSnapshots(
     // leads_daily for the tenant
     snapshots.push({
       id: deterministicUUID(`kpi-leads-${day}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       snapshot_type: 'leads_daily',
       entity_id: null,
       period_date: periodDate,
@@ -981,7 +1029,8 @@ async function seedKpiSnapshots(
     // projects_daily for the tenant
     snapshots.push({
       id: deterministicUUID(`kpi-projects-${day}`),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: holdingId,
       snapshot_type: 'projects_daily',
       entity_id: null,
       period_date: periodDate,
@@ -1018,6 +1067,9 @@ async function main() {
   console.log('\n🚀 Enura Platform — Development Seed\n')
   console.log('─'.repeat(60))
 
+  // ─── Ensure holding exists ───
+  await ensureHolding()
+
   // ─── Holding Admin ───
   console.log('\n📋 Creating holding admin...')
   const holdingAdminId = await createUser({
@@ -1043,15 +1095,15 @@ async function main() {
   })
 
   const alpenUsers: UserSpec[] = [
-    { email: 'm.krings@alpen-energie.ch', password: 'Super@Alpen2026!', firstName: 'Michael', lastName: 'Krings', roleKey: 'super_user', tenantId: alpenId },
-    { email: 'l.weber@alpen-energie.ch', password: 'Test@2026!setter', firstName: 'Lukas', lastName: 'Weber', roleKey: 'setter', tenantId: alpenId },
-    { email: 's.meier@alpen-energie.ch', password: 'Test@2026!setter2', firstName: 'Sarah', lastName: 'Meier', roleKey: 'setter', tenantId: alpenId },
-    { email: 't.mueller@alpen-energie.ch', password: 'Test@2026!berater', firstName: 'Thomas', lastName: 'Müller', roleKey: 'berater', tenantId: alpenId },
-    { email: 'm.bernasconi@alpen-energie.ch', password: 'Test@2026!berater2', firstName: 'Marco', lastName: 'Bernasconi', roleKey: 'berater', tenantId: alpenId },
-    { email: 's.brunner@alpen-energie.ch', password: 'Test@2026!innendienst', firstName: 'Sandra', lastName: 'Brunner', roleKey: 'innendienst', tenantId: alpenId },
-    { email: 'r.keller@alpen-energie.ch', password: 'Test@2026!bau', firstName: 'Reto', lastName: 'Keller', roleKey: 'bau', tenantId: alpenId },
-    { email: 'a.steiner@alpen-energie.ch', password: 'Test@2026!buchhaltung', firstName: 'Anna', lastName: 'Steiner', roleKey: 'buchhaltung', tenantId: alpenId },
-    { email: 'p.fischer@alpen-energie.ch', password: 'Test@2026!leadkontrolle', firstName: 'Peter', lastName: 'Fischer', roleKey: 'leadkontrolle', tenantId: alpenId },
+    { email: 'm.krings@alpen-energie.ch', password: 'Super@Alpen2026!', firstName: 'Michael', lastName: 'Krings', roleKey: 'super_user', companyId: alpenId },
+    { email: 'l.weber@alpen-energie.ch', password: 'Test@2026!setter', firstName: 'Lukas', lastName: 'Weber', roleKey: 'setter', companyId: alpenId },
+    { email: 's.meier@alpen-energie.ch', password: 'Test@2026!setter2', firstName: 'Sarah', lastName: 'Meier', roleKey: 'setter', companyId: alpenId },
+    { email: 't.mueller@alpen-energie.ch', password: 'Test@2026!berater', firstName: 'Thomas', lastName: 'Müller', roleKey: 'berater', companyId: alpenId },
+    { email: 'm.bernasconi@alpen-energie.ch', password: 'Test@2026!berater2', firstName: 'Marco', lastName: 'Bernasconi', roleKey: 'berater', companyId: alpenId },
+    { email: 's.brunner@alpen-energie.ch', password: 'Test@2026!innendienst', firstName: 'Sandra', lastName: 'Brunner', roleKey: 'innendienst', companyId: alpenId },
+    { email: 'r.keller@alpen-energie.ch', password: 'Test@2026!bau', firstName: 'Reto', lastName: 'Keller', roleKey: 'bau', companyId: alpenId },
+    { email: 'a.steiner@alpen-energie.ch', password: 'Test@2026!buchhaltung', firstName: 'Anna', lastName: 'Steiner', roleKey: 'buchhaltung', companyId: alpenId },
+    { email: 'p.fischer@alpen-energie.ch', password: 'Test@2026!leadkontrolle', firstName: 'Peter', lastName: 'Fischer', roleKey: 'leadkontrolle', companyId: alpenId },
   ]
 
   // Track user IDs for team member linking
@@ -1071,7 +1123,7 @@ async function main() {
   })
 
   const testUsers: UserSpec[] = [
-    { email: 'admin@test-company.ch', password: 'Super@Test2026!', firstName: 'Admin', lastName: 'Test', roleKey: 'super_user', tenantId: testId },
+    { email: 'admin@test-company.ch', password: 'Super@Test2026!', firstName: 'Admin', lastName: 'Test', roleKey: 'super_user', companyId: testId },
   ]
 
   for (const spec of testUsers) {
@@ -1132,12 +1184,12 @@ async function main() {
     { count: invCount },
     { count: phaseCount },
   ] = await Promise.all([
-    supabase.from('team_members').select('*', { count: 'exact', head: true }).eq('tenant_id', alpenId),
-    supabase.from('leads').select('*', { count: 'exact', head: true }).eq('tenant_id', alpenId),
-    supabase.from('offers').select('*', { count: 'exact', head: true }).eq('tenant_id', alpenId),
-    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('tenant_id', alpenId),
-    supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('tenant_id', alpenId),
-    supabase.from('phase_definitions').select('*', { count: 'exact', head: true }).eq('tenant_id', alpenId),
+    supabase.from('team_members').select('*', { count: 'exact', head: true }).eq('company_id', alpenId),
+    supabase.from('leads').select('*', { count: 'exact', head: true }).eq('company_id', alpenId),
+    supabase.from('offers').select('*', { count: 'exact', head: true }).eq('company_id', alpenId),
+    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('company_id', alpenId),
+    supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('company_id', alpenId),
+    supabase.from('phase_definitions').select('*', { count: 'exact', head: true }).eq('company_id', alpenId),
   ])
 
   console.log('\n📊 Verification:')

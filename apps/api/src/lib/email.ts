@@ -10,17 +10,17 @@ const FROM_EMAIL = 'noreply@enura-platform.com'
 
 export async function sendInviteSuperUserEmail(opts: {
   to: string
-  tenantName: string
+  companyName: string
   loginUrl: string
   tempPassword: string
   branding: BrandTokens
 }): Promise<void> {
   await resend.emails.send({
-    from: `${opts.tenantName} <${FROM_EMAIL}>`,
+    from: `${opts.companyName} <${FROM_EMAIL}>`,
     to: opts.to,
-    subject: `Willkommen bei ${opts.tenantName} — Ihr Zugang wurde eingerichtet`,
+    subject: `Willkommen bei ${opts.companyName} — Ihr Zugang wurde eingerichtet`,
     react: InviteSuperUserEmail({
-      tenantName: opts.tenantName,
+      companyName: opts.companyName,
       loginUrl: opts.loginUrl,
       tempPassword: opts.tempPassword,
       primaryColor: opts.branding.primary,
@@ -30,17 +30,17 @@ export async function sendInviteSuperUserEmail(opts: {
 
 export async function sendInviteUserEmail(opts: {
   to: string
-  tenantName: string
+  companyName: string
   loginUrl: string
   tempPassword: string
   branding: BrandTokens
 }): Promise<void> {
   await resend.emails.send({
-    from: `${opts.tenantName} <${FROM_EMAIL}>`,
+    from: `${opts.companyName} <${FROM_EMAIL}>`,
     to: opts.to,
-    subject: `Ihr Zugang zu ${opts.tenantName} wurde eingerichtet`,
+    subject: `Ihr Zugang zu ${opts.companyName} wurde eingerichtet`,
     react: InviteUserEmail({
-      tenantName: opts.tenantName,
+      companyName: opts.companyName,
       loginUrl: opts.loginUrl,
       tempPassword: opts.tempPassword,
       primaryColor: opts.branding.primary,
@@ -50,17 +50,17 @@ export async function sendInviteUserEmail(opts: {
 
 export async function sendPasswordResetEmail(opts: {
   to: string
-  tenantName: string
+  companyName: string
   loginUrl: string
   tempPassword: string
   branding: BrandTokens
 }): Promise<void> {
   await resend.emails.send({
-    from: `${opts.tenantName} <${FROM_EMAIL}>`,
+    from: `${opts.companyName} <${FROM_EMAIL}>`,
     to: opts.to,
-    subject: `Ihr Passwort für ${opts.tenantName} wurde zurückgesetzt`,
+    subject: `Ihr Passwort für ${opts.companyName} wurde zurückgesetzt`,
     react: PasswordResetByAdminEmail({
-      tenantName: opts.tenantName,
+      companyName: opts.companyName,
       loginUrl: opts.loginUrl,
       tempPassword: opts.tempPassword,
       primaryColor: opts.branding.primary,

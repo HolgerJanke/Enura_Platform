@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 
 export type MockSession = {
   userId: string
-  tenantId: string | null
+  companyId: string | null
   email: string
   firstName: string
   lastName: string

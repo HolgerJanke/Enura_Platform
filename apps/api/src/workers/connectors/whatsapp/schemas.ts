@@ -107,7 +107,7 @@ export type WhatsAppWebhook = z.infer<typeof WhatsAppWebhookSchema>
 export const WhatsAppMessageDirection = z.enum(['inbound', 'outbound'])
 
 export const WhatsAppMessageSchema = z.object({
-  tenant_id: z.string().uuid(),
+  company_id: z.string().uuid(),
   external_id: z.string(),
   wa_id: z.string(),
   direction: WhatsAppMessageDirection,

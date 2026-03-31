@@ -4,10 +4,10 @@
 // =============================================================================
 
 import type {
-  TenantRow,
-  TenantInsert,
-  TenantUpdate,
-  TenantBrandingRow,
+  CompanyRow,
+  CompanyInsert,
+  CompanyUpdate,
+  CompanyBrandingRow,
   ProfileRow,
   ProfileInsert,
   ProfileUpdate,
@@ -34,7 +34,7 @@ import type {
 
 import type {
   DataAccess,
-  TenantsRepository,
+  CompaniesRepository,
   BrandingsRepository,
   ProfilesRepository,
   RolesRepository,
@@ -104,30 +104,36 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
 // Tenants Repository
 // ---------------------------------------------------------------------------
 
-function createTenantsRepository(data: TenantRow[]): TenantsRepository {
+function createCompaniesRepository(data: CompanyRow[]): CompaniesRepository {
   return {
-    async findAll(): Promise<TenantRow[]> {
+    async findAll(): Promise<CompanyRow[]> {
       await delay()
       return clone(data)
     },
 
-    async findBySlug(slug: string): Promise<TenantRow | null> {
+    async findAllActive(): Promise<CompanyRow[]> {
+      await delay()
+      return clone(data.filter((t) => t.status === 'active'))
+    },
+
+    async findBySlug(slug: string): Promise<CompanyRow | null> {
       await delay()
       const tenant = data.find((t) => t.slug === slug)
       return tenant ? clone(tenant) : null
     },
 
-    async findById(id: string): Promise<TenantRow | null> {
+    async findById(id: string): Promise<CompanyRow | null> {
       await delay()
       const tenant = data.find((t) => t.id === id)
       return tenant ? clone(tenant) : null
     },
 
-    async create(input: TenantInsert): Promise<TenantRow> {
+    async create(input: CompanyInsert): Promise<CompanyRow> {
       await delay()
       const now = new Date().toISOString()
-      const newTenant: TenantRow = {
+      const newTenant: CompanyRow = {
         id: input.id ?? crypto.randomUUID(),
+        holding_id: input.holding_id,
         slug: input.slug,
         name: input.name,
         status: input.status ?? 'active',
@@ -139,7 +145,7 @@ function createTenantsRepository(data: TenantRow[]): TenantsRepository {
       return clone(newTenant)
     },
 
-    async update(id: string, input: TenantUpdate): Promise<TenantRow> {
+    async update(id: string, input: CompanyUpdate): Promise<CompanyRow> {
       await delay()
       const idx = data.findIndex((t) => t.id === id)
       if (idx === -1) throw new Error(`Tenant not found: ${id}`)
@@ -148,7 +154,7 @@ function createTenantsRepository(data: TenantRow[]): TenantsRepository {
         ...current,
         ...stripUndefined(input as Record<string, unknown>),
         updated_at: new Date().toISOString(),
-      } as TenantRow
+      } as CompanyRow
       data[idx] = updated
       return clone(updated)
     },
@@ -159,11 +165,11 @@ function createTenantsRepository(data: TenantRow[]): TenantsRepository {
 // Brandings Repository
 // ---------------------------------------------------------------------------
 
-function createBrandingsRepository(data: TenantBrandingRow[]): BrandingsRepository {
+function createBrandingsRepository(data: CompanyBrandingRow[]): BrandingsRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<TenantBrandingRow | null> {
+    async findByCompanyId(companyId: string): Promise<CompanyBrandingRow | null> {
       await delay()
-      const branding = data.find((b) => b.tenant_id === tenantId)
+      const branding = data.find((b) => b.company_id === companyId)
       return branding ? clone(branding) : null
     },
   }
@@ -181,9 +187,9 @@ function createProfilesRepository(data: ProfileRow[]): ProfilesRepository {
       return profile ? clone(profile) : null
     },
 
-    async findByTenantId(tenantId: string): Promise<ProfileRow[]> {
+    async findByCompanyId(companyId: string): Promise<ProfileRow[]> {
       await delay()
-      return clone(data.filter((p) => p.tenant_id === tenantId))
+      return clone(data.filter((p) => p.company_id === companyId))
     },
 
     async findByEmail(_email: string): Promise<ProfileRow | null> {
@@ -198,7 +204,8 @@ function createProfilesRepository(data: ProfileRow[]): ProfilesRepository {
       const now = new Date().toISOString()
       const newProfile: ProfileRow = {
         id: input.id,
-        tenant_id: input.tenant_id ?? null,
+        company_id: input.company_id ?? null,
+        holding_id: '00000000-0000-0000-0000-000000000010',
         first_name: input.first_name ?? null,
         last_name: input.last_name ?? null,
         display_name: [input.first_name, input.last_name].filter(Boolean).join(' ') || 'Unknown',
@@ -262,9 +269,9 @@ function createRolesRepository(
       return clone(rolesData.filter((r) => roleIds.has(r.id)))
     },
 
-    async findByTenantId(tenantId: string): Promise<RoleRow[]> {
+    async findByCompanyId(companyId: string): Promise<RoleRow[]> {
       await delay()
-      return clone(rolesData.filter((r) => r.tenant_id === tenantId))
+      return clone(rolesData.filter((r) => r.company_id === companyId))
     },
 
     async getPermissions(roleId: string): Promise<string[]> {
@@ -283,11 +290,11 @@ function createRolesRepository(
 function createLeadsRepository(data: LeadRow[]): LeadsRepository {
   return {
     async findMany(
-      tenantId: string,
+      companyId: string,
       opts?: { status?: string; setterId?: string },
     ): Promise<LeadRow[]> {
       await delay()
-      let filtered = data.filter((l) => l.tenant_id === tenantId)
+      let filtered = data.filter((l) => l.company_id === companyId)
       if (opts?.status) {
         filtered = filtered.filter((l) => l.status === opts.status)
       }
@@ -297,18 +304,19 @@ function createLeadsRepository(data: LeadRow[]): LeadsRepository {
       return clone(filtered)
     },
 
-    async findById(tenantId: string, id: string): Promise<LeadRow | null> {
+    async findById(companyId: string, id: string): Promise<LeadRow | null> {
       await delay()
-      const lead = data.find((l) => l.id === id && l.tenant_id === tenantId)
+      const lead = data.find((l) => l.id === id && l.company_id === companyId)
       return lead ? clone(lead) : null
     },
 
-    async create(tenantId: string, input: LeadInsert): Promise<LeadRow> {
+    async create(companyId: string, input: LeadInsert): Promise<LeadRow> {
       await delay()
       const now = new Date().toISOString()
       const newLead: LeadRow = {
         id: input.id ?? crypto.randomUUID(),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: '00000000-0000-0000-0000-000000000010',
         external_id: input.external_id ?? null,
         first_name: input.first_name ?? null,
         last_name: input.last_name ?? null,
@@ -330,9 +338,9 @@ function createLeadsRepository(data: LeadRow[]): LeadsRepository {
       return clone(newLead)
     },
 
-    async update(tenantId: string, id: string, input: LeadUpdate): Promise<LeadRow> {
+    async update(companyId: string, id: string, input: LeadUpdate): Promise<LeadRow> {
       await delay()
-      const idx = data.findIndex((l) => l.id === id && l.tenant_id === tenantId)
+      const idx = data.findIndex((l) => l.id === id && l.company_id === companyId)
       if (idx === -1) throw new Error(`Lead not found: ${id}`)
       const updated = {
         ...data[idx]!,
@@ -352,11 +360,11 @@ function createLeadsRepository(data: LeadRow[]): LeadsRepository {
 function createOffersRepository(data: OfferRow[]): OffersRepository {
   return {
     async findMany(
-      tenantId: string,
+      companyId: string,
       opts?: { status?: string; beraterId?: string },
     ): Promise<OfferRow[]> {
       await delay()
-      let filtered = data.filter((o) => o.tenant_id === tenantId)
+      let filtered = data.filter((o) => o.company_id === companyId)
       if (opts?.status) {
         filtered = filtered.filter((o) => o.status === opts.status)
       }
@@ -366,18 +374,19 @@ function createOffersRepository(data: OfferRow[]): OffersRepository {
       return clone(filtered)
     },
 
-    async findById(tenantId: string, id: string): Promise<OfferRow | null> {
+    async findById(companyId: string, id: string): Promise<OfferRow | null> {
       await delay()
-      const offer = data.find((o) => o.id === id && o.tenant_id === tenantId)
+      const offer = data.find((o) => o.id === id && o.company_id === companyId)
       return offer ? clone(offer) : null
     },
 
-    async create(tenantId: string, input: OfferInsert): Promise<OfferRow> {
+    async create(companyId: string, input: OfferInsert): Promise<OfferRow> {
       await delay()
       const now = new Date().toISOString()
       const newOffer: OfferRow = {
         id: input.id ?? crypto.randomUUID(),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: '00000000-0000-0000-0000-000000000010',
         external_id: input.external_id ?? null,
         lead_id: input.lead_id ?? null,
         berater_id: input.berater_id ?? null,
@@ -395,9 +404,9 @@ function createOffersRepository(data: OfferRow[]): OffersRepository {
       return clone(newOffer)
     },
 
-    async update(tenantId: string, id: string, input: OfferUpdate): Promise<OfferRow> {
+    async update(companyId: string, id: string, input: OfferUpdate): Promise<OfferRow> {
       await delay()
-      const idx = data.findIndex((o) => o.id === id && o.tenant_id === tenantId)
+      const idx = data.findIndex((o) => o.id === id && o.company_id === companyId)
       if (idx === -1) throw new Error(`Offer not found: ${id}`)
       const updated = {
         ...data[idx]!,
@@ -420,11 +429,11 @@ function createCallsRepository(
 ): CallsRepository {
   return {
     async findMany(
-      tenantId: string,
+      companyId: string,
       opts?: { teamMemberId?: string; status?: string },
     ): Promise<CallRow[]> {
       await delay()
-      let filtered = callsData.filter((c) => c.tenant_id === tenantId)
+      let filtered = callsData.filter((c) => c.company_id === companyId)
       if (opts?.teamMemberId) {
         filtered = filtered.filter((c) => c.team_member_id === opts.teamMemberId)
       }
@@ -434,16 +443,16 @@ function createCallsRepository(
       return clone(filtered)
     },
 
-    async findById(tenantId: string, id: string): Promise<CallRow | null> {
+    async findById(companyId: string, id: string): Promise<CallRow | null> {
       await delay()
-      const call = callsData.find((c) => c.id === id && c.tenant_id === tenantId)
+      const call = callsData.find((c) => c.id === id && c.company_id === companyId)
       return call ? clone(call) : null
     },
 
-    async getAnalysis(tenantId: string, callId: string): Promise<CallAnalysisRow | null> {
+    async getAnalysis(companyId: string, callId: string): Promise<CallAnalysisRow | null> {
       await delay()
       const analysis = analysesData.find(
-        (a) => a.call_id === callId && a.tenant_id === tenantId,
+        (a) => a.call_id === callId && a.company_id === companyId,
       )
       return analysis ? clone(analysis) : null
     },
@@ -457,11 +466,11 @@ function createCallsRepository(
 function createProjectsRepository(data: ProjectRow[]): ProjectsRepository {
   return {
     async findMany(
-      tenantId: string,
+      companyId: string,
       opts?: { phaseId?: string; status?: string },
     ): Promise<ProjectRow[]> {
       await delay()
-      let filtered = data.filter((p) => p.tenant_id === tenantId)
+      let filtered = data.filter((p) => p.company_id === companyId)
       if (opts?.phaseId) {
         filtered = filtered.filter((p) => p.phase_id === opts.phaseId)
       }
@@ -471,18 +480,19 @@ function createProjectsRepository(data: ProjectRow[]): ProjectsRepository {
       return clone(filtered)
     },
 
-    async findById(tenantId: string, id: string): Promise<ProjectRow | null> {
+    async findById(companyId: string, id: string): Promise<ProjectRow | null> {
       await delay()
-      const project = data.find((p) => p.id === id && p.tenant_id === tenantId)
+      const project = data.find((p) => p.id === id && p.company_id === companyId)
       return project ? clone(project) : null
     },
 
-    async create(tenantId: string, input: ProjectInsert): Promise<ProjectRow> {
+    async create(companyId: string, input: ProjectInsert): Promise<ProjectRow> {
       await delay()
       const now = new Date().toISOString()
       const newProject: ProjectRow = {
         id: input.id ?? crypto.randomUUID(),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: '00000000-0000-0000-0000-000000000010',
         external_id: input.external_id ?? null,
         lead_id: input.lead_id ?? null,
         offer_id: input.offer_id ?? null,
@@ -505,9 +515,9 @@ function createProjectsRepository(data: ProjectRow[]): ProjectsRepository {
       return clone(newProject)
     },
 
-    async update(tenantId: string, id: string, input: ProjectUpdate): Promise<ProjectRow> {
+    async update(companyId: string, id: string, input: ProjectUpdate): Promise<ProjectRow> {
       await delay()
-      const idx = data.findIndex((p) => p.id === id && p.tenant_id === tenantId)
+      const idx = data.findIndex((p) => p.id === id && p.company_id === companyId)
       if (idx === -1) throw new Error(`Project not found: ${id}`)
       const current = data[idx]!
       const updated = {
@@ -532,29 +542,30 @@ function createProjectsRepository(data: ProjectRow[]): ProjectsRepository {
 function createInvoicesRepository(data: InvoiceRow[]): InvoicesRepository {
   return {
     async findMany(
-      tenantId: string,
+      companyId: string,
       opts?: { status?: string },
     ): Promise<InvoiceRow[]> {
       await delay()
-      let filtered = data.filter((inv) => inv.tenant_id === tenantId)
+      let filtered = data.filter((inv) => inv.company_id === companyId)
       if (opts?.status) {
         filtered = filtered.filter((inv) => inv.status === opts.status)
       }
       return clone(filtered)
     },
 
-    async findById(tenantId: string, id: string): Promise<InvoiceRow | null> {
+    async findById(companyId: string, id: string): Promise<InvoiceRow | null> {
       await delay()
-      const invoice = data.find((inv) => inv.id === id && inv.tenant_id === tenantId)
+      const invoice = data.find((inv) => inv.id === id && inv.company_id === companyId)
       return invoice ? clone(invoice) : null
     },
 
-    async create(tenantId: string, input: InvoiceInsert): Promise<InvoiceRow> {
+    async create(companyId: string, input: InvoiceInsert): Promise<InvoiceRow> {
       await delay()
       const now = new Date().toISOString()
       const newInvoice: InvoiceRow = {
         id: input.id ?? crypto.randomUUID(),
-        tenant_id: tenantId,
+        company_id: companyId,
+        holding_id: '00000000-0000-0000-0000-000000000010',
         external_id: input.external_id ?? null,
         offer_id: input.offer_id ?? null,
         invoice_number: input.invoice_number,
@@ -573,9 +584,9 @@ function createInvoicesRepository(data: InvoiceRow[]): InvoicesRepository {
       return clone(newInvoice)
     },
 
-    async update(tenantId: string, id: string, input: InvoiceUpdate): Promise<InvoiceRow> {
+    async update(companyId: string, id: string, input: InvoiceUpdate): Promise<InvoiceRow> {
       await delay()
-      const idx = data.findIndex((inv) => inv.id === id && inv.tenant_id === tenantId)
+      const idx = data.findIndex((inv) => inv.id === id && inv.company_id === companyId)
       if (idx === -1) throw new Error(`Invoice not found: ${id}`)
       const updated = {
         ...data[idx]!,
@@ -595,13 +606,13 @@ function createInvoicesRepository(data: InvoiceRow[]): InvoicesRepository {
 function createKpiRepository(data: KpiSnapshotRow[]): KpiRepository {
   return {
     async findLatest(
-      tenantId: string,
+      companyId: string,
       snapshotType: string,
       entityId?: string,
     ): Promise<KpiSnapshotRow | null> {
       await delay()
       const filtered = data
-        .filter((s) => s.tenant_id === tenantId && s.snapshot_type === snapshotType)
+        .filter((s) => s.company_id === companyId && s.snapshot_type === snapshotType)
         .filter((s) => (entityId ? s.entity_id === entityId : true))
         .sort((a, b) => b.period_date.localeCompare(a.period_date))
       const first = filtered[0]
@@ -616,14 +627,14 @@ function createKpiRepository(data: KpiSnapshotRow[]): KpiRepository {
 
 function createTeamMembersRepository(data: TeamMemberRow[]): TeamMembersRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<TeamMemberRow[]> {
+    async findByCompanyId(companyId: string): Promise<TeamMemberRow[]> {
       await delay()
-      return clone(data.filter((tm) => tm.tenant_id === tenantId))
+      return clone(data.filter((tm) => tm.company_id === companyId))
     },
 
-    async findById(tenantId: string, id: string): Promise<TeamMemberRow | null> {
+    async findById(companyId: string, id: string): Promise<TeamMemberRow | null> {
       await delay()
-      const member = data.find((tm) => tm.id === id && tm.tenant_id === tenantId)
+      const member = data.find((tm) => tm.id === id && tm.company_id === companyId)
       return member ? clone(member) : null
     },
   }
@@ -635,9 +646,9 @@ function createTeamMembersRepository(data: TeamMemberRow[]): TeamMembersReposito
 
 function createConnectorsRepository(data: ConnectorRow[]): ConnectorsRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<ConnectorRow[]> {
+    async findByCompanyId(companyId: string): Promise<ConnectorRow[]> {
       await delay()
-      return clone(data.filter((c) => c.tenant_id === tenantId))
+      return clone(data.filter((c) => c.company_id === companyId))
     },
   }
 }
@@ -648,10 +659,10 @@ function createConnectorsRepository(data: ConnectorRow[]): ConnectorsRepository 
 
 function createPhaseDefinitionsRepository(data: PhaseDefinitionRow[]): PhaseDefinitionsRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<PhaseDefinitionRow[]> {
+    async findByCompanyId(companyId: string): Promise<PhaseDefinitionRow[]> {
       await delay()
       return clone(
-        data.filter((pd) => pd.tenant_id === tenantId).sort((a, b) => a.phase_number - b.phase_number),
+        data.filter((pd) => pd.company_id === companyId).sort((a, b) => a.phase_number - b.phase_number),
       )
     },
   }
@@ -682,7 +693,7 @@ export function createMockDataAccess(): DataAccess {
   const kpiData = clone(seedKpiSnapshots)
 
   return {
-    tenants: createTenantsRepository(tenantsData),
+    companies: createCompaniesRepository(tenantsData),
     brandings: createBrandingsRepository(brandingsData),
     profiles: createProfilesRepository(profilesData),
     roles: createRolesRepository(rolesData, profileRolesData, rolePermsData, permissionsData),

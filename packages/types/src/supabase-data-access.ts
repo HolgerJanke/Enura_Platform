@@ -10,7 +10,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   DataAccess,
-  TenantsRepository,
+  CompaniesRepository,
   BrandingsRepository,
   ProfilesRepository,
   RolesRepository,
@@ -25,10 +25,10 @@ import type {
   PhaseDefinitionsRepository,
 } from './data-access.js'
 import type {
-  TenantRow,
-  TenantInsert,
-  TenantUpdate,
-  TenantBrandingRow,
+  CompanyRow,
+  CompanyInsert,
+  CompanyUpdate,
+  CompanyBrandingRow,
   ProfileRow,
   ProfileInsert,
   ProfileUpdate,
@@ -100,64 +100,73 @@ function daysAgo(days: number): string {
 // Repository Implementations
 // =============================================================================
 
-function createTenantsRepo(client: SupabaseClient): TenantsRepository {
+function createTenantsRepo(client: SupabaseClient): CompaniesRepository {
   return {
-    async findAll(): Promise<TenantRow[]> {
+    async findAll(): Promise<CompanyRow[]> {
       const result = await client
-        .from('tenants')
+        .from('companies')
         .select('*')
         .order('name', { ascending: true })
-      return dataOrDefault<TenantRow[]>(result, [])
+      return dataOrDefault<CompanyRow[]>(result, [])
     },
 
-    async findBySlug(slug: string): Promise<TenantRow | null> {
+    async findAllActive(): Promise<CompanyRow[]> {
       const result = await client
-        .from('tenants')
+        .from('companies')
+        .select('*')
+        .eq('status', 'active')
+        .order('name', { ascending: true })
+      return dataOrDefault<CompanyRow[]>(result, [])
+    },
+
+    async findBySlug(slug: string): Promise<CompanyRow | null> {
+      const result = await client
+        .from('companies')
         .select('*')
         .eq('slug', slug)
         .maybeSingle()
-      return dataOrNull<TenantRow>(result)
+      return dataOrNull<CompanyRow>(result)
     },
 
-    async findById(id: string): Promise<TenantRow | null> {
+    async findById(id: string): Promise<CompanyRow | null> {
       const result = await client
-        .from('tenants')
+        .from('companies')
         .select('*')
         .eq('id', id)
         .maybeSingle()
-      return dataOrNull<TenantRow>(result)
+      return dataOrNull<CompanyRow>(result)
     },
 
-    async create(data: TenantInsert): Promise<TenantRow> {
+    async create(data: CompanyInsert): Promise<CompanyRow> {
       const result = await client
-        .from('tenants')
+        .from('companies')
         .insert(data)
         .select()
         .single()
-      return dataOrThrow<TenantRow>(result, 'tenant')
+      return dataOrThrow<CompanyRow>(result, 'tenant')
     },
 
-    async update(id: string, data: TenantUpdate): Promise<TenantRow> {
+    async update(id: string, data: CompanyUpdate): Promise<CompanyRow> {
       const result = await client
-        .from('tenants')
+        .from('companies')
         .update(data)
         .eq('id', id)
         .select()
         .single()
-      return dataOrThrow<TenantRow>(result, 'tenant')
+      return dataOrThrow<CompanyRow>(result, 'tenant')
     },
   }
 }
 
 function createBrandingsRepo(client: SupabaseClient): BrandingsRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<TenantBrandingRow | null> {
+    async findByCompanyId(companyId: string): Promise<CompanyBrandingRow | null> {
       const result = await client
-        .from('tenant_brandings')
+        .from('company_branding')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .maybeSingle()
-      return dataOrNull<TenantBrandingRow>(result)
+      return dataOrNull<CompanyBrandingRow>(result)
     },
   }
 }
@@ -173,11 +182,11 @@ function createProfilesRepo(client: SupabaseClient): ProfilesRepository {
       return dataOrNull<ProfileRow>(result)
     },
 
-    async findByTenantId(tenantId: string): Promise<ProfileRow[]> {
+    async findByCompanyId(companyId: string): Promise<ProfileRow[]> {
       const result = await client
         .from('profiles')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('display_name', { ascending: true })
       return dataOrDefault<ProfileRow[]>(result, [])
     },
@@ -248,11 +257,11 @@ function createRolesRepo(client: SupabaseClient): RolesRepository {
         .filter(Boolean)
     },
 
-    async findByTenantId(tenantId: string): Promise<RoleRow[]> {
+    async findByCompanyId(companyId: string): Promise<RoleRow[]> {
       const result = await client
         .from('roles')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('label', { ascending: true })
       return dataOrDefault<RoleRow[]>(result, [])
     },
@@ -280,11 +289,11 @@ function createRolesRepo(client: SupabaseClient): RolesRepository {
 
 function createLeadsRepo(client: SupabaseClient): LeadsRepository {
   return {
-    async findMany(tenantId: string, opts?: { status?: string; setterId?: string }): Promise<LeadRow[]> {
+    async findMany(companyId: string, opts?: { status?: string; setterId?: string }): Promise<LeadRow[]> {
       let query = client
         .from('leads')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false })
 
       if (opts?.status) {
@@ -297,30 +306,30 @@ function createLeadsRepo(client: SupabaseClient): LeadsRepository {
       return dataOrDefault<LeadRow[]>(await query, [])
     },
 
-    async findById(tenantId: string, id: string): Promise<LeadRow | null> {
+    async findById(companyId: string, id: string): Promise<LeadRow | null> {
       const result = await client
         .from('leads')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .maybeSingle()
       return dataOrNull<LeadRow>(result)
     },
 
-    async create(tenantId: string, data: LeadInsert): Promise<LeadRow> {
+    async create(companyId: string, data: LeadInsert): Promise<LeadRow> {
       const result = await client
         .from('leads')
-        .insert({ ...data, tenant_id: tenantId })
+        .insert({ ...data, company_id: companyId })
         .select()
         .single()
       return dataOrThrow<LeadRow>(result, 'lead')
     },
 
-    async update(tenantId: string, id: string, data: LeadUpdate): Promise<LeadRow> {
+    async update(companyId: string, id: string, data: LeadUpdate): Promise<LeadRow> {
       const result = await client
         .from('leads')
         .update(data)
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .select()
         .single()
@@ -331,11 +340,11 @@ function createLeadsRepo(client: SupabaseClient): LeadsRepository {
 
 function createOffersRepo(client: SupabaseClient): OffersRepository {
   return {
-    async findMany(tenantId: string, opts?: { status?: string; beraterId?: string }): Promise<OfferRow[]> {
+    async findMany(companyId: string, opts?: { status?: string; beraterId?: string }): Promise<OfferRow[]> {
       let query = client
         .from('offers')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false })
 
       if (opts?.status) {
@@ -348,30 +357,30 @@ function createOffersRepo(client: SupabaseClient): OffersRepository {
       return dataOrDefault<OfferRow[]>(await query, [])
     },
 
-    async findById(tenantId: string, id: string): Promise<OfferRow | null> {
+    async findById(companyId: string, id: string): Promise<OfferRow | null> {
       const result = await client
         .from('offers')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .maybeSingle()
       return dataOrNull<OfferRow>(result)
     },
 
-    async create(tenantId: string, data: OfferInsert): Promise<OfferRow> {
+    async create(companyId: string, data: OfferInsert): Promise<OfferRow> {
       const result = await client
         .from('offers')
-        .insert({ ...data, tenant_id: tenantId })
+        .insert({ ...data, company_id: companyId })
         .select()
         .single()
       return dataOrThrow<OfferRow>(result, 'offer')
     },
 
-    async update(tenantId: string, id: string, data: OfferUpdate): Promise<OfferRow> {
+    async update(companyId: string, id: string, data: OfferUpdate): Promise<OfferRow> {
       const result = await client
         .from('offers')
         .update(data)
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .select()
         .single()
@@ -382,12 +391,12 @@ function createOffersRepo(client: SupabaseClient): OffersRepository {
 
 function createCallsRepo(client: SupabaseClient): CallsRepository {
   return {
-    async findMany(tenantId: string, opts?: { teamMemberId?: string; status?: string }): Promise<CallRow[]> {
+    async findMany(companyId: string, opts?: { teamMemberId?: string; status?: string }): Promise<CallRow[]> {
       // calls is a TimescaleDB hypertable — always include time bounds
       let query = client
         .from('calls')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .gte('started_at', daysAgo(90))
         .order('started_at', { ascending: false })
 
@@ -401,21 +410,21 @@ function createCallsRepo(client: SupabaseClient): CallsRepository {
       return dataOrDefault<CallRow[]>(await query, [])
     },
 
-    async findById(tenantId: string, id: string): Promise<CallRow | null> {
+    async findById(companyId: string, id: string): Promise<CallRow | null> {
       const result = await client
         .from('calls')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .maybeSingle()
       return dataOrNull<CallRow>(result)
     },
 
-    async getAnalysis(tenantId: string, callId: string): Promise<CallAnalysisRow | null> {
+    async getAnalysis(companyId: string, callId: string): Promise<CallAnalysisRow | null> {
       const result = await client
         .from('call_analysis')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('call_id', callId)
         .maybeSingle()
       return dataOrNull<CallAnalysisRow>(result)
@@ -425,11 +434,11 @@ function createCallsRepo(client: SupabaseClient): CallsRepository {
 
 function createProjectsRepo(client: SupabaseClient): ProjectsRepository {
   return {
-    async findMany(tenantId: string, opts?: { phaseId?: string; status?: string }): Promise<ProjectRow[]> {
+    async findMany(companyId: string, opts?: { phaseId?: string; status?: string }): Promise<ProjectRow[]> {
       let query = client
         .from('projects')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('updated_at', { ascending: false })
 
       if (opts?.phaseId) {
@@ -442,30 +451,30 @@ function createProjectsRepo(client: SupabaseClient): ProjectsRepository {
       return dataOrDefault<ProjectRow[]>(await query, [])
     },
 
-    async findById(tenantId: string, id: string): Promise<ProjectRow | null> {
+    async findById(companyId: string, id: string): Promise<ProjectRow | null> {
       const result = await client
         .from('projects')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .maybeSingle()
       return dataOrNull<ProjectRow>(result)
     },
 
-    async create(tenantId: string, data: ProjectInsert): Promise<ProjectRow> {
+    async create(companyId: string, data: ProjectInsert): Promise<ProjectRow> {
       const result = await client
         .from('projects')
-        .insert({ ...data, tenant_id: tenantId })
+        .insert({ ...data, company_id: companyId })
         .select()
         .single()
       return dataOrThrow<ProjectRow>(result, 'project')
     },
 
-    async update(tenantId: string, id: string, data: ProjectUpdate): Promise<ProjectRow> {
+    async update(companyId: string, id: string, data: ProjectUpdate): Promise<ProjectRow> {
       const result = await client
         .from('projects')
         .update(data)
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .select()
         .single()
@@ -476,11 +485,11 @@ function createProjectsRepo(client: SupabaseClient): ProjectsRepository {
 
 function createInvoicesRepo(client: SupabaseClient): InvoicesRepository {
   return {
-    async findMany(tenantId: string, opts?: { status?: string }): Promise<InvoiceRow[]> {
+    async findMany(companyId: string, opts?: { status?: string }): Promise<InvoiceRow[]> {
       let query = client
         .from('invoices')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('issued_at', { ascending: false })
 
       if (opts?.status) {
@@ -490,30 +499,30 @@ function createInvoicesRepo(client: SupabaseClient): InvoicesRepository {
       return dataOrDefault<InvoiceRow[]>(await query, [])
     },
 
-    async findById(tenantId: string, id: string): Promise<InvoiceRow | null> {
+    async findById(companyId: string, id: string): Promise<InvoiceRow | null> {
       const result = await client
         .from('invoices')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .maybeSingle()
       return dataOrNull<InvoiceRow>(result)
     },
 
-    async create(tenantId: string, data: InvoiceInsert): Promise<InvoiceRow> {
+    async create(companyId: string, data: InvoiceInsert): Promise<InvoiceRow> {
       const result = await client
         .from('invoices')
-        .insert({ ...data, tenant_id: tenantId })
+        .insert({ ...data, company_id: companyId })
         .select()
         .single()
       return dataOrThrow<InvoiceRow>(result, 'invoice')
     },
 
-    async update(tenantId: string, id: string, data: InvoiceUpdate): Promise<InvoiceRow> {
+    async update(companyId: string, id: string, data: InvoiceUpdate): Promise<InvoiceRow> {
       const result = await client
         .from('invoices')
         .update(data)
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .select()
         .single()
@@ -523,21 +532,21 @@ function createInvoicesRepo(client: SupabaseClient): InvoicesRepository {
 }
 
 function createKpiRepo(client: SupabaseClient): KpiRepository & {
-  upsertSnapshot(tenantId: string, data: {
+  upsertSnapshot(companyId: string, data: {
     snapshot_type: string
     entity_id: string | null
     period_date: string
     metrics: Record<string, unknown>
   }): Promise<KpiSnapshotRow | null>
-  getSnapshotRange(tenantId: string, snapshotType: string, entityId: string | null, from: string, to: string): Promise<KpiSnapshotRow[]>
+  getSnapshotRange(companyId: string, snapshotType: string, entityId: string | null, from: string, to: string): Promise<KpiSnapshotRow[]>
 } {
   return {
-    async findLatest(tenantId: string, snapshotType: string, entityId?: string): Promise<KpiSnapshotRow | null> {
+    async findLatest(companyId: string, snapshotType: string, entityId?: string): Promise<KpiSnapshotRow | null> {
       // kpi_snapshots is a TimescaleDB hypertable — include time bounds
       let query = client
         .from('kpi_snapshots')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('snapshot_type', snapshotType)
         .gte('period_date', daysAgo(90))
         .order('period_date', { ascending: false })
@@ -551,7 +560,7 @@ function createKpiRepo(client: SupabaseClient): KpiRepository & {
       return dataOrNull<KpiSnapshotRow>(result)
     },
 
-    async upsertSnapshot(tenantId: string, data: {
+    async upsertSnapshot(companyId: string, data: {
       snapshot_type: string
       entity_id: string | null
       period_date: string
@@ -561,13 +570,13 @@ function createKpiRepo(client: SupabaseClient): KpiRepository & {
         .from('kpi_snapshots')
         .upsert(
           {
-            tenant_id: tenantId,
+            company_id: companyId,
             snapshot_type: data.snapshot_type,
             entity_id: data.entity_id,
             period_date: data.period_date,
             metrics: data.metrics,
           },
-          { onConflict: 'tenant_id,snapshot_type,entity_id,period_date' },
+          { onConflict: 'company_id,snapshot_type,entity_id,period_date' },
         )
         .select()
         .single()
@@ -575,7 +584,7 @@ function createKpiRepo(client: SupabaseClient): KpiRepository & {
     },
 
     async getSnapshotRange(
-      tenantId: string,
+      companyId: string,
       snapshotType: string,
       entityId: string | null,
       from: string,
@@ -584,7 +593,7 @@ function createKpiRepo(client: SupabaseClient): KpiRepository & {
       let query = client
         .from('kpi_snapshots')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('snapshot_type', snapshotType)
         .gte('period_date', from)
         .lte('period_date', to)
@@ -603,20 +612,20 @@ function createKpiRepo(client: SupabaseClient): KpiRepository & {
 
 function createTeamMembersRepo(client: SupabaseClient): TeamMembersRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<TeamMemberRow[]> {
+    async findByCompanyId(companyId: string): Promise<TeamMemberRow[]> {
       const result = await client
         .from('team_members')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('display_name', { ascending: true })
       return dataOrDefault<TeamMemberRow[]>(result, [])
     },
 
-    async findById(tenantId: string, id: string): Promise<TeamMemberRow | null> {
+    async findById(companyId: string, id: string): Promise<TeamMemberRow | null> {
       const result = await client
         .from('team_members')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .eq('id', id)
         .maybeSingle()
       return dataOrNull<TeamMemberRow>(result)
@@ -626,11 +635,11 @@ function createTeamMembersRepo(client: SupabaseClient): TeamMembersRepository {
 
 function createConnectorsRepo(client: SupabaseClient): ConnectorsRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<ConnectorRow[]> {
+    async findByCompanyId(companyId: string): Promise<ConnectorRow[]> {
       const result = await client
         .from('connectors')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('name', { ascending: true })
       return dataOrDefault<ConnectorRow[]>(result, [])
     },
@@ -639,11 +648,11 @@ function createConnectorsRepo(client: SupabaseClient): ConnectorsRepository {
 
 function createPhaseDefinitionsRepo(client: SupabaseClient): PhaseDefinitionsRepository {
   return {
-    async findByTenantId(tenantId: string): Promise<PhaseDefinitionRow[]> {
+    async findByCompanyId(companyId: string): Promise<PhaseDefinitionRow[]> {
       const result = await client
         .from('phase_definitions')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .order('phase_number', { ascending: true })
       return dataOrDefault<PhaseDefinitionRow[]>(result, [])
     },
@@ -656,7 +665,7 @@ function createPhaseDefinitionsRepo(client: SupabaseClient): PhaseDefinitionsRep
 
 export function createSupabaseDataAccess(client: SupabaseClient): DataAccess {
   return {
-    tenants: createTenantsRepo(client),
+    companies: createTenantsRepo(client),
     brandings: createBrandingsRepo(client),
     profiles: createProfilesRepo(client),
     roles: createRolesRepo(client),

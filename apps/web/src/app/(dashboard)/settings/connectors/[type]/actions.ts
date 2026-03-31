@@ -9,7 +9,7 @@ export async function saveConnectorAction(type: string, data: {
   syncIntervalMinutes: number
 }): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session?.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
 
   // Validate permission
   if (!session.isHoldingAdmin && !session.permissions.includes('module:admin:read')) {
@@ -20,14 +20,14 @@ export async function saveConnectorAction(type: string, data: {
 
   // Upsert connector
   const { error } = await db.from('connectors').upsert({
-    tenant_id: session.tenantId,
+    company_id: session.companyId,
     type,
     name: getConnectorLabel(type),
     credentials: data.credentials,
     config: data.config,
     sync_interval_minutes: data.syncIntervalMinutes,
     status: 'active',
-  }, { onConflict: 'tenant_id,type' })
+  }, { onConflict: 'company_id,type' })
 
   if (error) return { error: 'Verbindung konnte nicht gespeichert werden.' }
   return { success: true }
@@ -38,7 +38,7 @@ export async function testConnectorAction(
   credentials: Record<string, unknown>
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session?.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
 
   if (!session.isHoldingAdmin && !session.permissions.includes('module:admin:read')) {
     return { error: 'Nicht autorisiert' }
@@ -100,7 +100,7 @@ export async function triggerSyncAction(
   connectorId: string
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session?.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
 
   if (!session.isHoldingAdmin && !session.permissions.includes('module:admin:read')) {
     return { error: 'Nicht autorisiert' }
@@ -111,21 +111,21 @@ export async function triggerSyncAction(
   // Verify connector belongs to this tenant
   const { data: connector } = await db
     .from('connectors')
-    .select('id, tenant_id')
+    .select('id, company_id')
     .eq('id', connectorId)
     .single()
 
-  if (!connector || (connector as Record<string, unknown>)['tenant_id'] !== session.tenantId) {
+  if (!connector || (connector as Record<string, unknown>)['company_id'] !== session.companyId) {
     return { error: 'Connector nicht gefunden.' }
   }
 
   // In production, this would enqueue a BullMQ job:
-  // await syncQueue.add('connector-sync', { connectorId, tenantId: session.tenantId })
+  // await syncQueue.add('connector-sync', { connectorId, companyId: session.companyId })
   // For now, just update the last_synced_at to simulate a sync.
   await db.from('connectors')
     .update({ last_synced_at: new Date().toISOString() })
     .eq('id', connectorId)
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
 
   return { success: true }
 }

@@ -1,0 +1,64 @@
+---
+title: "Kanban-Board"
+description: "Projekte ueber 27 Phasen verfolgen und Engpaesse erkennen"
+section: "projects"
+lastUpdated: "2026-03-30"
+---
+
+# Kanban-Board
+
+Das Kanban-Board zeigt alle laufenden Projekte in ihren aktuellen Phasen. Jedes Projekt durchlaeuft bis zu 27 Phasen — vom Erstkontakt bis zur abgeschlossenen Inbetriebnahme. Das Board gibt Ihnen einen sofortigen Ueberblick ueber den Status aller Projekte.
+
+## Was sind Phasen?
+
+Jede Phase repraesentiert einen definierten Abschnitt im Projektablauf. Die 27 Phasen sind im Process Builder als Prozessschritte konfiguriert. Typische Beispiele:
+
+- **Phase 1-3**: Erstgespraech, Bedarfsanalyse, Angebotserstellung
+- **Phase 4-8**: Angebotsverhandlung, Auftragserteilung, Anzahlung
+- **Phase 9-15**: Technische Planung, Baubewilligung, Materialbestellung
+- **Phase 16-22**: Montage, Elektroinstallation, Inbetriebnahme
+- **Phase 23-27**: Abnahme, Schlussrechnung, Nachbetreuung
+
+Die genaue Benennung und Anzahl der Phasen wird vom Holding-Administrator im Process Builder definiert und kann je nach Mandant variieren.
+
+## Projekte verschieben
+
+Projekte werden als Karten auf dem Board dargestellt. Jede Karte zeigt:
+
+- Projektname und Kunde
+- Zustaendige Person
+- Tage in der aktuellen Phase
+- Status-Farbe (gruen = im Plan, gelb = Aufmerksamkeit, rot = ueberfaellig)
+
+Sie koennen Projekte per Drag-and-Drop in die naechste Phase ziehen. Dabei wird automatisch:
+
+1. Der Phasenwechsel im CRM protokolliert
+2. Ein Zeitstempel fuer die neue Phase gesetzt
+3. Ggf. ein Liquiditaetsmarker ausgeloest
+4. Die verantwortliche Person benachrichtigt (falls konfiguriert)
+
+**Wichtig**: Phasen koennen nur vorwaerts verschoben werden. Ein Rueckschritt erfordert die Berechtigung der Geschaeftsfuehrung oder des Teamleiters.
+
+## Blockierte Projekte erkennen
+
+Das Board hebt Projekte hervor, die zu lange in einer Phase verweilen:
+
+- **Gelbe Markierung**: Projekt ist laenger als der konfigurierte Schwellenwert in einer Phase (Standard: 5 Arbeitstage).
+- **Rote Markierung**: Projekt ist doppelt so lange wie der Schwellenwert blockiert.
+- **Rotes Ausrufezeichen**: Projekt steht in Phase 5 (Baubewilligung) — diese Phase hat erfahrungsgemaess die hoechste Blockade-Wahrscheinlichkeit.
+
+Die Schwellenwerte koennen pro Phase individuell konfiguriert werden.
+
+## Das 27-Phasen-System
+
+Das 27-Phasen-System bildet den vollstaendigen Lebenszyklus eines PV-Installationsprojekts ab. Es wurde fuer die Alpen Energie GmbH als Referenz entwickelt und kann fuer andere Mandanten angepasst werden.
+
+**Durchlaufzeit**: Die durchschnittliche Durchlaufzeit von Phase 1 bis Phase 27 wird als KPI getrackt. Sie sehen diesen Wert oben rechts auf dem Board.
+
+**Filter**: Nutzen Sie die Filterleiste, um nach Phase, Zustaendigem, Status oder Zeitraum zu filtern. Der Filter "Blockiert" zeigt Ihnen nur Projekte, die Aufmerksamkeit erfordern.
+
+## Tipps
+
+- Pruefen Sie das Board taeglich auf rote und gelbe Markierungen.
+- Nutzen Sie den Filter "Meine Projekte", um sich auf Ihre Zustaendigkeiten zu konzentrieren.
+- Wenn ein Projekt blockiert ist, pruefen Sie den Kommentar-Bereich auf der Projektkarte — dort dokumentieren Kollegen haeufig den Grund.

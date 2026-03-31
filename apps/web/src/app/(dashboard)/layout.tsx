@@ -1,42 +1,50 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
-import { getTenantContext } from '@/lib/tenant'
+import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { buildProcessNavGroups } from '@/lib/process-nav'
 import { DashboardShell } from '@/components/dashboard-shell'
+import type { MainProcessGroup } from '@/lib/process-nav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const { tenantName } = getTenantContext()
+  const { companyName } = getCompanyContext()
 
-  const navItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: '\u{1F4CA}', permission: null as string | null },
-    { label: 'Setter', href: '/setter', icon: '\u{1F4DE}', permission: 'module:setter:read' },
-    { label: 'Berater', href: '/berater', icon: '\u{1F4BC}', permission: 'module:berater:read' },
-    { label: 'Leads', href: '/leads', icon: '\u{1F465}', permission: 'module:leads:read' },
-    { label: 'Innendienst', href: '/innendienst', icon: '\u{1F4CB}', permission: 'module:innendienst:read' },
-    { label: 'Projekte', href: '/projects', icon: '\u{1F3D7}\uFE0F', permission: 'module:bau:read' },
-    { label: 'Finanzen', href: '/finance', icon: '\u{1F4B0}', permission: 'module:finance:read' },
-    { label: 'Einstellungen', href: '/settings/users', icon: '\u2699\uFE0F', permission: 'module:admin:read' },
+  const staticNavItems = [
+    { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', permission: null as string | null },
+    { label: 'Setter', href: '/setter', icon: 'Phone', permission: 'module:setter:read' },
+    { label: 'Berater', href: '/berater', icon: 'Briefcase', permission: 'module:berater:read' },
+    { label: 'Leads', href: '/leads', icon: 'Users', permission: 'module:leads:read' },
+    { label: 'Innendienst', href: '/innendienst', icon: 'ClipboardList', permission: 'module:innendienst:read' },
+    { label: 'Projekte', href: '/projects', icon: 'Building', permission: 'module:bau:read' },
+    { label: 'Finanzen', href: '/finance', icon: 'Banknote', permission: 'module:finance:read' },
+    { label: 'Liquiditaet', href: '/liquidity', icon: 'TrendingUp', permission: 'module:finance:read' },
+    { label: 'Einstellungen', href: '/settings/users', icon: 'Settings', permission: 'module:admin:read' },
   ].filter((item) => {
     if (!item.permission) return true
     if (session.isHoldingAdmin) return true
     return session.permissions.includes(item.permission)
   })
 
+  // Build grouped process navigation
+  const processGroups: MainProcessGroup[] = await buildProcessNavGroups(session)
+
+  const navItems = staticNavItems
+
   const displayName = session.profile.display_name ?? session.profile.first_name ?? 'Benutzer'
   const roleLabel = session.roles[0]?.label ?? ''
 
   // Fetch active critical anomaly count for banner
   let criticalAnomalyCount = 0
-  if (session.tenantId) {
+  if (session.companyId) {
     const supabase = createSupabaseServerClient()
     const { count } = await supabase
       .from('anomalies')
       .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', session.tenantId)
+      .eq('company_id', session.companyId)
       .eq('is_active', true)
       .eq('severity', 'critical')
 
@@ -45,8 +53,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <DashboardShell
-      tenantName={tenantName}
+      companyName={companyName}
       navItems={navItems}
+      processGroups={processGroups}
       userName={displayName}
       userRole={roleLabel}
     >

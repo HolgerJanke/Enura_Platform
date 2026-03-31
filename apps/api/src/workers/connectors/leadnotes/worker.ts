@@ -39,7 +39,7 @@ export const leadnotesConnector: ConnectorBase = {
     }
   },
 
-  async sync(tenantId: string, connector: ConnectorConfig): Promise<SyncResult> {
+  async sync(companyId: string, connector: ConnectorConfig): Promise<SyncResult> {
     const startTime = Date.now()
     const errors: SyncError[] = []
     let recordsFetched = 0
@@ -65,16 +65,16 @@ export const leadnotesConnector: ConnectorBase = {
       }
 
       // Deduplicate against existing leads in the tenant
-      const { newLeads, duplicateCount } = await deduplicateLeads(tenantId, leads)
+      const { newLeads, duplicateCount } = await deduplicateLeads(companyId, leads)
       recordsSkipped = duplicateCount
 
       if (newLeads.length > 0) {
-        const normalised = newLeads.map((lead) => normaliseLead(tenantId, lead))
+        const normalised = newLeads.map((lead) => normaliseLead(companyId, lead))
 
         const result = await upsertRecords(
           'leads',
           normalised as unknown as Record<string, unknown>[],
-          ['tenant_id', 'external_id'],
+          ['company_id', 'external_id'],
         )
 
         recordsWritten = result.written

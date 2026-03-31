@@ -37,7 +37,7 @@ function normalisePhone(phone: string): string {
  * Tries exact match first, then falls back to normalised suffix matching.
  */
 async function resolveLeadByPhone(
-  tenantId: string,
+  companyId: string,
   phone: string,
 ): Promise<string | null> {
   const db = getServiceClient()
@@ -47,7 +47,7 @@ async function resolveLeadByPhone(
   const { data: exactMatch } = await db
     .from('leads')
     .select('id, phone')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .not('phone', 'is', null)
 
   if (!exactMatch || exactMatch.length === 0) return null
@@ -73,7 +73,7 @@ async function resolveLeadByPhone(
  * Look up a team member by phone number within a tenant.
  */
 async function resolveTeamMemberByPhone(
-  tenantId: string,
+  companyId: string,
   phone: string,
 ): Promise<string | null> {
   const db = getServiceClient()
@@ -82,7 +82,7 @@ async function resolveTeamMemberByPhone(
   const { data: members } = await db
     .from('team_members')
     .select('id, phone')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_active', true)
     .not('phone', 'is', null)
 
@@ -111,12 +111,12 @@ async function resolveTeamMemberByPhone(
  */
 export async function resolveTenantByPhoneNumberId(
   phoneNumberId: string,
-): Promise<{ tenantId: string; connectorId: string } | null> {
+): Promise<{ companyId: string; connectorId: string } | null> {
   const db = getServiceClient()
 
   const { data: connectors } = await db
     .from('connectors')
-    .select('id, tenant_id, credentials')
+    .select('id, company_id, credentials')
     .eq('type', 'whatsapp')
     .eq('status', 'active')
 
@@ -125,11 +125,11 @@ export async function resolveTenantByPhoneNumberId(
   for (const connector of connectors) {
     const c = connector as {
       id: string
-      tenant_id: string
+      company_id: string
       credentials: Record<string, unknown>
     }
     if (c.credentials['phone_number_id'] === phoneNumberId) {
-      return { tenantId: c.tenant_id, connectorId: c.id }
+      return { companyId: c.company_id, connectorId: c.id }
     }
   }
 
@@ -168,12 +168,12 @@ export async function processWebhook(payload: WhatsAppWebhook): Promise<{
         continue
       }
 
-      const { tenantId } = tenantInfo
+      const { companyId } = tenantInfo
 
       for (const msg of messages) {
         try {
           const normalised = await normaliseIncomingMessage(
-            tenantId,
+            companyId,
             msg,
             metadata,
           )
@@ -191,7 +191,7 @@ export async function processWebhook(payload: WhatsAppWebhook): Promise<{
           const result = await upsertRecords(
             'whatsapp_messages',
             [validationResult.data as unknown as Record<string, unknown>],
-            ['tenant_id', 'external_id'],
+            ['company_id', 'external_id'],
           )
 
           if (result.errors.length > 0) {
@@ -203,7 +203,7 @@ export async function processWebhook(payload: WhatsAppWebhook): Promise<{
           errors.push({
             code: 'WA_PROCESS_MESSAGE',
             message: err instanceof Error ? err.message : String(err),
-            context: { messageId: msg.id, tenantId },
+            context: { messageId: msg.id, companyId },
           })
         }
       }
@@ -217,7 +217,7 @@ export async function processWebhook(payload: WhatsAppWebhook): Promise<{
  * Normalise an incoming WhatsApp message into our internal schema.
  */
 async function normaliseIncomingMessage(
-  tenantId: string,
+  companyId: string,
   msg: WhatsAppIncomingMessage,
   metadata: WhatsAppMetadata,
 ): Promise<WhatsAppMessage> {
@@ -226,11 +226,11 @@ async function normaliseIncomingMessage(
   const customerPhone = msg.from
 
   // Try to match the customer phone to a lead
-  const leadId = await resolveLeadByPhone(tenantId, customerPhone)
+  const leadId = await resolveLeadByPhone(companyId, customerPhone)
 
   // Try to resolve the team member associated with this business phone number
   const teamMemberId = await resolveTeamMemberByPhone(
-    tenantId,
+    companyId,
     metadata.display_phone_number,
   )
 
@@ -241,7 +241,7 @@ async function normaliseIncomingMessage(
   const sentAt = new Date(parseInt(msg.timestamp, 10) * 1000).toISOString()
 
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: msg.id,
     wa_id: customerPhone,
     direction: 'inbound',
@@ -305,7 +305,7 @@ export class WhatsAppConnector implements ConnectorBase {
   }
 
   async sync(
-    _tenantId: string,
+    _companyId: string,
     _connector: ConnectorConfig,
   ): Promise<SyncResult> {
     // WhatsApp is webhook-driven — sync is a no-op.

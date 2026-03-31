@@ -1,0 +1,61 @@
+---
+title: "KPI-Dashboard verstehen"
+description: "Erklaerung aller Kennzahlen, Berechnungsmethoden und Trend-Indikatoren"
+section: "dashboard"
+lastUpdated: "2026-03-30"
+---
+
+# KPI-Dashboard verstehen
+
+Das KPI-Dashboard zeigt Ihre wichtigsten Kennzahlen auf einen Blick. Alle Werte werden automatisch berechnet und alle 15 Minuten aktualisiert. Dieser Artikel erklaert, was jede Kennzahl bedeutet und wie Sie die Zahlen richtig interpretieren.
+
+## Wie werden KPIs berechnet?
+
+Die Plattform berechnet KPIs nicht bei jedem Seitenaufruf neu. Stattdessen laeuft im Hintergrund ein Worker-Prozess, der alle 15 Minuten Momentaufnahmen (Snapshots) erstellt. Das Dashboard liest diese vorberechneten Werte. Dadurch laden die Seiten schnell und die Zahlen sind konsistent.
+
+## Setter-KPIs
+
+| KPI | Beschreibung | Guter Wert |
+|-----|-------------|-----------|
+| **Anrufe/Tag** | Gesamtzahl ausgehender Anrufe am aktuellen Tag | > 80 |
+| **Erreichbarkeitsquote** | Anteil der Anrufe, die angenommen wurden | > 35% |
+| **Gebuchte Termine** | Anzahl vereinbarter Beratungstermine | > 3/Tag |
+| **Terminquote** | Verhaeltnis Termine zu Anrufen | > 4% |
+| **Durchschn. Gespraechsdauer** | Mittlere Laenge eines gefuehrten Gespraechs | 3-5 Min |
+| **No-Show-Rate** | Anteil der Termine, zu denen der Kunde nicht erscheint | < 15% |
+
+## Berater-KPIs
+
+| KPI | Beschreibung | Guter Wert |
+|-----|-------------|-----------|
+| **Termine/Woche** | Beratungstermine pro Kalenderwoche | > 10 |
+| **Abschlussquote** | Anteil der Angebote, die zum Auftrag werden | > 30% |
+| **Angebotsvolumen** | Summe aller offenen Angebote in CHF | kontextabhaengig |
+| **Deal-Dauer** | Durchschnittliche Tage vom Erstgespraech bis Abschluss | < 30 Tage |
+| **Aktivitaeten/Tag** | Gesamtzahl von Anrufen, E-Mails und Terminen | > 8 |
+| **Umsatz/Berater** | Monatlicher Abschluss-Umsatz pro Berater | kontextabhaengig |
+
+## Trend-Indikatoren
+
+Neben jeder Zahl sehen Sie einen Trend-Indikator:
+
+- **Gruener Pfeil nach oben**: Der Wert hat sich gegenueber der Vorwoche verbessert.
+- **Roter Pfeil nach unten**: Der Wert hat sich verschlechtert.
+- **Grauer Strich**: Keine wesentliche Veraenderung (< 2% Abweichung).
+
+Der Vergleichszeitraum ist immer die gleiche Periode der Vorwoche (z.B. Montag diese Woche vs. Montag letzte Woche).
+
+## Zeitraeume
+
+Standardmaessig zeigt das Dashboard den aktuellen Tag. Sie koennen den Zeitraum umschalten auf:
+
+- **Heute** — aktuelle Tageswerte
+- **Diese Woche** — Montag bis heute
+- **Dieser Monat** — 1. bis heute
+- **Benutzerdefiniert** — frei waehlbarer Zeitraum
+
+## Tipps zur Interpretation
+
+- Einzelne Tageswerte schwanken stark. Bewerten Sie Ihre Leistung immer im Wochenvergleich.
+- Die "guten Werte" in der Tabelle sind Richtwerte basierend auf den Alpen-Energie-Benchmarks. Ihr Teamleiter kann andere Zielwerte definieren.
+- Wenn ein KPI rot markiert ist, pruefen Sie zuerst den Connector-Status. Fehlende Daten koennen falsche Werte verursachen.

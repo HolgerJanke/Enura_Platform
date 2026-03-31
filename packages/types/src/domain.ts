@@ -1,6 +1,6 @@
 import type {
-  TenantRow,
-  TenantBrandingRow,
+  CompanyRow,
+  CompanyBrandingRow,
   ProfileRow,
   RoleRow,
   LeadRow,
@@ -13,15 +13,20 @@ import type {
   InvoiceRow,
 } from './database.js'
 
-export type TenantWithBranding = TenantRow & {
-  branding: TenantBrandingRow
+export type CompanyWithBranding = CompanyRow & {
+  branding: CompanyBrandingRow
 }
+
+/** @deprecated Use CompanyWithBranding */
+export type TenantWithBranding = CompanyWithBranding
 
 export type UserSession = {
   profile: ProfileRow
-  tenantId: string | null
+  holdingId: string | null
+  companyId: string | null
   roles: RoleRow[]
   permissions: string[]
+  isEnuraAdmin: boolean
   isHoldingAdmin: boolean
 }
 

@@ -1,0 +1,61 @@
+---
+title: "Liquiditaetsplanung"
+description: "Plan- und Ist-Werte vergleichen und den Cashflow ueberwachen"
+section: "liquidity"
+lastUpdated: "2026-03-30"
+---
+
+# Liquiditaetsplanung
+
+Die Liquiditaetsplanung gibt Ihnen einen Ueberblick ueber erwartete und tatsaechliche Zahlungsstroeme. Sie sehen auf einen Blick, ob genuegend Mittel verfuegbar sind, und erhalten Fruehwarnungen, wenn Engpaesse drohen.
+
+## Plan vs. Ist
+
+Die Planung arbeitet mit zwei Datenreihen:
+
+**Plan-Werte** sind erwartete Zahlungen. Sie entstehen automatisch, wenn ein Projekt einen Prozessschritt mit Liquiditaetsmarker erreicht (z.B. "Rechnung versendet → Zahlungseingang in 30 Tagen"). Plan-Werte koennen auch manuell erfasst werden.
+
+**Ist-Werte** sind tatsaechliche Zahlungsbewegungen. Sie werden automatisch ueber den Bexio-Connector erkannt oder per Bank-Upload importiert. Ist-Werte werden den Plan-Eintraegen zugeordnet, um Abweichungen sichtbar zu machen.
+
+## Wie Plan-Daten entstehen
+
+Plan-Eintraege werden auf drei Wegen erstellt:
+
+### 1. Automatisch ueber Liquiditaetsmarker
+
+Wenn ein Projekt den konfigurierten Trigger-Schritt im Prozess erreicht, berechnet die Plattform das erwartete Faelligkeitsdatum und den Betrag. Beispiel: Schritt "Schlussrechnung versendet" erzeugt einen Plan-Eingang mit Faelligkeit in 30 Tagen.
+
+### 2. Automatisch ueber Bexio
+
+Der Bexio-Connector importiert Rechnungsdaten. Fuer jede versendete Rechnung wird ein Plan-Eintrag mit dem Rechnungsbetrag und dem Zahlungsziel erstellt.
+
+### 3. Manuell
+
+Sie koennen Plan-Eintraege direkt erfassen — z.B. fuer erwartete Ausgaben (Materialeinkauf, Lohnzahlung) oder Einnahmen, die nicht ueber Connectoren abgebildet sind.
+
+## Das Cashflow-Diagramm
+
+Das Diagramm zeigt zwei Kurven:
+
+- **Blaue Linie (Plan)**: Kumulierter Saldo basierend auf den Plan-Eintraegen.
+- **Gruene Linie (Ist)**: Kumulierter Saldo basierend auf tatsaechlichen Zahlungen.
+
+**Gelber Bereich**: Markiert Perioden, in denen der geplante Saldo unter den konfigurierten Schwellenwert faellt. Das ist eine Fruehwarnung fuer moegliche Liquiditaetsengpaesse.
+
+**Roter Bereich**: Markiert Perioden, in denen der tatsaechliche Saldo unter den Schwellenwert gefallen ist. Hier besteht akuter Handlungsbedarf.
+
+## Drei Eingabemethoden
+
+| Methode | Daten-Typ | Aktualisierung |
+|---------|-----------|---------------|
+| **Bexio-Connector** | Rechnungen, Zahlungen | Stuendlich automatisch |
+| **Bank-Upload** | Kontobewegungen (CSV/MT940) | Manuell bei Bedarf |
+| **Manuelle Eingabe** | Sonstige Plan-Werte | Manuell bei Bedarf |
+
+## Typischer Workflow
+
+1. Prozesse mit Liquiditaetsmarkern definieren (Holding-Admin).
+2. Projekte durchlaufen den Prozess — Plan-Werte entstehen automatisch.
+3. Bexio synchronisiert Rechnungen und Zahlungen — Ist-Werte werden zugeordnet.
+4. Bank-Uploads ergaenzen die Ist-Daten um direkte Kontobewegungen.
+5. Das Dashboard zeigt Plan/Ist-Vergleich und warnt bei Abweichungen.

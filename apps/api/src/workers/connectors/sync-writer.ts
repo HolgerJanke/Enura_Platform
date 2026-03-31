@@ -11,7 +11,7 @@ function getServiceClient() {
 
 export async function writeSyncResult(
   connectorId: string,
-  tenantId: string,
+  companyId: string,
   startedAt: Date,
   result: SyncResult,
 ): Promise<void> {
@@ -20,7 +20,7 @@ export async function writeSyncResult(
 
   await db.from('connector_sync_log').insert({
     connector_id: connectorId,
-    tenant_id: tenantId,
+    company_id: companyId,
     status: result.success ? 'success' : 'error',
     records_synced: result.recordsWritten,
     error_message: result.errors.length > 0

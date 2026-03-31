@@ -26,7 +26,7 @@ const MAX_TRANSCRIPT_WORDS = 3000
 // ---------------------------------------------------------------------------
 
 export interface CallAnalysisJobData {
-  tenantId: string
+  companyId: string
   callId: string
   storagePath: string
 }
@@ -64,7 +64,7 @@ function getServiceClient() {
 export async function processCallAnalysis(
   job: CallAnalysisJobData,
 ): Promise<void> {
-  const { tenantId, callId, storagePath } = job
+  const { companyId, callId, storagePath } = job
   const db = getServiceClient()
 
   // -----------------------------------------------------------------------
@@ -74,12 +74,12 @@ export async function processCallAnalysis(
     .from('calls')
     .select('started_at, duration_seconds')
     .eq('id', callId)
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .single()
 
   if (callError || !call) {
     console.warn(
-      `[call-analysis] Call ${callId} not found for tenant ${tenantId}`,
+      `[call-analysis] Call ${callId} not found for tenant ${companyId}`,
     )
     return
   }
@@ -136,7 +136,7 @@ export async function processCallAnalysis(
   const { data: members } = await db
     .from('team_members')
     .select('first_name, last_name')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
 
   const knownNames = (members ?? []).flatMap(
     (m: Record<string, unknown>) =>
@@ -151,7 +151,7 @@ export async function processCallAnalysis(
   const { data: script } = await db
     .from('call_scripts')
     .select('content')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_active', true)
     .maybeSingle()
 
@@ -200,7 +200,7 @@ export async function processCallAnalysis(
 
   const { error: upsertError } = await db.from('call_analysis').upsert(
     {
-      tenant_id: tenantId,
+      company_id: companyId,
       call_id: callId,
       call_started_at: callRecord['started_at'] as string,
       transcript,
@@ -223,7 +223,7 @@ export async function processCallAnalysis(
       model_version: 'claude-sonnet-4-6',
       analyzed_at: new Date().toISOString(),
     },
-    { onConflict: 'tenant_id,call_id' },
+    { onConflict: 'company_id,call_id' },
   )
 
   if (upsertError) {

@@ -25,11 +25,11 @@ function mapInvoiceStatus(
  * Transform a raw Bexio invoice into the shape expected by the invoices table.
  */
 export function normaliseInvoice(
-  tenantId: string,
+  companyId: string,
   invoice: BexioInvoice,
 ): InvoiceInsert {
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: String(invoice.id),
     invoice_number: invoice.document_nr ?? `BEXIO-${invoice.id}`,
     customer_name: invoice.title ?? `Contact ${invoice.contact_id ?? 'unknown'}`,
@@ -48,12 +48,12 @@ export function normaliseInvoice(
  * Transform a raw Bexio payment into the shape expected by the payments table.
  */
 export function normalisePayment(
-  tenantId: string,
+  companyId: string,
   invoiceId: string,
   payment: BexioPayment,
 ): PaymentInsert {
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     invoice_id: invoiceId,
     amount_chf: payment.value,
     received_at: payment.date,

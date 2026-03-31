@@ -4,8 +4,8 @@
 // =============================================================================
 
 import type {
-  TenantRow,
-  TenantBrandingRow,
+  CompanyRow,
+  CompanyBrandingRow,
   ProfileRow,
   RoleRow,
   PermissionRow,
@@ -27,6 +27,7 @@ import type {
 // Constants — Tenant IDs
 // ---------------------------------------------------------------------------
 
+export const DEFAULT_HOLDING_ID = '00000000-0000-0000-0000-000000000010'
 export const TENANT_ALPEN_ENERGIE_ID = '00000000-0000-0000-0000-000000000001'
 export const TENANT_TEST_COMPANY_ID = '00000000-0000-0000-0000-000000000002'
 
@@ -129,9 +130,10 @@ const YESTERDAY = '2026-03-22T10:00:00.000Z'
 // TENANTS
 // ---------------------------------------------------------------------------
 
-export const tenants: TenantRow[] = [
+export const tenants: CompanyRow[] = [
   {
     id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     slug: 'alpen-energie',
     name: 'Alpen Energie GmbH',
     status: 'active',
@@ -141,6 +143,7 @@ export const tenants: TenantRow[] = [
   },
   {
     id: TENANT_TEST_COMPANY_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     slug: 'test-company',
     name: 'Test Company AG',
     status: 'active',
@@ -154,10 +157,11 @@ export const tenants: TenantRow[] = [
 // TENANT BRANDINGS
 // ---------------------------------------------------------------------------
 
-export const tenantBrandings: TenantBrandingRow[] = [
+export const tenantBrandings: CompanyBrandingRow[] = [
   {
     id: brandingId(1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     primary_color: '#1A56DB',
     secondary_color: '#1A1A1A',
     accent_color: '#F3A917',
@@ -175,7 +179,8 @@ export const tenantBrandings: TenantBrandingRow[] = [
   },
   {
     id: brandingId(2),
-    tenant_id: TENANT_TEST_COMPANY_ID,
+    company_id: TENANT_TEST_COMPANY_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     primary_color: '#059669',
     secondary_color: '#1A1A1A',
     accent_color: '#D97706',
@@ -210,10 +215,11 @@ const roleKeys = [
 ] as const
 
 export const roles: RoleRow[] = [
-  // Holding admin role (no tenant_id)
+  // Holding admin role (no company_id)
   {
     id: roleId(0, 0),
-    tenant_id: null,
+    company_id: null,
+    holding_id: null,
     key: 'holding_admin',
     label: 'Holding Admin',
     description: 'Globaler Administrator der Holding',
@@ -224,7 +230,8 @@ export const roles: RoleRow[] = [
   // Tenant 1 roles (alpen-energie)
   ...roleKeys.map((rk, i) => ({
     id: roleId(1, i + 1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     key: rk.key,
     label: rk.label,
     description: rk.desc,
@@ -235,7 +242,8 @@ export const roles: RoleRow[] = [
   // Tenant 2 roles (test-company)
   ...roleKeys.map((rk, i) => ({
     id: roleId(2, i + 1),
-    tenant_id: TENANT_TEST_COMPANY_ID,
+    company_id: TENANT_TEST_COMPANY_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     key: rk.key,
     label: rk.label,
     description: rk.desc,
@@ -430,7 +438,7 @@ const t2Names: Array<{ first: string; last: string; email: string; phone: string
 ]
 
 function buildProfiles(
-  tenantId: string | null,
+  companyId: string | null,
   tenantNum: number,
   names: Array<{ first: string; last: string; email: string; phone: string; roleKey: string }>,
 ): ProfileRow[] {
@@ -439,7 +447,8 @@ function buildProfiles(
     const isSuperOrAdmin = n.roleKey === 'super_user'
     return {
       id: profileId(tenantNum, idx),
-      tenant_id: tenantId,
+      company_id: companyId,
+      holding_id: DEFAULT_HOLDING_ID,
       first_name: n.first,
       last_name: n.last,
       display_name: `${n.first} ${n.last}`,
@@ -462,7 +471,8 @@ export const profiles: ProfileRow[] = [
   // Holding admin profile
   {
     id: HOLDING_ADMIN_PROFILE_ID,
-    tenant_id: null,
+    company_id: null,
+    holding_id: null,
     first_name: 'Stefan',
     last_name: 'Enura',
     display_name: 'Stefan Enura',
@@ -539,7 +549,8 @@ export const teamMembers: TeamMemberRow[] = [
   // Setters
   {
     id: teamMemberId(1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     profile_id: profileId(1, 4), // Marco Bernasconi (setter)
     external_id: 'reonic-setter-001',
     first_name: 'Marco',
@@ -555,7 +566,8 @@ export const teamMembers: TeamMemberRow[] = [
   },
   {
     id: teamMemberId(2),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     profile_id: null,
     external_id: 'reonic-setter-002',
     first_name: 'Fabio',
@@ -571,7 +583,8 @@ export const teamMembers: TeamMemberRow[] = [
   },
   {
     id: teamMemberId(3),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     profile_id: null,
     external_id: 'reonic-setter-003',
     first_name: 'Anja',
@@ -588,7 +601,8 @@ export const teamMembers: TeamMemberRow[] = [
   // Beraters
   {
     id: teamMemberId(4),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     profile_id: profileId(1, 5), // Sarah Keller (berater)
     external_id: 'reonic-berater-001',
     first_name: 'Sarah',
@@ -604,7 +618,8 @@ export const teamMembers: TeamMemberRow[] = [
   },
   {
     id: teamMemberId(5),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     profile_id: null,
     external_id: 'reonic-berater-002',
     first_name: 'David',
@@ -620,7 +635,8 @@ export const teamMembers: TeamMemberRow[] = [
   },
   {
     id: teamMemberId(6),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     profile_id: null,
     external_id: 'reonic-berater-003',
     first_name: 'Laura',
@@ -670,7 +686,8 @@ const leadData: Array<{
 
 export const leads: LeadRow[] = leadData.map((ld, i) => ({
   id: leadId(i + 1),
-  tenant_id: TENANT_ALPEN_ENERGIE_ID,
+  company_id: TENANT_ALPEN_ENERGIE_ID,
+  holding_id: DEFAULT_HOLDING_ID,
   external_id: `reonic-lead-${String(i + 1).padStart(3, '0')}`,
   first_name: ld.first,
   last_name: ld.last,
@@ -713,7 +730,8 @@ const offerData: Array<{
 
 export const offers: OfferRow[] = offerData.map((od, i) => ({
   id: offerId(i + 1),
-  tenant_id: TENANT_ALPEN_ENERGIE_ID,
+  company_id: TENANT_ALPEN_ENERGIE_ID,
+  holding_id: DEFAULT_HOLDING_ID,
   external_id: `reonic-offer-${String(i + 1).padStart(3, '0')}`,
   lead_id: leadId(od.leadIdx),
   berater_id: teamMemberId(od.beraterIdx),
@@ -768,7 +786,8 @@ export const calls: CallRow[] = Array.from({ length: 30 }, (_, i) => {
 
   return {
     id: callId(i + 1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     external_id: `3cx-call-${String(i + 1).padStart(4, '0')}`,
     team_member_id: setterIds[memberIdx] ?? null,
     direction: i % 4 === 0 ? 'inbound' as const : 'outbound' as const,
@@ -794,7 +813,8 @@ export const callAnalyses: CallAnalysisRow[] = calls
   .slice(0, 5)
   .map((c, i) => ({
     id: callAnalysisId(i + 1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     call_id: c.id,
     call_started_at: c.started_at,
     transcript: `[Transkript des Anrufs ${i + 1} - automatisch generiert]`,
@@ -856,7 +876,8 @@ const phaseNames: Array<{ name: string; desc: string; color: string; stallDays: 
 
 export const phaseDefinitions: PhaseDefinitionRow[] = phaseNames.map((pn, i) => ({
   id: phaseDefId(i + 1),
-  tenant_id: TENANT_ALPEN_ENERGIE_ID,
+  company_id: TENANT_ALPEN_ENERGIE_ID,
+  holding_id: DEFAULT_HOLDING_ID,
   phase_number: i + 1,
   name: pn.name,
   description: pn.desc,
@@ -893,7 +914,8 @@ const projectData: Array<{
 
 export const projects: ProjectRow[] = projectData.map((pd, i) => ({
   id: projectId(i + 1),
-  tenant_id: TENANT_ALPEN_ENERGIE_ID,
+  company_id: TENANT_ALPEN_ENERGIE_ID,
+  holding_id: DEFAULT_HOLDING_ID,
   external_id: `reonic-proj-${String(i + 1).padStart(3, '0')}`,
   lead_id: leadId(pd.leadIdx),
   offer_id: pd.offerIdx ? offerId(pd.offerIdx) : null,
@@ -936,7 +958,8 @@ const invoiceData: Array<{
 
 export const invoices: InvoiceRow[] = invoiceData.map((inv, i) => ({
   id: invoiceId(i + 1),
-  tenant_id: TENANT_ALPEN_ENERGIE_ID,
+  company_id: TENANT_ALPEN_ENERGIE_ID,
+  holding_id: DEFAULT_HOLDING_ID,
   external_id: `bexio-inv-${String(i + 1).padStart(3, '0')}`,
   offer_id: inv.offerIdx ? offerId(inv.offerIdx) : null,
   invoice_number: inv.number,
@@ -959,7 +982,8 @@ export const invoices: InvoiceRow[] = invoiceData.map((inv, i) => ({
 export const connectors: ConnectorRow[] = [
   {
     id: connectorId(1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     type: 'reonic',
     name: 'Reonic CRM',
     credentials: {},
@@ -973,7 +997,8 @@ export const connectors: ConnectorRow[] = [
   },
   {
     id: connectorId(2),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     type: '3cx',
     name: '3CX Cloud Telefonanlage',
     credentials: {},
@@ -987,7 +1012,8 @@ export const connectors: ConnectorRow[] = [
   },
   {
     id: connectorId(3),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     type: 'bexio',
     name: 'Bexio Buchhaltung',
     credentials: {},
@@ -1001,7 +1027,8 @@ export const connectors: ConnectorRow[] = [
   },
   {
     id: connectorId(4),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     type: 'google_calendar',
     name: 'Google Calendar',
     credentials: {},
@@ -1015,7 +1042,8 @@ export const connectors: ConnectorRow[] = [
   },
   {
     id: connectorId(5),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     type: 'leadnotes',
     name: 'Leadnotes',
     credentials: {},
@@ -1036,7 +1064,8 @@ export const connectors: ConnectorRow[] = [
 export const kpiSnapshots: KpiSnapshotRow[] = [
   {
     id: kpiSnapshotId(1),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'setter_daily',
     entity_id: teamMemberId(1),
     period_date: '2026-03-22',
@@ -1053,7 +1082,8 @@ export const kpiSnapshots: KpiSnapshotRow[] = [
   },
   {
     id: kpiSnapshotId(2),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'setter_daily',
     entity_id: teamMemberId(2),
     period_date: '2026-03-22',
@@ -1070,7 +1100,8 @@ export const kpiSnapshots: KpiSnapshotRow[] = [
   },
   {
     id: kpiSnapshotId(3),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'setter_daily',
     entity_id: teamMemberId(3),
     period_date: '2026-03-22',
@@ -1087,7 +1118,8 @@ export const kpiSnapshots: KpiSnapshotRow[] = [
   },
   {
     id: kpiSnapshotId(4),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'berater_daily',
     entity_id: teamMemberId(4),
     period_date: '2026-03-22',
@@ -1103,7 +1135,8 @@ export const kpiSnapshots: KpiSnapshotRow[] = [
   },
   {
     id: kpiSnapshotId(5),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'berater_daily',
     entity_id: teamMemberId(5),
     period_date: '2026-03-22',
@@ -1119,7 +1152,8 @@ export const kpiSnapshots: KpiSnapshotRow[] = [
   },
   {
     id: kpiSnapshotId(6),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'lead_daily',
     entity_id: null,
     period_date: '2026-03-22',
@@ -1141,7 +1175,8 @@ export const kpiSnapshots: KpiSnapshotRow[] = [
   },
   {
     id: kpiSnapshotId(7),
-    tenant_id: TENANT_ALPEN_ENERGIE_ID,
+    company_id: TENANT_ALPEN_ENERGIE_ID,
+    holding_id: DEFAULT_HOLDING_ID,
     snapshot_type: 'finance_monthly',
     entity_id: null,
     period_date: '2026-03-01',

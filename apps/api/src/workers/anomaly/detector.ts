@@ -65,7 +65,7 @@ function getServiceClient(): SupabaseClient {
 // ---------------------------------------------------------------------------
 
 async function detectSetterCallVolumeDrop(
-  tenantId: string,
+  companyId: string,
   client: SupabaseClient,
 ): Promise<DetectedAnomaly[]> {
   const anomalies: DetectedAnomaly[] = []
@@ -76,7 +76,7 @@ async function detectSetterCallVolumeDrop(
   const { data: snapshots } = await client
     .from('kpi_snapshots')
     .select('entity_id, metrics, period_date')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('snapshot_type', 'setter_daily')
     .gte('period_date', sevenDaysAgo.toISOString().split('T')[0]!)
     .order('period_date', { ascending: true })
@@ -103,7 +103,7 @@ async function detectSetterCallVolumeDrop(
   const { data: members } = await client
     .from('team_members')
     .select('id, display_name')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .in('id', entityIds)
 
   const nameMap = new Map<string, string>()
@@ -147,7 +147,7 @@ async function detectSetterCallVolumeDrop(
 // ---------------------------------------------------------------------------
 
 async function detectLeadIngestionStopped(
-  tenantId: string,
+  companyId: string,
   client: SupabaseClient,
 ): Promise<DetectedAnomaly[]> {
   const anomalies: DetectedAnomaly[] = []
@@ -157,7 +157,7 @@ async function detectLeadIngestionStopped(
   const { count } = await client
     .from('leads')
     .select('id', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .gte('created_at', eightHoursAgo.toISOString())
 
   // Check if there were leads in the previous 8-hour window (to confirm this is unusual)
@@ -165,7 +165,7 @@ async function detectLeadIngestionStopped(
   const { count: previousCount } = await client
     .from('leads')
     .select('id', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .gte('created_at', sixteenHoursAgo.toISOString())
     .lt('created_at', eightHoursAgo.toISOString())
 
@@ -192,7 +192,7 @@ async function detectLeadIngestionStopped(
 // ---------------------------------------------------------------------------
 
 async function detectConnectorSyncFailure(
-  tenantId: string,
+  companyId: string,
   client: SupabaseClient,
 ): Promise<DetectedAnomaly[]> {
   const anomalies: DetectedAnomaly[] = []
@@ -200,7 +200,7 @@ async function detectConnectorSyncFailure(
   const { data: connectors } = await client
     .from('connectors')
     .select('id, type, display_name, sync_interval_minutes, last_synced_at, status')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('status', 'active')
 
   const now = new Date()
@@ -255,7 +255,7 @@ async function detectConnectorSyncFailure(
 // ---------------------------------------------------------------------------
 
 async function detectReachRateDrop(
-  tenantId: string,
+  companyId: string,
   client: SupabaseClient,
 ): Promise<DetectedAnomaly[]> {
   const anomalies: DetectedAnomaly[] = []
@@ -265,7 +265,7 @@ async function detectReachRateDrop(
   const { data: snapshots } = await client
     .from('kpi_snapshots')
     .select('entity_id, metrics, period_date')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('snapshot_type', 'setter_daily')
     .gte('period_date', sevenDaysAgo.toISOString().split('T')[0]!)
     .order('period_date', { ascending: true })
@@ -290,7 +290,7 @@ async function detectReachRateDrop(
   const { data: members } = await client
     .from('team_members')
     .select('id, display_name')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .in('id', entityIds)
 
   const nameMap = new Map<string, string>()
@@ -331,7 +331,7 @@ async function detectReachRateDrop(
 // ---------------------------------------------------------------------------
 
 async function detectCallQualityDrop(
-  tenantId: string,
+  companyId: string,
   client: SupabaseClient,
 ): Promise<DetectedAnomaly[]> {
   const anomalies: DetectedAnomaly[] = []
@@ -343,14 +343,14 @@ async function detectCallQualityDrop(
   const { data: recentAnalysis } = await client
     .from('call_analysis')
     .select('team_member_id, overall_score')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .gte('created_at', sevenDaysAgo.toISOString())
 
   // Previous 7 days call analysis scores
   const { data: previousAnalysis } = await client
     .from('call_analysis')
     .select('team_member_id, overall_score')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .gte('created_at', fourteenDaysAgo.toISOString())
     .lt('created_at', sevenDaysAgo.toISOString())
 
@@ -383,7 +383,7 @@ async function detectCallQualityDrop(
   const { data: members } = await client
     .from('team_members')
     .select('id, display_name')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .in('id', allMemberIds)
 
   const nameMap = new Map<string, string>()
@@ -423,7 +423,7 @@ async function detectCallQualityDrop(
 // Public API: Run all detectors for a tenant
 // ---------------------------------------------------------------------------
 
-export async function runAllDetectors(tenantId: string): Promise<DetectedAnomaly[]> {
+export async function runAllDetectors(companyId: string): Promise<DetectedAnomaly[]> {
   const client = getServiceClient()
   const results: DetectedAnomaly[] = []
 
@@ -437,10 +437,10 @@ export async function runAllDetectors(tenantId: string): Promise<DetectedAnomaly
 
   for (const detector of detectors) {
     try {
-      const detected = await detector(tenantId, client)
+      const detected = await detector(companyId, client)
       results.push(...detected)
     } catch (err) {
-      console.error(`[AnomalyDetector] Detector failed for tenant ${tenantId}:`, err)
+      console.error(`[AnomalyDetector] Detector failed for tenant ${companyId}:`, err)
     }
   }
 

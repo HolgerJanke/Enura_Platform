@@ -89,10 +89,10 @@ function mapRoleType(raw: string): string {
 
 export function normaliseUser(
   user: ReonicUser,
-  tenantId: string,
+  companyId: string,
 ): Record<string, unknown> {
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: user.id,
     first_name: user.first_name,
     last_name: user.last_name,
@@ -105,13 +105,13 @@ export function normaliseUser(
 
 export function normaliseLead(
   lead: ReonicLead,
-  tenantId: string,
+  companyId: string,
   memberMap: Map<string, string>,
 ): Record<string, unknown> {
   const setterId = lead.assigned_to ? memberMap.get(lead.assigned_to) ?? null : null
 
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: lead.id,
     first_name: lead.first_name ?? null,
     last_name: lead.last_name ?? null,
@@ -131,7 +131,7 @@ export function normaliseLead(
 
 export function normaliseOffer(
   offer: ReonicOffer,
-  tenantId: string,
+  companyId: string,
   memberMap: Map<string, string>,
   leadMap: Map<string, string>,
 ): Record<string, unknown> {
@@ -139,7 +139,7 @@ export function normaliseOffer(
   const leadId = offer.lead_id ? leadMap.get(offer.lead_id) ?? null : null
 
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: offer.id,
     lead_id: leadId,
     berater_id: beraterId,

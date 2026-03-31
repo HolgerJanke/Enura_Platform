@@ -12,14 +12,14 @@ import {
 } from '@react-email/components'
 
 export interface PasswordResetByAdminEmailProps {
-  tenantName: string
+  companyName: string
   loginUrl: string
   tempPassword: string
   primaryColor: string
 }
 
 export function PasswordResetByAdminEmail({
-  tenantName,
+  companyName,
   loginUrl,
   tempPassword,
   primaryColor,
@@ -28,7 +28,7 @@ export function PasswordResetByAdminEmail({
     <Html lang="de">
       <Head />
       <Preview>
-        Ihr Passwort fuer {tenantName} wurde zurueckgesetzt
+        Ihr Passwort fuer {companyName} wurde zurueckgesetzt
       </Preview>
       <Body style={body}>
         <Container style={container}>
@@ -37,7 +37,7 @@ export function PasswordResetByAdminEmail({
               as="h1"
               style={{ ...heading, color: primaryColor }}
             >
-              {tenantName}
+              {companyName}
             </Heading>
           </Section>
 

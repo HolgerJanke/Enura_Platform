@@ -13,7 +13,7 @@ export async function createUserAction(data: {
   roleIds: string[]
 }): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session || !session.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
   const parsed = CreateUserSchema.safeParse({
     email: data.email,
@@ -34,7 +34,7 @@ export async function createUserAction(data: {
       email: data.email,
       password: tempPassword,
       email_confirm: true,
-      user_metadata: { tenant_id: session.tenantId },
+      user_metadata: { company_id: session.companyId },
     })
 
   if (authError) {
@@ -49,7 +49,7 @@ export async function createUserAction(data: {
   // Create profile
   await serviceClient.from('profiles').insert({
     id: authUser.user.id,
-    tenant_id: session.tenantId,
+    company_id: session.companyId,
     first_name: data.firstName,
     last_name: data.lastName,
     must_reset_password: true,
@@ -70,7 +70,7 @@ export async function createUserAction(data: {
   }
 
   await writeAuditLog({
-    tenantId: session.tenantId,
+    companyId: session.companyId,
     actorId: session.profile.id,
     action: 'user.created',
     tableName: 'profiles',
@@ -90,18 +90,18 @@ export async function updateUserRolesAction(
   roleIds: string[]
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session || !session.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
   const serviceClient = createSupabaseServiceClient()
 
   // Verify user belongs to same tenant
   const { data: profile } = await serviceClient
     .from('profiles')
-    .select('id, tenant_id')
+    .select('id, company_id')
     .eq('id', userId)
     .single()
 
-  if (!profile || profile.tenant_id !== session.tenantId) {
+  if (!profile || profile.company_id !== session.companyId) {
     return { error: 'Benutzer nicht gefunden.' }
   }
 
@@ -124,7 +124,7 @@ export async function updateUserRolesAction(
       role_id: roleId,
     })
     await writeAuditLog({
-      tenantId: session.tenantId,
+      companyId: session.companyId,
       actorId: session.profile.id,
       action: 'role.assigned',
       tableName: 'profile_roles',
@@ -137,7 +137,7 @@ export async function updateUserRolesAction(
   for (const pr of toRemove) {
     await serviceClient.from('profile_roles').delete().eq('id', pr.id)
     await writeAuditLog({
-      tenantId: session.tenantId,
+      companyId: session.companyId,
       actorId: session.profile.id,
       action: 'role.revoked',
       tableName: 'profile_roles',
@@ -153,18 +153,18 @@ export async function resetUserPasswordAction(
   userId: string
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session || !session.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
   const serviceClient = createSupabaseServiceClient()
 
   // Verify user belongs to same tenant
   const { data: profile } = await serviceClient
     .from('profiles')
-    .select('id, tenant_id')
+    .select('id, company_id')
     .eq('id', userId)
     .single()
 
-  if (!profile || profile.tenant_id !== session.tenantId) {
+  if (!profile || profile.company_id !== session.companyId) {
     return { error: 'Benutzer nicht gefunden.' }
   }
 
@@ -191,7 +191,7 @@ export async function resetUserPasswordAction(
   }
 
   await writeAuditLog({
-    tenantId: session.tenantId,
+    companyId: session.companyId,
     actorId: session.profile.id,
     action: 'auth.password_reset_by_admin',
     tableName: 'profiles',
@@ -206,7 +206,7 @@ export async function toggleUserActiveAction(
   active: boolean
 ): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session || !session.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
   // Cannot deactivate yourself
   if (userId === session.profile.id) {
@@ -219,12 +219,12 @@ export async function toggleUserActiveAction(
     .from('profiles')
     .update({ is_active: active })
     .eq('id', userId)
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
 
   if (error) return { error: 'Status konnte nicht geaendert werden.' }
 
   await writeAuditLog({
-    tenantId: session.tenantId,
+    companyId: session.companyId,
     actorId: session.profile.id,
     action: active ? 'user.reactivated' : 'user.deactivated',
     tableName: 'profiles',

@@ -83,17 +83,17 @@ function getSubdomain(hostname: string): string | null {
 function setTenantHeaders(
   response: NextResponse,
   opts: {
-    tenantId: string
-    tenantSlug: string
-    tenantName: string
+    companyId: string
+    companySlug: string
+    companyName: string
     isHolding: boolean
     brandCSS: string
     userId?: string
   },
 ): void {
-  response.headers.set('x-tenant-id', opts.tenantId)
-  response.headers.set('x-tenant-slug', opts.tenantSlug)
-  response.headers.set('x-tenant-name', opts.tenantName)
+  response.headers.set('x-company-id', opts.companyId)
+  response.headers.set('x-company-slug', opts.companySlug)
+  response.headers.set('x-company-name', opts.companyName)
   response.headers.set('x-is-holding', String(opts.isHolding))
   response.headers.set('x-brand-css', opts.brandCSS)
   if (opts.userId) {
@@ -117,9 +117,9 @@ function handleMockAuth(request: NextRequest): NextResponse {
   if (isAdminHost(hostname)) {
     const response = NextResponse.next({ request })
     setTenantHeaders(response, {
-      tenantId: '',
-      tenantSlug: 'admin',
-      tenantName: 'Enura Group',
+      companyId: '',
+      companySlug: 'admin',
+      companyName: 'Enura Group',
       isHolding: true,
       brandCSS: buildCSSVarString(defaultBrandTokens),
     })
@@ -167,9 +167,9 @@ function handleMockAuth(request: NextRequest): NextResponse {
 
   const response = NextResponse.next({ request })
   setTenantHeaders(response, {
-    tenantId: tenant.id,
-    tenantSlug: subdomain,
-    tenantName: tenant.name,
+    companyId: tenant.id,
+    companySlug: subdomain,
+    companyName: tenant.name,
     isHolding: false,
     brandCSS: buildCSSVarString(tenant.branding),
   })
@@ -207,7 +207,7 @@ function handleMockAuth(request: NextRequest): NextResponse {
 // Real Supabase Auth Middleware
 // ---------------------------------------------------------------------------
 
-interface TenantBrandingRow {
+interface CompanyBrandingRow {
   primary_color: string
   secondary_color: string
   accent_color: string
@@ -221,7 +221,7 @@ interface TenantBrandingRow {
   dark_mode_enabled: boolean
 }
 
-interface TenantRow {
+interface CompanyRow {
   id: string
   slug: string
   name: string
@@ -252,9 +252,9 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   if (isAdminHost(hostname)) {
     const response = getResponse()
     setTenantHeaders(response, {
-      tenantId: '',
-      tenantSlug: 'admin',
-      tenantName: 'Enura Group',
+      companyId: '',
+      companySlug: 'admin',
+      companyName: 'Enura Group',
       isHolding: true,
       brandCSS: buildCSSVarString(defaultBrandTokens),
       userId: user?.id,
@@ -306,11 +306,11 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
 
   // Fetch tenant from Supabase
   const { data: tenant } = await supabase
-    .from('tenants')
+    .from('companies')
     .select('id, slug, name, status')
     .eq('slug', subdomain)
     .eq('status', 'active')
-    .single<TenantRow>()
+    .single<CompanyRow>()
 
   if (!tenant) {
     return NextResponse.rewrite(new URL('/not-found', request.url))
@@ -318,12 +318,12 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
 
   // Fetch branding
   const { data: branding } = await supabase
-    .from('tenant_brandings')
+    .from('company_branding')
     .select(
       'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled',
     )
-    .eq('tenant_id', tenant.id)
-    .single<TenantBrandingRow>()
+    .eq('company_id', tenant.id)
+    .single<CompanyBrandingRow>()
 
   const brandTokens = branding
     ? brandTokensFromRow(branding)
@@ -332,9 +332,9 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   // Get the response AFTER all Supabase calls (cookies may have been updated)
   const response = getResponse()
   setTenantHeaders(response, {
-    tenantId: tenant.id,
-    tenantSlug: tenant.slug,
-    tenantName: tenant.name,
+    companyId: tenant.id,
+    companySlug: tenant.slug,
+    companyName: tenant.name,
     isHolding: false,
     brandCSS: buildCSSVarString(brandTokens),
     userId: user?.id,

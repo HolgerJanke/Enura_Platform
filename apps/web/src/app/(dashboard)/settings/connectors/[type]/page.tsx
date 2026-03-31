@@ -40,7 +40,7 @@ export default async function ConnectorConfigPage({
   if (!isValidType(type)) notFound()
 
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const supabase = createSupabaseServerClient()
 
@@ -48,7 +48,7 @@ export default async function ConnectorConfigPage({
   const { data: connector } = await supabase
     .from('connectors')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .eq('type', type)
     .maybeSingle()
 

@@ -1,7 +1,7 @@
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export async function writeAuditLog(entry: {
-  tenantId: string | null
+  companyId: string | null
   actorId: string
   action: string
   tableName?: string
@@ -13,7 +13,7 @@ export async function writeAuditLog(entry: {
   try {
     const supabase = createSupabaseServiceClient()
     await supabase.from('audit_log').insert({
-      tenant_id: entry.tenantId,
+      company_id: entry.companyId,
       actor_id: entry.actorId,
       action: entry.action,
       table_name: entry.tableName ?? null,

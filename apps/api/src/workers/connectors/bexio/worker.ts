@@ -85,17 +85,17 @@ async function fetchAllInvoices(
 }
 
 /**
- * Look up the internal invoice UUID by external_id and tenant_id.
+ * Look up the internal invoice UUID by external_id and company_id.
  */
 async function resolveInvoiceId(
-  tenantId: string,
+  companyId: string,
   externalId: string,
 ): Promise<string | null> {
   const db = getServiceClient()
   const { data } = await db
     .from('invoices')
     .select('id')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('external_id', externalId)
     .single()
 
@@ -107,7 +107,7 @@ async function resolveInvoiceId(
  */
 async function syncPayments(
   accessToken: string,
-  tenantId: string,
+  companyId: string,
   invoices: BexioInvoice[],
 ): Promise<{ written: number; errors: SyncError[] }> {
   let totalWritten = 0
@@ -122,20 +122,20 @@ async function syncPayments(
         continue
       }
 
-      const internalInvoiceId = await resolveInvoiceId(tenantId, String(invoice.id))
+      const internalInvoiceId = await resolveInvoiceId(companyId, String(invoice.id))
       if (!internalInvoiceId) {
         await sleep(RATE_LIMIT_DELAY_MS)
         continue
       }
 
       const normalised = payments.map((p) =>
-        normalisePayment(tenantId, internalInvoiceId, p),
+        normalisePayment(companyId, internalInvoiceId, p),
       )
 
       const result = await upsertRecords(
         'payments',
         normalised as unknown as Record<string, unknown>[],
-        ['tenant_id', 'reference'],
+        ['company_id', 'reference'],
       )
 
       totalWritten += result.written
@@ -168,7 +168,7 @@ export const bexioConnector: ConnectorBase = {
     await getBexioAccessToken(connector)
   },
 
-  async sync(tenantId: string, connector: ConnectorConfig): Promise<SyncResult> {
+  async sync(companyId: string, connector: ConnectorConfig): Promise<SyncResult> {
     const startTime = Date.now()
     const errors: SyncError[] = []
     let recordsFetched = 0
@@ -187,19 +187,19 @@ export const bexioConnector: ConnectorBase = {
       recordsFetched += invoices.length
 
       if (invoices.length > 0) {
-        const normalised = invoices.map((inv) => normaliseInvoice(tenantId, inv))
+        const normalised = invoices.map((inv) => normaliseInvoice(companyId, inv))
 
         const invoiceResult = await upsertRecords(
           'invoices',
           normalised as unknown as Record<string, unknown>[],
-          ['tenant_id', 'external_id'],
+          ['company_id', 'external_id'],
         )
 
         recordsWritten += invoiceResult.written
         errors.push(...invoiceResult.errors)
 
         // 2. Sync payments for recently updated invoices
-        const paymentResult = await syncPayments(accessToken, tenantId, invoices)
+        const paymentResult = await syncPayments(accessToken, companyId, invoices)
         recordsWritten += paymentResult.written
         errors.push(...paymentResult.errors)
       }

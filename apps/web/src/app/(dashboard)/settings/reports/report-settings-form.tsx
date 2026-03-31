@@ -2,11 +2,11 @@
 
 import { useCallback, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import type { TenantSettingsRow } from '@enura/types'
+import type { CompanySettingsRow } from '@enura/types'
 import { saveReportSettingsAction, triggerManualReportAction } from './actions'
 
 type Props = {
-  settings: TenantSettingsRow | null
+  settings: CompanySettingsRow | null
 }
 
 const TIMEZONE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [

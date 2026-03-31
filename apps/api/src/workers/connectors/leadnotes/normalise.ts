@@ -42,11 +42,11 @@ function buildNotes(lead: LeadnotesLead): string | null {
  * Transform a raw Leadnotes lead into the shape expected by the leads table.
  */
 export function normaliseLead(
-  tenantId: string,
+  companyId: string,
   lead: LeadnotesLead,
 ): LeadInsert {
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: lead.id,
     first_name: lead.first_name,
     last_name: lead.last_name,

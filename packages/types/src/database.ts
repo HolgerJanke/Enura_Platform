@@ -65,11 +65,12 @@ export type SyncStatus = 'running' | 'success' | 'error';
 export type CashflowType = 'income' | 'expense';
 
 // =============================================================================
-// TABLE: tenants
+// TABLE: companies (was tenants)
 // =============================================================================
 
-export interface TenantRow {
+export interface CompanyRow {
   id: string;
+  holding_id: string;
   slug: string;
   name: string;
   status: TenantStatus;
@@ -78,33 +79,146 @@ export interface TenantRow {
   updated_at: string;
 }
 
-export interface TenantInsert {
+export interface CompanyInsert {
   id?: string;
+  holding_id: string;
   slug: string;
   name: string;
   status?: TenantStatus;
   created_by?: string | null;
-  created_at?: string;
-  updated_at?: string;
 }
 
-export interface TenantUpdate {
-  id?: string;
+export interface CompanyUpdate {
   slug?: string;
   name?: string;
   status?: TenantStatus;
+  holding_id?: string;
+}
+
+/** @deprecated Use CompanyRow */
+export type TenantRow = CompanyRow;
+
+// =============================================================================
+// TABLE: holdings
+// =============================================================================
+
+export interface HoldingRow {
+  id: string;
+  name: string;
+  slug: string;
+  status: 'active' | 'suspended' | 'archived';
+  branding: Record<string, unknown>;
+  primary_domain: string | null;
+  permission_matrix: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HoldingInsert {
+  id?: string;
+  name: string;
+  slug: string;
+  status?: 'active' | 'suspended' | 'archived';
+  branding?: Record<string, unknown>;
+  primary_domain?: string | null;
+  permission_matrix?: Record<string, unknown>;
   created_by?: string | null;
-  created_at?: string;
-  updated_at?: string;
+}
+
+export interface HoldingUpdate {
+  name?: string;
+  slug?: string;
+  status?: 'active' | 'suspended' | 'archived';
+  branding?: Record<string, unknown>;
+  primary_domain?: string | null;
+  permission_matrix?: Record<string, unknown>;
+}
+
+// =============================================================================
+// TABLE: domain_mappings
+// =============================================================================
+
+export interface DomainMappingRow {
+  id: string;
+  domain: string;
+  holding_id: string;
+  company_id: string | null;
+  ssl_status: 'pending' | 'active' | 'error';
+  created_at: string;
+}
+
+export interface DomainMappingInsert {
+  domain: string;
+  holding_id: string;
+  company_id?: string | null;
+  ssl_status?: 'pending' | 'active' | 'error';
+}
+
+export interface DomainMappingUpdate {
+  domain?: string;
+  company_id?: string | null;
+  ssl_status?: 'pending' | 'active' | 'error';
+}
+
+// =============================================================================
+// TABLE: holding_admins_v2
+// =============================================================================
+
+export interface HoldingAdminV2Row {
+  id: string;
+  holding_id: string;
+  profile_id: string;
+  is_owner: boolean;
+  created_at: string;
+}
+
+export interface HoldingAdminV2Insert {
+  holding_id: string;
+  profile_id: string;
+  is_owner?: boolean;
+}
+
+export interface HoldingAdminV2Update {
+  is_owner?: boolean;
+}
+
+// =============================================================================
+// TABLE: enura_admins
+// =============================================================================
+
+export interface EnuraAdminRow {
+  id: string;
+  profile_id: string;
+  created_at: string;
+}
+
+export interface EnuraAdminInsert {
+  profile_id: string;
+}
+
+export interface EnuraAdminUpdate {}
+
+// =============================================================================
+// TABLE: enura_platform
+// =============================================================================
+
+export interface EnuraPlatformRow {
+  id: string;
+  name: string;
+  default_language: string;
+  default_locale: string;
+  created_at: string;
 }
 
 // =============================================================================
 // TABLE: tenant_brandings
 // =============================================================================
 
-export interface TenantBrandingRow {
+export interface CompanyBrandingRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   primary_color: string;
   secondary_color: string;
   accent_color: string;
@@ -121,9 +235,9 @@ export interface TenantBrandingRow {
   updated_at: string;
 }
 
-export interface TenantBrandingInsert {
+export interface CompanyBrandingInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   primary_color?: string;
   secondary_color?: string;
   accent_color?: string;
@@ -140,9 +254,9 @@ export interface TenantBrandingInsert {
   updated_at?: string;
 }
 
-export interface TenantBrandingUpdate {
+export interface CompanyBrandingUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   primary_color?: string;
   secondary_color?: string;
   accent_color?: string;
@@ -165,7 +279,8 @@ export interface TenantBrandingUpdate {
 
 export interface ProfileRow {
   id: string;
-  tenant_id: string | null;
+  company_id: string | null;
+  holding_id: string | null;
   first_name: string | null;
   last_name: string | null;
   display_name: string;
@@ -184,7 +299,8 @@ export interface ProfileRow {
 
 export interface ProfileInsert {
   id: string;
-  tenant_id?: string | null;
+  company_id?: string | null;
+  holding_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   avatar_url?: string | null;
@@ -202,7 +318,7 @@ export interface ProfileInsert {
 
 export interface ProfileUpdate {
   id?: string;
-  tenant_id?: string | null;
+  company_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   avatar_url?: string | null;
@@ -224,7 +340,8 @@ export interface ProfileUpdate {
 
 export interface RoleRow {
   id: string;
-  tenant_id: string | null;
+  company_id: string | null;
+  holding_id: string | null;
   key: string;
   label: string;
   description: string | null;
@@ -235,7 +352,7 @@ export interface RoleRow {
 
 export interface RoleInsert {
   id?: string;
-  tenant_id?: string | null;
+  company_id?: string | null;
   key: string;
   label: string;
   description?: string | null;
@@ -246,7 +363,7 @@ export interface RoleInsert {
 
 export interface RoleUpdate {
   id?: string;
-  tenant_id?: string | null;
+  company_id?: string | null;
   key?: string;
   label?: string;
   description?: string | null;
@@ -339,7 +456,8 @@ export interface ProfileRoleUpdate {
 
 export interface TeamMemberRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   profile_id: string | null;
   external_id: string | null;
   first_name: string;
@@ -356,7 +474,7 @@ export interface TeamMemberRow {
 
 export interface TeamMemberInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   profile_id?: string | null;
   external_id?: string | null;
   first_name: string;
@@ -372,7 +490,7 @@ export interface TeamMemberInsert {
 
 export interface TeamMemberUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   profile_id?: string | null;
   external_id?: string | null;
   first_name?: string;
@@ -392,7 +510,8 @@ export interface TeamMemberUpdate {
 
 export interface LeadRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -413,7 +532,7 @@ export interface LeadRow {
 
 export interface LeadInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
@@ -434,7 +553,7 @@ export interface LeadInsert {
 
 export interface LeadUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
@@ -459,7 +578,8 @@ export interface LeadUpdate {
 
 export interface OfferRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string | null;
   lead_id: string | null;
   berater_id: string | null;
@@ -476,7 +596,7 @@ export interface OfferRow {
 
 export interface OfferInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id?: string | null;
   lead_id?: string | null;
   berater_id?: string | null;
@@ -493,7 +613,7 @@ export interface OfferInsert {
 
 export interface OfferUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string | null;
   lead_id?: string | null;
   berater_id?: string | null;
@@ -514,7 +634,8 @@ export interface OfferUpdate {
 
 export interface CallRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string | null;
   team_member_id: string | null;
   direction: CallDirection;
@@ -530,7 +651,7 @@ export interface CallRow {
 
 export interface CallInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id?: string | null;
   team_member_id?: string | null;
   direction: CallDirection;
@@ -546,7 +667,7 @@ export interface CallInsert {
 
 export interface CallUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string | null;
   team_member_id?: string | null;
   direction?: CallDirection;
@@ -566,7 +687,8 @@ export interface CallUpdate {
 
 export interface CallAnalysisRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   call_id: string;
   call_started_at: string;
   transcript: string | null;
@@ -584,7 +706,7 @@ export interface CallAnalysisRow {
 
 export interface CallAnalysisInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   call_id: string;
   call_started_at: string;
   transcript?: string | null;
@@ -602,7 +724,7 @@ export interface CallAnalysisInsert {
 
 export interface CallAnalysisUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   call_id?: string;
   call_started_at?: string;
   transcript?: string | null;
@@ -624,7 +746,8 @@ export interface CallAnalysisUpdate {
 
 export interface InvoiceRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string | null;
   offer_id: string | null;
   invoice_number: string;
@@ -642,7 +765,7 @@ export interface InvoiceRow {
 
 export interface InvoiceInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id?: string | null;
   offer_id?: string | null;
   invoice_number: string;
@@ -660,7 +783,7 @@ export interface InvoiceInsert {
 
 export interface InvoiceUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string | null;
   offer_id?: string | null;
   invoice_number?: string;
@@ -682,7 +805,8 @@ export interface InvoiceUpdate {
 
 export interface PaymentRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   invoice_id: string;
   amount_chf: string;
   received_at: string;
@@ -694,7 +818,7 @@ export interface PaymentRow {
 
 export interface PaymentInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   invoice_id: string;
   amount_chf: string;
   received_at: string;
@@ -706,7 +830,7 @@ export interface PaymentInsert {
 
 export interface PaymentUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   invoice_id?: string;
   amount_chf?: string;
   received_at?: string;
@@ -722,7 +846,8 @@ export interface PaymentUpdate {
 
 export interface OfferNoteRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   offer_id: string;
   author_id: string | null;
   content: string;
@@ -731,7 +856,7 @@ export interface OfferNoteRow {
 
 export interface OfferNoteInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   offer_id: string;
   author_id?: string | null;
   content: string;
@@ -749,7 +874,8 @@ export interface OfferNoteUpdate {
 
 export interface CallScriptRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   name: string;
   content: string;
   is_active: boolean;
@@ -760,7 +886,7 @@ export interface CallScriptRow {
 
 export interface CallScriptInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   name: string;
   content: string;
   is_active?: boolean;
@@ -783,7 +909,8 @@ export interface CallScriptUpdate {
 
 export interface CashflowUploadRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   filename: string;
   uploaded_by: string | null;
   row_count: number;
@@ -794,7 +921,7 @@ export interface CashflowUploadRow {
 
 export interface CashflowUploadInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   filename: string;
   uploaded_by?: string | null;
   row_count?: number;
@@ -817,7 +944,8 @@ export interface CashflowUploadUpdate {
 export interface ProjectPhaseHistoryRow {
   id: string;
   project_id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   from_phase: number | null;
   to_phase: number;
   changed_by: string | null;
@@ -828,7 +956,7 @@ export interface ProjectPhaseHistoryRow {
 export interface ProjectPhaseHistoryInsert {
   id?: string;
   project_id: string;
-  tenant_id: string;
+  company_id: string;
   from_phase?: number | null;
   to_phase: number;
   changed_by?: string | null;
@@ -847,7 +975,8 @@ export interface ProjectPhaseHistoryUpdate {
 
 export interface PhaseDefinitionRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   phase_number: number;
   name: string;
   description: string | null;
@@ -858,7 +987,7 @@ export interface PhaseDefinitionRow {
 
 export interface PhaseDefinitionInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   phase_number: number;
   name: string;
   description?: string | null;
@@ -869,7 +998,7 @@ export interface PhaseDefinitionInsert {
 
 export interface PhaseDefinitionUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   phase_number?: number;
   name?: string;
   description?: string | null;
@@ -884,7 +1013,8 @@ export interface PhaseDefinitionUpdate {
 
 export interface ProjectRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string | null;
   lead_id: string | null;
   offer_id: string | null;
@@ -906,7 +1036,7 @@ export interface ProjectRow {
 
 export interface ProjectInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id?: string | null;
   lead_id?: string | null;
   offer_id?: string | null;
@@ -928,7 +1058,7 @@ export interface ProjectInsert {
 
 export interface ProjectUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string | null;
   lead_id?: string | null;
   offer_id?: string | null;
@@ -954,7 +1084,8 @@ export interface ProjectUpdate {
 
 export interface ConnectorRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   type: ConnectorType;
   name: string;
   credentials: Record<string, unknown>;
@@ -969,7 +1100,7 @@ export interface ConnectorRow {
 
 export interface ConnectorInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   type: ConnectorType;
   name: string;
   credentials?: Record<string, unknown>;
@@ -984,7 +1115,7 @@ export interface ConnectorInsert {
 
 export interface ConnectorUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   type?: ConnectorType;
   name?: string;
   credentials?: Record<string, unknown>;
@@ -1004,7 +1135,8 @@ export interface ConnectorUpdate {
 export interface ConnectorSyncLogRow {
   id: string;
   connector_id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   status: SyncStatus;
   records_synced: number;
   error_message: string | null;
@@ -1016,7 +1148,7 @@ export interface ConnectorSyncLogRow {
 export interface ConnectorSyncLogInsert {
   id?: string;
   connector_id: string;
-  tenant_id: string;
+  company_id: string;
   status: SyncStatus;
   records_synced?: number;
   error_message?: string | null;
@@ -1028,7 +1160,7 @@ export interface ConnectorSyncLogInsert {
 export interface ConnectorSyncLogUpdate {
   id?: string;
   connector_id?: string;
-  tenant_id?: string;
+  company_id?: string;
   status?: SyncStatus;
   records_synced?: number;
   error_message?: string | null;
@@ -1043,7 +1175,8 @@ export interface ConnectorSyncLogUpdate {
 
 export interface KpiSnapshotRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   snapshot_type: string;
   entity_id: string | null;
   period_date: string;
@@ -1053,7 +1186,7 @@ export interface KpiSnapshotRow {
 
 export interface KpiSnapshotInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   snapshot_type: string;
   entity_id?: string | null;
   period_date: string;
@@ -1063,7 +1196,7 @@ export interface KpiSnapshotInsert {
 
 export interface KpiSnapshotUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   snapshot_type?: string;
   entity_id?: string | null;
   period_date?: string;
@@ -1077,7 +1210,8 @@ export interface KpiSnapshotUpdate {
 
 export interface CashflowEntryRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   entry_date: string;
   type: CashflowType;
   category: string;
@@ -1089,7 +1223,7 @@ export interface CashflowEntryRow {
 
 export interface CashflowEntryInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   entry_date: string;
   type: CashflowType;
   category: string;
@@ -1101,7 +1235,7 @@ export interface CashflowEntryInsert {
 
 export interface CashflowEntryUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   entry_date?: string;
   type?: CashflowType;
   category?: string;
@@ -1117,7 +1251,8 @@ export interface CashflowEntryUpdate {
 
 export interface CalendarEventRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string | null;
   team_member_id: string | null;
   title: string;
@@ -1132,7 +1267,7 @@ export interface CalendarEventRow {
 
 export interface CalendarEventInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id?: string | null;
   team_member_id?: string | null;
   title: string;
@@ -1147,7 +1282,7 @@ export interface CalendarEventInsert {
 
 export interface CalendarEventUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string | null;
   team_member_id?: string | null;
   title?: string;
@@ -1166,7 +1301,7 @@ export interface CalendarEventUpdate {
 
 export interface AuditLogRow {
   id: string;
-  tenant_id: string | null;
+  company_id: string | null;
   actor_id: string | null;
   action: string;
   table_name: string | null;
@@ -1179,7 +1314,7 @@ export interface AuditLogRow {
 
 export interface AuditLogInsert {
   id?: string;
-  tenant_id?: string | null;
+  company_id?: string | null;
   actor_id?: string | null;
   action: string;
   table_name?: string | null;
@@ -1192,7 +1327,7 @@ export interface AuditLogInsert {
 
 export interface AuditLogUpdate {
   id?: string;
-  tenant_id?: string | null;
+  company_id?: string | null;
   actor_id?: string | null;
   action?: string;
   table_name?: string | null;
@@ -1231,7 +1366,8 @@ export interface HoldingAdminUpdate {
 
 export interface DailyReportRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   report_date: string;
   report_json: Record<string, unknown>;
   kpi_data: Record<string, unknown>;
@@ -1241,7 +1377,7 @@ export interface DailyReportRow {
 
 export interface DailyReportInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   report_date: string;
   report_json: Record<string, unknown>;
   kpi_data: Record<string, unknown>;
@@ -1251,7 +1387,7 @@ export interface DailyReportInsert {
 
 export interface DailyReportUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   report_date?: string;
   report_json?: Record<string, unknown>;
   kpi_data?: Record<string, unknown>;
@@ -1263,36 +1399,43 @@ export interface DailyReportUpdate {
 // TABLE: tenant_settings
 // =============================================================================
 
-export interface TenantSettingsRow {
-  tenant_id: string;
+export interface CompanySettingsRow {
+  company_id: string;
+  holding_id: string;
   report_send_time: string;
   report_timezone: string;
   report_recipients_all: boolean;
   stalled_project_days: number;
   unworked_lead_hours: number;
   max_whisper_usd_monthly: string;
+  min_liquidity_threshold: string;
+  opening_balance: string;
   updated_at: string;
 }
 
-export interface TenantSettingsInsert {
-  tenant_id: string;
+export interface CompanySettingsInsert {
+  company_id: string;
   report_send_time?: string;
   report_timezone?: string;
   report_recipients_all?: boolean;
   stalled_project_days?: number;
   unworked_lead_hours?: number;
   max_whisper_usd_monthly?: string;
+  min_liquidity_threshold?: string;
+  opening_balance?: string;
   updated_at?: string;
 }
 
-export interface TenantSettingsUpdate {
-  tenant_id?: string;
+export interface CompanySettingsUpdate {
+  company_id?: string;
   report_send_time?: string;
   report_timezone?: string;
   report_recipients_all?: boolean;
   stalled_project_days?: number;
   unworked_lead_hours?: number;
   max_whisper_usd_monthly?: string;
+  min_liquidity_threshold?: string;
+  opening_balance?: string;
   updated_at?: string;
 }
 
@@ -1302,7 +1445,8 @@ export interface TenantSettingsUpdate {
 
 export interface TranscriptionUsageRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   month: string;
   total_minutes: string;
   estimated_usd: string;
@@ -1311,7 +1455,7 @@ export interface TranscriptionUsageRow {
 
 export interface TranscriptionUsageInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   month: string;
   total_minutes?: string;
   estimated_usd?: string;
@@ -1320,7 +1464,7 @@ export interface TranscriptionUsageInsert {
 
 export interface TranscriptionUsageUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   month?: string;
   total_minutes?: string;
   estimated_usd?: string;
@@ -1333,7 +1477,8 @@ export interface TranscriptionUsageUpdate {
 
 export interface AnomalyRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   type: string;
   severity: string;
   entity_id: string | null;
@@ -1351,7 +1496,7 @@ export interface AnomalyRow {
 
 export interface AnomalyInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   type: string;
   severity: string;
   entity_id?: string | null;
@@ -1369,7 +1514,7 @@ export interface AnomalyInsert {
 
 export interface AnomalyUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   type?: string;
   severity?: string;
   entity_id?: string | null;
@@ -1393,7 +1538,8 @@ export type WhatsAppMessageDirection = 'inbound' | 'outbound';
 
 export interface WhatsAppMessageRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   external_id: string;
   wa_id: string;
   direction: WhatsAppMessageDirection;
@@ -1407,7 +1553,7 @@ export interface WhatsAppMessageRow {
 
 export interface WhatsAppMessageInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   external_id: string;
   wa_id: string;
   direction: WhatsAppMessageDirection;
@@ -1421,7 +1567,7 @@ export interface WhatsAppMessageInsert {
 
 export interface WhatsAppMessageUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   external_id?: string;
   wa_id?: string;
   direction?: WhatsAppMessageDirection;
@@ -1439,7 +1585,8 @@ export interface WhatsAppMessageUpdate {
 
 export interface EmailActivityRow {
   id: string;
-  tenant_id: string;
+  company_id: string;
+  holding_id: string;
   team_member_id: string;
   activity_date: string;
   emails_sent: number;
@@ -1449,7 +1596,7 @@ export interface EmailActivityRow {
 
 export interface EmailActivityInsert {
   id?: string;
-  tenant_id: string;
+  company_id: string;
   team_member_id: string;
   activity_date: string;
   emails_sent?: number;
@@ -1459,12 +1606,1277 @@ export interface EmailActivityInsert {
 
 export interface EmailActivityUpdate {
   id?: string;
-  tenant_id?: string;
+  company_id?: string;
   team_member_id?: string;
   activity_date?: string;
   emails_sent?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+// =============================================================================
+// TABLE: holding_secrets
+// =============================================================================
+
+export interface HoldingSecretRow {
+  id: string;
+  holding_id: string;
+  name: string;
+  secret_type: 'api_key' | 'bearer_token' | 'refresh_token' | 'webhook_secret' | 'service_account' | 'sftp' | 'encryption_key';
+  scope: string;
+  vault_id: string | null;
+  description: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  last_rotated_at: string | null;
+  rotation_interval_days: number | null;
+  next_rotation_due: string | null;
+}
+
+export interface HoldingSecretInsert {
+  holding_id: string;
+  name: string;
+  secret_type: 'api_key' | 'bearer_token' | 'refresh_token' | 'webhook_secret' | 'service_account' | 'sftp' | 'encryption_key';
+  scope?: string;
+  vault_id?: string | null;
+  description?: string | null;
+  is_active?: boolean;
+  created_by?: string | null;
+  rotation_interval_days?: number | null;
+}
+
+export interface HoldingSecretUpdate {
+  name?: string;
+  description?: string | null;
+  is_active?: boolean;
+  vault_id?: string | null;
+  last_rotated_at?: string | null;
+  rotation_interval_days?: number | null;
+}
+
+// =============================================================================
+// TABLE: tool_registry
+// =============================================================================
+
+export interface ToolRegistryRow {
+  id: string;
+  holding_id: string;
+  name: string;
+  slug: string;
+  category: 'crm' | 'telephony' | 'accounting' | 'calendar' | 'lead_aggregation' | 'messaging' | 'storage' | 'custom';
+  base_url: string | null;
+  auth_type: 'api_key' | 'oauth2' | 'basic' | 'none' | null;
+  secret_ref: string | null;
+  default_headers: Record<string, unknown>;
+  interface_templates: Record<string, unknown>[];
+  is_active: boolean;
+  icon_url: string | null;
+  docs_url: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ToolRegistryInsert {
+  holding_id: string;
+  name: string;
+  slug: string;
+  category: 'crm' | 'telephony' | 'accounting' | 'calendar' | 'lead_aggregation' | 'messaging' | 'storage' | 'custom';
+  base_url?: string | null;
+  auth_type?: 'api_key' | 'oauth2' | 'basic' | 'none' | null;
+  secret_ref?: string | null;
+  default_headers?: Record<string, unknown>;
+  interface_templates?: Record<string, unknown>[];
+  is_active?: boolean;
+  icon_url?: string | null;
+  docs_url?: string | null;
+  created_by?: string | null;
+}
+
+export interface ToolRegistryUpdate {
+  name?: string;
+  slug?: string;
+  category?: string;
+  base_url?: string | null;
+  auth_type?: string | null;
+  secret_ref?: string | null;
+  is_active?: boolean;
+  icon_url?: string | null;
+  docs_url?: string | null;
+}
+
+// =============================================================================
+// TABLE: process_definitions
+// =============================================================================
+
+export interface ProcessDefinitionRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  template_id: string | null;
+  name: string;
+  description: string | null;
+  category: 'verkauf' | 'planung' | 'abwicklung' | 'betrieb' | 'sonstige';
+  menu_label: string;
+  menu_icon: string;
+  menu_sort_order: number;
+  visible_roles: string[];
+  status: 'draft' | 'finalised' | 'pending_approval' | 'deployed' | 'archived';
+  version: string;
+  deployed_at: string | null;
+  deployed_version: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessDefinitionInsert {
+  holding_id: string;
+  company_id?: string | null;
+  template_id?: string | null;
+  name: string;
+  description?: string | null;
+  category?: 'verkauf' | 'planung' | 'abwicklung' | 'betrieb' | 'sonstige';
+  menu_label: string;
+  menu_icon?: string;
+  menu_sort_order?: number;
+  visible_roles?: string[];
+  status?: string;
+  version?: string;
+  created_by?: string | null;
+}
+
+export interface ProcessDefinitionUpdate {
+  name?: string;
+  description?: string | null;
+  category?: string;
+  menu_label?: string;
+  menu_icon?: string;
+  menu_sort_order?: number;
+  visible_roles?: string[];
+  status?: string;
+  version?: string;
+  deployed_at?: string | null;
+  deployed_version?: string | null;
+}
+
+// =============================================================================
+// TABLE: process_steps
+// =============================================================================
+
+export interface ProcessStepRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  process_step_id: string;
+  name: string;
+  main_process: 'vertrieb' | 'planung' | 'abwicklung' | 'service' | null;
+  description: string;
+  responsible_roles: string[];
+  expected_output: string | null;
+  typical_hours: number | null;
+  warning_days: number | null;
+  show_in_flowchart: boolean;
+  liquidity_marker: 'trigger' | 'event' | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessStepInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  process_step_id: string;
+  name: string;
+  main_process?: string | null;
+  description?: string;
+  responsible_roles?: string[];
+  expected_output?: string | null;
+  typical_hours?: number | null;
+  warning_days?: number | null;
+  show_in_flowchart?: boolean;
+  liquidity_marker?: string | null;
+  sort_order?: number;
+}
+
+export interface ProcessStepUpdate {
+  name?: string;
+  main_process?: string | null;
+  description?: string;
+  responsible_roles?: string[];
+  expected_output?: string | null;
+  typical_hours?: number | null;
+  warning_days?: number | null;
+  show_in_flowchart?: boolean;
+  liquidity_marker?: string | null;
+  sort_order?: number;
+}
+
+// =============================================================================
+// TABLE: process_step_sources
+// =============================================================================
+
+export interface ProcessStepSourceRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  step_id: string;
+  label: string;
+  source_type: 'rest_api' | 'webhook' | 'file' | 'supabase' | 'google' | 'manual' | 'other';
+  tool_name: string | null;
+  endpoint: string | null;
+  description: string | null;
+  sort_order: number;
+}
+
+export interface ProcessStepSourceInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  step_id: string;
+  label: string;
+  source_type: string;
+  tool_name?: string | null;
+  endpoint?: string | null;
+  description?: string | null;
+  sort_order?: number;
+}
+
+export interface ProcessStepSourceUpdate {
+  label?: string;
+  source_type?: string;
+  tool_name?: string | null;
+  endpoint?: string | null;
+  description?: string | null;
+  sort_order?: number;
+}
+
+// =============================================================================
+// TABLE: process_step_interfaces
+// =============================================================================
+
+export interface ProcessStepInterfaceRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  step_id: string;
+  label: string;
+  interface_type: 'rest_pull' | 'rest_push' | 'webhook_in' | 'webhook_out' | 'file_in' | 'file_out' | 'internal';
+  protocol: 'https' | 'sftp' | 's3' | 'internal';
+  tool_registry_id: string | null;
+  endpoint: string | null;
+  http_method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | null;
+  request_schema: Record<string, unknown> | null;
+  response_schema: Record<string, unknown> | null;
+  field_mapping: Record<string, unknown>[];
+  secret_ref: string | null;
+  sync_interval_min: number;
+  trigger_condition: string | null;
+  retry_policy: 'none' | 'exponential_3x' | 'alert_manual';
+  timeout_sec: number;
+  sort_order: number;
+}
+
+export interface ProcessStepInterfaceInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  step_id: string;
+  label: string;
+  interface_type: string;
+  protocol?: string;
+  tool_registry_id?: string | null;
+  endpoint?: string | null;
+  http_method?: string | null;
+  request_schema?: Record<string, unknown> | null;
+  response_schema?: Record<string, unknown> | null;
+  field_mapping?: Record<string, unknown>[];
+  secret_ref?: string | null;
+  sync_interval_min?: number;
+  trigger_condition?: string | null;
+  retry_policy?: string;
+  timeout_sec?: number;
+  sort_order?: number;
+}
+
+export interface ProcessStepInterfaceUpdate {
+  label?: string;
+  interface_type?: string;
+  endpoint?: string | null;
+  http_method?: string | null;
+  request_schema?: Record<string, unknown> | null;
+  response_schema?: Record<string, unknown> | null;
+  field_mapping?: Record<string, unknown>[];
+  secret_ref?: string | null;
+  sync_interval_min?: number;
+  trigger_condition?: string | null;
+  retry_policy?: string;
+  timeout_sec?: number;
+  sort_order?: number;
+}
+
+// =============================================================================
+// TABLE: process_step_liquidity
+// =============================================================================
+
+export interface ProcessStepLiquidityRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  step_id: string;
+  marker_type: 'trigger' | 'event';
+  trigger_step_id: string | null;
+  event_step_id: string | null;
+  direction: 'income' | 'expense';
+  plan_currency: string;
+  plan_amount: string | null;
+  amount_type: 'fixed' | 'percentage';
+  actual_currency: string | null;
+  fx_rate: string | null;
+  fx_rate_date: string | null;
+  plan_delay_days: number | null;
+  plan_date: string | null;
+  actual_date: string | null;
+  actual_amount: string | null;
+  source_tool: string | null;
+}
+
+export interface ProcessStepLiquidityInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  step_id: string;
+  marker_type: 'trigger' | 'event';
+  direction: 'income' | 'expense';
+  plan_currency?: string;
+  plan_amount?: string | null;
+  amount_type?: 'fixed' | 'percentage';
+  trigger_step_id?: string | null;
+  event_step_id?: string | null;
+  plan_delay_days?: number | null;
+  source_tool?: string | null;
+}
+
+export interface ProcessStepLiquidityUpdate {
+  marker_type?: 'trigger' | 'event';
+  direction?: 'income' | 'expense';
+  plan_currency?: string;
+  plan_amount?: string | null;
+  amount_type?: string;
+  plan_delay_days?: number | null;
+  actual_date?: string | null;
+  actual_amount?: string | null;
+  source_tool?: string | null;
+}
+
+// =============================================================================
+// TABLE: process_versions
+// =============================================================================
+
+export interface ProcessVersionRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  version: string;
+  snapshot: Record<string, unknown>;
+  change_summary: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ProcessVersionInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  version: string;
+  snapshot: Record<string, unknown>;
+  change_summary?: string | null;
+  created_by?: string | null;
+}
+
+export interface ProcessVersionUpdate {}
+
+// =============================================================================
+// TABLE: process_deployments
+// =============================================================================
+
+export interface ProcessDeploymentRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  process_id: string;
+  version: string;
+  status: 'pending_approval' | 'approved' | 'rejected' | 'deployed' | 'rolled_back';
+  requested_by: string;
+  requested_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
+  deployed_at: string | null;
+  reason: string | null;
+  rollback_of: string | null;
+}
+
+export interface ProcessDeploymentInsert {
+  holding_id: string;
+  company_id: string;
+  process_id: string;
+  version: string;
+  status?: string;
+  requested_by: string;
+  reason?: string | null;
+  rollback_of?: string | null;
+}
+
+export interface ProcessDeploymentUpdate {
+  status?: string;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  review_notes?: string | null;
+  deployed_at?: string | null;
+}
+
+// =============================================================================
+// TABLE: process_templates
+// =============================================================================
+
+export interface ProcessTemplateRow {
+  id: string;
+  name: string;
+  description: string | null;
+  category: 'verkauf' | 'planung' | 'abwicklung' | 'betrieb' | 'sonstige';
+  steps: Record<string, unknown>[];
+  version: string;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessTemplateInsert {
+  name: string;
+  description?: string | null;
+  category: string;
+  steps?: Record<string, unknown>[];
+  version?: string;
+  is_active?: boolean;
+  created_by?: string | null;
+}
+
+export interface ProcessTemplateUpdate {
+  name?: string;
+  description?: string | null;
+  category?: string;
+  steps?: Record<string, unknown>[];
+  version?: string;
+  is_active?: boolean;
+}
+
+// =============================================================================
+// TABLE: company_currency_settings
+// =============================================================================
+
+export interface CompanyCurrencySettingsRow {
+  company_id: string;
+  holding_id: string;
+  base_currency: string;
+  enabled_currencies: string[];
+  eur_chf_rate: string;
+  rate_updated_at: string | null;
+  fx_source: string;
+  updated_at: string;
+}
+
+export interface CompanyCurrencySettingsInsert {
+  company_id: string;
+  holding_id: string;
+  base_currency?: string;
+  enabled_currencies?: string[];
+  eur_chf_rate?: string;
+  fx_source?: string;
+}
+
+export interface CompanyCurrencySettingsUpdate {
+  base_currency?: string;
+  enabled_currencies?: string[];
+  eur_chf_rate?: string;
+  rate_updated_at?: string | null;
+  fx_source?: string;
+}
+
+// =============================================================================
+// TABLE: compliance_rules
+// =============================================================================
+
+export type ComplianceRuleTriggerEvent =
+  | 'connector_created'
+  | 'company_created'
+  | 'holding_created'
+  | 'document_uploaded'
+  | 'secret_rotated'
+  | 'manual'
+  | 'scheduled';
+
+export type ComplianceSeverity = 'critical' | 'warning' | 'info';
+
+export interface ComplianceRuleRow {
+  id: string;
+  rule_code: string;
+  title: string;
+  description: string;
+  trigger_event: ComplianceRuleTriggerEvent;
+  trigger_filter: Record<string, unknown>;
+  requirement: string;
+  deadline_days: number;
+  severity: ComplianceSeverity;
+  legal_basis: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ComplianceRuleInsert {
+  id?: string;
+  rule_code: string;
+  title: string;
+  description?: string;
+  trigger_event: ComplianceRuleTriggerEvent;
+  trigger_filter?: Record<string, unknown>;
+  requirement?: string;
+  deadline_days?: number;
+  severity: ComplianceSeverity;
+  legal_basis?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+export interface ComplianceRuleUpdate {
+  rule_code?: string;
+  title?: string;
+  description?: string;
+  trigger_event?: ComplianceRuleTriggerEvent;
+  trigger_filter?: Record<string, unknown>;
+  requirement?: string;
+  deadline_days?: number;
+  severity?: ComplianceSeverity;
+  legal_basis?: string | null;
+  is_active?: boolean;
+}
+
+// =============================================================================
+// TABLE: compliance_checks
+// =============================================================================
+
+export type ComplianceCheckStatus = 'open' | 'fulfilled' | 'overdue' | 'waived';
+
+export interface ComplianceCheckRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  rule_id: string;
+  rule_code: string;
+  status: ComplianceCheckStatus;
+  triggered_by: string;
+  triggered_at: string;
+  due_at: string;
+  fulfilled_at: string | null;
+  fulfilled_by: string | null;
+  waived_by: string | null;
+  waive_reason: string | null;
+  waive_expires_at: string | null;
+  notes: string | null;
+  notified_at: string | null;
+}
+
+export interface ComplianceCheckInsert {
+  id?: string;
+  holding_id: string;
+  company_id?: string | null;
+  rule_id: string;
+  rule_code: string;
+  status?: ComplianceCheckStatus;
+  triggered_by?: string;
+  triggered_at?: string;
+  due_at: string;
+  fulfilled_at?: string | null;
+  fulfilled_by?: string | null;
+  waived_by?: string | null;
+  waive_reason?: string | null;
+  waive_expires_at?: string | null;
+  notes?: string | null;
+  notified_at?: string | null;
+}
+
+export interface ComplianceCheckUpdate {
+  status?: ComplianceCheckStatus;
+  fulfilled_at?: string | null;
+  fulfilled_by?: string | null;
+  waived_by?: string | null;
+  waive_reason?: string | null;
+  waive_expires_at?: string | null;
+  notes?: string | null;
+  notified_at?: string | null;
+}
+
+// =============================================================================
+// TABLE: compliance_documents
+// =============================================================================
+
+export type ComplianceDocumentType =
+  | 'avv'
+  | 'dpa'
+  | 'dsfa'
+  | 'tom'
+  | 'certificate'
+  | 'audit_report'
+  | 'vvt'
+  | 'consent_form'
+  | 'other';
+
+export interface ComplianceDocumentRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  check_id: string | null;
+  document_type: ComplianceDocumentType;
+  title: string;
+  storage_path: string;
+  file_size: number;
+  mime_type: string;
+  valid_from: string | null;
+  expires_at: string | null;
+  uploaded_by: string;
+  uploaded_at: string;
+}
+
+export interface ComplianceDocumentInsert {
+  id?: string;
+  holding_id: string;
+  company_id?: string | null;
+  check_id?: string | null;
+  document_type: ComplianceDocumentType;
+  title: string;
+  storage_path: string;
+  file_size?: number;
+  mime_type?: string;
+  valid_from?: string | null;
+  expires_at?: string | null;
+  uploaded_by: string;
+  uploaded_at?: string;
+}
+
+export interface ComplianceDocumentUpdate {
+  document_type?: ComplianceDocumentType;
+  title?: string;
+  storage_path?: string;
+  file_size?: number;
+  mime_type?: string;
+  valid_from?: string | null;
+  expires_at?: string | null;
+  check_id?: string | null;
+}
+
+// =============================================================================
+// TABLE: certifications
+// =============================================================================
+
+export type CertificationLevel = 'platform' | 'holding' | 'company';
+export type CertificationStatus = 'planned' | 'in_progress' | 'certified' | 'expired';
+
+export interface CertificationRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  level: CertificationLevel;
+  certification: string;
+  status: CertificationStatus;
+  certified_at: string | null;
+  expires_at: string | null;
+  document_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CertificationInsert {
+  id?: string;
+  holding_id: string;
+  company_id?: string | null;
+  level: CertificationLevel;
+  certification: string;
+  status?: CertificationStatus;
+  certified_at?: string | null;
+  expires_at?: string | null;
+  document_id?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CertificationUpdate {
+  level?: CertificationLevel;
+  certification?: string;
+  status?: CertificationStatus;
+  certified_at?: string | null;
+  expires_at?: string | null;
+  document_id?: string | null;
+  notes?: string | null;
+  updated_at?: string;
+}
+
+// =============================================================================
+// TABLE: project_process_instances
+// =============================================================================
+
+export type ProjectProcessInstanceStatus = 'active' | 'completed' | 'cancelled';
+
+export interface ProjectProcessInstanceRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  project_id: string;
+  process_id: string;
+  process_version: string;
+  started_at: string;
+  completed_at: string | null;
+  status: ProjectProcessInstanceStatus;
+}
+
+export interface ProjectProcessInstanceInsert {
+  id?: string;
+  holding_id: string;
+  company_id: string;
+  project_id: string;
+  process_id: string;
+  process_version: string;
+  started_at?: string;
+  completed_at?: string | null;
+  status?: ProjectProcessInstanceStatus;
+}
+
+export interface ProjectProcessInstanceUpdate {
+  process_version?: string;
+  completed_at?: string | null;
+  status?: ProjectProcessInstanceStatus;
+}
+
+// =============================================================================
+// TABLE: liquidity_event_instances
+// =============================================================================
+
+export type LiquidityMarkerType = 'trigger' | 'event';
+export type LiquidityDirection = 'income' | 'expense';
+export type LiquidityAmountType = 'fixed' | 'percentage';
+export type LiquidityActualSource = 'bexio' | 'bank_upload' | 'manual' | 'connector';
+
+export interface LiquidityEventInstanceRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  instance_id: string;
+  project_id: string;
+  process_id: string;
+  step_id: string;
+  process_step_id: string;
+  step_name: string;
+  marker_type: LiquidityMarkerType;
+  linked_instance_id: string | null;
+  direction: LiquidityDirection;
+  plan_currency: string;
+  plan_amount: string | null;
+  amount_type: LiquidityAmountType;
+  plan_delay_days: number | null;
+  trigger_activated_at: string | null;
+  plan_date: string | null;
+  actual_date: string | null;
+  actual_currency: string | null;
+  actual_amount: string | null;
+  fx_rate: string | null;
+  fx_rate_date: string | null;
+  actual_source: LiquidityActualSource | null;
+  actual_source_ref: string | null;
+  matched_at: string | null;
+  matched_by: string | null;
+  amount_deviation: string | null;
+  date_deviation_days: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LiquidityEventInstanceInsert {
+  id?: string;
+  holding_id: string;
+  company_id: string;
+  instance_id: string;
+  project_id: string;
+  process_id: string;
+  step_id: string;
+  process_step_id: string;
+  step_name: string;
+  marker_type: LiquidityMarkerType;
+  linked_instance_id?: string | null;
+  direction: LiquidityDirection;
+  plan_currency?: string;
+  plan_amount?: string | null;
+  amount_type?: LiquidityAmountType;
+  plan_delay_days?: number | null;
+  trigger_activated_at?: string | null;
+  plan_date?: string | null;
+  actual_date?: string | null;
+  actual_currency?: string | null;
+  actual_amount?: string | null;
+  fx_rate?: string | null;
+  fx_rate_date?: string | null;
+  actual_source?: LiquidityActualSource | null;
+  actual_source_ref?: string | null;
+  matched_at?: string | null;
+  matched_by?: string | null;
+  amount_deviation?: string | null;
+  date_deviation_days?: number | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LiquidityEventInstanceUpdate {
+  linked_instance_id?: string | null;
+  plan_amount?: string | null;
+  plan_delay_days?: number | null;
+  trigger_activated_at?: string | null;
+  plan_date?: string | null;
+  actual_date?: string | null;
+  actual_currency?: string | null;
+  actual_amount?: string | null;
+  fx_rate?: string | null;
+  fx_rate_date?: string | null;
+  actual_source?: LiquidityActualSource | null;
+  actual_source_ref?: string | null;
+  matched_at?: string | null;
+  matched_by?: string | null;
+  amount_deviation?: string | null;
+  date_deviation_days?: number | null;
+  notes?: string | null;
+}
+
+// =============================================================================
+// TABLE: bank_upload_files
+// =============================================================================
+
+export type BankFileFormat = 'camt053' | 'mt940' | 'csv';
+
+export interface BankUploadFileRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  filename: string;
+  file_format: BankFileFormat;
+  storage_path: string;
+  period_from: string | null;
+  period_to: string | null;
+  transaction_count: number | null;
+  processed_at: string | null;
+  matched_count: number;
+  unmatched_count: number;
+  uploaded_by: string;
+  uploaded_at: string;
+}
+
+export interface BankUploadFileInsert {
+  id?: string;
+  holding_id: string;
+  company_id: string;
+  filename: string;
+  file_format: BankFileFormat;
+  storage_path: string;
+  period_from?: string | null;
+  period_to?: string | null;
+  transaction_count?: number | null;
+  processed_at?: string | null;
+  matched_count?: number;
+  unmatched_count?: number;
+  uploaded_by: string;
+  uploaded_at?: string;
+}
+
+export interface BankUploadFileUpdate {
+  period_from?: string | null;
+  period_to?: string | null;
+  transaction_count?: number | null;
+  processed_at?: string | null;
+  matched_count?: number;
+  unmatched_count?: number;
+}
+
+// =============================================================================
+// TABLE: bank_transactions
+// =============================================================================
+
+export type BankTransactionDirection = 'credit' | 'debit';
+export type BankTransactionStatus = 'unmatched' | 'matched' | 'ignored';
+
+export interface BankTransactionRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  upload_id: string;
+  transaction_date: string;
+  value_date: string | null;
+  amount: string;
+  currency: string;
+  direction: BankTransactionDirection;
+  reference: string | null;
+  counterparty_name: string | null;
+  counterparty_iban: string | null;
+  description: string | null;
+  matched_to: string | null;
+  match_confidence: string | null;
+  status: BankTransactionStatus;
+}
+
+export interface BankTransactionInsert {
+  id?: string;
+  holding_id: string;
+  company_id: string;
+  upload_id: string;
+  transaction_date: string;
+  value_date?: string | null;
+  amount: string;
+  currency?: string;
+  direction: BankTransactionDirection;
+  reference?: string | null;
+  counterparty_name?: string | null;
+  counterparty_iban?: string | null;
+  description?: string | null;
+  matched_to?: string | null;
+  match_confidence?: string | null;
+  status?: BankTransactionStatus;
+}
+
+export interface BankTransactionUpdate {
+  value_date?: string | null;
+  matched_to?: string | null;
+  match_confidence?: string | null;
+  status?: BankTransactionStatus;
+  description?: string | null;
+}
+
+// =============================================================================
+// TABLE: interface_execution_log
+// =============================================================================
+
+export type InterfaceExecutionStatus = 'success' | 'error' | 'timeout' | 'skipped';
+
+export interface InterfaceExecutionLogRow {
+  id: number;
+  holding_id: string | null;
+  company_id: string | null;
+  interface_id: string | null;
+  step_id: string | null;
+  process_id: string | null;
+  executed_at: string;
+  trigger: string;
+  status: InterfaceExecutionStatus;
+  http_status: number | null;
+  duration_ms: number | null;
+  retry_count: number;
+  error_message: string | null;
+  error_context: Record<string, unknown> | null;
+}
+
+export interface InterfaceExecutionLogInsert {
+  id?: number;
+  holding_id?: string | null;
+  company_id?: string | null;
+  interface_id?: string | null;
+  step_id?: string | null;
+  process_id?: string | null;
+  executed_at?: string;
+  trigger: string;
+  status: InterfaceExecutionStatus;
+  http_status?: number | null;
+  duration_ms?: number | null;
+  retry_count?: number;
+  error_message?: string | null;
+  error_context?: Record<string, unknown> | null;
+}
+
+export interface InterfaceExecutionLogUpdate {
+  status?: InterfaceExecutionStatus;
+  http_status?: number | null;
+  duration_ms?: number | null;
+  retry_count?: number;
+  error_message?: string | null;
+  error_context?: Record<string, unknown> | null;
+}
+
+// =============================================================================
+// TABLE: holding_subscriptions
+// =============================================================================
+
+export type SubscriptionPlan = 'starter' | 'professional' | 'scale' | 'enterprise';
+export type BillingCycle = 'monthly' | 'annual';
+
+export interface HoldingSubscriptionRow {
+  id: string;
+  holding_id: string;
+  plan: SubscriptionPlan;
+  company_plan: SubscriptionPlan;
+  billing_cycle: BillingCycle;
+  ai_calls_enabled: boolean;
+  process_builder_enabled: boolean;
+  liquidity_enabled: boolean;
+  max_companies: number;
+  max_users_per_company: number;
+  trial_ends_at: string | null;
+  activated_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HoldingSubscriptionInsert {
+  id?: string;
+  holding_id: string;
+  plan?: SubscriptionPlan;
+  company_plan?: SubscriptionPlan;
+  billing_cycle?: BillingCycle;
+  ai_calls_enabled?: boolean;
+  process_builder_enabled?: boolean;
+  liquidity_enabled?: boolean;
+  max_companies?: number;
+  max_users_per_company?: number;
+  trial_ends_at?: string | null;
+  activated_at?: string | null;
+  notes?: string | null;
+}
+
+export interface HoldingSubscriptionUpdate {
+  plan?: SubscriptionPlan;
+  company_plan?: SubscriptionPlan;
+  billing_cycle?: BillingCycle;
+  ai_calls_enabled?: boolean;
+  process_builder_enabled?: boolean;
+  liquidity_enabled?: boolean;
+  max_companies?: number;
+  max_users_per_company?: number;
+  trial_ends_at?: string | null;
+  activated_at?: string | null;
+  notes?: string | null;
+}
+
+// =============================================================================
+// TABLE: holding_onboarding
+// =============================================================================
+
+export interface HoldingOnboardingRow {
+  id: string;
+  holding_id: string;
+  current_step: number;
+  completed_steps: number[];
+  wizard_data: Record<string, unknown>;
+  is_complete: boolean;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HoldingOnboardingInsert {
+  id?: string;
+  holding_id: string;
+  current_step?: number;
+  completed_steps?: number[];
+  wizard_data?: Record<string, unknown>;
+  is_complete?: boolean;
+  completed_at?: string | null;
+}
+
+export interface HoldingOnboardingUpdate {
+  current_step?: number;
+  completed_steps?: number[];
+  wizard_data?: Record<string, unknown>;
+  is_complete?: boolean;
+  completed_at?: string | null;
+}
+
+// =============================================================================
+// TABLE: user_invitations
+// =============================================================================
+
+export interface UserInvitationRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  email: string;
+  role_name: string;
+  invited_by: string;
+  token: string;
+  expires_at: string;
+  accepted_at: string | null;
+  accepted_by: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface UserInvitationInsert {
+  id?: string;
+  holding_id: string;
+  company_id?: string | null;
+  email: string;
+  role_name: string;
+  invited_by: string;
+  token?: string;
+  expires_at?: string;
+  accepted_at?: string | null;
+  accepted_by?: string | null;
+  revoked_at?: string | null;
+}
+
+export interface UserInvitationUpdate {
+  company_id?: string | null;
+  email?: string;
+  role_name?: string;
+  expires_at?: string;
+  accepted_at?: string | null;
+  accepted_by?: string | null;
+  revoked_at?: string | null;
+}
+
+// =============================================================================
+// TABLE: platform_metrics
+// =============================================================================
+
+export interface PlatformMetricRow {
+  id: number;
+  measured_at: string;
+  total_holdings: number;
+  active_holdings: number;
+  total_companies: number;
+  total_users: number;
+  ai_calls_24h: number;
+  deployments_24h: number;
+}
+
+export interface PlatformMetricInsert {
+  id?: number;
+  measured_at?: string;
+  total_holdings?: number;
+  active_holdings?: number;
+  total_companies?: number;
+  total_users?: number;
+  ai_calls_24h?: number;
+  deployments_24h?: number;
+}
+
+export interface PlatformMetricUpdate {
+  measured_at?: string;
+  total_holdings?: number;
+  active_holdings?: number;
+  total_companies?: number;
+  total_users?: number;
+  ai_calls_24h?: number;
+  deployments_24h?: number;
+}
+
+// =============================================================================
+// TABLE: help_snippets
+// =============================================================================
+
+export type HelpLocale = 'de' | 'en' | 'fr' | 'it';
+
+export interface HelpSnippetRow {
+  id: string;
+  location_key: string;
+  locale: HelpLocale;
+  title: string;
+  content: string;
+  article_slug: string | null;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface HelpSnippetInsert {
+  id?: string;
+  location_key: string;
+  locale: HelpLocale;
+  title: string;
+  content: string;
+  article_slug?: string | null;
+  updated_at?: string;
+  updated_by?: string | null;
+}
+
+export interface HelpSnippetUpdate {
+  location_key?: string;
+  locale?: HelpLocale;
+  title?: string;
+  content?: string;
+  article_slug?: string | null;
+  updated_at?: string;
+  updated_by?: string | null;
+}
+
+// =============================================================================
+// TABLE: user_tour_progress
+// =============================================================================
+
+export interface UserTourProgressRow {
+  profile_id: string;
+  tour_id: string;
+  started_at: string;
+  completed_at: string | null;
+  last_step: number;
+  skipped: boolean;
+}
+
+export interface UserTourProgressInsert {
+  profile_id: string;
+  tour_id: string;
+  started_at?: string;
+  completed_at?: string | null;
+  last_step?: number;
+  skipped?: boolean;
+}
+
+export interface UserTourProgressUpdate {
+  completed_at?: string | null;
+  last_step?: number;
+  skipped?: boolean;
+}
+
+// =============================================================================
+// TABLE: help_feedback
+// =============================================================================
+
+export interface HelpFeedbackRow {
+  id: string;
+  article_slug: string;
+  profile_id: string;
+  locale: HelpLocale;
+  helpful: boolean;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface HelpFeedbackInsert {
+  id?: string;
+  article_slug: string;
+  profile_id: string;
+  locale: HelpLocale;
+  helpful: boolean;
+  comment?: string | null;
+  created_at?: string;
+}
+
+export interface HelpFeedbackUpdate {
+  helpful?: boolean;
+  comment?: string | null;
 }
 
 // =============================================================================
@@ -1474,8 +2886,12 @@ export interface EmailActivityUpdate {
 export interface Database {
   public: {
     Tables: {
-      tenants: { Row: TenantRow; Insert: TenantInsert; Update: TenantUpdate; Relationships: [] };
-      tenant_brandings: { Row: TenantBrandingRow; Insert: TenantBrandingInsert; Update: TenantBrandingUpdate; Relationships: [] };
+      companies: { Row: CompanyRow; Insert: CompanyInsert; Update: CompanyUpdate; Relationships: [] };
+      holdings: { Row: HoldingRow; Insert: HoldingInsert; Update: HoldingUpdate; Relationships: [] };
+      domain_mappings: { Row: DomainMappingRow; Insert: DomainMappingInsert; Update: DomainMappingUpdate; Relationships: [] };
+      holding_admins_v2: { Row: HoldingAdminV2Row; Insert: HoldingAdminV2Insert; Update: HoldingAdminV2Update; Relationships: [] };
+      enura_admins: { Row: EnuraAdminRow; Insert: EnuraAdminInsert; Update: EnuraAdminUpdate; Relationships: [] };
+      company_branding: { Row: CompanyBrandingRow; Insert: CompanyBrandingInsert; Update: CompanyBrandingUpdate; Relationships: [] };
       profiles: { Row: ProfileRow; Insert: ProfileInsert; Update: ProfileUpdate; Relationships: [] };
       roles: { Row: RoleRow; Insert: RoleInsert; Update: RoleUpdate; Relationships: [] };
       permissions: { Row: PermissionRow; Insert: PermissionInsert; Update: PermissionUpdate; Relationships: [] };
@@ -1502,11 +2918,38 @@ export interface Database {
       cashflow_uploads: { Row: CashflowUploadRow; Insert: CashflowUploadInsert; Update: CashflowUploadUpdate; Relationships: [] };
       project_phase_history: { Row: ProjectPhaseHistoryRow; Insert: ProjectPhaseHistoryInsert; Update: ProjectPhaseHistoryUpdate; Relationships: [] };
       daily_reports: { Row: DailyReportRow; Insert: DailyReportInsert; Update: DailyReportUpdate; Relationships: [] };
-      tenant_settings: { Row: TenantSettingsRow; Insert: TenantSettingsInsert; Update: TenantSettingsUpdate; Relationships: [] };
+      company_settings: { Row: CompanySettingsRow; Insert: CompanySettingsInsert; Update: CompanySettingsUpdate; Relationships: [] };
       transcription_usage: { Row: TranscriptionUsageRow; Insert: TranscriptionUsageInsert; Update: TranscriptionUsageUpdate; Relationships: [] };
       anomalies: { Row: AnomalyRow; Insert: AnomalyInsert; Update: AnomalyUpdate; Relationships: [] };
       whatsapp_messages: { Row: WhatsAppMessageRow; Insert: WhatsAppMessageInsert; Update: WhatsAppMessageUpdate; Relationships: [] };
       email_activity: { Row: EmailActivityRow; Insert: EmailActivityInsert; Update: EmailActivityUpdate; Relationships: [] };
+      holding_secrets: { Row: HoldingSecretRow; Insert: HoldingSecretInsert; Update: HoldingSecretUpdate; Relationships: [] };
+      tool_registry: { Row: ToolRegistryRow; Insert: ToolRegistryInsert; Update: ToolRegistryUpdate; Relationships: [] };
+      process_templates: { Row: ProcessTemplateRow; Insert: ProcessTemplateInsert; Update: ProcessTemplateUpdate; Relationships: [] };
+      process_definitions: { Row: ProcessDefinitionRow; Insert: ProcessDefinitionInsert; Update: ProcessDefinitionUpdate; Relationships: [] };
+      process_steps: { Row: ProcessStepRow; Insert: ProcessStepInsert; Update: ProcessStepUpdate; Relationships: [] };
+      process_step_sources: { Row: ProcessStepSourceRow; Insert: ProcessStepSourceInsert; Update: ProcessStepSourceUpdate; Relationships: [] };
+      process_step_interfaces: { Row: ProcessStepInterfaceRow; Insert: ProcessStepInterfaceInsert; Update: ProcessStepInterfaceUpdate; Relationships: [] };
+      process_step_liquidity: { Row: ProcessStepLiquidityRow; Insert: ProcessStepLiquidityInsert; Update: ProcessStepLiquidityUpdate; Relationships: [] };
+      process_versions: { Row: ProcessVersionRow; Insert: ProcessVersionInsert; Update: ProcessVersionUpdate; Relationships: [] };
+      process_deployments: { Row: ProcessDeploymentRow; Insert: ProcessDeploymentInsert; Update: ProcessDeploymentUpdate; Relationships: [] };
+      company_currency_settings: { Row: CompanyCurrencySettingsRow; Insert: CompanyCurrencySettingsInsert; Update: CompanyCurrencySettingsUpdate; Relationships: [] };
+      compliance_rules: { Row: ComplianceRuleRow; Insert: ComplianceRuleInsert; Update: ComplianceRuleUpdate; Relationships: [] };
+      compliance_checks: { Row: ComplianceCheckRow; Insert: ComplianceCheckInsert; Update: ComplianceCheckUpdate; Relationships: [] };
+      compliance_documents: { Row: ComplianceDocumentRow; Insert: ComplianceDocumentInsert; Update: ComplianceDocumentUpdate; Relationships: [] };
+      certifications: { Row: CertificationRow; Insert: CertificationInsert; Update: CertificationUpdate; Relationships: [] };
+      project_process_instances: { Row: ProjectProcessInstanceRow; Insert: ProjectProcessInstanceInsert; Update: ProjectProcessInstanceUpdate; Relationships: [] };
+      liquidity_event_instances: { Row: LiquidityEventInstanceRow; Insert: LiquidityEventInstanceInsert; Update: LiquidityEventInstanceUpdate; Relationships: [] };
+      bank_upload_files: { Row: BankUploadFileRow; Insert: BankUploadFileInsert; Update: BankUploadFileUpdate; Relationships: [] };
+      bank_transactions: { Row: BankTransactionRow; Insert: BankTransactionInsert; Update: BankTransactionUpdate; Relationships: [] };
+      interface_execution_log: { Row: InterfaceExecutionLogRow; Insert: InterfaceExecutionLogInsert; Update: InterfaceExecutionLogUpdate; Relationships: [] };
+      holding_subscriptions: { Row: HoldingSubscriptionRow; Insert: HoldingSubscriptionInsert; Update: HoldingSubscriptionUpdate; Relationships: [] };
+      holding_onboarding: { Row: HoldingOnboardingRow; Insert: HoldingOnboardingInsert; Update: HoldingOnboardingUpdate; Relationships: [] };
+      user_invitations: { Row: UserInvitationRow; Insert: UserInvitationInsert; Update: UserInvitationUpdate; Relationships: [] };
+      platform_metrics: { Row: PlatformMetricRow; Insert: PlatformMetricInsert; Update: PlatformMetricUpdate; Relationships: [] };
+      help_snippets: { Row: HelpSnippetRow; Insert: HelpSnippetInsert; Update: HelpSnippetUpdate; Relationships: [] };
+      user_tour_progress: { Row: UserTourProgressRow; Insert: UserTourProgressInsert; Update: UserTourProgressUpdate; Relationships: [] };
+      help_feedback: { Row: HelpFeedbackRow; Insert: HelpFeedbackInsert; Update: HelpFeedbackUpdate; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -1523,6 +2966,8 @@ export interface Database {
       connector_status: ConnectorStatus;
       sync_status: SyncStatus;
       cashflow_type: CashflowType;
+      subscription_plan: SubscriptionPlan;
+      billing_cycle: BillingCycle;
     };
     CompositeTypes: Record<string, never>;
   };

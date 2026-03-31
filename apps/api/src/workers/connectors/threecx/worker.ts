@@ -60,7 +60,7 @@ export class ThreeCXConnector implements ConnectorBase {
   }
 
   async sync(
-    tenantId: string,
+    companyId: string,
     connector: ConnectorConfig,
   ): Promise<SyncResult> {
     const startTime = Date.now()
@@ -88,14 +88,14 @@ export class ThreeCXConnector implements ConnectorBase {
           })
           continue
         }
-        validExtensions.push(normaliseExtension(result.data, tenantId))
+        validExtensions.push(normaliseExtension(result.data, companyId))
       }
 
       fetched += validExtensions.length
       const extResult = await upsertRecords(
         'team_members',
         validExtensions,
-        ['tenant_id', 'external_id'],
+        ['company_id', 'external_id'],
       )
       written += extResult.written
       errors.push(...extResult.errors)
@@ -107,7 +107,7 @@ export class ThreeCXConnector implements ConnectorBase {
       const { data: members } = await db
         .from('team_members')
         .select('id, external_id, phone')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
 
       const extensionMemberMap = new Map<string, string>()
       for (const m of members ?? []) {
@@ -156,7 +156,7 @@ export class ThreeCXConnector implements ConnectorBase {
 
           const normalised = normaliseCall(
             result.data,
-            tenantId,
+            companyId,
             extensionMemberMap,
           )
           validCalls.push(normalised)
@@ -174,7 +174,7 @@ export class ThreeCXConnector implements ConnectorBase {
         const callsResult = await upsertRecords(
           'calls',
           validCalls,
-          ['tenant_id', 'external_id'],
+          ['company_id', 'external_id'],
         )
         written += callsResult.written
         errors.push(...callsResult.errors)
@@ -191,7 +191,7 @@ export class ThreeCXConnector implements ConnectorBase {
       const { data: callsNeedingRecordings } = await db
         .from('calls')
         .select('id, external_id, started_at')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
         .is('recording_url', null)
         .gt('started_at', syncSince)
 
@@ -226,7 +226,7 @@ export class ThreeCXConnector implements ConnectorBase {
 
           // Download and store in Supabase Storage
           const storagePath = await storeRecording(
-            tenantId,
+            companyId,
             internalCall.id,
             downloadUrl,
           )
@@ -259,7 +259,7 @@ export class ThreeCXConnector implements ConnectorBase {
       errors.push({
         code: 'SYNC_FATAL',
         message: err instanceof Error ? err.message : String(err),
-        context: { tenantId },
+        context: { companyId },
       })
     }
 

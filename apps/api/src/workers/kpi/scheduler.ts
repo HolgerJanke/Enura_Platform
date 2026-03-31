@@ -11,18 +11,18 @@ export async function scheduleDailySnapshots(date: Date): Promise<void> {
   )
 
   const { data: tenants } = await client
-    .from('tenants')
+    .from('companies')
     .select('id')
     .eq('status', 'active')
 
   for (const tenant of tenants ?? []) {
-    const tenantId = (tenant as Record<string, unknown>)['id'] as string
+    const companyId = (tenant as Record<string, unknown>)['id'] as string
 
     // Get team members
     const { data: members } = await client
       .from('team_members')
       .select('id, role_type')
-      .eq('tenant_id', tenantId)
+      .eq('company_id', companyId)
       .eq('is_active', true)
 
     const setters = (members ?? []).filter((m: Record<string, unknown>) => m['role_type'] === 'setter')
@@ -30,7 +30,7 @@ export async function scheduleDailySnapshots(date: Date): Promise<void> {
     // Per-setter snapshots
     for (const setter of setters) {
       const job: SnapshotJobData = {
-        tenantId,
+        companyId,
         snapshotType: KPI_SNAPSHOT_TYPES.SETTER_DAILY,
         entityId: (setter as Record<string, unknown>)['id'] as string,
         date: date.toISOString(),
@@ -45,7 +45,7 @@ export async function scheduleDailySnapshots(date: Date): Promise<void> {
       KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY,
     ] as const) {
       await processSnapshotJob({
-        tenantId,
+        companyId,
         snapshotType: type,
         entityId: null,
         date: date.toISOString(),
@@ -55,7 +55,7 @@ export async function scheduleDailySnapshots(date: Date): Promise<void> {
     // Monthly finance (first of month only)
     if (date.getDate() === 1) {
       await processSnapshotJob({
-        tenantId,
+        companyId,
         snapshotType: KPI_SNAPSHOT_TYPES.FINANCE_MONTHLY,
         entityId: null,
         date: date.toISOString(),

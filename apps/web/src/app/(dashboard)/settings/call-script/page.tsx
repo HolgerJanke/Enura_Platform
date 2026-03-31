@@ -8,21 +8,21 @@ export default async function CallScriptPage() {
   await requirePermission('module:admin:write')
 
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const supabase = createSupabaseServerClient()
 
   const { data: activeScript } = await supabase
     .from('call_scripts')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .eq('is_active', true)
     .maybeSingle()
 
   const { data: allScripts } = await supabase
     .from('call_scripts')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .order('created_at', { ascending: false })
 
   return (

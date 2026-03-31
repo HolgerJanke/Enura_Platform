@@ -5,6 +5,10 @@ import { HoldingShell } from '@/components/holding-shell'
 const HOLDING_NAV_ITEMS = [
   { label: 'Unternehmen', href: '/admin', icon: 'building' },
   { label: 'Benutzer', href: '/admin/users', icon: 'users' },
+  { label: 'Finanzen', href: '/admin/finance', icon: 'banknote' },
+  { label: 'Secrets', href: '/admin/secrets', icon: 'key' },
+  { label: 'Tools', href: '/admin/tools', icon: 'wrench' },
+  { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
 ]
 
 export default async function HoldingAdminLayout({ children }: { children: React.ReactNode }) {

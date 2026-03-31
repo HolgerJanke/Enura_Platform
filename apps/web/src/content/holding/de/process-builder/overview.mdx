@@ -1,0 +1,49 @@
+---
+title: "Process Builder Uebersicht"
+description: "Geschaeftsprozesse visuell definieren und bereitstellen"
+section: "process-builder"
+lastUpdated: "2026-03-30"
+---
+
+# Process Builder Uebersicht
+
+Der Process Builder ist das zentrale Werkzeug fuer die Abbildung Ihrer Geschaeftsprozesse. Er erlaubt es Holding-Administratoren, komplexe Ablaeufe als Schrittfolgen zu definieren, mit externen Systemen zu verknuepfen und fuer die Mandanten bereitzustellen.
+
+## Was ist ein Prozess?
+
+Ein Prozess beschreibt einen wiederkehrenden Geschaeftsablauf von Anfang bis Ende. Beispiel: Der PV-Installationsprozess bei Alpen Energie umfasst 27 Phasen — vom Erstgespraech ueber die Planung bis zur Inbetriebnahme. Jede Phase wird als Schrittkarte im Process Builder abgebildet.
+
+## Schrittkarten
+
+Jeder Prozessschritt wird als Karte dargestellt. Eine Schrittkarte enthaelt:
+
+- **Schrittname**: Eindeutige Bezeichnung (z.B. "Angebot erstellen", "Baubewilligung einholen")
+- **Verantwortliche Rolle**: Welche Benutzerrolle diesen Schritt ausfuehrt (Berater, Innendienst, Bau)
+- **Informationsquellen**: Woher kommen die benoetigten Daten (CRM-Felder, Dokumente, manuelle Eingaben)
+- **Schnittstellen**: Welche externen Systeme werden angesprochen (Bexio, Reonic, Google Calendar)
+- **Liquiditaetsmarker**: Optionale Verknuepfung mit der Cashflow-Planung
+
+## Informationsquellen vs. Schnittstellen
+
+Diese Unterscheidung ist wichtig:
+
+**Informationsquellen** beschreiben, *welche Daten* ein Schritt benoetigt. Das kann ein CRM-Feld sein ("Kundenadresse"), ein Dokument ("Dachplan") oder eine manuelle Eingabe ("Bautermin bestaetigt").
+
+**Schnittstellen** beschreiben, *welches System* die Daten liefert oder empfaengt. Der Reonic-Connector liefert Projektdaten, der Bexio-Connector empfaengt Rechnungsinformationen.
+
+## Bereitstellungs-Workflow
+
+1. **Erstellen**: Fuegen Sie Schritte hinzu, ordnen Sie sie an, definieren Sie Quellen und Schnittstellen.
+2. **Pruefen**: Validieren Sie den Prozess. Die Plattform prueft auf fehlende Pflichtfelder und unterbrochene Verknuepfungen.
+3. **Bereitstellen**: Veroeffentlichen Sie den Prozess. Es wird eine neue Version erstellt.
+4. **Aktivieren**: Die neue Version wird zur aktiven Version. Mandanten sehen nur die aktive Version.
+
+## Versionierung
+
+Jede Aenderung an einem bereitgestellten Prozess erzeugt eine neue Version. Sie koennen:
+
+- Aeltere Versionen einsehen und vergleichen
+- Zu einer frueheren Version zurueckkehren
+- Sehen, wer wann welche Aenderung vorgenommen hat
+
+Die aktive Version ist immer diejenige, die im Betrieb verwendet wird. Entwuerfe sind nur fuer Holding-Administratoren sichtbar.

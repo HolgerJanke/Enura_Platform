@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from 'next'
-import { getTenantContext } from '@/lib/tenant'
+import { getCompanyContext } from '@/lib/tenant'
+import CookieBanner from '@/components/CookieBanner'
 import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { tenantName } = getTenantContext()
+  const { companyName } = getCompanyContext()
   return {
-    title: tenantName || 'Platform',
-    description: `${tenantName} — Business Intelligence`,
+    title: companyName || 'Platform',
+    description: `${companyName} — Business Intelligence`,
     manifest: '/manifest.json',
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
-      title: tenantName || 'Dashboard',
+      title: companyName || 'Dashboard',
     },
   }
 }
@@ -24,7 +25,7 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const { brandCSS, tenantName } = getTenantContext()
+  const { brandCSS, companyName } = getCompanyContext()
 
   return (
     <html lang="de-CH" style={cssStringToObject(brandCSS)}>
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-brand-background font-brand text-brand-text-primary antialiased">
+        <CookieBanner />
         {children}
       </body>
     </html>

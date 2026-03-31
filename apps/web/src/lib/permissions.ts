@@ -38,3 +38,12 @@ export async function requireAuth(): Promise<void> {
   const session = await getSession()
   if (!session) redirect('/login')
 }
+
+/**
+ * Require the user to be an Enura platform admin. Redirects to /login if not.
+ */
+export async function requireEnuraAdmin(): Promise<void> {
+  const session = await getSession()
+  if (!session) redirect('/login')
+  if (!session.isEnuraAdmin) redirect('/login')
+}

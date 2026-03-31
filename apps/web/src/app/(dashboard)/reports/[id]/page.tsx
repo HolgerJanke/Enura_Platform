@@ -71,7 +71,7 @@ export default async function ReportDetailPage({
   await requirePermission('module:reports:read')
 
   const session = await getSession()
-  if (!session?.tenantId) redirect('/login')
+  if (!session?.companyId) redirect('/login')
 
   const supabase = createSupabaseServerClient()
 
@@ -79,7 +79,7 @@ export default async function ReportDetailPage({
     .from('daily_reports')
     .select('*')
     .eq('id', params.id)
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .single()
 
   if (!report) redirect('/reports')

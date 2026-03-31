@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { TenantRow, TenantBrandingRow, ProfileRow, ConnectorRow } from '@enura/types'
+import type { CompanyRow, CompanyBrandingRow, ProfileRow, ConnectorRow } from '@enura/types'
 import { TenantDetailTabs } from './tenant-detail-tabs'
 
-type TenantWithBranding = TenantRow & {
-  tenant_brandings: TenantBrandingRow[]
+type CompanyWithBranding = CompanyRow & {
+  tenant_brandings: CompanyBrandingRow[]
 }
 
 type ProfileWithRoles = ProfileRow & {
@@ -60,7 +60,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
 
   // Fetch tenant with branding
   const { data: tenant } = await supabase
-    .from('tenants')
+    .from('companies')
     .select('*, tenant_brandings(*)')
     .eq('slug', slug)
     .single()
@@ -69,7 +69,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
     notFound()
   }
 
-  const typedTenant = tenant as unknown as TenantWithBranding
+  const typedTenant = tenant as unknown as CompanyWithBranding
   const branding = typedTenant.tenant_brandings?.[0] ?? null
 
   // Fetch users in this tenant
@@ -82,7 +82,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
         roles ( key, label )
       )
     `)
-    .eq('tenant_id', typedTenant.id)
+    .eq('company_id', typedTenant.id)
     .order('created_at', { ascending: false })
 
   const users = (profiles ?? []) as unknown as ProfileWithRoles[]
@@ -91,7 +91,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
   const { data: connectors } = await supabase
     .from('connectors')
     .select('*')
-    .eq('tenant_id', typedTenant.id)
+    .eq('company_id', typedTenant.id)
     .order('created_at', { ascending: false })
 
   const connectorList = (connectors ?? []) as ConnectorRow[]

@@ -8,22 +8,22 @@ import type { ProjectRow, PhaseDefinitionRow } from '@enura/types'
 export default async function ProjectsPage() {
   await requirePermission('module:bau:read')
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
 
   // Fetch KPI snapshot for summary stats
   const snapshot = await db.kpis.findLatest(
-    session.tenantId,
+    session.companyId,
     KPI_SNAPSHOT_TYPES.PROJECTS_DAILY,
   )
   const metrics = snapshot?.metrics as ProjectsDailyMetrics | undefined
 
   // Fetch live projects and phase definitions for the Kanban view
   const [projects, phaseDefinitions] = await Promise.all([
-    db.projects.findMany(session.tenantId, { status: 'active' }),
-    db.phaseDefinitions.findByTenantId(session.tenantId),
+    db.projects.findMany(session.companyId, { status: 'active' }),
+    db.phaseDefinitions.findByCompanyId(session.companyId),
   ])
 
   // Sort phases by phase_number

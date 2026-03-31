@@ -23,7 +23,7 @@ async function _getSession(): Promise<UserSession | null> {
     .select(`
       role_id,
       roles (
-        id, tenant_id, key, label, description, is_system, created_at, updated_at
+        id, company_id, key, label, description, is_system, created_at, updated_at
       )
     `)
     .eq('profile_id', user.id)
@@ -59,11 +59,22 @@ async function _getSession(): Promise<UserSession | null> {
 
   const isHoldingAdmin = Boolean(holdingAdmin)
 
+  // Check enura admin status
+  const { data: enuraAdmin } = await supabase
+    .from('enura_admins')
+    .select('id')
+    .eq('profile_id', user.id)
+    .maybeSingle()
+
+  const isEnuraAdmin = Boolean(enuraAdmin)
+
   return {
     profile,
-    tenantId: profile.tenant_id,
+    holdingId: profile.holding_id,
+    companyId: profile.company_id,
     roles,
     permissions: [...new Set(permissions)],
+    isEnuraAdmin,
     isHoldingAdmin,
   }
 }

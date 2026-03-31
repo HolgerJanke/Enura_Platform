@@ -23,7 +23,7 @@ export default async function tenantRoutes(fastify: FastifyInstance): Promise<vo
   fastify.get(
     '/tenants',
     async (_request: FastifyRequest, reply: FastifyReply) => {
-      const tenants = await fastify.dataAccess.tenants.findAll()
+      const tenants = await fastify.dataAccess.companies.findAll()
       reply.status(200).send(success(tenants, { count: tenants.length }))
     },
   )
@@ -38,7 +38,7 @@ export default async function tenantRoutes(fastify: FastifyInstance): Promise<vo
       reply: FastifyReply,
     ) => {
       const { id } = request.params
-      const tenant = await fastify.dataAccess.tenants.findById(id)
+      const tenant = await fastify.dataAccess.companies.findById(id)
 
       if (!tenant) {
         reply.status(404).send(error('NOT_FOUND', `Tenant ${id} not found`))
@@ -83,13 +83,14 @@ export default async function tenantRoutes(fastify: FastifyInstance): Promise<vo
       const { name, slug } = parseResult.data
 
       // Check slug uniqueness
-      const existing = await fastify.dataAccess.tenants.findBySlug(slug)
+      const existing = await fastify.dataAccess.companies.findBySlug(slug)
       if (existing) {
         reply.status(409).send(error('CONFLICT', `Slug "${slug}" is already taken`))
         return
       }
 
-      const tenant = await fastify.dataAccess.tenants.create({
+      const tenant = await fastify.dataAccess.companies.create({
+        holding_id: '00000000-0000-0000-0000-000000000010',
         name,
         slug,
         created_by: request.user.userId,
@@ -133,7 +134,7 @@ export default async function tenantRoutes(fastify: FastifyInstance): Promise<vo
         return
       }
 
-      const existing = await fastify.dataAccess.tenants.findById(id)
+      const existing = await fastify.dataAccess.companies.findById(id)
       if (!existing) {
         reply.status(404).send(error('NOT_FOUND', `Tenant ${id} not found`))
         return
@@ -142,7 +143,7 @@ export default async function tenantRoutes(fastify: FastifyInstance): Promise<vo
       const updateData = Object.fromEntries(
         Object.entries(parseResult.data).filter(([, v]) => v !== undefined),
       )
-      const updated = await fastify.dataAccess.tenants.update(id, updateData)
+      const updated = await fastify.dataAccess.companies.update(id, updateData)
       reply.status(200).send(success(updated))
     },
   )

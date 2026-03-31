@@ -69,7 +69,7 @@ function formatNumber(value: number): string {
 export default async function AnomaliesPage() {
   await requirePermission('module:admin:read')
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const supabase = createSupabaseServerClient()
 
@@ -77,7 +77,7 @@ export default async function AnomaliesPage() {
   const { data: activeAnomalies } = await supabase
     .from('anomalies')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .eq('is_active', true)
     .order('detected_at', { ascending: false })
 
@@ -88,7 +88,7 @@ export default async function AnomaliesPage() {
   const { data: resolvedAnomalies } = await supabase
     .from('anomalies')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .eq('is_active', false)
     .gte('resolved_at', sevenDaysAgo.toISOString())
     .order('resolved_at', { ascending: false })

@@ -10,26 +10,26 @@ import {
 // Tenant context from middleware-injected headers (works in both modes)
 // ---------------------------------------------------------------------------
 
-export interface TenantContext {
-  tenantId: string
-  tenantSlug: string
-  tenantName: string
+export interface CompanyContext {
+  companyId: string
+  companySlug: string
+  companyName: string
   isHolding: boolean
   brandCSS: string
   userId: string
 }
 
-export function getTenantContext(): TenantContext {
+export function getCompanyContext(): CompanyContext {
   const headerStore = headers()
-  const tenantId = headerStore.get('x-tenant-id') ?? ''
-  const tenantSlug = headerStore.get('x-tenant-slug') ?? ''
-  const tenantName = headerStore.get('x-tenant-name') ?? ''
+  const companyId = headerStore.get('x-company-id') ?? ''
+  const companySlug = headerStore.get('x-company-slug') ?? ''
+  const companyName = headerStore.get('x-company-name') ?? ''
   const isHolding = headerStore.get('x-is-holding') === 'true'
   const brandCSS =
     headerStore.get('x-brand-css') ?? buildCSSVarString(defaultBrandTokens)
   const userId = headerStore.get('x-user-id') ?? ''
 
-  return { tenantId, tenantSlug, tenantName, isHolding, brandCSS, userId }
+  return { companyId, companySlug, companyName, isHolding, brandCSS, userId }
 }
 
 // ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ export function getMockBrandingForTenant(slug: string | null): BrandTokens {
 // Supabase-backed tenant + branding resolution
 // ---------------------------------------------------------------------------
 
-interface TenantBrandingRow {
+interface CompanyBrandingRow {
   primary_color: string
   secondary_color: string
   accent_color: string
@@ -73,7 +73,7 @@ interface TenantBrandingRow {
   dark_mode_enabled: boolean
 }
 
-interface TenantRow {
+interface CompanyRow {
   id: string
   slug: string
   name: string
@@ -116,22 +116,22 @@ export async function fetchTenantBySlug(
 ): Promise<ResolvedTenant | null> {
   // Fetch tenant
   const { data: tenant } = await supabase
-    .from('tenants')
+    .from('companies')
     .select('id, slug, name, status')
     .eq('slug', slug)
     .eq('status', 'active')
-    .single<TenantRow>()
+    .single<CompanyRow>()
 
   if (!tenant) return null
 
   // Fetch branding
   const { data: branding } = await supabase
-    .from('tenant_brandings')
+    .from('company_branding')
     .select(
       'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled',
     )
-    .eq('tenant_id', tenant.id)
-    .single<TenantBrandingRow>()
+    .eq('company_id', tenant.id)
+    .single<CompanyBrandingRow>()
 
   const brandTokens = branding
     ? brandTokensFromRow(branding)

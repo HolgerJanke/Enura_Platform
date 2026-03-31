@@ -1,4 +1,4 @@
-import type { ProfileRow, TenantRow, DataAccess } from '@enura/types'
+import type { ProfileRow, CompanyRow, DataAccess } from '@enura/types'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -7,15 +7,15 @@ declare module 'fastify' {
   interface FastifyRequest {
     user: {
       userId: string
-      tenantId: string | null
+      companyId: string | null
       roles: string[]
     }
     tenant: {
-      tenantId: string
-      tenant: TenantRow
+      companyId: string
+      tenant: CompanyRow
     }
   }
 }
 
 // Re-export for convenience within the API codebase
-export type { ProfileRow, TenantRow, DataAccess }
+export type { ProfileRow, CompanyRow, DataAccess }

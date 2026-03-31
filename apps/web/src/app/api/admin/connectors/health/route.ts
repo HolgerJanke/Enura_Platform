@@ -10,9 +10,9 @@ interface ConnectorHealth {
 }
 
 interface TenantConnectorHealth {
-  tenantId: string
-  tenantSlug: string
-  tenantName: string
+  companyId: string
+  companySlug: string
+  companyName: string
   connectors: ConnectorHealth[]
 }
 
@@ -26,7 +26,7 @@ export async function GET() {
 
   // Alle aktiven Mandanten laden
   const { data: tenants, error: tenantsError } = await supabase
-    .from('tenants')
+    .from('companies')
     .select('id, slug, name')
     .eq('status', 'active')
 
@@ -40,7 +40,7 @@ export async function GET() {
   // Alle Konnektoren laden
   const { data: connectors, error: connectorsError } = await supabase
     .from('connectors')
-    .select('id, tenant_id, type, status, last_synced_at, last_error')
+    .select('id, company_id, type, status, last_synced_at, last_error')
 
   if (connectorsError) {
     return NextResponse.json(
@@ -52,11 +52,11 @@ export async function GET() {
   const result: TenantConnectorHealth[] = (
     (tenants ?? []) as Record<string, unknown>[]
   ).map((tenant) => {
-    const tenantId = tenant['id'] as string
+    const companyId = tenant['id'] as string
     const tenantConnectors = (
       (connectors ?? []) as Record<string, unknown>[]
     )
-      .filter((c) => c['tenant_id'] === tenantId)
+      .filter((c) => c['company_id'] === companyId)
       .map((c): ConnectorHealth => ({
         type: c['type'] as string,
         status: c['status'] as string,
@@ -65,9 +65,9 @@ export async function GET() {
       }))
 
     return {
-      tenantId,
-      tenantSlug: tenant['slug'] as string,
-      tenantName: tenant['name'] as string,
+      companyId,
+      companySlug: tenant['slug'] as string,
+      companyName: tenant['name'] as string,
       connectors: tenantConnectors,
     }
   })

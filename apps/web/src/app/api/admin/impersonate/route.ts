@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   // Verify target user exists
   const { data: targetUser, error: targetError } = await db
     .from('profiles')
-    .select('id, tenant_id, display_name')
+    .select('id, company_id, display_name')
     .eq('id', targetUserId)
     .single()
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   }
 
   await writeAuditLog({
-    tenantId: (targetUser as Record<string, unknown>)['tenant_id'] as string | null,
+    companyId: (targetUser as Record<string, unknown>)['company_id'] as string | null,
     actorId: session.profile.id,
     action: 'admin.impersonation_created',
     recordId: targetUserId,

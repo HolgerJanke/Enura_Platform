@@ -16,7 +16,7 @@ type Props = {
   connectorTypes: ReadonlyArray<ConnectorTypeInfo>
   configuredConnectors: Array<Record<string, unknown>>
   syncLogs: Array<Record<string, unknown>>
-  tenantId: string
+  companyId: string
 }
 
 type ConnectorStatus = 'active' | 'error' | 'paused' | 'unconfigured'
@@ -105,7 +105,7 @@ export function ConnectorListClient({
   connectorTypes,
   configuredConnectors,
   syncLogs,
-  tenantId: _tenantId,
+  companyId: _companyId,
 }: Props) {
   const router = useRouter()
   const [syncingId, setSyncingId] = useState<string | null>(null)

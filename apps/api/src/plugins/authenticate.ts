@@ -10,7 +10,7 @@ import { error } from '../lib/response.js'
 
 interface TokenPayload {
   userId: string
-  tenantId: string | null
+  companyId: string | null
   roles: string[]
 }
 
@@ -41,16 +41,16 @@ function decodeToken(header: string | undefined): TokenPayload | null {
     if (typeof obj['userId'] !== 'string') return null
     if (!Array.isArray(obj['roles'])) return null
     if (
-      obj['tenantId'] !== null &&
-      obj['tenantId'] !== undefined &&
-      typeof obj['tenantId'] !== 'string'
+      obj['companyId'] !== null &&
+      obj['companyId'] !== undefined &&
+      typeof obj['companyId'] !== 'string'
     ) {
       return null
     }
 
     return {
       userId: obj['userId'] as string,
-      tenantId: (obj['tenantId'] as string | null) ?? null,
+      companyId: (obj['companyId'] as string | null) ?? null,
       roles: obj['roles'] as string[],
     }
   } catch {
@@ -80,7 +80,7 @@ async function authenticatePlugin(fastify: FastifyInstance): Promise<void> {
 
       request.user = {
         userId: payload.userId,
-        tenantId: payload.tenantId,
+        companyId: payload.companyId,
         roles: payload.roles,
       }
     },

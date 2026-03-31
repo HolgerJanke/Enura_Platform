@@ -52,7 +52,7 @@ export async function verify2faAction(code: string): Promise<{ error?: string }>
 
   // Audit
   await writeAuditLog({
-    tenantId: (user.user_metadata?.['tenant_id'] as string | null) ?? null,
+    companyId: (user.user_metadata?.['company_id'] as string | null) ?? null,
     actorId: user.id,
     action: 'auth.2fa_verified',
   })

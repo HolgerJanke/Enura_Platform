@@ -1,0 +1,62 @@
+---
+title: "Liquiditaetsmarker"
+description: "Prozessschritte mit der Cashflow-Planung verknuepfen"
+section: "process-builder"
+lastUpdated: "2026-03-30"
+---
+
+# Liquiditaetsmarker
+
+Liquiditaetsmarker verbinden Prozessschritte mit der Finanzplanung. Sie definieren, an welcher Stelle im Prozess ein zahlungsrelevantes Ereignis stattfindet und wie es sich auf den Cashflow auswirkt.
+
+## Trigger vs. Ereignis
+
+Ein Liquiditaetsmarker besteht aus zwei Teilen:
+
+**Trigger** — der Prozessschritt, der den Marker ausloest. Beispiel: Wenn der Schritt "Rechnung erstellen" abgeschlossen wird, wird der Marker aktiviert.
+
+**Ereignis** — die finanzielle Auswirkung, die eintritt. Beispiel: "Zahlungseingang erwartet in 30 Tagen, Betrag aus Angebotsvolumen".
+
+## Wie sie verknuepft sind
+
+Jeder Marker ist an genau einen Prozessschritt gebunden. Wenn ein Projekt diesen Schritt erreicht, erzeugt die Plattform automatisch einen Eintrag im Liquiditaetsplan:
+
+1. Der Trigger-Schritt wird als erledigt markiert.
+2. Die Plattform liest die verknuepften Felder (Betrag, Zahlungsziel).
+3. Ein Plan-Eintrag wird mit dem berechneten Faelligkeitsdatum erstellt.
+4. Der Eintrag erscheint im Cashflow-Diagramm als geplanter Eingang oder Ausgang.
+
+## Plan-Daten berechnen
+
+Plan-Daten werden auf Basis der Marker-Konfiguration berechnet:
+
+| Konfiguration | Bedeutung |
+|---------------|-----------|
+| `trigger_date + 30d` | 30 Tage nach Abschluss des Trigger-Schritts |
+| `field:payment_terms` | Dynamisch aus dem Zahlungsziel-Feld des Projekts |
+| `fixed:2026-06-01` | Festes Datum (selten verwendet, z.B. fuer Meilensteine) |
+
+Die haeufigste Konfiguration ist `trigger_date + Nd`, wobei N das uebliche Zahlungsziel in Tagen ist (z.B. 30, 60 oder 90 Tage).
+
+## Ist-Werte erfassen
+
+Sobald ein tatsaechlicher Zahlungseingang oder -ausgang erfolgt (erkannt ueber den Bexio-Connector oder manuellen Upload), wird der Plan-Eintrag mit dem Ist-Wert abgeglichen:
+
+- **Vollstaendig bezahlt**: Der Eintrag wird gruen markiert.
+- **Teilzahlung**: Der Eintrag zeigt den offenen Restbetrag.
+- **Ueberfaellig**: Nach Ablauf des Faelligkeitsdatums wird der Eintrag rot markiert und loest eine Benachrichtigung aus.
+
+## Typische Marker im PV-Prozess
+
+| Prozessschritt | Marker-Typ | Betrag-Quelle | Faelligkeit |
+|---------------|------------|---------------|-------------|
+| Angebot angenommen | Eingang | 30% Anzahlung aus Angebotssumme | Trigger + 14d |
+| AC-Montage abgeschlossen | Eingang | 60% aus Angebotssumme | Trigger + 30d |
+| Schlussabnahme | Eingang | 10% Restbetrag | Trigger + 30d |
+| Materialbestellung | Ausgang | Materialkosten aus Kalkulation | Trigger + 0d |
+
+## Tipps
+
+- Erstellen Sie Marker fuer alle wesentlichen Zahlungsstroeme, nicht nur fuer Eingaenge.
+- Nutzen Sie dynamische Zahlungsziele (`field:payment_terms`), wenn diese je nach Kunde variieren.
+- Pruefen Sie regelmaessig die Abweichung zwischen Plan und Ist im Liquiditaets-Dashboard.
