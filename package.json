@@ -14,6 +14,7 @@
     "validate:env": "tsx scripts/validate-env.ts"
   },
   "devDependencies": {
+    "next": "14.2.21",
     "tsx": "^4.19.2",
     "turbo": "^2.4.0"
   },

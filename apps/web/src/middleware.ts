@@ -71,11 +71,17 @@ function getSubdomain(hostname: string): string | null {
     return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
   }
 
+  // Vercel preview/production URLs (e.g. enura-platform.vercel.app)
+  // These don't have a company subdomain — use the default tenant
+  if (hostname.includes('.vercel.app')) {
+    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+  }
+
   const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'platform.com'
 
   // Root domain — no subdomain
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
-    return null
+    return process.env.DEV_DEFAULT_TENANT_SLUG ?? null
   }
 
   // Extract subdomain (first part before root domain)

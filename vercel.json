@@ -1,7 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && npx pnpm install && npx pnpm --filter @enura/types build && npx pnpm --filter @enura/ui build && npx pnpm --filter web build",
-  "installCommand": "echo 'skip'",
-  "framework": "nextjs",
-  "outputDirectory": ".next"
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter @enura/types build && pnpm --filter @enura/ui build && pnpm --filter web build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs"
 }
