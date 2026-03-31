@@ -17,6 +17,7 @@ export interface CompanyContext {
   isHolding: boolean
   brandCSS: string
   userId: string
+  customCSSPath: string | null
 }
 
 export function getCompanyContext(): CompanyContext {
@@ -28,8 +29,10 @@ export function getCompanyContext(): CompanyContext {
   const brandCSS =
     headerStore.get('x-brand-css') ?? buildCSSVarString(defaultBrandTokens)
   const userId = headerStore.get('x-user-id') ?? ''
+  const customCSSHeader = headerStore.get('x-custom-css')
+  const customCSSPath = customCSSHeader || null
 
-  return { companyId, companySlug, companyName, isHolding, brandCSS, userId }
+  return { companyId, companySlug, companyName, isHolding, brandCSS, userId, customCSSPath }
 }
 
 // ---------------------------------------------------------------------------

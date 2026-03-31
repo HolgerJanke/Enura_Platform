@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { defaultBrandTokens, buildCSSVarString, brandTokensFromRow } from '@enura/types'
+import {
+  defaultBrandTokens,
+  defaultExtendedTokens,
+  buildCSSVarString,
+  buildExtendedCSSVarString,
+  brandTokensFromRow,
+  type ExtendedBrandTokens,
+} from '@enura/types'
 import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 
 // ---------------------------------------------------------------------------
@@ -89,6 +96,7 @@ function setTenantHeaders(
     isHolding: boolean
     brandCSS: string
     userId?: string
+    customCSSPath?: string
   },
 ): void {
   response.headers.set('x-company-id', opts.companyId)
@@ -96,6 +104,7 @@ function setTenantHeaders(
   response.headers.set('x-company-name', opts.companyName)
   response.headers.set('x-is-holding', String(opts.isHolding))
   response.headers.set('x-brand-css', opts.brandCSS)
+  response.headers.set('x-custom-css', opts.customCSSPath ?? '')
   if (opts.userId) {
     response.headers.set('x-user-id', opts.userId)
   }
@@ -219,6 +228,8 @@ interface CompanyBrandingRow {
   font_url: string | null
   border_radius: string
   dark_mode_enabled: boolean
+  extended_tokens: Partial<ExtendedBrandTokens> | null
+  custom_css_path: string | null
 }
 
 interface CompanyRow {
@@ -320,7 +331,7 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   const { data: branding } = await supabase
     .from('company_branding')
     .select(
-      'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled',
+      'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled, extended_tokens, custom_css_path',
     )
     .eq('company_id', tenant.id)
     .single<CompanyBrandingRow>()
@@ -329,6 +340,22 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
     ? brandTokensFromRow(branding)
     : defaultBrandTokens
 
+  // Build core brand CSS string
+  let brandCSS = buildCSSVarString(brandTokens)
+
+  // Merge extended tokens: holding defaults + company overrides
+  if (branding?.extended_tokens) {
+    const mergedExtended: Partial<ExtendedBrandTokens> = {
+      ...defaultExtendedTokens,
+      ...branding.extended_tokens,
+    }
+    brandCSS += ';' + buildExtendedCSSVarString(mergedExtended)
+  } else {
+    brandCSS += ';' + buildExtendedCSSVarString(defaultExtendedTokens)
+  }
+
+  const customCSSPath = branding?.custom_css_path ?? undefined
+
   // Get the response AFTER all Supabase calls (cookies may have been updated)
   const response = getResponse()
   setTenantHeaders(response, {
@@ -336,8 +363,9 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
     companySlug: tenant.slug,
     companyName: tenant.name,
     isHolding: false,
-    brandCSS: buildCSSVarString(brandTokens),
+    brandCSS,
     userId: user?.id,
+    customCSSPath: customCSSPath,
   })
 
   // -----------------------------------------------------------------------

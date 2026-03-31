@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { HELP_ARTICLES } from '../../page'
+import { HELP_ARTICLES } from '../../data'
 import { HelpFeedback } from '@/components/help/HelpFeedback'
 
 type ArticlePageProps = {
@@ -332,7 +332,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       {/* Article content */}
       <article
-        className="prose prose-sm max-w-none text-brand-text-primary prose-headings:text-brand-text-primary prose-p:text-brand-text-primary prose-li:text-brand-text-primary prose-strong:text-brand-text-primary prose-a:underline"
+        className="max-w-none"
         dangerouslySetInnerHTML={{ __html: renderedHtml }}
       />
 
@@ -399,6 +399,7 @@ function renderMarkdown(md: string): string {
   const lines = md.trim().split('\n')
   const html: string[] = []
   let inList = false
+  let listType: 'ul' | 'ol' = 'ul'
   let inTable = false
   let inCodeBlock = false
   let codeBlockContent: string[] = []
@@ -425,7 +426,7 @@ function renderMarkdown(md: string): string {
 
     // Close open list if current line is not a list item
     if (inList && !line.trim().startsWith('- ') && !line.trim().match(/^\d+\.\s/)) {
-      html.push('</ul>')
+      html.push(listType === 'ol' ? '</ol>' : '</ul>')
       inList = false
     }
 
@@ -444,15 +445,15 @@ function renderMarkdown(md: string): string {
 
     // Headings
     if (trimmed.startsWith('### ')) {
-      html.push(`<h3>${inlineFormat(trimmed.slice(4))}</h3>`)
+      html.push(`<h3 class="text-base font-semibold text-brand-text-primary mt-8 mb-3">${inlineFormat(trimmed.slice(4))}</h3>`)
       continue
     }
     if (trimmed.startsWith('## ')) {
-      html.push(`<h2>${inlineFormat(trimmed.slice(3))}</h2>`)
+      html.push(`<h2 class="text-lg font-bold text-brand-text-primary mt-10 mb-4 pb-2 border-b border-gray-200">${inlineFormat(trimmed.slice(3))}</h2>`)
       continue
     }
     if (trimmed.startsWith('# ')) {
-      html.push(`<h1>${inlineFormat(trimmed.slice(2))}</h1>`)
+      html.push(`<h1 class="text-xl font-bold text-brand-text-primary mt-10 mb-4">${inlineFormat(trimmed.slice(2))}</h1>`)
       continue
     }
 
@@ -484,10 +485,11 @@ function renderMarkdown(md: string): string {
     // Unordered list
     if (trimmed.startsWith('- ')) {
       if (!inList) {
-        html.push('<ul class="list-disc pl-5 space-y-1">')
+        html.push('<ul class="list-disc pl-5 space-y-2 mb-4">')
         inList = true
+        listType = 'ul'
       }
-      html.push(`<li>${inlineFormat(trimmed.slice(2))}</li>`)
+      html.push(`<li class="text-sm text-brand-text-secondary">${inlineFormat(trimmed.slice(2))}</li>`)
       continue
     }
 
@@ -495,19 +497,20 @@ function renderMarkdown(md: string): string {
     const orderedMatch = trimmed.match(/^(\d+)\.\s(.*)/)
     if (orderedMatch) {
       if (!inList) {
-        html.push('<ul class="list-decimal pl-5 space-y-1">')
+        html.push('<ol class="list-decimal pl-5 space-y-2 mb-4">')
         inList = true
+        listType = 'ol'
       }
-      html.push(`<li>${inlineFormat(orderedMatch[2] ?? '')}</li>`)
+      html.push(`<li class="text-sm text-brand-text-secondary">${inlineFormat(orderedMatch[2] ?? '')}</li>`)
       continue
     }
 
     // Paragraph
-    html.push(`<p>${inlineFormat(trimmed)}</p>`)
+    html.push(`<p class="text-sm leading-relaxed text-brand-text-secondary mb-4">${inlineFormat(trimmed)}</p>`)
   }
 
   // Close trailing open elements
-  if (inList) html.push('</ul>')
+  if (inList) html.push(listType === 'ol' ? '</ol>' : '</ul>')
   if (inTable) html.push('</tbody></table>')
   if (inCodeBlock) {
     html.push(`<pre class="rounded-brand bg-gray-100 p-4 text-xs overflow-x-auto"><code>${codeBlockContent.join('\n')}</code></pre>`)

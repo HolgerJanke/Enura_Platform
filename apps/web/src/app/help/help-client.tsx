@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import type { HelpArticle } from './page'
+import type { HelpArticle } from './data'
 
 type QuickLink = {
   title: string

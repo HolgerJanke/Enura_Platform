@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import Fuse from 'fuse.js'
-import { HELP_ARTICLES } from '@/app/help/page'
-import type { HelpArticle } from '@/app/help/page'
+import { HELP_ARTICLES } from '@/app/help/data'
+import type { HelpArticle } from '@/app/help/data'
 
 type SearchResult = {
   title: string

@@ -167,8 +167,8 @@ export function DashboardShell({
                     style={active ? { backgroundColor: 'var(--brand-primary)' } : undefined}
                     aria-current={active ? 'page' : undefined}
                   >
-                    <NavIcon name={item.icon} className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <NavIcon name={item.icon} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
                   </Link>
                 </li>
               )
@@ -203,7 +203,7 @@ export function DashboardShell({
                         aria-expanded={isExpanded}
                         aria-label={`${group.label} ${isExpanded ? 'einklappen' : 'ausklappen'}`}
                       >
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center gap-2 truncate">
                           <svg
                             className="h-4 w-4"
                             fill="none"
@@ -562,6 +562,8 @@ const ICON_PATHS: Record<string, string> = {
   Banknote: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
   Settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
   Circle: 'M12 12m-9 0a9 9 0 1018 0 9 9 0 10-18 0',
+  HelpCircle: 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-6v.01M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3',
+  TrendingUp: 'M23 6l-9.5 9.5-5-5L1 18',
 }
 
 function NavIcon({ name, className }: { name: string; className?: string }) {

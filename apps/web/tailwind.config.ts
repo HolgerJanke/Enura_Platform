@@ -19,6 +19,23 @@ const config: Config = {
           'text-secondary': 'var(--brand-text-secondary)',
         },
       },
+      boxShadow: {
+        'brand-sm': 'var(--brand-shadow-sm)',
+        'brand-md': 'var(--brand-shadow-md)',
+        'brand-lg': 'var(--brand-shadow-lg)',
+      },
+      fontSize: {
+        'brand-base': 'var(--brand-font-size-base)',
+      },
+      lineHeight: {
+        brand: 'var(--brand-line-height)',
+      },
+      letterSpacing: {
+        brand: 'var(--brand-letter-spacing)',
+      },
+      borderWidth: {
+        brand: 'var(--brand-border-width)',
+      },
       borderRadius: {
         brand: 'var(--brand-radius)',
       },

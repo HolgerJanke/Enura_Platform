@@ -9,6 +9,9 @@ const HOLDING_NAV_ITEMS = [
   { label: 'Secrets', href: '/admin/secrets', icon: 'key' },
   { label: 'Tools', href: '/admin/tools', icon: 'wrench' },
   { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
+  { label: 'Analytics', href: '/admin/analytics', icon: 'bar-chart' },
+  { label: 'Prozesse', href: '/admin/processes', icon: 'workflow' },
+  { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
 
 export default async function HoldingAdminLayout({ children }: { children: React.ReactNode }) {
