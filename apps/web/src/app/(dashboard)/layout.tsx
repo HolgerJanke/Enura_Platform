@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -9,7 +8,22 @@ import type { MainProcessGroup } from '@/lib/process-nav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
-  if (!session) redirect('/login')
+
+  // If no session, show a loading/redirect state instead of calling redirect()
+  // redirect() in Server Component layouts causes 404 on Vercel
+  // The middleware handles the actual auth redirect
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-background">
+        <div className="text-center">
+          <p className="text-brand-text-secondary mb-4">Sitzung wird geladen...</p>
+          <a href="/login" className="text-brand-primary underline text-sm">
+            Zur Anmeldung
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const { companyName } = getCompanyContext()
 

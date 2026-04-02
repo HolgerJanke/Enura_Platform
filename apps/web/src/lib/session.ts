@@ -3,10 +3,11 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { UserSession, RoleRow } from '@enura/types'
 
 async function _getSession(): Promise<UserSession | null> {
-  const supabase = createSupabaseServerClient()
+  try {
+    const supabase = createSupabaseServerClient()
 
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) return null
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) return null
 
   // Fetch profile
   const { data: profile } = await supabase
@@ -76,6 +77,10 @@ async function _getSession(): Promise<UserSession | null> {
     permissions: [...new Set(permissions)],
     isEnuraAdmin,
     isHoldingAdmin,
+  }
+  } catch (err) {
+    console.error('[getSession] Error:', err instanceof Error ? err.message : err)
+    return null
   }
 }
 

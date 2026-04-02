@@ -16,8 +16,21 @@ const HOLDING_NAV_ITEMS = [
 
 export default async function HoldingAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin) redirect('/login')
+
+  // Don't call redirect() in layouts — it causes 404 on Vercel
+  // The middleware handles auth redirects
+  if (!session || !session.isHoldingAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">Sitzung wird geladen...</p>
+          <a href="/login" className="text-blue-600 underline text-sm">
+            Zur Anmeldung
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const displayName = [session.profile.first_name, session.profile.last_name]
     .filter(Boolean)
