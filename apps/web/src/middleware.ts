@@ -357,20 +357,24 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!tenant) {
-    // On public paths, show default branding instead of 404
-    if (isPublicPath(pathname)) {
-      const response = NextResponse.next({ request })
-      setTenantHeaders(response, {
-        companyId: '',
-        companySlug: subdomain,
-        companyName: subdomain,
-        isHolding: false,
-        brandCSS: buildCSSVarString(defaultBrandTokens),
-        customCSSPath: '',
-      })
-      return response
+    // Tenant not found — fall through with default branding
+    // This handles cases where the Supabase Edge client fails
+    const response = getResponse()
+    setTenantHeaders(response, {
+      companyId: '',
+      companySlug: subdomain,
+      companyName: subdomain,
+      isHolding: false,
+      brandCSS: buildCSSVarString(defaultBrandTokens),
+      customCSSPath: '',
+    })
+
+    // For non-public paths, still require auth
+    if (!isPublicPath(pathname) && !user) {
+      return redirectTo(request, '/login')
     }
-    return NextResponse.rewrite(new URL('/not-found', request.url))
+
+    return response
   }
 
   // Fetch branding
