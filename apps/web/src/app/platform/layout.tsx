@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session'
 import { PlatformShell } from '@/components/platform-shell'
 
 const PLATFORM_NAV_ITEMS = [
+  { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
   { label: 'Uebersicht', href: '/platform', icon: 'overview' },
   { label: 'Neues Holding', href: '/platform/holdings/new', icon: 'building' },
   { label: 'Gesundheit', href: '/platform/health', icon: 'health' },

@@ -25,7 +25,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     )
   }
 
-  const { companyName } = getCompanyContext()
+  const { companyName: rawCompanyName } = getCompanyContext()
+  // Enura admins with no company see neutral branding
+  const companyName = session.isEnuraAdmin && !session.companyId
+    ? 'Enura Group'
+    : rawCompanyName
 
   const staticNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', permission: null as string | null },

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { getCompanyContext } from '@/lib/tenant'
+import { getSession } from '@/lib/session'
 import CookieBanner from '@/components/CookieBanner'
+import { EnuraAdminBar } from '@/components/EnuraAdminBar'
 import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,8 +26,11 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { brandCSS, customCSSPath } = getCompanyContext()
+  const session = await getSession()
+  const isEnuraAdmin = session?.isEnuraAdmin ?? false
+  const adminName = session ? [session.profile.first_name, session.profile.last_name].filter(Boolean).join(' ') || 'Admin' : ''
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const customCSSUrl = customCSSPath
@@ -42,8 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ) : null}
       </head>
       <body className="bg-brand-background font-brand text-brand-text-primary antialiased">
-        <CookieBanner />
-        {children}
+        {isEnuraAdmin && <EnuraAdminBar userName={adminName} />}
+        <div className={isEnuraAdmin ? 'pt-11' : ''}>
+          <CookieBanner />
+          {children}
+        </div>
       </body>
     </html>
   )

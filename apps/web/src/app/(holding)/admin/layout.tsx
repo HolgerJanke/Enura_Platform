@@ -1,8 +1,8 @@
-import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { HoldingShell } from '@/components/holding-shell'
 
 const HOLDING_NAV_ITEMS = [
+  { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
   { label: 'Unternehmen', href: '/admin', icon: 'building' },
   { label: 'Benutzer', href: '/admin/users', icon: 'users' },
   { label: 'Finanzen', href: '/admin/finance', icon: 'banknote' },
