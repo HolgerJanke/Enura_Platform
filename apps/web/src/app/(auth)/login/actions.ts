@@ -2,7 +2,6 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { LoginSchema } from '@enura/types'
-import { redirect } from 'next/navigation'
 
 export async function loginAction(
   formData: FormData
@@ -26,6 +25,5 @@ export async function loginAction(
     return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
   }
 
-  // redirect() throws internally — must NOT be inside try/catch
-  redirect('/dashboard')
+  return { success: true }
 }

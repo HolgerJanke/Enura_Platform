@@ -13,11 +13,13 @@ export default function LoginPage() {
 
     const result = await loginAction(formData)
 
-    // If we reach here, redirect() didn't fire — there was an error
     if ('error' in result) {
       setError(result.error)
+      setIsPending(false)
+    } else {
+      // Server action set the cookies — navigate with full page load
+      window.location.href = '/dashboard'
     }
-    setIsPending(false)
   }
 
   return (
@@ -32,7 +34,13 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form action={handleSubmit} className="space-y-5">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleSubmit(new FormData(e.currentTarget))
+        }}
+        className="space-y-5"
+      >
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-text-primary mb-1.5">
             E-Mail-Adresse
