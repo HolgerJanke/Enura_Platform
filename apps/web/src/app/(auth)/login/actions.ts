@@ -2,7 +2,6 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { LoginSchema } from '@enura/types'
-import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { checkRateLimit, resetRateLimit } from '@/lib/rate-limit'
 
@@ -31,18 +30,23 @@ export async function loginAction(
     }
   }
 
-  const supabase = await createSupabaseServerClient()
-  const { error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-  })
+  try {
+    const supabase = createSupabaseServerClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    })
 
-  if (error) {
-    return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
+    if (error) {
+      return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
+    }
+
+    // Success — reset rate limit and return success
+    // Client handles the redirect via window.location
+    resetRateLimit(rateLimitKey)
+    return { error: null }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { error: `Anmeldefehler: ${msg}` }
   }
-
-  // Success — reset rate limit and return success
-  // Client handles the redirect via window.location
-  resetRateLimit(rateLimitKey)
-  return { error: null, success: true } as { error: string | null }
 }
