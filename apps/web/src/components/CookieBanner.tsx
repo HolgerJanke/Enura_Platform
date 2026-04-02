@@ -1,28 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getCookie, setCookie } from 'cookies-next'
 import Link from 'next/link'
 
 const COOKIE_NAME = 'enura_cookie_consent'
 const COOKIE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60 // 1 year
 
+function getBrowserCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1] ?? '') : undefined
+}
+
+function setBrowserCookie(name: string, value: string, maxAge: number): void {
+  document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${maxAge};samesite=lax`
+}
+
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const consent = getCookie(COOKIE_NAME)
-    if (!consent) {
+    if (!getBrowserCookie(COOKIE_NAME)) {
       setVisible(true)
     }
   }, [])
 
   function handleAccept() {
-    setCookie(COOKIE_NAME, 'accepted', {
-      maxAge: COOKIE_MAX_AGE_SECONDS,
-      sameSite: 'lax',
-      path: '/',
-    })
+    setBrowserCookie(COOKIE_NAME, 'accepted', COOKIE_MAX_AGE_SECONDS)
     setVisible(false)
   }
 

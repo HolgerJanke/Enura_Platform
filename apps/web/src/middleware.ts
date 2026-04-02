@@ -321,15 +321,55 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
     return redirectTo(request, '/login')
   }
 
-  // Fetch tenant from Supabase
-  const { data: tenant } = await supabase
+  // Fetch tenant from Supabase — try direct REST API as fallback
+  let tenant: CompanyRow | null = null
+
+  // First try the Supabase client
+  const { data: tenantData } = await supabase
     .from('companies')
     .select('id, slug, name, status')
     .eq('slug', subdomain)
     .eq('status', 'active')
     .single<CompanyRow>()
 
+  tenant = tenantData
+
+  // Fallback: direct REST fetch if client fails (Edge runtime compatibility)
+  if (!tenant && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/companies?slug=eq.${subdomain}&status=eq.active&select=id,slug,name,status&limit=1`,
+        {
+          headers: {
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          },
+          cache: 'no-store',
+        },
+      )
+      if (res.ok) {
+        const rows = await res.json() as CompanyRow[]
+        tenant = rows[0] ?? null
+      }
+    } catch {
+      // Silently fall through
+    }
+  }
+
   if (!tenant) {
+    // On public paths, show default branding instead of 404
+    if (isPublicPath(pathname)) {
+      const response = NextResponse.next({ request })
+      setTenantHeaders(response, {
+        companyId: '',
+        companySlug: subdomain,
+        companyName: subdomain,
+        isHolding: false,
+        brandCSS: buildCSSVarString(defaultBrandTokens),
+        customCSSPath: '',
+      })
+      return response
+    }
     return NextResponse.rewrite(new URL('/not-found', request.url))
   }
 
