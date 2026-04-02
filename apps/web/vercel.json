@@ -1,0 +1,5 @@
+{
+  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "cd ../.. && pnpm --filter @enura/types build && pnpm --filter @enura/ui build && cd apps/web && npx next build",
+  "framework": "nextjs"
+}
