@@ -1,15 +1,14 @@
-import { redirect } from 'next/navigation'
 import { getSession } from './session'
 
 /**
- * Require a specific permission. Redirects to /dashboard if not authorized.
- * Use in Server Components at the top of the component function.
+ * Require a specific permission. Returns false if not authorized.
+ * Use in Server Components: if (!await requirePermission('key')) return <Fallback/>
  */
-export async function requirePermission(permissionKey: string): Promise<void> {
+export async function requirePermission(permissionKey: string): Promise<boolean> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (session.isHoldingAdmin) return
-  if (!session.permissions.includes(permissionKey)) redirect('/dashboard')
+  if (!session) return false
+  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
+  return session.permissions.includes(permissionKey)
 }
 
 /**
@@ -18,32 +17,32 @@ export async function requirePermission(permissionKey: string): Promise<void> {
 export async function checkPermission(permissionKey: string): Promise<boolean> {
   const session = await getSession()
   if (!session) return false
-  if (session.isHoldingAdmin) return true
+  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
   return session.permissions.includes(permissionKey)
 }
 
 /**
- * Require the user to be a holding admin. Redirects to /login if not.
+ * Require the user to be a holding admin. Returns false if not.
  */
-export async function requireHoldingAdmin(): Promise<void> {
+export async function requireHoldingAdmin(): Promise<boolean> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin) redirect('/login')
+  if (!session) return false
+  return session.isHoldingAdmin || session.isEnuraAdmin
 }
 
 /**
- * Require authentication. Redirects to /login if no session.
+ * Require authentication. Returns false if no session.
  */
-export async function requireAuth(): Promise<void> {
+export async function requireAuth(): Promise<boolean> {
   const session = await getSession()
-  if (!session) redirect('/login')
+  return session !== null
 }
 
 /**
- * Require the user to be an Enura platform admin. Redirects to /login if not.
+ * Require the user to be an Enura platform admin. Returns false if not.
  */
-export async function requireEnuraAdmin(): Promise<void> {
+export async function requireEnuraAdmin(): Promise<boolean> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isEnuraAdmin) redirect('/login')
+  if (!session) return false
+  return session.isEnuraAdmin
 }
