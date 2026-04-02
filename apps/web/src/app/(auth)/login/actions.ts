@@ -41,7 +41,8 @@ export async function loginAction(
     return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
   }
 
-  // Success — reset rate limit and redirect
+  // Success — reset rate limit and return success
+  // Client handles the redirect via window.location
   resetRateLimit(rateLimitKey)
-  redirect('/')
+  return { error: null, success: true } as { error: string | null }
 }

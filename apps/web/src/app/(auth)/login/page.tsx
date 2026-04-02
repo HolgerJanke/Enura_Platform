@@ -16,6 +16,9 @@ export default function LoginPage() {
       const result = await loginAction({ error: null }, formData)
       if (result?.error) {
         setError(result.error)
+      } else {
+        // Login successful — full page navigation to trigger middleware
+        window.location.href = '/'
       }
     })
   }
