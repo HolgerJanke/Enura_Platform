@@ -1,26 +1,41 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { loginAction } from './actions'
+import { useState } from 'react'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
     setError(null)
+    setIsPending(true)
 
-    startTransition(async () => {
-      const result = await loginAction({ error: null }, formData)
-      if (result?.error) {
-        setError(result.error)
-      } else {
-        // Login successful — full page navigation to trigger middleware
-        window.location.href = '/'
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json() as { error?: string; success?: boolean }
+
+      if (!res.ok || data.error) {
+        setError(data.error ?? 'Anmeldung fehlgeschlagen.')
+        setIsPending(false)
+        return
       }
-    })
+
+      // Success — full page reload to pick up session cookies
+      window.location.href = '/'
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Netzwerkfehler.')
+      setIsPending(false)
+    }
   }
 
   return (
@@ -40,66 +55,32 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-brand-text-primary mb-1.5"
-          >
+          <label htmlFor="email" className="block text-sm font-medium text-brand-text-primary mb-1.5">
             E-Mail-Adresse
           </label>
           <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            aria-label="E-Mail-Adresse"
+            id="email" name="email" type="email" required autoComplete="email"
             className="w-full rounded-brand border border-gray-300 px-3 py-2.5 text-sm text-brand-text-primary bg-brand-background placeholder:text-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="name@firma.ch"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-brand-text-primary mb-1.5"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-brand-text-primary mb-1.5">
             Passwort
           </label>
           <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            aria-label="Passwort"
+            id="password" name="password" type="password" required autoComplete="current-password"
             className="w-full rounded-brand border border-gray-300 px-3 py-2.5 text-sm text-brand-text-primary bg-brand-background placeholder:text-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="••••••••"
           />
         </div>
 
         <button
-          type="submit"
-          disabled={isPending}
-          aria-label="Anmelden"
+          type="submit" disabled={isPending}
           className="w-full rounded-brand bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
-          {isPending ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Wird angemeldet...
-            </span>
-          ) : (
-            'Anmelden'
-          )}
+          {isPending ? 'Wird angemeldet...' : 'Anmelden'}
         </button>
       </form>
 

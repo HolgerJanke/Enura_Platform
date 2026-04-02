@@ -1,32 +1,23 @@
-'use server'
-
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { LoginSchema } from '@enura/types'
+import { NextResponse } from 'next/server'
 
-export async function loginAction(
-  _prevState: { error: string | null },
-  formData: FormData
-): Promise<{ error: string | null }> {
+export async function POST(request: Request) {
   try {
-    const parsed = LoginSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    })
+    const body = await request.json() as { email?: string; password?: string }
 
-    if (!parsed.success) {
-      return { error: 'Ungueltige Eingabe. Bitte ueberpruefen Sie Ihre Angaben.' }
+    if (!body.email || !body.password) {
+      return NextResponse.json({ error: 'E-Mail und Passwort erforderlich.' }, { status: 400 })
     }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!url || !key) {
-      return { error: 'Konfigurationsfehler: Supabase-Umgebungsvariablen fehlen.' }
+      return NextResponse.json({ error: 'Supabase nicht konfiguriert.' }, { status: 500 })
     }
 
     const cookieStore = cookies()
-
     const supabase = createServerClient(url, key, {
       cookies: {
         getAll() {
@@ -38,24 +29,24 @@ export async function loginAction(
               cookieStore.set(name, value, options),
             )
           } catch {
-            // Server component context — cookies can't be set here
+            // ignore
           }
         },
       },
     })
 
     const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
+      email: body.email,
+      password: body.password,
     })
 
     if (error) {
-      return { error: `E-Mail-Adresse oder Passwort ist falsch. (${error.message})` }
+      return NextResponse.json({ error: `E-Mail oder Passwort falsch. (${error.message})` }, { status: 401 })
     }
 
-    return { error: null }
+    return NextResponse.json({ success: true })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    return { error: `Anmeldefehler: ${msg}` }
+    return NextResponse.json({ error: `Serverfehler: ${msg}` }, { status: 500 })
   }
 }
