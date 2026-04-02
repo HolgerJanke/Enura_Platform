@@ -61,16 +61,22 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
   // Fetch tenant with branding
   const { data: tenant } = await supabase
     .from('companies')
-    .select('*, tenant_brandings(*)')
+    .select('*, company_branding(*)')
     .eq('slug', slug)
     .single()
 
   if (!tenant) {
-    notFound()
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Unternehmen nicht gefunden.</p>
+        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurueck</a>
+      </div>
+    )
   }
 
   const typedTenant = tenant as unknown as CompanyWithBranding
-  const branding = typedTenant.tenant_brandings?.[0] ?? null
+  const branding = (typedTenant as unknown as Record<string, unknown>)['company_branding'] as CompanyBrandingRow[] | null
+  const brandingRow = Array.isArray(branding) ? branding[0] ?? null : null
 
   // Fetch users in this tenant
   const { data: profiles } = await supabase
@@ -129,7 +135,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
 
       <TenantDetailTabs
         tenant={typedTenant}
-        branding={branding}
+        branding={brandingRow}
         users={users.map((u) => ({
           id: u.id,
           firstName: u.first_name,
