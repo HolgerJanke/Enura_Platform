@@ -23,8 +23,8 @@ export async function rotateSecret(
   newValue: string,
 ): Promise<SecretActionResult> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {
@@ -94,8 +94,8 @@ export async function rotateSecret(
 
 export async function deactivateSecret(secretId: string): Promise<SecretActionResult> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {
@@ -148,8 +148,8 @@ export async function deactivateSecret(secretId: string): Promise<SecretActionRe
 
 export async function reactivateSecret(secretId: string): Promise<SecretActionResult> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {

@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 
 const MODULE_PRIORITY = [
@@ -12,18 +11,21 @@ const MODULE_PRIORITY = [
 
 export default async function DashboardRootPage() {
   const session = await getSession()
-  if (!session) redirect('/login')
-
-  // Holding admins go to dashboard overview
-  if (session.isHoldingAdmin) redirect('/dashboard')
-
-  // Find first permitted module
-  for (const mod of MODULE_PRIORITY) {
-    if (session.permissions.includes(mod.permission)) {
-      redirect(mod.path)
-    }
+  if (!session) {
+    return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
   }
 
-  // No permissions — show access denied page
-  redirect('/dashboard')
+  // Find first permitted module for a direct link
+  const firstModule = MODULE_PRIORITY.find(mod => session.permissions.includes(mod.permission))
+  const targetPath = session.isHoldingAdmin ? '/dashboard' : (firstModule?.path ?? '/dashboard')
+
+  return (
+    <div className="p-8 text-center">
+      <p className="text-gray-500 mb-4">Weiterleitung...</p>
+      <a href={targetPath} className="text-blue-600 underline">
+        Zum Dashboard
+      </a>
+      <script dangerouslySetInnerHTML={{ __html: `window.location.href="${targetPath}"` }} />
+    </div>
+  )
 }

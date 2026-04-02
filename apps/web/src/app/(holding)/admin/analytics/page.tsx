@@ -8,7 +8,7 @@ export default async function AnalyticsPage() {
   await requireHoldingAdmin()
 
   const session = await getSession()
-  if (!session?.holdingId) redirect('/login')
+  if (!session?.holdingId) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
 
   // Default: 30 Tage
   const kpis = await getHoldingKpis(30)

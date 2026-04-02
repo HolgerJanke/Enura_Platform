@@ -13,8 +13,8 @@ import { writeAuditLog } from '@/lib/audit'
 
 async function requireHoldingSession() {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff')
   if (!session.holdingId) {
     throw new Error('Kein Holding zugewiesen.')
   }

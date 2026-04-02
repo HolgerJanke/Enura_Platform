@@ -3,9 +3,16 @@ import { getHoldingBranding } from './actions'
 import { BrandingEditorClient } from './branding-editor-client'
 
 export default async function HoldingBrandingPage() {
-  await requireHoldingAdmin()
+  const isAdmin = await requireHoldingAdmin()
+  if (!isAdmin) return (<div className="p-8 text-center"><p className="text-gray-500">Kein Zugriff.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
-  const branding = await getHoldingBranding()
+  let branding: Awaited<ReturnType<typeof getHoldingBranding>> | null = null
+  try {
+    branding = await getHoldingBranding()
+  } catch {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Branding konnte nicht geladen werden.</p><a href="/admin" className="text-blue-600 underline">Zurueck</a></div>)
+  }
+  if (!branding) return (<div className="p-8 text-center"><p className="text-gray-500">Keine Branding-Daten.</p></div>)
 
   return (
     <div className="p-6">

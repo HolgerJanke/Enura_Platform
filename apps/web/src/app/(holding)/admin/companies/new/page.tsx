@@ -14,7 +14,7 @@ export default async function NewCompanyWizardPage() {
   await requireHoldingAdmin()
 
   const session = await getSession()
-  if (!session?.holdingId) redirect('/login')
+  if (!session?.holdingId) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
 
   return (
     <div className="p-6 lg:p-8">

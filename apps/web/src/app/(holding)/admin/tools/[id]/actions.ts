@@ -81,8 +81,8 @@ export async function updateTool(
   input: UpdateToolInput,
 ): Promise<ToolActionResult> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {
@@ -168,8 +168,8 @@ export type TestConnectionResult = {
 
 export async function testConnection(toolId: string): Promise<TestConnectionResult> {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {

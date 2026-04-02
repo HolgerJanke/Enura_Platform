@@ -37,7 +37,7 @@ export default async function ConnectorConfigPage({
   await requirePermission('module:admin:read')
 
   const { type } = params
-  if (!isValidType(type)) notFound()
+  if (!isValidType(type)) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
 
   const session = await getSession()
   if (!session?.companyId) return null

@@ -78,8 +78,8 @@ export type CreateToolResult = {
 export async function createTool(input: CreateToolInput): Promise<CreateToolResult> {
   // 1. Auth check
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {

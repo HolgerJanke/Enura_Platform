@@ -64,7 +64,7 @@ export default async function HoldingDetailPage({
   await requireEnuraAdmin()
 
   const detail = await getHoldingDetail(params.id)
-  if (!detail) notFound()
+  if (!detail) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
 
   return (
     <div className="p-6 lg:p-8">

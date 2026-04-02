@@ -13,7 +13,7 @@ export default async function DeployPage({
 }) {
   await requireHoldingAdmin()
   const session = await getSession()
-  if (!session) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
   const supabase = createSupabaseServerClient()
   const processId = params.id

@@ -50,13 +50,13 @@ interface PageProps {
 export default async function LiquidityCompanyPage({ params }: PageProps) {
   await requirePermission('module:finance:read')
   const session = await getSession()
-  if (!session) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
   const { companyId } = params
 
   // Verify user has access to this company
   if (!session.isHoldingAdmin && session.companyId !== companyId) {
-    redirect('/dashboard')
+  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
   }
 
   const supabase = createSupabaseServerClient()

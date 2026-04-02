@@ -3,9 +3,18 @@ import { getAllUsers } from './actions'
 import { UsersClient } from './users-client'
 
 export default async function HoldingUsersPage() {
-  await requireHoldingAdmin()
+  const isAdmin = await requireHoldingAdmin()
+  if (!isAdmin) return (<div className="p-8 text-center"><p className="text-gray-500">Kein Zugriff.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
-  const { users, invitations } = await getAllUsers()
+  let users: Awaited<ReturnType<typeof getAllUsers>>['users'] = []
+  let invitations: Awaited<ReturnType<typeof getAllUsers>>['invitations'] = []
+  try {
+    const data = await getAllUsers()
+    users = data.users
+    invitations = data.invitations
+  } catch {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Daten konnten nicht geladen werden.</p><a href="/admin" className="text-blue-600 underline">Zurueck</a></div>)
+  }
 
   return (
     <div className="p-6">

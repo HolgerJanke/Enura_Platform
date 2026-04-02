@@ -3,9 +3,16 @@ import { getPermissionMatrix } from './actions'
 import { PermissionMatrixClient } from './permission-matrix-client'
 
 export default async function PermissionsPage() {
-  await requireHoldingAdmin()
+  const isAdmin = await requireHoldingAdmin()
+  if (!isAdmin) return (<div className="p-8 text-center"><p className="text-gray-500">Kein Zugriff.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
-  const matrix = await getPermissionMatrix()
+  let matrix: Awaited<ReturnType<typeof getPermissionMatrix>> | null = null
+  try {
+    matrix = await getPermissionMatrix()
+  } catch {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Berechtigungen konnten nicht geladen werden.</p><a href="/admin" className="text-blue-600 underline">Zurueck</a></div>)
+  }
+  if (!matrix) return (<div className="p-8 text-center"><p className="text-gray-500">Keine Daten.</p></div>)
 
   return (
     <div className="p-6">

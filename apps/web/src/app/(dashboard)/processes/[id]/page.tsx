@@ -70,7 +70,7 @@ export default async function TenantProcessPage({
   params: { id: string }
 }) {
   const session = await getSession()
-  if (!session) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
   const supabase = createSupabaseServerClient()
   const processId = params.id
@@ -104,7 +104,7 @@ export default async function TenantProcessPage({
     session.companyId &&
     (processRow['company_id'] as string | null) !== session.companyId
   ) {
-    redirect('/dashboard')
+  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
   }
 
   // Guard: user's role must be in visible_roles (holding admins bypass)
@@ -115,7 +115,7 @@ export default async function TenantProcessPage({
       userRoleKeys.includes(vr),
     )
     if (!hasVisibleRole) {
-      redirect('/dashboard')
+  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
     }
   }
 

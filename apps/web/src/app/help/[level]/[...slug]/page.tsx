@@ -248,14 +248,14 @@ Die Tabellen \`calls\`, \`cashflow_entries\`, \`calendar_events\`, \`kpi_snapsho
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const session = await getSession()
-  if (!session) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
   const { level, slug } = params
   const articleSlug = slug.join('/')
 
   // Validate level
   if (!['company', 'holding', 'meta'].includes(level)) {
-    notFound()
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
   }
 
   // Check access
@@ -264,13 +264,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (session.isEnuraAdmin) accessibleLevels.push('meta')
 
   if (!accessibleLevels.includes(level)) {
-    redirect('/help')
+    return (<div className="p-8 text-center"><a href="/help" className="text-blue-600 underline">Weiter</a></div>)
   }
 
   // Find article metadata
   const article = HELP_ARTICLES.find((a) => a.slug === articleSlug && a.level === level)
   if (!article) {
-    notFound()
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
   }
 
   // Get content

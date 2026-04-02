@@ -33,11 +33,11 @@ export default async function ToolEditPage({
   params: { id: string }
 }) {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
 
   const holdingId = session.holdingId
-  if (!holdingId) redirect('/login')
+  if (!holdingId) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
 
   const supabase = createSupabaseServerClient()
 
@@ -50,7 +50,7 @@ export default async function ToolEditPage({
     .single()
 
   if (toolError || !tool) {
-    notFound()
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
   }
 
   const toolRecord = tool as Record<string, unknown>

@@ -13,12 +13,12 @@ export default async function ProcessVersionsPage({
   params: { id: string }
 }) {
   const session = await getSession()
-  if (!session) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
   // Must be super_user or holding admin
   const isSuperUser = session.roles.some((r) => r.key === 'super_user')
   if (!isSuperUser && !session.isHoldingAdmin) {
-    redirect('/dashboard')
+  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
   }
 
   const supabase = createSupabaseServerClient()
@@ -50,7 +50,7 @@ export default async function ProcessVersionsPage({
     session.companyId &&
     (defRow['company_id'] as string | null) !== session.companyId
   ) {
-    redirect('/dashboard')
+  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
   }
 
   // Fetch versions with creator profile

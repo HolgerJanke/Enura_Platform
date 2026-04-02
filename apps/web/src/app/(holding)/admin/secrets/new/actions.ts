@@ -65,8 +65,8 @@ export type CreateSecretResult = {
 export async function createSecret(input: CreateSecretInput): Promise<CreateSecretResult> {
   // 1. Auth check
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {

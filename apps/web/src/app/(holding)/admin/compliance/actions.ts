@@ -11,8 +11,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 async function requireHoldingSession() {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) redirect('/login')
+  if (!session) throw new Error('Nicht angemeldet')
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
   if (!session.holdingId) {
     throw new Error('Kein Holding zugewiesen.')
   }

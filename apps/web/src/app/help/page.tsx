@@ -43,7 +43,7 @@ const DEFAULT_QUICK_LINKS: QuickLink[] = [
 
 export default async function HelpCentrePage() {
   const session = await getSession()
-  if (!session) redirect('/login')
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
   // Determine accessible levels based on user status
   const accessibleLevels: Array<'company' | 'holding' | 'meta'> = ['company']
