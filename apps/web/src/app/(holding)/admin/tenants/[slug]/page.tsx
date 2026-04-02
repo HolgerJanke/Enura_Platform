@@ -54,8 +54,9 @@ function connectorStatusBadge(status: string): { label: string; classes: string 
   }
 }
 
-export default async function TenantDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+export default async function TenantDetailPage({ params }: { params: { slug: string } }) {
+  try {
+  const { slug } = params
   const supabase = createSupabaseServerClient()
 
   // Fetch tenant with branding
@@ -173,4 +174,14 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
       />
     </div>
   )
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Fehler beim Laden</h2>
+        <p className="text-gray-500 text-sm mb-4">{msg}</p>
+        <a href="/admin" className="text-blue-600 underline text-sm">Zurueck zur Uebersicht</a>
+      </div>
+    )
+  }
 }
