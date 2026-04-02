@@ -1,42 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useFormState, useFormStatus } from 'react-dom'
+import { loginAction } from './actions'
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-brand bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+    >
+      {pending ? 'Wird angemeldet...' : 'Anmelden'}
+    </button>
+  )
+}
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, setIsPending] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    setIsPending(true)
-
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await res.json() as { error?: string; success?: boolean }
-
-      if (!res.ok || data.error) {
-        setError(data.error ?? 'Anmeldung fehlgeschlagen.')
-        setIsPending(false)
-        return
-      }
-
-      // Success — full page reload to pick up session cookies
-      window.location.href = '/'
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Netzwerkfehler.')
-      setIsPending(false)
-    }
-  }
+  const [state, formAction] = useFormState(loginAction, { error: null })
 
   return (
     <div className="bg-brand-surface rounded-brand p-8 shadow-sm border border-gray-200">
@@ -44,16 +25,13 @@ export default function LoginPage() {
         Anmelden
       </h2>
 
-      {error && (
-        <div
-          className="mb-4 rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          role="alert"
-        >
-          {error}
+      {state.error && (
+        <div className="mb-4 rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+          {state.error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form action={formAction} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-text-primary mb-1.5">
             E-Mail-Adresse
@@ -76,12 +54,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <button
-          type="submit" disabled={isPending}
-          className="w-full rounded-brand bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-        >
-          {isPending ? 'Wird angemeldet...' : 'Anmelden'}
-        </button>
+        <SubmitButton />
       </form>
 
       <p className="mt-6 text-center text-xs text-brand-text-secondary">

@@ -1,61 +1,36 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { LoginSchema } from '@enura/types'
+import { redirect } from 'next/navigation'
 
 export async function loginAction(
   _prevState: { error: string | null },
   formData: FormData
 ): Promise<{ error: string | null }> {
+  const parsed = LoginSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  })
+
+  if (!parsed.success) {
+    return { error: 'Ungueltige Eingabe. Bitte ueberpruefen Sie Ihre Angaben.' }
+  }
+
   try {
-    const parsed = LoginSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    })
-
-    if (!parsed.success) {
-      return { error: 'Ungueltige Eingabe. Bitte ueberpruefen Sie Ihre Angaben.' }
-    }
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!url || !key) {
-      return { error: 'Konfigurationsfehler: Supabase-Umgebungsvariablen fehlen.' }
-    }
-
-    const cookieStore = cookies()
-
-    const supabase = createServerClient(url, key, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }>) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            )
-          } catch {
-            // Server component context — cookies can't be set here
-          }
-        },
-      },
-    })
-
+    const supabase = createSupabaseServerClient()
     const { error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     })
 
     if (error) {
-      return { error: `E-Mail-Adresse oder Passwort ist falsch. (${error.message})` }
+      return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
     }
-
-    return { error: null }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return { error: `Anmeldefehler: ${msg}` }
   }
+
+  redirect('/')
 }

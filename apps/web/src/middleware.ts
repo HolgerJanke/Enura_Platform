@@ -518,19 +518,38 @@ async function checkMfaLevel(
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
+  const hostname = request.headers.get('host') ?? 'localhost:3000'
 
   // Skip static assets entirely
   if (isStaticAsset(pathname)) {
     return NextResponse.next()
   }
 
+  // ── PUBLIC PATH SHORT-CIRCUIT ──────────────────────────────
+  // For login, reset-password, 2FA, API routes, etc.:
+  // Set default branding headers and pass through immediately.
+  // NO Supabase client creation, NO auth checks, NO DB queries.
+  if (isPublicPath(pathname)) {
+    const subdomain = getSubdomain(hostname)
+    const response = NextResponse.next({ request })
+    setTenantHeaders(response, {
+      companyId: '',
+      companySlug: subdomain ?? 'default',
+      companyName: subdomain ?? 'Platform',
+      isHolding: isAdminHost(hostname),
+      brandCSS: buildCSSVarString(defaultBrandTokens),
+      customCSSPath: '',
+    })
+    return response
+  }
+
+  // ── PROTECTED PATHS ────────────────────────────────────────
   try {
     if (MOCK_AUTH) {
       return handleMockAuth(request)
     }
     return await handleSupabaseAuth(request)
   } catch (error) {
-    // Never throw from middleware — redirect to login on unexpected errors
     console.error('[middleware] Unerwarteter Fehler:', error)
     return NextResponse.redirect(new URL('/login', request.url))
   }
