@@ -15,8 +15,8 @@ import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 
 const MOCK_AUTH = process.env.MOCK_AUTH !== 'false'
 
-const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa']
-const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/health']
+const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/invite', '/privacy', '/help', '/debug']
+const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/', '/manifest.json', '/icon-']
 
 /** Mock tenant data — only used when MOCK_AUTH=true */
 const MOCK_TENANTS: Record<
