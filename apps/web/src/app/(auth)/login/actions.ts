@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 
 export async function loginAction(
   formData: FormData
-): Promise<{ error: string }> {
+): Promise<{ error: string } | { success: true }> {
   const parsed = LoginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -16,21 +16,16 @@ export async function loginAction(
     return { error: 'Ungueltige Eingabe. Bitte ueberpruefen Sie Ihre Angaben.' }
   }
 
-  try {
-    const supabase = createSupabaseServerClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    })
+  const supabase = createSupabaseServerClient()
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  })
 
-    if (error) {
-      return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return { error: `Anmeldefehler: ${msg}` }
+  if (error) {
+    return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
   }
 
-  // redirect() throws NEXT_REDIRECT — caught by Next.js, not by our catch
+  // redirect() throws internally — must NOT be inside try/catch
   redirect('/dashboard')
 }

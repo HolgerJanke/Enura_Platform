@@ -1,31 +1,23 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useState } from 'react'
 import { loginAction } from './actions'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
-  const formRef = useRef<HTMLFormElement>(null)
+  const [isPending, setIsPending] = useState(false)
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function handleSubmit(formData: FormData) {
     setError(null)
+    setIsPending(true)
 
-    const formData = new FormData(e.currentTarget)
+    const result = await loginAction(formData)
 
-    startTransition(async () => {
-      try {
-        const result = await loginAction(formData)
-        // If we get here, it means redirect() didn't fire → there was an error
-        if (result?.error) {
-          setError(result.error)
-        }
-      } catch {
-        // redirect() throws NEXT_REDIRECT which propagates here
-        // This is expected — Next.js handles the navigation
-      }
-    })
+    // If we reach here, redirect() didn't fire — there was an error
+    if ('error' in result) {
+      setError(result.error)
+    }
+    setIsPending(false)
   }
 
   return (
@@ -40,7 +32,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+      <form action={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-text-primary mb-1.5">
             E-Mail-Adresse
