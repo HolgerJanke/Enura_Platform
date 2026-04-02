@@ -255,13 +255,37 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   const hostname = request.headers.get('host') ?? 'localhost:3000'
 
   // Create Supabase middleware client — this handles cookie forwarding
-  const { supabase, getResponse } = createSupabaseMiddlewareClient(request)
+  let supabase: ReturnType<typeof createSupabaseMiddlewareClient>['supabase']
+  let getResponse: ReturnType<typeof createSupabaseMiddlewareClient>['getResponse']
+  let user: { id: string } | null = null
 
-  // IMPORTANT: Always call getUser() first so cookies are refreshed.
-  // Do NOT use getSession() — it reads from cookies without server validation.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  try {
+    const client = createSupabaseMiddlewareClient(request)
+    supabase = client.supabase
+    getResponse = client.getResponse
+
+    const { data } = await supabase.auth.getUser()
+    user = data.user as { id: string } | null
+  } catch {
+    // Supabase client failed (e.g. missing env vars in Edge runtime)
+    // Continue with no user — public paths will still work
+    const fallbackResponse = NextResponse.next({ request })
+    const subdomain = getSubdomain(hostname)
+
+    setTenantHeaders(fallbackResponse, {
+      companyId: '',
+      companySlug: subdomain ?? 'default',
+      companyName: subdomain ?? 'Platform',
+      isHolding: isAdminHost(hostname),
+      brandCSS: buildCSSVarString(defaultBrandTokens),
+      customCSSPath: '',
+    })
+
+    if (!isPublicPath(pathname)) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return fallbackResponse
+  }
 
   // -----------------------------------------------------------------------
   // Admin / Holding portal
