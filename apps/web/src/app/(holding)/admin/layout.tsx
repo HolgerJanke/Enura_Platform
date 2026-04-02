@@ -8,9 +8,12 @@ const HOLDING_NAV_ITEMS = [
   { label: 'Finanzen', href: '/admin/finance', icon: 'banknote' },
   { label: 'Secrets', href: '/admin/secrets', icon: 'key' },
   { label: 'Tools', href: '/admin/tools', icon: 'wrench' },
-  { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
-  { label: 'Analytics', href: '/admin/analytics', icon: 'bar-chart' },
   { label: 'Prozesse', href: '/admin/processes', icon: 'workflow' },
+  { label: 'Analytics', href: '/admin/analytics', icon: 'bar-chart' },
+  { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
+  { label: 'Zertifizierungen', href: '/admin/compliance/certifications', icon: 'award' },
+  { label: 'Branding', href: '/admin/settings/branding', icon: 'palette' },
+  { label: 'Berechtigungen', href: '/admin/settings/permissions', icon: 'lock' },
   { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
 

@@ -6,6 +6,7 @@ import {
   buildExtendedCSSVarString,
   brandTokensFromRow,
   type ExtendedBrandTokens,
+  type BrandTokens,
 } from '@enura/types'
 import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 
@@ -77,17 +78,22 @@ function getSubdomain(hostname: string): string | null {
     return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
   }
 
-  const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'platform.com'
+  const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
 
-  // Root domain — no subdomain
+  // Root domain (with or without www) — use default tenant
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
-    return process.env.DEV_DEFAULT_TENANT_SLUG ?? null
+    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
   }
 
-  // Extract subdomain (first part before root domain)
+  // Extract subdomain: e.g. alpen-energie.enura-group.com → alpen-energie
+  // But skip 'www' — it's not a tenant subdomain
   const parts = hostname.split('.')
   if (parts.length >= 3) {
-    return parts[0] ?? null
+    const sub = parts[0]
+    if (sub === 'www' || sub === 'admin') {
+      return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+    }
+    return sub ?? null
   }
 
   return null
@@ -368,7 +374,6 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
             apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           },
-          cache: 'no-store',
         },
       )
       if (res.ok) {
@@ -525,46 +530,90 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next()
   }
 
-  // ── PUBLIC PATH SHORT-CIRCUIT ──────────────────────────────
-  // For login, reset-password, 2FA, API routes, etc.:
-  // Set default branding headers and pass through immediately.
-  // NO Supabase client creation, NO auth checks, NO DB queries.
-  if (isPublicPath(pathname)) {
-    const subdomain = getSubdomain(hostname)
+  // ── PUBLIC PATHS (API routes) — skip branding, pass through immediately
+  if (pathname.startsWith('/api/')) {
     const response = NextResponse.next({ request })
-    setTenantHeaders(response, {
-      companyId: '',
-      companySlug: subdomain ?? 'default',
-      companyName: subdomain ?? 'Platform',
-      isHolding: isAdminHost(hostname),
-      brandCSS: buildCSSVarString(defaultBrandTokens),
-      customCSSPath: '',
-    })
     return response
   }
 
-  // ── PROTECTED PATHS ────────────────────────────────────────
-  try {
-    if (MOCK_AUTH) {
-      return handleMockAuth(request)
+  // ── ALL PATHS — resolve branding via direct REST, then pass through ──
+  // NO Supabase SDK. NO auth checks. Only branding resolution.
+  // If anything fails, fall back to defaults — NEVER block the request.
+  const subdomain = getSubdomain(hostname)
+
+  let resolvedBrandCSS = buildCSSVarString(defaultBrandTokens)
+  let resolvedCompanyId = ''
+  let resolvedCompanyName = subdomain ?? 'Platform'
+  let resolvedCustomCSSPath = ''
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (supabaseUrl && supabaseKey && subdomain) {
+    try {
+      // Fetch company by slug
+      const companyRes = await fetch(
+        `${supabaseUrl}/rest/v1/companies?slug=eq.${subdomain}&select=id,name&limit=1`,
+        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, Accept: 'application/json' } },
+      )
+      if (companyRes.ok) {
+        const companies = (await companyRes.json()) as Array<{ id: string; name: string }>
+        const company = companies[0]
+        if (company) {
+          resolvedCompanyId = company.id
+          resolvedCompanyName = company.name
+
+          // Fetch branding for this company
+          const brandRes = await fetch(
+            `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
+            {
+              headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`,
+                Accept: 'application/json',
+              },
+                },
+          )
+          if (brandRes.ok) {
+            const brandings = (await brandRes.json()) as Array<Record<string, unknown>>
+            const branding = brandings[0]
+            if (branding) {
+              // Merge with defaults for any null/missing fields
+              const tokens: BrandTokens = {
+                ...defaultBrandTokens,
+                primary:        (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
+                secondary:      (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
+                accent:         (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
+                background:     (branding['background_color'] as string) ?? defaultBrandTokens.background,
+                surface:        (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
+                textPrimary:    (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
+                textSecondary:  (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
+                font:           (branding['font_family'] as string) ?? defaultBrandTokens.font,
+                fontUrl:        (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
+                radius:         (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
+              }
+              resolvedBrandCSS = buildCSSVarString(tokens)
+              resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Silently fall back to default branding — NEVER block the request
+      console.error('[middleware] Branding fetch error:', err)
     }
-    return await handleSupabaseAuth(request)
-  } catch (error) {
-    // Supabase Edge client failed — pass through with default headers
-    // Let the server component (layout.tsx) handle auth checks instead
-    console.error('[middleware] Fehler, lasse Anfrage durch:', error)
-    const subdomain = getSubdomain(hostname)
-    const response = NextResponse.next({ request })
-    setTenantHeaders(response, {
-      companyId: '',
-      companySlug: subdomain ?? 'default',
-      companyName: subdomain ?? 'Platform',
-      isHolding: isAdminHost(hostname),
-      brandCSS: buildCSSVarString(defaultBrandTokens),
-      customCSSPath: '',
-    })
-    return response
   }
+
+  const response = NextResponse.next({ request })
+  setTenantHeaders(response, {
+    companyId: resolvedCompanyId,
+    companySlug: subdomain ?? 'default',
+    companyName: resolvedCompanyName,
+    isHolding: isAdminHost(hostname),
+    brandCSS: resolvedBrandCSS,
+    customCSSPath: resolvedCustomCSSPath,
+  })
+  return response
 }
 
 export const config = {
