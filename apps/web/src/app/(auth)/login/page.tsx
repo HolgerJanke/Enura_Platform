@@ -1,38 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState, useTransition } from 'react'
+import { loginAction } from './actions'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const formRef = useRef<HTMLFormElement>(null)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-    setPending(true)
 
-    const form = new FormData(e.currentTarget)
-    const email = form.get('email') as string
-    const password = form.get('password') as string
+    const formData = new FormData(e.currentTarget)
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = (await res.json()) as { error?: string; success?: boolean }
-
-      if (data.error) {
-        setError(data.error)
-        setPending(false)
-      } else {
-        window.location.href = '/'
+    startTransition(async () => {
+      try {
+        const result = await loginAction(formData)
+        // If we get here, it means redirect() didn't fire → there was an error
+        if (result?.error) {
+          setError(result.error)
+        }
+      } catch {
+        // redirect() throws NEXT_REDIRECT which propagates here
+        // This is expected — Next.js handles the navigation
       }
-    } catch {
-      setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
-      setPending(false)
-    }
+    })
   }
 
   return (
@@ -47,7 +40,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-text-primary mb-1.5">
             E-Mail-Adresse
@@ -71,10 +64,10 @@ export default function LoginPage() {
         </div>
 
         <button
-          type="submit" disabled={pending}
+          type="submit" disabled={isPending}
           className="w-full rounded-brand bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
-          {pending ? 'Wird angemeldet...' : 'Anmelden'}
+          {isPending ? 'Wird angemeldet...' : 'Anmelden'}
         </button>
       </form>
 

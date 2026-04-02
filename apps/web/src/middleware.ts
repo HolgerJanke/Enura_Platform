@@ -550,8 +550,20 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
     return await handleSupabaseAuth(request)
   } catch (error) {
-    console.error('[middleware] Unerwarteter Fehler:', error)
-    return NextResponse.redirect(new URL('/login', request.url))
+    // Supabase Edge client failed — pass through with default headers
+    // Let the server component (layout.tsx) handle auth checks instead
+    console.error('[middleware] Fehler, lasse Anfrage durch:', error)
+    const subdomain = getSubdomain(hostname)
+    const response = NextResponse.next({ request })
+    setTenantHeaders(response, {
+      companyId: '',
+      companySlug: subdomain ?? 'default',
+      companyName: subdomain ?? 'Platform',
+      isHolding: isAdminHost(hostname),
+      brandCSS: buildCSSVarString(defaultBrandTokens),
+      customCSSPath: '',
+    })
+    return response
   }
 }
 

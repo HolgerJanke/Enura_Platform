@@ -5,9 +5,8 @@ import { LoginSchema } from '@enura/types'
 import { redirect } from 'next/navigation'
 
 export async function loginAction(
-  _prevState: { error: string | null },
   formData: FormData
-): Promise<{ error: string | null }> {
+): Promise<{ error: string }> {
   const parsed = LoginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -32,5 +31,6 @@ export async function loginAction(
     return { error: `Anmeldefehler: ${msg}` }
   }
 
-  redirect('/')
+  // redirect() throws NEXT_REDIRECT — caught by Next.js, not by our catch
+  redirect('/dashboard')
 }
