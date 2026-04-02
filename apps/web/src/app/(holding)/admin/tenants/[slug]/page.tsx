@@ -168,9 +168,6 @@ export default async function TenantDetailPage({ params }: { params: { slug: str
           lastSyncedAt: c.last_synced_at,
           lastError: c.last_error,
         }))}
-        formatDate={formatDate}
-        statusBadge={statusBadge}
-        connectorStatusBadge={connectorStatusBadge}
       />
     </div>
   )

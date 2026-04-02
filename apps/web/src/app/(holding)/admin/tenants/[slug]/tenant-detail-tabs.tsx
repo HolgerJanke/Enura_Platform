@@ -62,9 +62,33 @@ type Props = {
   users: UserInfo[]
   superUser: { firstName: string | null; lastName: string | null; displayName: string } | null
   connectors: ConnectorInfo[]
-  formatDate: (dateStr: string) => string
-  statusBadge: (status: string) => { label: string; classes: string }
-  connectorStatusBadge: (status: string) => { label: string; classes: string }
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('de-CH', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+function statusBadge(status: string): { label: string; classes: string } {
+  switch (status) {
+    case 'active': return { label: 'Aktiv', classes: 'bg-green-100 text-green-700' }
+    case 'suspended': return { label: 'Gesperrt', classes: 'bg-red-100 text-red-700' }
+    case 'archived': return { label: 'Archiviert', classes: 'bg-gray-100 text-gray-500' }
+    default: return { label: status, classes: 'bg-gray-100 text-gray-500' }
+  }
+}
+
+function connectorStatusBadge(status: string): { label: string; classes: string } {
+  switch (status) {
+    case 'active': return { label: 'Aktiv', classes: 'bg-green-100 text-green-700' }
+    case 'paused': return { label: 'Pausiert', classes: 'bg-yellow-100 text-yellow-700' }
+    case 'error': return { label: 'Fehler', classes: 'bg-red-100 text-red-700' }
+    case 'disconnected': return { label: 'Getrennt', classes: 'bg-gray-100 text-gray-500' }
+    default: return { label: status, classes: 'bg-gray-100 text-gray-500' }
+  }
 }
 
 export function TenantDetailTabs({
@@ -73,9 +97,6 @@ export function TenantDetailTabs({
   users,
   superUser,
   connectors,
-  formatDate,
-  statusBadge,
-  connectorStatusBadge,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [brandingForm, setBrandingForm] = useState({
