@@ -277,7 +277,7 @@ function MarkenfarbenTab({
             : 'Diese Werte werden von der Holding-Konfiguration vererbt.'}
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {CORE_TOKEN_LABELS.map((token) => {
             const editedVal = editValues[token.key]
             const companyVal = editedVal ?? companyTokens[token.key]
@@ -287,11 +287,11 @@ function MarkenfarbenTab({
             return (
               <div
                 key={token.key}
-                className="rounded-[var(--brand-radius)] border border-gray-200 bg-[var(--brand-background)] p-4"
+                className="rounded-[var(--brand-radius)] border border-gray-200 bg-[var(--brand-background)] p-5"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-4">
                   {token.isColor ? (
-                    <label className="relative h-10 w-10 flex-shrink-0 rounded-[var(--brand-radius)] border border-gray-300 cursor-pointer overflow-hidden">
+                    <label className="relative h-12 w-12 flex-shrink-0 rounded-[var(--brand-radius)] border border-gray-300 cursor-pointer overflow-hidden">
                       <div
                         className="absolute inset-0"
                         style={{ backgroundColor: String(companyVal) }}
@@ -306,7 +306,7 @@ function MarkenfarbenTab({
                       )}
                     </label>
                   ) : (
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[var(--brand-radius)] border border-gray-300 bg-gray-100">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[var(--brand-radius)] border border-gray-300 bg-gray-100">
                       <span className="text-xs text-[var(--brand-text-secondary)]">Aa</span>
                     </div>
                   )}
