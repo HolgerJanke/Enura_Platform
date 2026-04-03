@@ -293,3 +293,53 @@ export async function deleteCustomCSS(): Promise<{
 
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// saveCompanyBrandTokens — save core brand color overrides
+// ---------------------------------------------------------------------------
+
+const BRAND_COLUMN_MAP: Record<string, string> = {
+  primary: 'primary_color',
+  secondary: 'secondary_color',
+  accent: 'accent_color',
+  background: 'background_color',
+  surface: 'surface_color',
+  textPrimary: 'text_primary',
+  textSecondary: 'text_secondary',
+  font: 'font_family',
+  fontUrl: 'font_url',
+  radius: 'border_radius',
+}
+
+export async function saveCompanyBrandTokens(
+  tokens: Record<string, string>,
+): Promise<{ error?: string; success?: boolean }> {
+  const session = await getSession()
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
+
+  // Map camelCase token keys to snake_case DB columns
+  const updatePayload: Record<string, string> = {}
+  for (const [key, value] of Object.entries(tokens)) {
+    const column = BRAND_COLUMN_MAP[key]
+    if (column && value) {
+      updatePayload[column] = value
+    }
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    return { error: 'Keine Aenderungen vorhanden.' }
+  }
+
+  try {
+    const db = createSupabaseServiceClient()
+    const { error } = await db
+      .from('company_branding')
+      .update(updatePayload)
+      .eq('company_id', session.companyId)
+
+    if (error) return { error: error.message }
+    return { success: true }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Speichern fehlgeschlagen.' }
+  }
+}

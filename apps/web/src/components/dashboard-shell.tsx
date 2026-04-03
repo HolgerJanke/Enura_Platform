@@ -19,6 +19,7 @@ type DashboardShellProps = {
   processGroups?: MainProcessGroup[]
   userName: string
   userRole: string
+  hasAdminBar?: boolean
   children: React.ReactNode
 }
 
@@ -52,6 +53,7 @@ export function DashboardShell({
   processGroups = [],
   userName,
   userRole,
+  hasAdminBar = false,
   children,
 }: DashboardShellProps) {
   const pathname = usePathname()
@@ -102,13 +104,16 @@ export function DashboardShell({
   }, [])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-brand-background">
+    <div
+      className="flex overflow-hidden bg-brand-background"
+      style={{ height: hasAdminBar ? 'calc(100vh - 2.5rem)' : '100vh' }}
+    >
       {/* ---------------------------------------------------------------- */}
       {/*  Desktop sidebar overlay (for mobile hamburger menu)             */}
       {/* ---------------------------------------------------------------- */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className={`fixed inset-x-0 bottom-0 z-30 bg-black/50 lg:hidden ${hasAdminBar ? 'top-10' : 'top-0'}`}
           onClick={() => setSidebarOpen(false)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') setSidebarOpen(false)
@@ -124,10 +129,11 @@ export function DashboardShell({
       {/* ---------------------------------------------------------------- */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-gray-200
+          fixed left-0 z-40 flex w-64 flex-col border-r border-gray-200
           bg-brand-surface transition-transform duration-200 ease-in-out
           lg:static lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${hasAdminBar ? 'top-10 bottom-0' : 'inset-y-0'}
         `}
       >
         {/* Tenant logo / name */}

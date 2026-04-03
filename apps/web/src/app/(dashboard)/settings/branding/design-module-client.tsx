@@ -20,6 +20,7 @@ import {
 interface DesignModuleClientProps {
   initialData: CompanyDesignData
   hasHoldingAccess: boolean
+  canEdit?: boolean
   supabaseUrl: string
 }
 
@@ -35,6 +36,35 @@ const TABS = [
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
+
+function TabNavButtons({ activeTab, onTabChange }: { activeTab: TabId; onTabChange: (tab: TabId) => void }) {
+  const currentIndex = TABS.findIndex(t => t.id === activeTab)
+  const prevTab = currentIndex > 0 ? TABS[currentIndex - 1] : null
+  const nextTab = currentIndex < TABS.length - 1 ? TABS[currentIndex + 1] : null
+
+  return (
+    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+      {prevTab ? (
+        <button
+          type="button"
+          onClick={() => onTabChange(prevTab.id)}
+          className="flex items-center gap-1 text-sm text-[var(--brand-text-secondary)] hover:text-[var(--brand-primary)] transition-colors"
+        >
+          ← {prevTab.label}
+        </button>
+      ) : <span />}
+      {nextTab ? (
+        <button
+          type="button"
+          onClick={() => onTabChange(nextTab.id)}
+          className="flex items-center gap-1 rounded-[var(--brand-radius)] bg-[var(--brand-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+        >
+          {nextTab.label} →
+        </button>
+      ) : <span />}
+    </div>
+  )
+}
 
 const CORE_TOKEN_LABELS: ReadonlyArray<{
   key: keyof BrandTokens
@@ -98,6 +128,7 @@ const EXTENDED_TOKEN_CONFIGS: ReadonlyArray<ExtendedTokenConfig> = [
 export default function DesignModuleClient({
   initialData,
   hasHoldingAccess,
+  canEdit = false,
   supabaseUrl,
 }: DesignModuleClientProps) {
   const [activeTab, setActiveTab] = useState<TabId>('markenfarben')
@@ -129,38 +160,48 @@ export default function DesignModuleClient({
 
       {/* Tab Panels */}
       {activeTab === 'markenfarben' && (
-        <MarkenfarbenTab
-          companyTokens={data.companyBranding.tokens}
-          holdingTokens={data.holdingBranding.tokens}
-          hasHoldingAccess={hasHoldingAccess}
-        />
+        <>
+          <MarkenfarbenTab
+            companyTokens={data.companyBranding.tokens}
+            holdingTokens={data.holdingBranding.tokens}
+            hasHoldingAccess={hasHoldingAccess}
+            canEdit={canEdit}
+          />
+          <TabNavButtons activeTab={activeTab} onTabChange={setActiveTab} />
+        </>
       )}
       {activeTab === 'erweitert' && (
-        <ErweitertTab
-          companyExtended={data.companyBranding.extendedTokens}
-          holdingExtended={data.holdingBranding.extendedTokens}
-          onSaved={(tokens) =>
-            setData((prev) => ({
-              ...prev,
-              companyBranding: {
-                ...prev.companyBranding,
-                extendedTokens: tokens,
-              },
-            }))
-          }
-        />
+        <>
+          <ErweitertTab
+            companyExtended={data.companyBranding.extendedTokens}
+            holdingExtended={data.holdingBranding.extendedTokens}
+            onSaved={(tokens) =>
+              setData((prev) => ({
+                ...prev,
+                companyBranding: {
+                  ...prev.companyBranding,
+                  extendedTokens: tokens,
+                },
+              }))
+            }
+          />
+          <TabNavButtons activeTab={activeTab} onTabChange={setActiveTab} />
+        </>
       )}
       {activeTab === 'css' && (
-        <CustomCSSTab
-          customCSSPath={data.companyBranding.customCSSPath}
-          supabaseUrl={supabaseUrl}
-          onUpdated={(path) =>
-            setData((prev) => ({
-              ...prev,
-              companyBranding: { ...prev.companyBranding, customCSSPath: path },
-            }))
-          }
-        />
+        <>
+          <CustomCSSTab
+            customCSSPath={data.companyBranding.customCSSPath}
+            supabaseUrl={supabaseUrl}
+            onUpdated={(path) =>
+              setData((prev) => ({
+                ...prev,
+                companyBranding: { ...prev.companyBranding, customCSSPath: path },
+              }))
+            }
+          />
+          <TabNavButtons activeTab={activeTab} onTabChange={setActiveTab} />
+        </>
       )}
       {activeTab === 'vorschau' && (
         <VorschauTab
@@ -182,27 +223,66 @@ function MarkenfarbenTab({
   companyTokens,
   holdingTokens,
   hasHoldingAccess,
+  canEdit = false,
 }: {
   companyTokens: BrandTokens
   holdingTokens: BrandTokens
   hasHoldingAccess: boolean
+  canEdit?: boolean
 }) {
+  const [editValues, setEditValues] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const hasChanges = Object.keys(editValues).length > 0
+
+  async function handleSave() {
+    setSaving(true)
+    setSaved(false)
+    try {
+      const { saveCompanyBrandTokens } = await import('./actions')
+      await saveCompanyBrandTokens(editValues)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+      setEditValues({})
+    } catch {
+      // silently handle
+    }
+    setSaving(false)
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-[var(--brand-surface)] rounded-[var(--brand-radius)] p-6 border border-gray-200">
-        <h2 className="text-lg font-medium text-[var(--brand-text-primary)] mb-2">
-          Markenfarben und Grundwerte
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-medium text-[var(--brand-text-primary)]">
+            Markenfarben und Grundwerte
+          </h2>
+          {canEdit && hasChanges && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-[var(--brand-radius)] bg-[var(--brand-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? 'Speichern...' : 'Speichern'}
+            </button>
+          )}
+          {saved && (
+            <span className="text-sm text-green-600 font-medium">✓ Gespeichert</span>
+          )}
+        </div>
         <p className="text-sm text-[var(--brand-text-secondary)] mb-6">
-          Diese Werte werden von der Holding-Konfiguration vererbt. Aenderungen koennen nur
-          ueber den Holding-Administrator vorgenommen werden.
+          {canEdit
+            ? 'Klicken Sie auf einen Farbwert, um ihn fuer Ihr Unternehmen anzupassen.'
+            : 'Diese Werte werden von der Holding-Konfiguration vererbt.'}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {CORE_TOKEN_LABELS.map((token) => {
-            const companyVal = companyTokens[token.key]
+            const editedVal = editValues[token.key]
+            const companyVal = editedVal ?? companyTokens[token.key]
             const holdingVal = holdingTokens[token.key]
-            const isOverridden = companyVal !== holdingVal
+            const isOverridden = String(companyVal) !== String(holdingVal)
 
             return (
               <div
@@ -211,25 +291,44 @@ function MarkenfarbenTab({
               >
                 <div className="flex items-start gap-3">
                   {token.isColor ? (
-                    <div
-                      className="h-10 w-10 flex-shrink-0 rounded-[var(--brand-radius)] border border-gray-300"
-                      style={{ backgroundColor: String(companyVal) }}
-                    />
+                    <label className="relative h-10 w-10 flex-shrink-0 rounded-[var(--brand-radius)] border border-gray-300 cursor-pointer overflow-hidden">
+                      <div
+                        className="absolute inset-0"
+                        style={{ backgroundColor: String(companyVal) }}
+                      />
+                      {canEdit && (
+                        <input
+                          type="color"
+                          value={String(companyVal)}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, [token.key]: e.target.value }))}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      )}
+                    </label>
                   ) : (
                     <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[var(--brand-radius)] border border-gray-300 bg-gray-100">
                       <span className="text-xs text-[var(--brand-text-secondary)]">Aa</span>
                     </div>
                   )}
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-[var(--brand-text-primary)]">
                       {token.label}
                     </p>
                     <p className="text-xs text-[var(--brand-text-secondary)] mt-0.5">
                       {token.description}
                     </p>
-                    <p className="text-xs font-mono text-[var(--brand-text-secondary)] mt-1">
-                      {String(companyVal)}
-                    </p>
+                    {canEdit && !token.isColor ? (
+                      <input
+                        type="text"
+                        value={String(companyVal)}
+                        onChange={(e) => setEditValues(prev => ({ ...prev, [token.key]: e.target.value }))}
+                        className="mt-1 w-full rounded border border-gray-200 px-2 py-1 text-xs font-mono text-[var(--brand-text-primary)] bg-white"
+                      />
+                    ) : (
+                      <p className="text-xs font-mono text-[var(--brand-text-secondary)] mt-1">
+                        {String(companyVal)}
+                      </p>
+                    )}
                     {isOverridden && (
                       <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
                         Ueberschrieben (Holding: {String(holdingVal)})
@@ -248,24 +347,27 @@ function MarkenfarbenTab({
         </div>
       </div>
 
-      <div className="bg-[var(--brand-surface)] rounded-[var(--brand-radius)] p-4 border border-gray-200">
-        {hasHoldingAccess ? (
+      {hasHoldingAccess && (
+        <div className="bg-[var(--brand-surface)] rounded-[var(--brand-radius)] p-4 border border-gray-200">
           <p className="text-sm text-[var(--brand-text-secondary)]">
             <a
-              href="/admin/branding"
+              href="/admin/settings/branding"
               className="text-[var(--brand-primary)] underline hover:no-underline"
             >
               Zum Holding-Brand-Editor
             </a>{' '}
-            um die Grundwerte zu bearbeiten.
+            um die Holding-Grundwerte zu bearbeiten.
           </p>
-        ) : (
+        </div>
+      )}
+      {!canEdit && !hasHoldingAccess && (
+        <div className="bg-[var(--brand-surface)] rounded-[var(--brand-radius)] p-4 border border-gray-200">
           <p className="text-sm text-[var(--brand-text-secondary)]">
-            Kontaktieren Sie Ihren Holding-Administrator, um Aenderungen an den
+            Kontaktieren Sie Ihren Administrator, um Aenderungen an den
             Markenfarben vorzunehmen.
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -6,6 +6,8 @@ export default async function BrandingSettingsPage() {
   await requirePermission('module:admin:branding')
 
   const { data, error } = await getCompanyDesign()
+  // canEdit = true for Super Users AND Holding Admins
+  // hasHoldingAccess = true ONLY for Holding Admins (shows link to holding editor)
   const hasHoldingAccess = await checkPermission('holding:global')
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 
@@ -36,6 +38,7 @@ export default async function BrandingSettingsPage() {
       <DesignModuleClient
         initialData={data}
         hasHoldingAccess={hasHoldingAccess}
+        canEdit={true}
         supabaseUrl={supabaseUrl}
       />
     </div>
