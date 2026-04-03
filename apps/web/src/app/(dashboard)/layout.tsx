@@ -4,7 +4,16 @@ import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buildProcessNavGroups } from '@/lib/process-nav'
 import { DashboardShell } from '@/components/dashboard-shell'
+import { AdminBar } from '@/components/AdminBar'
 import type { MainProcessGroup } from '@/lib/process-nav'
+
+const SUPER_USER_NAV = [
+  { label: 'Prozesse', href: '/settings/call-script' },
+  { label: 'Integrationen', href: '/settings/connectors' },
+  { label: 'Benutzer', href: '/settings/users' },
+  { label: 'Branding', href: '/settings/branding' },
+  { label: 'Berichte', href: '/settings/reports' },
+]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -78,15 +87,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
     criticalAnomalyCount = count ?? 0
   }
 
+  const isSuperUser = session.roles.some(r => r.key === 'super_user')
+  const showSuperUserBar = isSuperUser && !session.isEnuraAdmin
+
   return (
-    <DashboardShell
-      companyName={companyName}
-      navItems={navItems}
-      processGroups={processGroups}
-      userName={displayName}
-      userRole={roleLabel}
-    >
-      {criticalAnomalyCount > 0 && (
+    <>
+      {showSuperUserBar && (
+        <AdminBar variant="super-user" label={companyName} items={SUPER_USER_NAV} />
+      )}
+      <DashboardShell
+        companyName={companyName}
+        navItems={navItems}
+        processGroups={processGroups}
+        userName={displayName}
+        userRole={roleLabel}
+      >
+        {criticalAnomalyCount > 0 && (
         <div className="border-b border-red-300 bg-red-600 px-4 py-2.5 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -108,5 +124,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       )}
       {children}
     </DashboardShell>
+    </>
   )
 }

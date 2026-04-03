@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/session'
 import { HoldingShell } from '@/components/holding-shell'
+import { AdminBar } from '@/components/AdminBar'
 
 const HOLDING_NAV_ITEMS = [
   { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
@@ -17,19 +18,25 @@ const HOLDING_NAV_ITEMS = [
   { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
 
+const HOLDING_ADMIN_BAR_NAV = [
+  { label: 'Prozesse', href: '/admin/processes' },
+  { label: 'Integrationen', href: '/admin/tools' },
+  { label: 'Benutzer', href: '/admin/users' },
+  { label: 'Branding', href: '/admin/settings/branding' },
+  { label: 'Berichte', href: '/admin/analytics' },
+  { label: 'Abrechnung', href: '/admin/billing' },
+  { label: '+ Unternehmen', href: '/admin/companies/new' },
+]
+
 export default async function HoldingAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
 
-  // Don't call redirect() in layouts — it causes 404 on Vercel
-  // The middleware handles auth redirects
   if (!session || !session.isHoldingAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Sitzung wird geladen...</p>
-          <a href="/login" className="text-blue-600 underline text-sm">
-            Zur Anmeldung
-          </a>
+          <a href="/login" className="text-blue-600 underline text-sm">Zur Anmeldung</a>
         </div>
       </div>
     )
@@ -39,12 +46,14 @@ export default async function HoldingAdminLayout({ children }: { children: React
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
+  const holdingName = 'Holding-Verwaltung'
+
   return (
-    <HoldingShell
-      navItems={HOLDING_NAV_ITEMS}
-      userName={displayName}
-    >
-      {children}
-    </HoldingShell>
+    <>
+      <AdminBar variant="holding-admin" label={holdingName} items={HOLDING_ADMIN_BAR_NAV} />
+      <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName}>
+        {children}
+      </HoldingShell>
+    </>
   )
 }
