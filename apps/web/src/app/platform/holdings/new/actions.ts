@@ -94,10 +94,19 @@ type CompleteWizardInput = {
 export async function completeWizard(
   input: CompleteWizardInput,
 ): Promise<{ success: boolean; holdingId?: string; error?: string }> {
-  const session = await requireEnuraSession()
+  let session
+  try {
+    session = await requireEnuraSession()
+  } catch (err) {
+    return { success: false, error: `Autorisierungsfehler: ${err instanceof Error ? err.message : String(err)}` }
+  }
 
-  // Use service client for cross-table operations
-  const serviceClient = createSupabaseServiceClient()
+  let serviceClient
+  try {
+    serviceClient = createSupabaseServiceClient()
+  } catch (err) {
+    return { success: false, error: `Service-Client-Fehler: ${err instanceof Error ? err.message : String(err)}` }
+  }
 
   // 1. Create the holding
   const { data: holding, error: holdingError } = await serviceClient
