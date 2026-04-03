@@ -1,9 +1,11 @@
 import { cache } from 'react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import type { UserSession, RoleRow } from '@enura/types'
 
 async function _getSession(): Promise<UserSession | null> {
   const supabase = createSupabaseServerClient()
+  const service = createSupabaseServiceClient()
 
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) return null
@@ -17,13 +19,13 @@ async function _getSession(): Promise<UserSession | null> {
 
   if (!profile) return null
 
-  // Fetch roles with permissions
-  const { data: profileRoles } = await supabase
+  // Fetch roles with permissions (service client bypasses RLS for system lookups)
+  const { data: profileRoles } = await service
     .from('profile_roles')
     .select(`
       role_id,
       roles (
-        id, tenant_id, key, label, description, is_system, created_at, updated_at
+        id, key, label, description, is_system, created_at, updated_at
       )
     `)
     .eq('profile_id', user.id)
@@ -37,7 +39,7 @@ async function _getSession(): Promise<UserSession | null> {
   let permissions: string[] = []
 
   if (roleIds.length > 0) {
-    const { data: rolePerms } = await supabase
+    const { data: rolePerms } = await service
       .from('role_permissions')
       .select(`
         permission_id,
@@ -51,7 +53,7 @@ async function _getSession(): Promise<UserSession | null> {
   }
 
   // Check holding admin status
-  const { data: holdingAdmin } = await supabase
+  const { data: holdingAdmin } = await service
     .from('holding_admins')
     .select('id')
     .eq('profile_id', user.id)
@@ -61,7 +63,7 @@ async function _getSession(): Promise<UserSession | null> {
 
   return {
     profile,
-    tenantId: profile.tenant_id,
+    tenantId: (profile as Record<string, unknown>).company_id as string ?? (profile as Record<string, unknown>).tenant_id as string ?? null,
     roles,
     permissions: [...new Set(permissions)],
     isHoldingAdmin,
