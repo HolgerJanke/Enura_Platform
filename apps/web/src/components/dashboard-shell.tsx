@@ -306,7 +306,7 @@ export function DashboardShell({
       {/* ---------------------------------------------------------------- */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
-        <header className="flex h-14 items-center border-b border-gray-200 bg-brand-surface px-4 lg:hidden safe-area-pt">
+        <header className="flex h-14 items-center border-b border-gray-200 bg-brand-surface px-4 lg:hidden safe-area-pt mobile-only">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
@@ -343,7 +343,7 @@ export function DashboardShell({
       {/*  Mobile bottom navigation                                        */}
       {/* ---------------------------------------------------------------- */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex items-end justify-around border-t border-gray-200 bg-brand-surface safe-area-pb lg:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-end justify-around border-t border-gray-200 bg-brand-surface safe-area-pb lg:hidden mobile-only"
         style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px))' }}
         aria-label="Mobile Navigation"
       >

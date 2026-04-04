@@ -30,3 +30,10 @@
 body {
   font-family: var(--brand-font);
 }
+
+/* Ensure mobile-only elements are hidden on desktop (belt-and-suspenders with lg:hidden) */
+@media (min-width: 1024px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
