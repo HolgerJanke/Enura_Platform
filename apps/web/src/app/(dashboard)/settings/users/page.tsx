@@ -10,20 +10,20 @@ export default async function UsersSettingsPage() {
   if (!session) return null
 
   const supabase = createSupabaseServerClient()
-  const tenantId = session.tenantId ?? ''
+  const companyId = session.companyId ?? ''
 
   // Fetch users in this tenant
   const { data: profiles } = await supabase
     .from('profiles')
     .select('*')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .order('created_at', { ascending: true })
 
   // Fetch roles for the tenant
   const { data: roles } = await supabase
     .from('roles')
     .select('*')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_system', true)
     .order('key')
 

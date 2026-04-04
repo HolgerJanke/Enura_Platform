@@ -16,7 +16,7 @@ export type ConnectorTypeInfo = (typeof CONNECTOR_TYPES)[number]
 export default async function ConnectorsPage() {
   await requirePermission('module:admin:read')
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const supabase = createSupabaseServerClient()
 
@@ -24,7 +24,7 @@ export default async function ConnectorsPage() {
   const { data: connectors } = await supabase
     .from('connectors')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
 
   // Fetch latest sync log for each connector
   const connectorIds = (connectors ?? []).map((c: Record<string, unknown>) => c['id'] as string)
@@ -47,7 +47,7 @@ export default async function ConnectorsPage() {
         connectorTypes={CONNECTOR_TYPES as unknown as ReadonlyArray<ConnectorTypeInfo>}
         configuredConnectors={(connectors ?? []) as unknown as Array<Record<string, unknown>>}
         syncLogs={(syncLogs ?? []) as unknown as Array<Record<string, unknown>>}
-        tenantId={session.tenantId}
+        companyId={session.companyId}
       />
     </div>
   )

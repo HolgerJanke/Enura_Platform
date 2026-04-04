@@ -17,7 +17,7 @@ function getServiceClient() {
  * Returns the storage path on success, or null on failure.
  */
 export async function storeRecording(
-  tenantId: string,
+  companyId: string,
   callId: string,
   externalUrl: string,
 ): Promise<string | null> {
@@ -26,7 +26,7 @@ export async function storeRecording(
   const now = new Date()
   const year = now.getFullYear()
   const month = String(now.getMonth() + 1).padStart(2, '0')
-  const path = `${tenantId}/calls/${year}/${month}/${callId}.mp3`
+  const path = `${companyId}/calls/${year}/${month}/${callId}.mp3`
 
   const response = await fetch(externalUrl)
   if (!response.ok || !response.body) {

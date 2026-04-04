@@ -30,8 +30,8 @@ interface TenantStats {
 }
 
 interface AIUsageRow {
-  tenantId: string
-  tenantName: string
+  companyId: string
+  companyName: string
   callsTranscribedMTD: number
   estimatedWhisperCostCHF: number
   reportsGenerated: number
@@ -52,7 +52,7 @@ export default async function HoldingAdminPage() {
   // Fetch all tenants
   // -----------------------------------------------------------------------
   const { data: tenants, error: tenantsError } = await supabase
-    .from('tenants')
+    .from('companies')
     .select('id, name, slug, status, created_at')
     .order('name')
 
@@ -77,37 +77,37 @@ export default async function HoldingAdminPage() {
 
   const tenantStats: TenantStats[] = await Promise.all(
     ((tenants ?? []) as Record<string, unknown>[]).map(async (tenant) => {
-      const tenantId = tenant['id'] as string
+      const companyId = tenant['id'] as string
 
       const [userCount, projectCount, invoiceData, connectorsData, anomalyData, lastActivityData] =
         await Promise.all([
           supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId),
+            .eq('company_id', companyId),
           supabase
             .from('projects')
             .select('*', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId)
+            .eq('company_id', companyId)
             .eq('status', 'active'),
           supabase
             .from('invoices')
             .select('total_chf, status')
-            .eq('tenant_id', tenantId)
+            .eq('company_id', companyId)
             .in('status', ['sent', 'partially_paid']),
           supabase
             .from('connectors')
             .select('type, status, last_synced_at, last_error')
-            .eq('tenant_id', tenantId),
+            .eq('company_id', companyId),
           supabase
             .from('anomalies')
             .select('*', { count: 'exact', head: true })
-            .eq('tenant_id', tenantId)
+            .eq('company_id', companyId)
             .eq('is_active', true),
           supabase
             .from('audit_log')
             .select('created_at')
-            .eq('tenant_id', tenantId)
+            .eq('company_id', companyId)
             .order('created_at', { ascending: false })
             .limit(1),
         ])
@@ -134,7 +134,7 @@ export default async function HoldingAdminPage() {
         : null
 
       return {
-        id: tenantId,
+        id: companyId,
         name: tenant['name'] as string,
         slug: tenant['slug'] as string,
         status: tenant['status'] as string,
@@ -154,19 +154,19 @@ export default async function HoldingAdminPage() {
   // -----------------------------------------------------------------------
   const aiUsage: AIUsageRow[] = await Promise.all(
     ((tenants ?? []) as Record<string, unknown>[]).map(async (tenant) => {
-      const tenantId = tenant['id'] as string
-      const tenantName = tenant['name'] as string
+      const companyId = tenant['id'] as string
+      const companyName = tenant['name'] as string
 
       const [transcriptionData, reportData] = await Promise.all([
         supabase
           .from('call_analysis')
           .select('*', { count: 'exact', head: true })
-          .eq('tenant_id', tenantId)
+          .eq('company_id', companyId)
           .gte('created_at', monthStart),
         supabase
           .from('daily_reports')
           .select('*', { count: 'exact', head: true })
-          .eq('tenant_id', tenantId)
+          .eq('company_id', companyId)
           .gte('created_at', monthStart),
       ])
 
@@ -177,8 +177,8 @@ export default async function HoldingAdminPage() {
       const claudeTokensUsed = callsTranscribed * 800 + reportsGenerated * 3000
 
       return {
-        tenantId,
-        tenantName,
+        companyId,
+        companyName,
         callsTranscribedMTD: callsTranscribed,
         estimatedWhisperCostCHF: callsTranscribed * WHISPER_COST_PER_CALL_CHF,
         reportsGenerated,

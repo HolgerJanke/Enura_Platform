@@ -17,7 +17,7 @@ type ConnectorInfo = {
 }
 
 type AnomalySummary = {
-  tenantId: string
+  companyId: string
   activeCount: number
 }
 
@@ -36,8 +36,8 @@ type TenantStats = {
 }
 
 type AIUsageRow = {
-  tenantId: string
-  tenantName: string
+  companyId: string
+  companyName: string
   callsTranscribedMTD: number
   estimatedWhisperCostCHF: number
   reportsGenerated: number
@@ -456,8 +456,8 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
                   ) : (
                     <>
                       {aiUsage.map((row) => (
-                        <tr key={row.tenantId} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-5 py-3 text-sm font-medium text-gray-900">{row.tenantName}</td>
+                        <tr key={row.companyId} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-5 py-3 text-sm font-medium text-gray-900">{row.companyName}</td>
                           <td className="px-5 py-3 text-sm text-gray-700 text-right tabular-nums">
                             {formatNumber(row.callsTranscribedMTD)}
                           </td>

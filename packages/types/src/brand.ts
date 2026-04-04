@@ -74,3 +74,54 @@ export function brandTokensFromRow(row: {
     darkModeEnabled: row.dark_mode_enabled,
   }
 }
+
+// Extended design tokens — layered on top of core BrandTokens
+export type ExtendedBrandTokens = {
+  shadowSm: string
+  shadowMd: string
+  shadowLg: string
+  spacingBase: string
+  fontSizeBase: string
+  fontSizeScale: string
+  fontWeightNormal: string
+  fontWeightSemibold: string
+  letterSpacing: string
+  lineHeight: string
+  borderWidth: string
+}
+
+export const defaultExtendedTokens: ExtendedBrandTokens = {
+  shadowSm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+  shadowMd: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+  shadowLg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+  spacingBase: '4px',
+  fontSizeBase: '16px',
+  fontSizeScale: '1.25',
+  fontWeightNormal: '400',
+  fontWeightSemibold: '600',
+  letterSpacing: '0em',
+  lineHeight: '1.5',
+  borderWidth: '1px',
+}
+
+export function buildExtendedCSSVars(tokens: Partial<ExtendedBrandTokens>): Record<string, string> {
+  const merged = { ...defaultExtendedTokens, ...tokens }
+  return {
+    '--brand-shadow-sm': merged.shadowSm,
+    '--brand-shadow-md': merged.shadowMd,
+    '--brand-shadow-lg': merged.shadowLg,
+    '--brand-spacing-base': merged.spacingBase,
+    '--brand-font-size-base': merged.fontSizeBase,
+    '--brand-font-size-scale': merged.fontSizeScale,
+    '--brand-font-weight-normal': merged.fontWeightNormal,
+    '--brand-font-weight-semibold': merged.fontWeightSemibold,
+    '--brand-letter-spacing': merged.letterSpacing,
+    '--brand-line-height': merged.lineHeight,
+    '--brand-border-width': merged.borderWidth,
+  }
+}
+
+export function buildExtendedCSSVarString(tokens: Partial<ExtendedBrandTokens>): string {
+  const vars = buildExtendedCSSVars(tokens)
+  return Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(';')
+}

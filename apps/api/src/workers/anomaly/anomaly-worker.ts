@@ -30,17 +30,17 @@ function anomalyKey(type: string, entityId: string | null): string {
 // Process a single tenant
 // ---------------------------------------------------------------------------
 
-async function processAnomaliesForTenant(tenantId: string): Promise<void> {
+async function processAnomaliesForTenant(companyId: string): Promise<void> {
   const client = getServiceClient()
 
   // 1. Run all detectors
-  const detected = await runAllDetectors(tenantId)
+  const detected = await runAllDetectors(companyId)
 
   // 2. Fetch existing active anomalies for this tenant
   const { data: existingAnomalies } = await client
     .from('anomalies')
     .select('id, type, entity_id')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_active', true)
 
   const existingKeys = new Map<string, string>()
@@ -65,7 +65,7 @@ async function processAnomaliesForTenant(tenantId: string): Promise<void> {
   // 4. Insert new anomalies
   if (newAnomalies.length > 0) {
     const rows = newAnomalies.map((a) => ({
-      tenant_id: tenantId,
+      company_id: companyId,
       type: a.type,
       severity: a.severity,
       entity_id: a.entityId,
@@ -81,9 +81,9 @@ async function processAnomaliesForTenant(tenantId: string): Promise<void> {
 
     const { error } = await client.from('anomalies').insert(rows)
     if (error) {
-      console.error(`[AnomalyWorker] Failed to insert anomalies for tenant ${tenantId}:`, error)
+      console.error(`[AnomalyWorker] Failed to insert anomalies for tenant ${companyId}:`, error)
     } else {
-      console.log(`[AnomalyWorker] Inserted ${newAnomalies.length} new anomalies for tenant ${tenantId}`)
+      console.log(`[AnomalyWorker] Inserted ${newAnomalies.length} new anomalies for tenant ${companyId}`)
     }
   }
 
@@ -102,14 +102,14 @@ async function processAnomaliesForTenant(tenantId: string): Promise<void> {
       .in('id', staleIds)
 
     if (error) {
-      console.error(`[AnomalyWorker] Failed to resolve stale anomalies for tenant ${tenantId}:`, error)
+      console.error(`[AnomalyWorker] Failed to resolve stale anomalies for tenant ${companyId}:`, error)
     } else {
-      console.log(`[AnomalyWorker] Resolved ${staleIds.length} stale anomalies for tenant ${tenantId}`)
+      console.log(`[AnomalyWorker] Resolved ${staleIds.length} stale anomalies for tenant ${companyId}`)
     }
   }
 
   // 6. Send alerts for critical anomalies that haven't been notified yet
-  await sendAnomalyAlerts(tenantId)
+  await sendAnomalyAlerts(companyId)
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ export async function runAnomalyDetection(): Promise<void> {
   const client = getServiceClient()
 
   const { data: tenants } = await client
-    .from('tenants')
+    .from('companies')
     .select('id')
     .eq('status', 'active')
 
@@ -132,11 +132,11 @@ export async function runAnomalyDetection(): Promise<void> {
   console.log(`[AnomalyWorker] Running anomaly detection for ${tenants.length} tenants...`)
 
   for (const tenant of tenants) {
-    const tenantId = (tenant as Record<string, unknown>)['id'] as string
+    const companyId = (tenant as Record<string, unknown>)['id'] as string
     try {
-      await processAnomaliesForTenant(tenantId)
+      await processAnomaliesForTenant(companyId)
     } catch (err) {
-      console.error(`[AnomalyWorker] Failed for tenant ${tenantId}:`, err)
+      console.error(`[AnomalyWorker] Failed for tenant ${companyId}:`, err)
     }
   }
 

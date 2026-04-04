@@ -1,0 +1,61 @@
+---
+title: "Understanding the KPI Dashboard"
+description: "Explanation of all metrics, calculation methods, and trend indicators"
+section: "dashboard"
+lastUpdated: "2026-03-30"
+---
+
+# Understanding the KPI Dashboard
+
+The KPI dashboard shows your most important metrics at a glance. All values are calculated automatically and refreshed every 15 minutes. This article explains what each metric means and how to interpret the numbers correctly.
+
+## How Are KPIs Calculated?
+
+The platform does not recalculate KPIs on every page load. Instead, a background worker runs every 15 minutes and creates snapshots. The dashboard reads these pre-computed values. This ensures fast page loads and consistent numbers.
+
+## Setter KPIs
+
+| KPI | Description | Good Value |
+|-----|-------------|-----------|
+| **Calls/Day** | Total outgoing calls on the current day | > 80 |
+| **Reach Rate** | Proportion of calls that were answered | > 35% |
+| **Booked Appointments** | Number of scheduled consultation appointments | > 3/day |
+| **Appointment Rate** | Ratio of appointments to calls | > 4% |
+| **Avg. Call Duration** | Mean length of a conducted call | 3-5 min |
+| **No-Show Rate** | Proportion of appointments the customer did not attend | < 15% |
+
+## Advisor KPIs
+
+| KPI | Description | Good Value |
+|-----|-------------|-----------|
+| **Appointments/Week** | Consultation appointments per calendar week | > 10 |
+| **Closing Rate** | Proportion of offers that become orders | > 30% |
+| **Offer Volume** | Sum of all open offers in CHF | context-dependent |
+| **Deal Duration** | Average days from first contact to closing | < 30 days |
+| **Activities/Day** | Total number of calls, emails, and appointments | > 8 |
+| **Revenue/Advisor** | Monthly closing revenue per advisor | context-dependent |
+
+## Trend Indicators
+
+Next to each number you will see a trend indicator:
+
+- **Green arrow up**: The value has improved compared to the previous week.
+- **Red arrow down**: The value has deteriorated.
+- **Gray dash**: No significant change (< 2% deviation).
+
+The comparison period is always the same period of the previous week (e.g., Monday this week vs. Monday last week).
+
+## Time Periods
+
+By default, the dashboard shows the current day. You can switch the period to:
+
+- **Today** — current day values
+- **This Week** — Monday to today
+- **This Month** — 1st to today
+- **Custom** — freely selectable period
+
+## Tips for Interpretation
+
+- Single-day values fluctuate significantly. Always evaluate your performance on a weekly basis.
+- The "good values" in the tables are benchmarks based on Alpen Energie data. Your team lead may define different targets.
+- If a KPI is highlighted red, first check the connector status. Missing data can cause incorrect values.

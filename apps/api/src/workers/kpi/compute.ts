@@ -16,7 +16,7 @@ function getServiceClient(): SupabaseClient {
 }
 
 export async function computeSetterDaily(
-  tenantId: string,
+  companyId: string,
   memberId: string,
   date: Date,
 ): Promise<SetterDailyMetrics> {
@@ -30,7 +30,7 @@ export async function computeSetterDaily(
   const { data: calls } = await client
     .from('calls')
     .select('status, duration_seconds')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('team_member_id', memberId)
     .gte('started_at', dayStart.toISOString())
     .lte('started_at', dayEnd.toISOString())
@@ -50,7 +50,7 @@ export async function computeSetterDaily(
   const { count: appointmentsBooked } = await client
     .from('calendar_events')
     .select('*', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('team_member_id', memberId)
     .gte('starts_at', dayStart.toISOString())
     .lte('starts_at', dayEnd.toISOString())
@@ -71,7 +71,7 @@ export async function computeSetterDaily(
 }
 
 export async function computeLeadsDaily(
-  tenantId: string,
+  companyId: string,
   date: Date,
 ): Promise<LeadsDailyMetrics> {
   const client = getServiceClient()
@@ -83,7 +83,7 @@ export async function computeLeadsDaily(
   const { data: leads } = await client
     .from('leads')
     .select('status, source, created_at')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .gte('created_at', dayStart.toISOString())
     .lte('created_at', dayEnd.toISOString())
 
@@ -101,7 +101,7 @@ export async function computeLeadsDaily(
   const { count: unworkedCount } = await client
     .from('leads')
     .select('*', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('status', 'new')
     .lt('created_at', fourHoursAgo.toISOString())
 
@@ -117,7 +117,7 @@ export async function computeLeadsDaily(
 }
 
 export async function computeProjectsDaily(
-  tenantId: string,
+  companyId: string,
   _date: Date,
 ): Promise<ProjectsDailyMetrics> {
   const client = getServiceClient()
@@ -125,7 +125,7 @@ export async function computeProjectsDaily(
   const { data: projects } = await client
     .from('projects')
     .select('id, current_phase, phase_entered_at, status')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('status', 'active')
 
   const projectList = projects ?? []
@@ -153,7 +153,7 @@ export async function computeProjectsDaily(
   const { count: completed30d } = await client
     .from('projects')
     .select('*', { count: 'exact', head: true })
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('status', 'completed')
     .gte('updated_at', thirtyDaysAgo.toISOString())
 
@@ -168,7 +168,7 @@ export async function computeProjectsDaily(
 }
 
 export async function computeFinanceMonthly(
-  tenantId: string,
+  companyId: string,
   date: Date,
 ): Promise<FinanceMonthlyMetrics> {
   const client = getServiceClient()
@@ -180,7 +180,7 @@ export async function computeFinanceMonthly(
   const { data: paidInvoices } = await client
     .from('invoices')
     .select('total_chf')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('status', 'paid')
     .gte('paid_at', monthStart.toISOString())
     .lte('paid_at', monthEnd.toISOString())
@@ -193,7 +193,7 @@ export async function computeFinanceMonthly(
   const { data: openInvoices } = await client
     .from('invoices')
     .select('total_chf, due_at, status')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .in('status', ['sent', 'partially_paid'])
 
   const openList = openInvoices ?? []
@@ -228,7 +228,7 @@ export async function computeFinanceMonthly(
 }
 
 export async function computeTenantDailySummary(
-  tenantId: string,
+  companyId: string,
   date: Date,
 ): Promise<TenantDailySummaryMetrics> {
   const client = getServiceClient()
@@ -237,7 +237,7 @@ export async function computeTenantDailySummary(
   const { data: teamMembers } = await client
     .from('team_members')
     .select('id, role_type')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_active', true)
 
   const setters = (teamMembers ?? []).filter((m: Record<string, unknown>) => m['role_type'] === 'setter')
@@ -248,7 +248,7 @@ export async function computeTenantDailySummary(
     appointments_booked: 0, appointment_rate: 0, no_show_count: 0, no_show_rate: 0,
   }
   for (const setter of setters) {
-    const m = await computeSetterDaily(tenantId, (setter as Record<string, unknown>)['id'] as string, date)
+    const m = await computeSetterDaily(companyId, (setter as Record<string, unknown>)['id'] as string, date)
     setterAgg.calls_total += m.calls_total
     setterAgg.calls_answered += m.calls_answered
     setterAgg.calls_missed += m.calls_missed
@@ -264,9 +264,9 @@ export async function computeTenantDailySummary(
     setterAgg.appointment_rate = setterAgg.appointments_booked / setterAgg.calls_answered
   }
 
-  const leads = await computeLeadsDaily(tenantId, date)
-  const projects = await computeProjectsDaily(tenantId, date)
-  const finance = await computeFinanceMonthly(tenantId, date)
+  const leads = await computeLeadsDaily(companyId, date)
+  const projects = await computeProjectsDaily(companyId, date)
+  const finance = await computeFinanceMonthly(companyId, date)
 
   return {
     setter: setterAgg,

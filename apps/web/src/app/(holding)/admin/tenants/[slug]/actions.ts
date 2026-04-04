@@ -17,7 +17,7 @@ type BrandingUpdate = {
 }
 
 export async function updateTenantBrandingAction(
-  tenantId: string,
+  companyId: string,
   branding: BrandingUpdate,
 ): Promise<{ error?: string }> {
   const session = await getSession()
@@ -42,9 +42,9 @@ export async function updateTenantBrandingAction(
 
   // Verify tenant exists
   const { data: tenant } = await serviceClient
-    .from('tenants')
+    .from('companies')
     .select('id, slug')
-    .eq('id', tenantId)
+    .eq('id', companyId)
     .single()
 
   if (!tenant) {
@@ -53,13 +53,13 @@ export async function updateTenantBrandingAction(
 
   // Fetch current branding for audit log
   const { data: currentBranding } = await serviceClient
-    .from('tenant_brandings')
+    .from('company_branding')
     .select('primary_color, secondary_color, accent_color, font_family, border_radius')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .single()
 
   const { error: updateError } = await serviceClient
-    .from('tenant_brandings')
+    .from('company_branding')
     .update({
       primary_color: branding.primary_color,
       secondary_color: branding.secondary_color,
@@ -67,7 +67,7 @@ export async function updateTenantBrandingAction(
       font_family: branding.font_family,
       border_radius: branding.border_radius,
     })
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
 
   if (updateError) {
     console.error('[admin] Failed to update branding:', updateError)
@@ -75,11 +75,11 @@ export async function updateTenantBrandingAction(
   }
 
   await writeAuditLog({
-    tenantId,
+    companyId,
     actorId: session.profile.id,
     action: 'tenant_branding.updated',
     tableName: 'tenant_brandings',
-    recordId: tenantId,
+    recordId: companyId,
     oldValues: currentBranding ? { ...currentBranding } : undefined,
     newValues: { ...branding },
   })
@@ -89,7 +89,7 @@ export async function updateTenantBrandingAction(
 }
 
 export async function updateTenantStatusAction(
-  tenantId: string,
+  companyId: string,
   status: TenantStatus,
 ): Promise<{ error?: string }> {
   const session = await getSession()
@@ -106,9 +106,9 @@ export async function updateTenantStatusAction(
 
   // Fetch current tenant for audit log
   const { data: tenant } = await serviceClient
-    .from('tenants')
+    .from('companies')
     .select('id, slug, status')
-    .eq('id', tenantId)
+    .eq('id', companyId)
     .single()
 
   if (!tenant) {
@@ -116,9 +116,9 @@ export async function updateTenantStatusAction(
   }
 
   const { error: updateError } = await serviceClient
-    .from('tenants')
+    .from('companies')
     .update({ status })
-    .eq('id', tenantId)
+    .eq('id', companyId)
 
   if (updateError) {
     console.error('[admin] Failed to update tenant status:', updateError)
@@ -126,11 +126,11 @@ export async function updateTenantStatusAction(
   }
 
   await writeAuditLog({
-    tenantId,
+    companyId,
     actorId: session.profile.id,
     action: 'tenant.status_changed',
     tableName: 'tenants',
-    recordId: tenantId,
+    recordId: companyId,
     oldValues: { status: tenant.status },
     newValues: { status },
   })

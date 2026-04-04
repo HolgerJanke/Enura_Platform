@@ -14,7 +14,7 @@ function getServiceClient() {
  * Returns the subset of leads that are new (not duplicates).
  */
 export async function deduplicateLeads(
-  tenantId: string,
+  companyId: string,
   leads: LeadnotesLead[],
 ): Promise<{ newLeads: LeadnotesLead[]; duplicateCount: number }> {
   if (leads.length === 0) {
@@ -41,7 +41,7 @@ export async function deduplicateLeads(
     const { data: extMatches } = await db
       .from('leads')
       .select('external_id')
-      .eq('tenant_id', tenantId)
+      .eq('company_id', companyId)
       .in('external_id', externalIds)
 
     for (const match of extMatches ?? []) {
@@ -57,7 +57,7 @@ export async function deduplicateLeads(
     const { data: emailMatches } = await db
       .from('leads')
       .select('email')
-      .eq('tenant_id', tenantId)
+      .eq('company_id', companyId)
       .in('email', emails)
 
     for (const match of emailMatches ?? []) {
@@ -73,7 +73,7 @@ export async function deduplicateLeads(
     const { data: phoneMatches } = await db
       .from('leads')
       .select('phone')
-      .eq('tenant_id', tenantId)
+      .eq('company_id', companyId)
       .in('phone', phones)
 
     for (const match of phoneMatches ?? []) {

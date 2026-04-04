@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { getTenantContext } from '@/lib/tenant'
+import { getCompanyContext } from '@/lib/tenant'
 import { getDataAccess } from '@/lib/data-access'
 import {
   formatCHF,
@@ -13,9 +13,9 @@ import type { TenantDailySummaryMetrics, ConnectorRow } from '@enura/types'
 
 export default async function DashboardPage() {
   const session = await getSession()
-  const { tenantName } = getTenantContext()
+  const { companyName } = getCompanyContext()
 
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const displayName =
     session.profile.display_name ?? session.profile.first_name ?? 'Benutzer'
@@ -26,10 +26,10 @@ export default async function DashboardPage() {
   // Fetch tenant daily summary snapshot and connectors in parallel
   const [snapshot, connectors] = await Promise.all([
     db.kpis.findLatest(
-      session.tenantId,
+      session.companyId,
       KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY,
     ),
-    db.connectors.findByTenantId(session.tenantId),
+    db.connectors.findByCompanyId(session.companyId),
   ])
 
   const metrics = snapshot?.metrics as TenantDailySummaryMetrics | undefined
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
         Willkommen, {displayName}
       </h1>
       <p className="text-brand-text-secondary mb-8">
-        {tenantName} &mdash; Uebersicht vom {formatDate(today)}
+        {companyName} &mdash; Uebersicht vom {formatDate(today)}
       </p>
 
       {/* Top-level aggregated KPIs */}

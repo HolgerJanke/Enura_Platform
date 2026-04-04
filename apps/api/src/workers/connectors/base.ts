@@ -4,12 +4,12 @@ export interface ConnectorBase {
   readonly version: string
 
   validate(connector: ConnectorConfig): Promise<void>
-  sync(tenantId: string, connector: ConnectorConfig): Promise<SyncResult>
+  sync(companyId: string, connector: ConnectorConfig): Promise<SyncResult>
 }
 
 export type ConnectorConfig = {
   id: string
-  tenant_id: string
+  company_id: string
   type: string
   credentials: Record<string, unknown>
   config: Record<string, unknown>

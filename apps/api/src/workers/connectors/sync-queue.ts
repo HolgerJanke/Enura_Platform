@@ -5,7 +5,7 @@ import type { ConnectorConfig } from './base.js'
 
 export interface SyncJobData {
   connectorId: string
-  tenantId: string
+  companyId: string
   type: string
   trigger: 'scheduled' | 'manual' | 'webhook'
 }
@@ -45,10 +45,10 @@ export async function processSyncJob(job: SyncJobData): Promise<void> {
   // Mark as syncing
   await db.from('connectors').update({ status: 'active' }).eq('id', job.connectorId)
 
-  const result = await impl.sync(job.tenantId, config)
-  await writeSyncResult(job.connectorId, job.tenantId, startedAt, result)
+  const result = await impl.sync(job.companyId, config)
+  await writeSyncResult(job.connectorId, job.companyId, startedAt, result)
 
   console.log(
-    `[sync] ${job.type} for ${job.tenantId}: ${result.recordsWritten} written, ${result.errors.length} errors, ${result.durationMs}ms`,
+    `[sync] ${job.type} for ${job.companyId}: ${result.recordsWritten} written, ${result.errors.length} errors, ${result.durationMs}ms`,
   )
 }

@@ -10,7 +10,7 @@ import { assembleKpiData } from './assemble-kpis.js'
 // ---------------------------------------------------------------------------
 
 export interface ReportJobData {
-  tenantId: string
+  companyId: string
   /** ISO date string (YYYY-MM-DD) of the data day being reported on. */
   dataDate: string
   /** Whether this report was triggered by the scheduler or manually. */
@@ -49,14 +49,14 @@ function getServiceClient() {
 export async function processReportJob(
   job: ReportJobData,
 ): Promise<void> {
-  const { tenantId, dataDate } = job
+  const { companyId, dataDate } = job
   const db = getServiceClient()
   const date = new Date(dataDate)
 
   // -----------------------------------------------------------------------
   // 1. Assemble KPI data
   // -----------------------------------------------------------------------
-  const kpiData = await assembleKpiData(tenantId, date)
+  const kpiData = await assembleKpiData(companyId, date)
 
   // -----------------------------------------------------------------------
   // 2. Build prompt from versioned template files
@@ -96,7 +96,7 @@ export async function processReportJob(
   //    role_permissions -> permissions to find users with module:reports:read.
   // -----------------------------------------------------------------------
   const { data: recipients } = await db.rpc('get_report_recipients', {
-    p_tenant_id: tenantId,
+    p_company_id: companyId,
   })
 
   const emails = (
@@ -110,19 +110,19 @@ export async function processReportJob(
 
   const { error: upsertError } = await db.from('daily_reports').upsert(
     {
-      tenant_id: tenantId,
+      company_id: companyId,
       report_date: reportDateStr,
       report_json: report as unknown as Record<string, unknown>,
       kpi_data: kpiData as unknown as Record<string, unknown>,
       sent_to: emails,
       sent_at: new Date().toISOString(),
     },
-    { onConflict: 'tenant_id,report_date' },
+    { onConflict: 'company_id,report_date' },
   )
 
   if (upsertError) {
     throw new Error(
-      `[daily-report] Failed to store report for tenant ${tenantId}: ${upsertError.message}`,
+      `[daily-report] Failed to store report for tenant ${companyId}: ${upsertError.message}`,
     )
   }
 

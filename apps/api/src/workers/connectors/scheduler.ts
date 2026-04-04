@@ -14,7 +14,7 @@ export async function runScheduledSync(): Promise<void> {
 
   const { data: connectors } = await db
     .from('connectors')
-    .select('id, tenant_id, type, sync_interval_minutes, last_synced_at, status')
+    .select('id, company_id, type, sync_interval_minutes, last_synced_at, status')
     .in('status', ['active', 'error'])
 
   const now = Date.now()
@@ -30,7 +30,7 @@ export async function runScheduledSync(): Promise<void> {
 
     const job: SyncJobData = {
       connectorId: c['id'] as string,
-      tenantId: c['tenant_id'] as string,
+      companyId: c['company_id'] as string,
       type: c['type'] as string,
       trigger: 'scheduled',
     }
@@ -38,7 +38,7 @@ export async function runScheduledSync(): Promise<void> {
     try {
       await processSyncJob(job)
     } catch (err) {
-      console.error(`[scheduler] Failed to sync ${c['type']} for ${c['tenant_id']}:`, err)
+      console.error(`[scheduler] Failed to sync ${c['type']} for ${c['company_id']}:`, err)
     }
   }
 }

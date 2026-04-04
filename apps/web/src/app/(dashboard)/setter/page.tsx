@@ -15,14 +15,14 @@ import { RecentCallsTable } from '@/components/calls/recent-calls-table'
 export default async function SetterPage() {
   await requirePermission('module:setter:read')
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
 
   // Get today's snapshot
   const snapshot = await db.kpis.findLatest(
-    session.tenantId,
+    session.companyId,
     KPI_SNAPSHOT_TYPES.SETTER_DAILY,
   )
 
@@ -38,7 +38,7 @@ export default async function SetterPage() {
     .select(
       'id, started_at, duration_seconds, direction, status, team_member_id, recording_url',
     )
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .gte('started_at', thirtyDaysAgo.toISOString())
     .order('started_at', { ascending: false })
     .limit(20)

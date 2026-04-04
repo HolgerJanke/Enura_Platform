@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { defaultBrandTokens, buildCSSVarString, brandTokensFromRow } from '@enura/types'
+import {
+  defaultBrandTokens,
+  defaultExtendedTokens,
+  buildCSSVarString,
+  buildExtendedCSSVarString,
+  brandTokensFromRow,
+  type ExtendedBrandTokens,
+  type BrandTokens,
+} from '@enura/types'
 import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
 
-// NEXT_PUBLIC_ prefix required for edge runtime (middleware) on Vercel
-const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || process.env.MOCK_AUTH === 'true'
+const MOCK_AUTH = process.env.MOCK_AUTH !== 'false'
 
-const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/debug']
-const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/health']
+const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/invite', '/privacy', '/help', '/debug']
+const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/', '/manifest.json', '/icon-']
 
 /** Mock tenant data — only used when MOCK_AUTH=true */
 const MOCK_TENANTS: Record<
@@ -57,32 +64,36 @@ function isAdminHost(hostname: string): boolean {
 }
 
 function getSubdomain(hostname: string): string | null {
-  const defaultSlug = process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
-
   // Localhost development — use env default
   if (
     hostname.startsWith('localhost') ||
     hostname.startsWith('127.0.0.1')
   ) {
-    return defaultSlug
+    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
   }
 
-  const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'platform.com'
-
-  // Vercel preview/production domains — use env default
-  if (hostname.endsWith('.vercel.app')) {
-    return defaultSlug
+  // Vercel preview/production URLs (e.g. enura-platform.vercel.app)
+  // These don't have a company subdomain — use the default tenant
+  if (hostname.includes('.vercel.app')) {
+    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
   }
 
-  // Root domain — use env default (single-tenant mode)
+  const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
+
+  // Root domain (with or without www) — use default tenant
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
-    return defaultSlug
+    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
   }
 
-  // Extract subdomain (first part before root domain)
+  // Extract subdomain: e.g. alpen-energie.enura-group.com → alpen-energie
+  // But skip 'www' — it's not a tenant subdomain
   const parts = hostname.split('.')
   if (parts.length >= 3) {
-    return parts[0] ?? null
+    const sub = parts[0]
+    if (sub === 'www' || sub === 'admin') {
+      return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+    }
+    return sub ?? null
   }
 
   return null
@@ -91,19 +102,21 @@ function getSubdomain(hostname: string): string | null {
 function setTenantHeaders(
   response: NextResponse,
   opts: {
-    tenantId: string
-    tenantSlug: string
-    tenantName: string
+    companyId: string
+    companySlug: string
+    companyName: string
     isHolding: boolean
     brandCSS: string
     userId?: string
+    customCSSPath?: string
   },
 ): void {
-  response.headers.set('x-tenant-id', opts.tenantId)
-  response.headers.set('x-tenant-slug', opts.tenantSlug)
-  response.headers.set('x-tenant-name', opts.tenantName)
+  response.headers.set('x-company-id', opts.companyId)
+  response.headers.set('x-company-slug', opts.companySlug)
+  response.headers.set('x-company-name', opts.companyName)
   response.headers.set('x-is-holding', String(opts.isHolding))
   response.headers.set('x-brand-css', opts.brandCSS)
+  response.headers.set('x-custom-css', opts.customCSSPath ?? '')
   if (opts.userId) {
     response.headers.set('x-user-id', opts.userId)
   }
@@ -125,9 +138,9 @@ function handleMockAuth(request: NextRequest): NextResponse {
   if (isAdminHost(hostname)) {
     const response = NextResponse.next({ request })
     setTenantHeaders(response, {
-      tenantId: '',
-      tenantSlug: 'admin',
-      tenantName: 'Enura Group',
+      companyId: '',
+      companySlug: 'admin',
+      companyName: 'Enura Group',
       isHolding: true,
       brandCSS: buildCSSVarString(defaultBrandTokens),
     })
@@ -175,9 +188,9 @@ function handleMockAuth(request: NextRequest): NextResponse {
 
   const response = NextResponse.next({ request })
   setTenantHeaders(response, {
-    tenantId: tenant.id,
-    tenantSlug: subdomain,
-    tenantName: tenant.name,
+    companyId: tenant.id,
+    companySlug: subdomain,
+    companyName: tenant.name,
     isHolding: false,
     brandCSS: buildCSSVarString(tenant.branding),
   })
@@ -215,7 +228,7 @@ function handleMockAuth(request: NextRequest): NextResponse {
 // Real Supabase Auth Middleware
 // ---------------------------------------------------------------------------
 
-interface TenantBrandingRow {
+interface CompanyBrandingRow {
   primary_color: string
   secondary_color: string
   accent_color: string
@@ -227,9 +240,11 @@ interface TenantBrandingRow {
   font_url: string | null
   border_radius: string
   dark_mode_enabled: boolean
+  extended_tokens: Partial<ExtendedBrandTokens> | null
+  custom_css_path: string | null
 }
 
-interface TenantRow {
+interface CompanyRow {
   id: string
   slug: string
   name: string
@@ -246,15 +261,36 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   const hostname = request.headers.get('host') ?? 'localhost:3000'
 
   // Create Supabase middleware client — this handles cookie forwarding
-  const { supabase, getResponse } = createSupabaseMiddlewareClient(request)
-
-  // Try to get the current user — may fail if no session exists (that's OK)
+  let supabase: ReturnType<typeof createSupabaseMiddlewareClient>['supabase']
+  let getResponse: ReturnType<typeof createSupabaseMiddlewareClient>['getResponse']
   let user: { id: string } | null = null
+
   try {
+    const client = createSupabaseMiddlewareClient(request)
+    supabase = client.supabase
+    getResponse = client.getResponse
+
     const { data } = await supabase.auth.getUser()
-    user = data.user
+    user = data.user as { id: string } | null
   } catch {
-    // No session or auth error — continue without user
+    // Supabase client failed (e.g. missing env vars in Edge runtime)
+    // Continue with no user — public paths will still work
+    const fallbackResponse = NextResponse.next({ request })
+    const subdomain = getSubdomain(hostname)
+
+    setTenantHeaders(fallbackResponse, {
+      companyId: '',
+      companySlug: subdomain ?? 'default',
+      companyName: subdomain ?? 'Platform',
+      isHolding: isAdminHost(hostname),
+      brandCSS: buildCSSVarString(defaultBrandTokens),
+      customCSSPath: '',
+    })
+
+    if (!isPublicPath(pathname)) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return fallbackResponse
   }
 
   // -----------------------------------------------------------------------
@@ -263,9 +299,9 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
   if (isAdminHost(hostname)) {
     const response = getResponse()
     setTenantHeaders(response, {
-      tenantId: '',
-      tenantSlug: 'admin',
-      tenantName: 'Enura Group',
+      companyId: '',
+      companySlug: 'admin',
+      companyName: 'Enura Group',
       isHolding: true,
       brandCSS: buildCSSVarString(defaultBrandTokens),
       userId: user?.id,
@@ -315,81 +351,138 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
     return redirectTo(request, '/login')
   }
 
-  // Fetch tenant via direct REST API (Supabase client doesn't work reliably in edge middleware)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  let tenant: TenantRow | null = null
-  let brandTokens = defaultBrandTokens
+  // Fetch tenant from Supabase — try direct REST API as fallback
+  let tenant: CompanyRow | null = null
 
-  if (supabaseUrl && supabaseKey) {
+  // First try the Supabase client
+  const { data: tenantData } = await supabase
+    .from('companies')
+    .select('id, slug, name, status')
+    .eq('slug', subdomain)
+    .eq('status', 'active')
+    .single<CompanyRow>()
+
+  tenant = tenantData
+
+  // Fallback: direct REST fetch if client fails (Edge runtime compatibility)
+  if (!tenant && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     try {
-      const tenantRes = await fetch(
-        `${supabaseUrl}/rest/v1/tenants?slug=eq.${encodeURIComponent(subdomain)}&status=eq.active&select=id,slug,name,status&limit=1`,
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/companies?slug=eq.${subdomain}&status=eq.active&select=id,slug,name,status&limit=1`,
         {
           headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           },
-          cache: 'no-store',
         },
       )
-      const tenants = (await tenantRes.json()) as TenantRow[]
-      tenant = tenants[0] ?? null
-
-      if (tenant) {
-        const brandRes = await fetch(
-          `${supabaseUrl}/rest/v1/tenant_brandings?tenant_id=eq.${tenant.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled&limit=1`,
-          {
-            headers: {
-              apikey: supabaseKey,
-              Authorization: `Bearer ${supabaseKey}`,
-            },
-            cache: 'no-store',
-          },
-        )
-        const brandings = (await brandRes.json()) as Array<Parameters<typeof brandTokensFromRow>[0]>
-        if (brandings[0]) {
-          brandTokens = brandTokensFromRow(brandings[0])
-        }
+      if (res.ok) {
+        const rows = await res.json() as CompanyRow[]
+        tenant = rows[0] ?? null
       }
-    } catch (err) {
-      console.error('[middleware] Tenant fetch error:', err)
+    } catch {
+      // Silently fall through
     }
   }
 
   if (!tenant) {
-    // Tenant fetch failed — use default branding and continue anyway
-    // The server components will handle tenant resolution
+    // Tenant not found — fall through with default branding
+    // This handles cases where the Supabase Edge client fails
     const response = getResponse()
     setTenantHeaders(response, {
-      tenantId: '',
-      tenantSlug: subdomain,
-      tenantName: subdomain,
+      companyId: '',
+      companySlug: subdomain,
+      companyName: subdomain,
       isHolding: false,
       brandCSS: buildCSSVarString(defaultBrandTokens),
+      customCSSPath: '',
     })
-    response.headers.set('x-debug-tenant', `not-found, url=${supabaseUrl ? 'set' : 'missing'}`)
+
+    // For non-public paths, still require auth
+    if (!isPublicPath(pathname) && !user) {
+      return redirectTo(request, '/login')
+    }
+
     return response
   }
+
+  // Fetch branding
+  const { data: branding } = await supabase
+    .from('company_branding')
+    .select(
+      'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled, extended_tokens, custom_css_path',
+    )
+    .eq('company_id', tenant.id)
+    .single<CompanyBrandingRow>()
+
+  const brandTokens = branding
+    ? brandTokensFromRow(branding)
+    : defaultBrandTokens
+
+  // Build core brand CSS string
+  let brandCSS = buildCSSVarString(brandTokens)
+
+  // Merge extended tokens: holding defaults + company overrides
+  if (branding?.extended_tokens) {
+    const mergedExtended: Partial<ExtendedBrandTokens> = {
+      ...defaultExtendedTokens,
+      ...branding.extended_tokens,
+    }
+    brandCSS += ';' + buildExtendedCSSVarString(mergedExtended)
+  } else {
+    brandCSS += ';' + buildExtendedCSSVarString(defaultExtendedTokens)
+  }
+
+  const customCSSPath = branding?.custom_css_path ?? undefined
 
   // Get the response AFTER all Supabase calls (cookies may have been updated)
   const response = getResponse()
   setTenantHeaders(response, {
-    tenantId: tenant.id,
-    tenantSlug: tenant.slug,
-    tenantName: tenant.name,
+    companyId: tenant.id,
+    companySlug: tenant.slug,
+    companyName: tenant.name,
     isHolding: false,
-    brandCSS: buildCSSVarString(brandTokens),
+    brandCSS,
     userId: user?.id,
+    customCSSPath: customCSSPath,
   })
 
   // -----------------------------------------------------------------------
-  // Auth gate: redirect unauthenticated users to login
-  // Profile gates (password reset, TOTP) are handled by server components
-  // because Supabase client queries don't work in Vercel edge middleware
+  // Auth gates (except public paths)
   // -----------------------------------------------------------------------
-  if (!isPublicPath(pathname) && !user) {
-    return redirectTo(request, '/login')
+  if (!isPublicPath(pathname)) {
+    if (!user) {
+      return redirectTo(request, '/login')
+    }
+
+    // Fetch profile for password-reset and TOTP gates
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('must_reset_password, totp_enabled')
+      .eq('id', user.id)
+      .single<ProfileRow>()
+
+    if (profile) {
+      // Gate 1: Password must be reset
+      if (profile.must_reset_password && pathname !== '/reset-password') {
+        return redirectTo(request, '/reset-password')
+      }
+
+      // Gate 2: TOTP must be enrolled (only check after password is set)
+      if (
+        !profile.totp_enabled &&
+        pathname !== '/enrol-2fa' &&
+        !profile.must_reset_password
+      ) {
+        return redirectTo(request, '/enrol-2fa')
+      }
+    }
+
+    // Gate 3: MFA assurance level
+    const mfaRedirect = await checkMfaLevel(supabase, pathname)
+    if (mfaRedirect) {
+      return redirectTo(request, mfaRedirect)
+    }
   }
 
   return response
@@ -430,27 +523,97 @@ async function checkMfaLevel(
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
+  const hostname = request.headers.get('host') ?? 'localhost:3000'
 
   // Skip static assets entirely
   if (isStaticAsset(pathname)) {
     return NextResponse.next()
   }
 
-  try {
-    if (MOCK_AUTH) {
-      return handleMockAuth(request)
-    }
-    const result = await handleSupabaseAuth(request)
-    result.headers.set('x-debug-middleware', 'ok')
-    return result
-  } catch (error) {
-    // Never throw from middleware — redirect to login on unexpected errors
-    const msg = error instanceof Error ? error.message : String(error)
-    console.error('[middleware] Unerwarteter Fehler:', msg)
-    const response = NextResponse.redirect(new URL('/login', request.url))
-    response.headers.set('x-debug-error', msg.slice(0, 200))
+  // ── PUBLIC PATHS (API routes) — skip branding, pass through immediately
+  if (pathname.startsWith('/api/')) {
+    const response = NextResponse.next({ request })
     return response
   }
+
+  // ── ALL PATHS — resolve branding via direct REST, then pass through ──
+  // NO Supabase SDK. NO auth checks. Only branding resolution.
+  // If anything fails, fall back to defaults — NEVER block the request.
+  const subdomain = getSubdomain(hostname)
+
+  let resolvedBrandCSS = buildCSSVarString(defaultBrandTokens)
+  let resolvedCompanyId = ''
+  let resolvedCompanyName = subdomain ?? 'Platform'
+  let resolvedCustomCSSPath = ''
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (supabaseUrl && supabaseKey && subdomain) {
+    try {
+      // Fetch company by slug
+      const companyRes = await fetch(
+        `${supabaseUrl}/rest/v1/companies?slug=eq.${subdomain}&select=id,name&limit=1`,
+        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, Accept: 'application/json' } },
+      )
+      if (companyRes.ok) {
+        const companies = (await companyRes.json()) as Array<{ id: string; name: string }>
+        const company = companies[0]
+        if (company) {
+          resolvedCompanyId = company.id
+          resolvedCompanyName = company.name
+
+          // Fetch branding for this company
+          const brandRes = await fetch(
+            `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
+            {
+              headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`,
+                Accept: 'application/json',
+              },
+                },
+          )
+          if (brandRes.ok) {
+            const brandings = (await brandRes.json()) as Array<Record<string, unknown>>
+            const branding = brandings[0]
+            if (branding) {
+              // Merge with defaults for any null/missing fields
+              const tokens: BrandTokens = {
+                ...defaultBrandTokens,
+                primary:        (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
+                secondary:      (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
+                accent:         (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
+                background:     (branding['background_color'] as string) ?? defaultBrandTokens.background,
+                surface:        (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
+                textPrimary:    (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
+                textSecondary:  (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
+                font:           (branding['font_family'] as string) ?? defaultBrandTokens.font,
+                fontUrl:        (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
+                radius:         (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
+              }
+              resolvedBrandCSS = buildCSSVarString(tokens)
+              resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Silently fall back to default branding — NEVER block the request
+      console.error('[middleware] Branding fetch error:', err)
+    }
+  }
+
+  const response = NextResponse.next({ request })
+  setTenantHeaders(response, {
+    companyId: resolvedCompanyId,
+    companySlug: subdomain ?? 'default',
+    companyName: resolvedCompanyName,
+    isHolding: isAdminHost(hostname),
+    brandCSS: resolvedBrandCSS,
+    customCSSPath: resolvedCustomCSSPath,
+  })
+  return response
 }
 
 export const config = {

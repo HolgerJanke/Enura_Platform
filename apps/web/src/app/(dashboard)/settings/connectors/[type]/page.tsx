@@ -37,10 +37,10 @@ export default async function ConnectorConfigPage({
   await requirePermission('module:admin:read')
 
   const { type } = params
-  if (!isValidType(type)) notFound()
+  if (!isValidType(type)) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
 
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const supabase = createSupabaseServerClient()
 
@@ -48,7 +48,7 @@ export default async function ConnectorConfigPage({
   const { data: connector } = await supabase
     .from('connectors')
     .select('*')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .eq('type', type)
     .maybeSingle()
 

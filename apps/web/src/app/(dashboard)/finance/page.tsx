@@ -12,13 +12,13 @@ import type { FinanceMonthlyMetrics } from '@enura/types'
 export default async function FinancePage() {
   await requirePermission('module:finance:read')
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
 
   const snapshot = await db.kpis.findLatest(
-    session.tenantId,
+    session.companyId,
     KPI_SNAPSHOT_TYPES.FINANCE_MONTHLY,
   )
 

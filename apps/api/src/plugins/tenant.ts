@@ -4,7 +4,7 @@ import fp from 'fastify-plugin'
 import { error } from '../lib/response.js'
 
 // ---------------------------------------------------------------------------
-// Plugin — resolves tenant from the authenticated user's tenantId,
+// Plugin — resolves tenant from the authenticated user's companyId,
 // fetches the tenant from data access, and attaches it to the request.
 // ---------------------------------------------------------------------------
 
@@ -17,19 +17,19 @@ async function tenantPlugin(fastify: FastifyInstance): Promise<void> {
       request: FastifyRequest,
       reply: FastifyReply,
     ): Promise<void> {
-      const { tenantId } = request.user
+      const { companyId } = request.user
 
-      if (!tenantId) {
+      if (!companyId) {
         reply
           .status(400)
           .send(error('TENANT_REQUIRED', 'This endpoint requires a tenant context'))
         return
       }
 
-      const tenant = await fastify.dataAccess.tenants.findById(tenantId)
+      const tenant = await fastify.dataAccess.companies.findById(companyId)
 
       if (!tenant) {
-        reply.status(404).send(error('TENANT_NOT_FOUND', `Tenant ${tenantId} not found`))
+        reply.status(404).send(error('TENANT_NOT_FOUND', `Tenant ${companyId} not found`))
         return
       }
 
@@ -41,7 +41,7 @@ async function tenantPlugin(fastify: FastifyInstance): Promise<void> {
       }
 
       request.tenant = {
-        tenantId: tenant.id,
+        companyId: tenant.id,
         tenant,
       }
     },

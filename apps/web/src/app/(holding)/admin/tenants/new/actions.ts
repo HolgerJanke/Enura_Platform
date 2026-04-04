@@ -72,7 +72,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
 
   // 1. Check slug uniqueness
   const { data: existing } = await serviceClient
-    .from('tenants')
+    .from('companies')
     .select('id')
     .eq('slug', data.slug)
     .maybeSingle()
@@ -83,7 +83,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
 
   // 2. Create tenant
   const { data: tenant, error: tenantError } = await serviceClient
-    .from('tenants')
+    .from('companies')
     .insert({
       name: data.name,
       slug: data.slug,
@@ -99,17 +99,17 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
 
   // 3. Upsert branding (the DB trigger may auto-create a default row)
   const { error: brandingError } = await serviceClient
-    .from('tenant_brandings')
+    .from('company_branding')
     .upsert(
       {
-        tenant_id: tenant.id,
+        company_id: tenant.id,
         primary_color: data.branding.primary,
         secondary_color: data.branding.secondary,
         accent_color: data.branding.accent,
         font_family: data.branding.font,
         border_radius: data.branding.radius,
       },
-      { onConflict: 'tenant_id' },
+      { onConflict: 'company_id' },
     )
 
   if (brandingError) {
@@ -123,7 +123,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
     email: data.superUser.email,
     password: tempPassword,
     email_confirm: true,
-    user_metadata: { tenant_id: tenant.id },
+    user_metadata: { company_id: tenant.id },
   })
 
   if (authError || !authUser.user) {
@@ -134,7 +134,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
   // 5. Create profile
   const { error: profileError } = await serviceClient.from('profiles').insert({
     id: authUser.user.id,
-    tenant_id: tenant.id,
+    company_id: tenant.id,
     first_name: data.superUser.firstName,
     last_name: data.superUser.lastName,
     must_reset_password: true,
@@ -152,7 +152,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
   const { data: superRole } = await serviceClient
     .from('roles')
     .select('id')
-    .eq('tenant_id', tenant.id)
+    .eq('company_id', tenant.id)
     .eq('key', 'super_user')
     .single()
 
@@ -166,7 +166,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
     const { data: newRole } = await serviceClient
       .from('roles')
       .insert({
-        tenant_id: tenant.id,
+        company_id: tenant.id,
         key: 'super_user',
         label: 'Super User',
         description: 'Vollzugriff auf alle Mandantenfunktionen',
@@ -190,7 +190,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
 
   // 8. Audit log
   await writeAuditLog({
-    tenantId: tenant.id,
+    companyId: tenant.id,
     actorId: session.profile.id,
     action: 'tenant.created',
     tableName: 'tenants',

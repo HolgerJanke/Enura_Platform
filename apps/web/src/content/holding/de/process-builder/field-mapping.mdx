@@ -1,0 +1,98 @@
+---
+title: "Feldmapping"
+description: "Quellfelder aus externen Systemen mit Plattform-Zielfeldern verbinden"
+section: "process-builder"
+lastUpdated: "2026-03-30"
+---
+
+# Feldmapping
+
+Das Feldmapping definiert, wie Daten aus externen Systemen in die Plattform uebernommen werden. Jede Zuordnung verbindet ein Quellfeld (z.B. ein CRM-Feld aus Reonic) mit einem Zielfeld in der Plattform-Datenbank.
+
+## Grundkonzept
+
+Ein Feldmapping besteht aus drei Teilen:
+
+```
+source_field → Transformation → target_table.target_field
+```
+
+- **source_field**: Der Feldname im externen System, z.B. `project.address.zip_code`
+- **Transformation**: Eine optionale Umwandlung der Daten
+- **target_table.target_field**: Wohin der Wert in der Plattform geschrieben wird, z.B. `projects.postal_code`
+
+## Verfuegbare Transformationen
+
+### mapping
+
+Die `mapping`-Transformation wandelt Werte anhand einer Zuordnungstabelle um. Das ist nuetzlich, wenn das Quellsystem andere Bezeichnungen verwendet als die Plattform.
+
+**Beispiel**: Reonic verwendet den Projektstatus `"In Bearbeitung"`, die Plattform erwartet `"active"`.
+
+```json
+{
+  "type": "mapping",
+  "map": {
+    "In Bearbeitung": "active",
+    "Abgeschlossen": "completed",
+    "Pausiert": "on_hold",
+    "Storniert": "cancelled"
+  }
+}
+```
+
+### date_iso
+
+Die `date_iso`-Transformation konvertiert verschiedene Datumsformate in das ISO-8601-Format (`YYYY-MM-DD`).
+
+**Beispiel**: Bexio liefert Daten im Format `"25.03.2026"`, die Plattform erwartet `"2026-03-25"`.
+
+```json
+{
+  "type": "date_iso",
+  "input_format": "DD.MM.YYYY"
+}
+```
+
+Unterstuetzte Eingabeformate: `DD.MM.YYYY`, `MM/DD/YYYY`, `YYYY-MM-DD` (bereits korrekt), Unix-Timestamps.
+
+### numeric
+
+Die `numeric`-Transformation konvertiert Textwerte in Zahlen und ermoeglicht einfache Berechnungen.
+
+**Beispiel**: Reonic liefert den Angebotsbetrag als `"45'000.00 CHF"`, die Plattform erwartet `45000.00`.
+
+```json
+{
+  "type": "numeric",
+  "strip_chars": ["'", " ", "CHF"],
+  "decimal_separator": "."
+}
+```
+
+## Vollstaendiges Beispiel
+
+So sieht ein typisches Mapping fuer den Reonic-Connector aus:
+
+| Quellfeld | Transformation | Zielfeld |
+|-----------|---------------|----------|
+| `project.name` | keine | `projects.name` |
+| `project.status` | mapping | `projects.status` |
+| `project.created_at` | date_iso | `projects.created_at` |
+| `project.total_price` | numeric | `projects.offer_amount` |
+| `project.address.zip` | keine | `projects.postal_code` |
+| `project.assigned_user.email` | keine | `projects.assigned_email` |
+
+## Validierung
+
+Die Plattform validiert jedes Mapping vor dem Speichern:
+
+- Das Zielfeld muss in der Datenbank existieren.
+- Die Transformation muss zum Datentyp des Zielfelds passen (z.B. `numeric` fuer ein Dezimalfeld).
+- Pflichtfelder muessen gemappt sein — die Plattform zeigt eine Warnung, wenn Pflichtfelder fehlen.
+
+## Tipps
+
+- Beginnen Sie mit den Pflichtfeldern und ergaenzen Sie optionale Felder schrittweise.
+- Testen Sie das Mapping mit einem einzelnen Datensatz, bevor Sie die vollstaendige Synchronisation starten.
+- Dokumentieren Sie Besonderheiten in der Beschreibung des Mappings (z.B. "Bexio liefert Betraege in Rappen").

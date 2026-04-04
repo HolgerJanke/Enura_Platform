@@ -28,14 +28,14 @@ function getResendClient(): Resend {
 // Send alerts for un-notified critical/warning anomalies
 // ---------------------------------------------------------------------------
 
-export async function sendAnomalyAlerts(tenantId: string): Promise<void> {
+export async function sendAnomalyAlerts(companyId: string): Promise<void> {
   const client = getServiceClient()
 
   // Fetch un-notified anomalies (critical and warning only)
   const { data: anomalies } = await client
     .from('anomalies')
     .select('*')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_active', true)
     .eq('notified', false)
     .in('severity', ['critical', 'warning'])
@@ -45,12 +45,12 @@ export async function sendAnomalyAlerts(tenantId: string): Promise<void> {
 
   // Fetch tenant info for email context
   const { data: tenant } = await client
-    .from('tenants')
+    .from('companies')
     .select('name')
-    .eq('id', tenantId)
+    .eq('id', companyId)
     .single()
 
-  const tenantName = (tenant as Record<string, unknown> | null)?.['name'] as string ?? 'Unbekannt'
+  const companyName = (tenant as Record<string, unknown> | null)?.['name'] as string ?? 'Unbekannt'
 
   // Fetch super users and holding admins who should receive alerts
   const recipients: string[] = []
@@ -59,7 +59,7 @@ export async function sendAnomalyAlerts(tenantId: string): Promise<void> {
   const { data: superUserRoles } = await client
     .from('profile_roles')
     .select('profile_id')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
 
   if (superUserRoles) {
     const profileIds = (superUserRoles as Array<Record<string, unknown>>)
@@ -71,7 +71,7 @@ export async function sendAnomalyAlerts(tenantId: string): Promise<void> {
         .from('roles')
         .select('id')
         .eq('key', 'super_user')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
 
       if (roles && roles.length > 0) {
         const roleId = (roles[0] as Record<string, unknown>)['id'] as string
@@ -105,7 +105,7 @@ export async function sendAnomalyAlerts(tenantId: string): Promise<void> {
   }
 
   if (recipients.length === 0) {
-    console.log(`[AlertSender] No recipients found for tenant ${tenantId}, skipping alert.`)
+    console.log(`[AlertSender] No recipients found for tenant ${companyId}, skipping alert.`)
     // Still mark as notified to avoid retrying endlessly
     const ids = (anomalies as Array<Record<string, unknown>>).map((a) => a['id'] as string)
     await client.from('anomalies').update({ notified: true }).in('id', ids)
@@ -122,7 +122,7 @@ export async function sendAnomalyAlerts(tenantId: string): Promise<void> {
 
     const emailHtml = await render(
       AnomalyAlertEmail({
-        tenantName,
+        companyName,
         severity,
         type: rec['type'] as string,
         metric: rec['metric'] as string,

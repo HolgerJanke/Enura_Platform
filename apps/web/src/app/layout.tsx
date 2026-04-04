@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from 'next'
-import { getTenantContext } from '@/lib/tenant'
+import { getCompanyContext } from '@/lib/tenant'
+import CookieBanner from '@/components/CookieBanner'
+import { EnuraAdminBar } from '@/components/EnuraAdminBar'
 import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { tenantName } = getTenantContext()
+  const { companyName } = getCompanyContext()
   return {
-    title: tenantName || 'Platform',
-    description: `${tenantName} — Business Intelligence`,
+    title: companyName || 'Platform',
+    description: `${companyName} — Business Intelligence`,
     manifest: '/manifest.json',
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
-      title: tenantName || 'Dashboard',
+      title: companyName || 'Dashboard',
     },
   }
 }
@@ -24,15 +26,25 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const { brandCSS, tenantName } = getTenantContext()
+  const { brandCSS, customCSSPath } = getCompanyContext()
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const customCSSUrl = customCSSPath
+    ? `${supabaseUrl}/storage/v1/object/public/corporate-assets/${customCSSPath}`
+    : null
 
   return (
     <html lang="de-CH" style={cssStringToObject(brandCSS)}>
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        {customCSSUrl ? (
+          <link rel="stylesheet" href={customCSSUrl} />
+        ) : null}
       </head>
       <body className="bg-brand-background font-brand text-brand-text-primary antialiased">
+        <EnuraAdminBar />
+        <CookieBanner />
         {children}
       </body>
     </html>

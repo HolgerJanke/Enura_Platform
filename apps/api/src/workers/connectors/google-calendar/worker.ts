@@ -52,14 +52,14 @@ function parseConnectorSettings(connector: ConnectorConfig): {
  * Returns null if no matching team member is found.
  */
 async function resolveTeamMemberId(
-  tenantId: string,
+  companyId: string,
   email: string,
 ): Promise<string | null> {
   const db = getServiceClient()
   const { data } = await db
     .from('team_members')
     .select('id')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('email', email)
     .eq('is_active', true)
     .single()
@@ -101,7 +101,7 @@ function resolveEventTimes(event: GoogleCalendarEvent): {
  * Transform a Google Calendar event into the calendar_events table shape.
  */
 function normaliseEvent(
-  tenantId: string,
+  companyId: string,
   teamMemberId: string | null,
   event: GoogleCalendarEvent,
 ): CalendarEventInsert {
@@ -109,7 +109,7 @@ function normaliseEvent(
   const eventType = classifyEvent(event.summary)
 
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: event.id,
     team_member_id: teamMemberId,
     title: event.summary ?? '(No title)',
@@ -136,7 +136,7 @@ export const googleCalendarConnector: ConnectorBase = {
     }
   },
 
-  async sync(tenantId: string, connector: ConnectorConfig): Promise<SyncResult> {
+  async sync(companyId: string, connector: ConnectorConfig): Promise<SyncResult> {
     const startTime = Date.now()
     const errors: SyncError[] = []
     let recordsFetched = 0
@@ -156,7 +156,7 @@ export const googleCalendarConnector: ConnectorBase = {
       for (const calendarId of config.calendar_ids) {
         try {
           // Resolve team member for this calendar email
-          const teamMemberId = await resolveTeamMemberId(tenantId, calendarId)
+          const teamMemberId = await resolveTeamMemberId(companyId, calendarId)
 
           const events = await fetchAllEvents(credentials, calendarId, timeMin, timeMax)
           recordsFetched += events.length
@@ -166,7 +166,7 @@ export const googleCalendarConnector: ConnectorBase = {
           recordsSkipped += events.length - activeEvents.length
 
           const normalised = activeEvents.map((event) =>
-            normaliseEvent(tenantId, teamMemberId, event),
+            normaliseEvent(companyId, teamMemberId, event),
           )
 
           allNormalised.push(...normalised)
@@ -183,7 +183,7 @@ export const googleCalendarConnector: ConnectorBase = {
         const result = await upsertRecords(
           'calendar_events',
           allNormalised as unknown as Record<string, unknown>[],
-          ['tenant_id', 'external_id'],
+          ['company_id', 'external_id'],
         )
 
         recordsWritten += result.written

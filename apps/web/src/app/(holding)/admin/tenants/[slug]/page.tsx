@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { TenantRow, TenantBrandingRow, ProfileRow, ConnectorRow } from '@enura/types'
+import type { CompanyRow, CompanyBrandingRow, ProfileRow, ConnectorRow } from '@enura/types'
 import { TenantDetailTabs } from './tenant-detail-tabs'
 
-type TenantWithBranding = TenantRow & {
-  tenant_brandings: TenantBrandingRow[]
+type CompanyWithBranding = CompanyRow & {
+  tenant_brandings: CompanyBrandingRow[]
 }
 
 type ProfileWithRoles = ProfileRow & {
@@ -54,23 +54,30 @@ function connectorStatusBadge(status: string): { label: string; classes: string 
   }
 }
 
-export default async function TenantDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+export default async function TenantDetailPage({ params }: { params: { slug: string } }) {
+  try {
+  const { slug } = params
   const supabase = createSupabaseServerClient()
 
   // Fetch tenant with branding
   const { data: tenant } = await supabase
-    .from('tenants')
-    .select('*, tenant_brandings(*)')
+    .from('companies')
+    .select('*, company_branding(*)')
     .eq('slug', slug)
     .single()
 
   if (!tenant) {
-    notFound()
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Unternehmen nicht gefunden.</p>
+        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurueck</a>
+      </div>
+    )
   }
 
-  const typedTenant = tenant as unknown as TenantWithBranding
-  const branding = typedTenant.tenant_brandings?.[0] ?? null
+  const typedTenant = tenant as unknown as CompanyWithBranding
+  const branding = (typedTenant as unknown as Record<string, unknown>)['company_branding'] as CompanyBrandingRow[] | null
+  const brandingRow = Array.isArray(branding) ? branding[0] ?? null : null
 
   // Fetch users in this tenant
   const { data: profiles } = await supabase
@@ -82,7 +89,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
         roles ( key, label )
       )
     `)
-    .eq('tenant_id', typedTenant.id)
+    .eq('company_id', typedTenant.id)
     .order('created_at', { ascending: false })
 
   const users = (profiles ?? []) as unknown as ProfileWithRoles[]
@@ -91,7 +98,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
   const { data: connectors } = await supabase
     .from('connectors')
     .select('*')
-    .eq('tenant_id', typedTenant.id)
+    .eq('company_id', typedTenant.id)
     .order('created_at', { ascending: false })
 
   const connectorList = (connectors ?? []) as ConnectorRow[]
@@ -129,7 +136,7 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
 
       <TenantDetailTabs
         tenant={typedTenant}
-        branding={branding}
+        branding={brandingRow}
         users={users.map((u) => ({
           id: u.id,
           firstName: u.first_name,
@@ -161,10 +168,17 @@ export default async function TenantDetailPage({ params }: { params: Promise<{ s
           lastSyncedAt: c.last_synced_at,
           lastError: c.last_error,
         }))}
-        formatDate={formatDate}
-        statusBadge={statusBadge}
-        connectorStatusBadge={connectorStatusBadge}
       />
     </div>
   )
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Fehler beim Laden</h2>
+        <p className="text-gray-500 text-sm mb-4">{msg}</p>
+        <a href="/admin" className="text-blue-600 underline text-sm">Zurueck zur Uebersicht</a>
+      </div>
+    )
+  }
 }

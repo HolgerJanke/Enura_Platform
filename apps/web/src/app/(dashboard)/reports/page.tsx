@@ -36,14 +36,14 @@ export default async function ReportsArchivePage() {
   await requirePermission('module:reports:read')
 
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const supabase = createSupabaseServerClient()
 
   const { data: reports } = await supabase
     .from('daily_reports')
     .select('id, report_date, sent_to, sent_at, report_json')
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
     .order('report_date', { ascending: false })
     .limit(30)
 

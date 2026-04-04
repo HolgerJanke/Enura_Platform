@@ -56,7 +56,7 @@ export default async function authRoutes(fastify: FastifyInstance): Promise<void
 
       // For mock: if no profile found we still create a token with defaults
       const userId = profile?.id ?? 'usr_mock'
-      const tenantId = profile?.tenant_id ?? null
+      const companyId = profile?.company_id ?? null
       const roleKeys: string[] = []
 
       if (profile) {
@@ -66,7 +66,7 @@ export default async function authRoutes(fastify: FastifyInstance): Promise<void
 
       const tokenPayload = {
         userId,
-        tenantId,
+        companyId,
         roles: roleKeys,
       }
 

@@ -10,7 +10,7 @@ import {
 } from './compute.js'
 
 export interface SnapshotJobData {
-  tenantId: string
+  companyId: string
   snapshotType: KpiSnapshotType
   entityId: string | null
   date: string
@@ -25,7 +25,7 @@ function getServiceClient() {
 }
 
 export async function processSnapshotJob(job: SnapshotJobData): Promise<void> {
-  const { tenantId, snapshotType, entityId, date } = job
+  const { companyId, snapshotType, entityId, date } = job
   const targetDate = new Date(date)
 
   let metrics: Record<string, unknown>
@@ -33,19 +33,19 @@ export async function processSnapshotJob(job: SnapshotJobData): Promise<void> {
   switch (snapshotType) {
     case KPI_SNAPSHOT_TYPES.SETTER_DAILY:
       if (!entityId) throw new Error('entityId required for setter_daily')
-      metrics = await computeSetterDaily(tenantId, entityId, targetDate) as Record<string, unknown>
+      metrics = await computeSetterDaily(companyId, entityId, targetDate) as Record<string, unknown>
       break
     case KPI_SNAPSHOT_TYPES.LEADS_DAILY:
-      metrics = await computeLeadsDaily(tenantId, targetDate) as Record<string, unknown>
+      metrics = await computeLeadsDaily(companyId, targetDate) as Record<string, unknown>
       break
     case KPI_SNAPSHOT_TYPES.FINANCE_MONTHLY:
-      metrics = await computeFinanceMonthly(tenantId, targetDate) as Record<string, unknown>
+      metrics = await computeFinanceMonthly(companyId, targetDate) as Record<string, unknown>
       break
     case KPI_SNAPSHOT_TYPES.PROJECTS_DAILY:
-      metrics = await computeProjectsDaily(tenantId, targetDate) as Record<string, unknown>
+      metrics = await computeProjectsDaily(companyId, targetDate) as Record<string, unknown>
       break
     case KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY:
-      metrics = await computeTenantDailySummary(tenantId, targetDate) as Record<string, unknown>
+      metrics = await computeTenantDailySummary(companyId, targetDate) as Record<string, unknown>
       break
     default:
       throw new Error(`Unknown snapshot type: ${snapshotType}`)
@@ -57,10 +57,10 @@ export async function processSnapshotJob(job: SnapshotJobData): Promise<void> {
   await client
     .from('kpi_snapshots')
     .upsert({
-      tenant_id: tenantId,
+      company_id: companyId,
       snapshot_type: snapshotType,
       entity_id: entityId,
       period_date: periodDate,
       metrics,
-    }, { onConflict: 'tenant_id,snapshot_type,entity_id,period_date' })
+    }, { onConflict: 'company_id,snapshot_type,entity_id,period_date' })
 }

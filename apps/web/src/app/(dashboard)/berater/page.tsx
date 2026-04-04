@@ -13,13 +13,13 @@ import type { BeraterDailyMetrics } from '@enura/types'
 export default async function BeraterPage() {
   await requirePermission('module:berater:read')
   const session = await getSession()
-  if (!session?.tenantId) return null
+  if (!session?.companyId) return null
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
 
   const snapshot = await db.kpis.findLatest(
-    session.tenantId,
+    session.companyId,
     KPI_SNAPSHOT_TYPES.BERATER_DAILY,
   )
 

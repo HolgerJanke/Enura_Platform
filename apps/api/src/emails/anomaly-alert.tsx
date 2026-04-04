@@ -16,7 +16,7 @@ import type { AnomalySeverity } from '@enura/types'
 // ---------------------------------------------------------------------------
 
 export interface AnomalyAlertEmailProps {
-  tenantName: string
+  companyName: string
   severity: AnomalySeverity
   type: string
   metric: string
@@ -72,7 +72,7 @@ function formatTimestamp(iso: string): string {
 // ---------------------------------------------------------------------------
 
 export function AnomalyAlertEmail({
-  tenantName,
+  companyName,
   severity,
   type,
   metric,
@@ -89,14 +89,14 @@ export function AnomalyAlertEmail({
     <Html lang="de">
       <Head />
       <Preview>
-        {config.emoji} {config.label} - {tenantName}: {message.slice(0, 100)}
+        {config.emoji} {config.label} - {companyName}: {message.slice(0, 100)}
       </Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
           <Section style={{ ...headerSection, borderBottomColor: config.borderColor }}>
             <Heading as="h1" style={companyHeading}>
-              {tenantName}
+              {companyName}
             </Heading>
             <Text style={dateText}>
               Anomalie-Alarm

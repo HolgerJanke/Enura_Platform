@@ -25,7 +25,7 @@ export async function overrideCallScoresAction(
   data: OverrideScoresInput,
 ): Promise<OverrideResult> {
   const session = await getSession()
-  if (!session?.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
 
   // Check permission (teamleiter or GF)
   const canOverride =
@@ -64,7 +64,7 @@ export async function overrideCallScoresAction(
       override_at: new Date().toISOString(),
     })
     .eq('call_id', data.callId)
-    .eq('tenant_id', session.tenantId)
+    .eq('company_id', session.companyId)
 
   if (error) {
     console.error('[call-analysis] Override failed:', error)
@@ -72,7 +72,7 @@ export async function overrideCallScoresAction(
   }
 
   await writeAuditLog({
-    tenantId: session.tenantId,
+    companyId: session.companyId,
     actorId: session.profile.id,
     action: 'call_analysis.overridden',
     tableName: 'call_analysis',

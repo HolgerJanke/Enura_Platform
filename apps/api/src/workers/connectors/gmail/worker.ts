@@ -162,14 +162,14 @@ async function countSentEmails(
  * Resolve the team_member_id for a given email within a tenant.
  */
 async function resolveTeamMemberId(
-  tenantId: string,
+  companyId: string,
   email: string,
 ): Promise<string | null> {
   const db = getServiceClient()
   const { data } = await db
     .from('team_members')
     .select('id')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('email', email)
     .eq('is_active', true)
     .single()
@@ -226,7 +226,7 @@ export class GmailConnector implements ConnectorBase {
   }
 
   async sync(
-    tenantId: string,
+    companyId: string,
     connector: ConnectorConfig,
   ): Promise<SyncResult> {
     const startTime = Date.now()
@@ -254,12 +254,12 @@ export class GmailConnector implements ConnectorBase {
 
       for (const email of config.tracked_emails) {
         // Resolve the team_member_id for this email
-        const teamMemberId = await resolveTeamMemberId(tenantId, email)
+        const teamMemberId = await resolveTeamMemberId(companyId, email)
         if (!teamMemberId) {
           errors.push({
             code: 'GMAIL_MEMBER_NOT_FOUND',
             message: `No active team member found for email: ${email}`,
-            context: { email, tenantId },
+            context: { email, companyId },
           })
           recordsSkipped++
           continue
@@ -289,14 +289,14 @@ export class GmailConnector implements ConnectorBase {
               .from('email_activity')
               .upsert(
                 {
-                  tenant_id: tenantId,
+                  company_id: companyId,
                   team_member_id: teamMemberId,
                   activity_date: activityDate,
                   emails_sent: emailsSent,
                   updated_at: new Date().toISOString(),
                 },
                 {
-                  onConflict: 'tenant_id,team_member_id,activity_date',
+                  onConflict: 'company_id,team_member_id,activity_date',
                   ignoreDuplicates: false,
                 },
               )
@@ -323,7 +323,7 @@ export class GmailConnector implements ConnectorBase {
       errors.push({
         code: 'GMAIL_SYNC_FATAL',
         message: err instanceof Error ? err.message : String(err),
-        context: { tenantId },
+        context: { companyId },
       })
     }
 

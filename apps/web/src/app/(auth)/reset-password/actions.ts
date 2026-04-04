@@ -54,7 +54,7 @@ export async function resetPasswordAction(
 
   // Audit log
   await writeAuditLog({
-    tenantId: (user.user_metadata?.['tenant_id'] as string | null) ?? null,
+    companyId: (user.user_metadata?.['company_id'] as string | null) ?? null,
     actorId: user.id,
     action: 'auth.password_reset',
     tableName: 'profiles',

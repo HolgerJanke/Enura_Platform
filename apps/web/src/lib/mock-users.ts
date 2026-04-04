@@ -12,7 +12,7 @@ export const mockUsers: MockUser[] = [
     password: 'Test1234!',
     session: {
       userId: 'h0000000-0000-0000-0000-000000000001',
-      tenantId: null,
+      companyId: null,
       email: 'admin@enura.ch',
       firstName: 'System',
       lastName: 'Admin',
@@ -29,7 +29,7 @@ export const mockUsers: MockUser[] = [
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      tenantId: '00000000-0000-0000-0000-000000000001',
+      companyId: '00000000-0000-0000-0000-000000000001',
       email: 'super@alpen-energie.ch',
       firstName: 'Hans',
       lastName: 'Müller',
@@ -56,7 +56,7 @@ export const mockUsers: MockUser[] = [
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      tenantId: '00000000-0000-0000-0000-000000000001',
+      companyId: '00000000-0000-0000-0000-000000000001',
       email: 'gf@alpen-energie.ch',
       firstName: 'Petra',
       lastName: 'Schneider',
@@ -77,7 +77,7 @@ export const mockUsers: MockUser[] = [
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000004',
-      tenantId: '00000000-0000-0000-0000-000000000001',
+      companyId: '00000000-0000-0000-0000-000000000001',
       email: 'setter@alpen-energie.ch',
       firstName: 'Lukas',
       lastName: 'Weber',
@@ -94,7 +94,7 @@ export const mockUsers: MockUser[] = [
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000005',
-      tenantId: '00000000-0000-0000-0000-000000000001',
+      companyId: '00000000-0000-0000-0000-000000000001',
       email: 'berater@alpen-energie.ch',
       firstName: 'Marco',
       lastName: 'Bernasconi',
@@ -111,7 +111,7 @@ export const mockUsers: MockUser[] = [
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000008',
-      tenantId: '00000000-0000-0000-0000-000000000001',
+      companyId: '00000000-0000-0000-0000-000000000001',
       email: 'finance@alpen-energie.ch',
       firstName: 'Elena',
       lastName: 'Fischer',

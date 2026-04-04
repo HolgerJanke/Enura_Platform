@@ -12,14 +12,14 @@ import {
 } from '@react-email/components'
 
 export interface InviteSuperUserEmailProps {
-  tenantName: string
+  companyName: string
   loginUrl: string
   tempPassword: string
   primaryColor: string
 }
 
 export function InviteSuperUserEmail({
-  tenantName,
+  companyName,
   loginUrl,
   tempPassword,
   primaryColor,
@@ -28,7 +28,7 @@ export function InviteSuperUserEmail({
     <Html lang="de">
       <Head />
       <Preview>
-        Ihr Administrator-Konto bei {tenantName} wurde eingerichtet
+        Ihr Administrator-Konto bei {companyName} wurde eingerichtet
       </Preview>
       <Body style={body}>
         <Container style={container}>
@@ -37,7 +37,7 @@ export function InviteSuperUserEmail({
               as="h1"
               style={{ ...heading, color: primaryColor }}
             >
-              {tenantName}
+              {companyName}
             </Heading>
           </Section>
 
@@ -48,7 +48,7 @@ export function InviteSuperUserEmail({
 
             <Text style={paragraph}>
               Ihr Administrator-Konto wurde eingerichtet. Sie haben als Super
-              User vollen Zugriff auf die Verwaltung von {tenantName}.
+              User vollen Zugriff auf die Verwaltung von {companyName}.
             </Text>
 
             <Text style={paragraph}>

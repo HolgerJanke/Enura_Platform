@@ -12,14 +12,14 @@ import {
 } from '@react-email/components'
 
 export interface InviteUserEmailProps {
-  tenantName: string
+  companyName: string
   loginUrl: string
   tempPassword: string
   primaryColor: string
 }
 
 export function InviteUserEmail({
-  tenantName,
+  companyName,
   loginUrl,
   tempPassword,
   primaryColor,
@@ -27,7 +27,7 @@ export function InviteUserEmail({
   return (
     <Html lang="de">
       <Head />
-      <Preview>Ihr Konto bei {tenantName} wurde eingerichtet</Preview>
+      <Preview>Ihr Konto bei {companyName} wurde eingerichtet</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={headerSection}>
@@ -35,7 +35,7 @@ export function InviteUserEmail({
               as="h1"
               style={{ ...heading, color: primaryColor }}
             >
-              {tenantName}
+              {companyName}
             </Heading>
           </Section>
 
@@ -46,7 +46,7 @@ export function InviteUserEmail({
 
             <Text style={paragraph}>
               Ihr Konto wurde eingerichtet. Sie koennen sich ab sofort auf der
-              Plattform von {tenantName} anmelden.
+              Plattform von {companyName} anmelden.
             </Text>
 
             <Text style={paragraph}>

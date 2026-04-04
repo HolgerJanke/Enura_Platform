@@ -31,8 +31,8 @@ export default async function userRoutes(fastify: FastifyInstance): Promise<void
   fastify.get(
     '/users',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { tenantId } = request.tenant
-      const profiles = await fastify.dataAccess.profiles.findByTenantId(tenantId)
+      const { companyId } = request.tenant
+      const profiles = await fastify.dataAccess.profiles.findByCompanyId(companyId)
 
       reply.status(200).send(success(profiles, { count: profiles.length }))
     },
@@ -71,11 +71,11 @@ export default async function userRoutes(fastify: FastifyInstance): Promise<void
       }
 
       const { email, firstName, lastName } = parseResult.data
-      const { tenantId } = request.tenant
+      const { companyId } = request.tenant
 
       // Check for duplicate email
       const existingProfile = await fastify.dataAccess.profiles.findByEmail(email)
-      if (existingProfile && existingProfile.tenant_id === tenantId) {
+      if (existingProfile && existingProfile.company_id === companyId) {
         reply.status(409).send(error('CONFLICT', `User with email ${email} already exists in this tenant`))
         return
       }
@@ -87,7 +87,7 @@ export default async function userRoutes(fastify: FastifyInstance): Promise<void
       // For now, mock the profile creation
       const profile = await fastify.dataAccess.profiles.create({
         id: `usr_${Date.now()}`,
-        tenant_id: tenantId,
+        company_id: companyId,
         first_name: firstName,
         last_name: lastName,
         must_reset_password: true,
@@ -124,7 +124,7 @@ export default async function userRoutes(fastify: FastifyInstance): Promise<void
       reply: FastifyReply,
     ) => {
       const { id } = request.params
-      const { tenantId } = request.tenant
+      const { companyId } = request.tenant
 
       const parseResult = UpdateUserSchema.safeParse(request.body)
 
@@ -137,7 +137,7 @@ export default async function userRoutes(fastify: FastifyInstance): Promise<void
 
       const existing = await fastify.dataAccess.profiles.findById(id)
 
-      if (!existing || existing.tenant_id !== tenantId) {
+      if (!existing || existing.company_id !== companyId) {
         reply.status(404).send(error('NOT_FOUND', `User ${id} not found in this tenant`))
         return
       }

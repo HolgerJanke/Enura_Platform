@@ -22,13 +22,13 @@ export default async function connectorRoutes(fastify: FastifyInstance): Promise
   fastify.get(
     '/connectors',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { tenantId } = request.tenant
-      const connectors = await fastify.dataAccess.connectors.findByTenantId(tenantId)
+      const { companyId } = request.tenant
+      const connectors = await fastify.dataAccess.connectors.findByCompanyId(companyId)
 
       // Strip credentials from the response — they must never be exposed
       const safe = connectors.map((c) => ({
         id: c.id,
-        tenantId: c.tenant_id,
+        companyId: c.company_id,
         type: c.type,
         name: c.name,
         config: c.config,

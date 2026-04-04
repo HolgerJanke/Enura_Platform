@@ -37,7 +37,7 @@ function mapCallResult(raw: string): string {
 
 export function normaliseCall(
   call: ThreeCXCall,
-  tenantId: string,
+  companyId: string,
   extensionMemberMap: Map<string, string>,
 ): Record<string, unknown> {
   const teamMemberId = call.extension
@@ -45,7 +45,7 @@ export function normaliseCall(
     : null
 
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: call.id,
     team_member_id: teamMemberId,
     direction: mapDirection(call.direction),
@@ -61,10 +61,10 @@ export function normaliseCall(
 
 export function normaliseExtension(
   ext: ThreeCXExtension,
-  tenantId: string,
+  companyId: string,
 ): Record<string, unknown> {
   return {
-    tenant_id: tenantId,
+    company_id: companyId,
     external_id: `3cx-ext-${ext.id}`,
     first_name: ext.first_name,
     last_name: ext.last_name,

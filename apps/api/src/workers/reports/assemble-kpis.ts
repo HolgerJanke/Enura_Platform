@@ -58,7 +58,7 @@ function toISODateString(date: Date): string {
  */
 async function fetchSnapshot(
   db: SupabaseClient,
-  tenantId: string,
+  companyId: string,
   snapshotType: string,
   entityId: string | null,
   periodDate: string,
@@ -66,7 +66,7 @@ async function fetchSnapshot(
   const query = db
     .from('kpi_snapshots')
     .select('metrics')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('snapshot_type', snapshotType)
     .eq('period_date', periodDate)
 
@@ -92,11 +92,11 @@ async function fetchSnapshot(
  * Reads from pre-computed `kpi_snapshots` (never raw tables),
  * then builds a warnings list based on threshold checks.
  *
- * @param tenantId  The tenant to assemble data for.
+ * @param companyId  The tenant to assemble data for.
  * @param date      The data date (the day being reported on, not the report date).
  */
 export async function assembleKpiData(
-  tenantId: string,
+  companyId: string,
   date: Date,
 ): Promise<ReportKpiData> {
   const db = getServiceClient()
@@ -109,9 +109,9 @@ export async function assembleKpiData(
   // 1. Fetch tenant name
   // -----------------------------------------------------------------------
   const { data: tenant } = await db
-    .from('tenants')
+    .from('companies')
     .select('name')
-    .eq('id', tenantId)
+    .eq('id', companyId)
     .single()
 
   const companyName =
@@ -123,7 +123,7 @@ export async function assembleKpiData(
   const { data: members } = await db
     .from('team_members')
     .select('id, first_name, last_name, display_name, role_type')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('is_active', true)
 
   const teamMembers = (members ?? []) as Array<Record<string, unknown>>
@@ -139,7 +139,7 @@ export async function assembleKpiData(
   for (const setter of setters) {
     const metrics = await fetchSnapshot(
       db,
-      tenantId,
+      companyId,
       'setter_daily',
       setter['id'] as string,
       periodDate,
@@ -160,7 +160,7 @@ export async function assembleKpiData(
   for (const berater of beraters) {
     const metrics = await fetchSnapshot(
       db,
-      tenantId,
+      companyId,
       'berater_daily',
       berater['id'] as string,
       periodDate,
@@ -178,7 +178,7 @@ export async function assembleKpiData(
   // -----------------------------------------------------------------------
   const leadsKpis = await fetchSnapshot(
     db,
-    tenantId,
+    companyId,
     'leads_daily',
     null,
     periodDate,
@@ -186,7 +186,7 @@ export async function assembleKpiData(
 
   const projectsKpis = await fetchSnapshot(
     db,
-    tenantId,
+    companyId,
     'projects_daily',
     null,
     periodDate,
@@ -194,7 +194,7 @@ export async function assembleKpiData(
 
   const financeKpis = await fetchSnapshot(
     db,
-    tenantId,
+    companyId,
     'finance_monthly',
     null,
     periodDate,
@@ -244,7 +244,7 @@ export async function assembleKpiData(
   const { data: errorConnectors } = await db
     .from('connectors')
     .select('name, last_error')
-    .eq('tenant_id', tenantId)
+    .eq('company_id', companyId)
     .eq('status', 'error')
 
   const connErrors = errorConnectors ?? []

@@ -7,6 +7,46 @@
 
 ---
 
+## 0. Change Validation Protocol
+
+**Every proposed change must be validated against the existing codebase before implementation.**
+
+### Rules
+
+1. **Check before changing.** Before modifying any file, function, type, database table,
+   or architectural pattern, verify what already exists. Read the relevant files. Understand
+   the current implementation. Do not assume — inspect.
+
+2. **Flag structural conflicts.** If a proposed change contradicts the current architecture
+   (e.g. bypassing the three-tier hierarchy, breaking the branding inheritance chain,
+   violating the RLS isolation model, or circumventing the permission matrix), **stop and
+   explicitly inform the developer** before proceeding. State clearly:
+   - What the current structure is
+   - How the proposed change conflicts with it
+   - What the consequences would be (data leakage, broken cascades, type mismatches, etc.)
+
+3. **Ask for confirmation.** When a conflict is identified, ask the developer:
+   *"This change would [describe impact]. The current system works as [describe current behaviour].
+   Do you want to proceed with this change?"*
+   Do not silently make changes that alter the hierarchical structure.
+
+4. **Hierarchical integrity.** The platform follows a strict three-tier hierarchy:
+   **Enura Group → Holding → Company**. Any change that would:
+   - Allow a Company to bypass its Holding
+   - Allow a Holding to bypass Enura Group controls
+   - Remove or weaken RLS tenant isolation
+   - Break the branding/permission/process inheritance chain
+   - Allow data to flow outside its scoped tier
+
+   must be flagged as a **structural rupture** and requires explicit developer approval
+   with documented justification.
+
+5. **No silent regressions.** If a change would break an existing feature, test, or
+   integration — even if the change itself is correct in isolation — flag it. The developer
+   must be aware of all downstream effects before approving.
+
+---
+
 ## 1. Platform Overview
 
 ### What This Is

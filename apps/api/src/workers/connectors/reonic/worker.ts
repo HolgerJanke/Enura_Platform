@@ -53,7 +53,7 @@ export class ReonicConnector implements ConnectorBase {
   }
 
   async sync(
-    tenantId: string,
+    companyId: string,
     connector: ConnectorConfig,
   ): Promise<SyncResult> {
     const startTime = Date.now()
@@ -81,14 +81,14 @@ export class ReonicConnector implements ConnectorBase {
           })
           continue
         }
-        validUsers.push(normaliseUser(result.data, tenantId))
+        validUsers.push(normaliseUser(result.data, companyId))
       }
 
       fetched += validUsers.length
       const usersResult = await upsertRecords(
         'team_members',
         validUsers,
-        ['tenant_id', 'external_id'],
+        ['company_id', 'external_id'],
       )
       written += usersResult.written
       errors.push(...usersResult.errors)
@@ -97,7 +97,7 @@ export class ReonicConnector implements ConnectorBase {
       const { data: members } = await db
         .from('team_members')
         .select('id, external_id')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
 
       const memberMap = new Map<string, string>(
         (members ?? []).map((m: { id: string; external_id: string }) => [
@@ -129,14 +129,14 @@ export class ReonicConnector implements ConnectorBase {
             })
             continue
           }
-          validLeads.push(normaliseLead(result.data, tenantId, memberMap))
+          validLeads.push(normaliseLead(result.data, companyId, memberMap))
         }
 
         fetched += validLeads.length
         const leadsResult = await upsertRecords(
           'leads',
           validLeads,
-          ['tenant_id', 'external_id'],
+          ['company_id', 'external_id'],
         )
         written += leadsResult.written
         errors.push(...leadsResult.errors)
@@ -150,7 +150,7 @@ export class ReonicConnector implements ConnectorBase {
       const { data: leads } = await db
         .from('leads')
         .select('id, external_id')
-        .eq('tenant_id', tenantId)
+        .eq('company_id', companyId)
 
       const leadMap = new Map<string, string>(
         (leads ?? []).map((l: { id: string; external_id: string }) => [
@@ -183,7 +183,7 @@ export class ReonicConnector implements ConnectorBase {
             continue
           }
           validOffers.push(
-            normaliseOffer(result.data, tenantId, memberMap, leadMap),
+            normaliseOffer(result.data, companyId, memberMap, leadMap),
           )
         }
 
@@ -191,7 +191,7 @@ export class ReonicConnector implements ConnectorBase {
         const offersResult = await upsertRecords(
           'offers',
           validOffers,
-          ['tenant_id', 'external_id'],
+          ['company_id', 'external_id'],
         )
         written += offersResult.written
         errors.push(...offersResult.errors)
@@ -204,7 +204,7 @@ export class ReonicConnector implements ConnectorBase {
       errors.push({
         code: 'SYNC_FATAL',
         message: err instanceof Error ? err.message : String(err),
-        context: { tenantId },
+        context: { companyId },
       })
     }
 

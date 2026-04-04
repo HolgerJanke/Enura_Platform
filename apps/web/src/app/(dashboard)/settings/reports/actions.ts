@@ -13,7 +13,7 @@ export async function saveReportSettingsAction(data: {
   maxWhisperUsdMonthly: number
 }): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session?.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
 
   // Basic validation
   if (data.stalledProjectDays < 1 || data.stalledProjectDays > 365) {
@@ -28,22 +28,22 @@ export async function saveReportSettingsAction(data: {
 
   const db = createSupabaseServiceClient()
 
-  const { error: upsertError } = await db.from('tenant_settings').upsert({
-    tenant_id: session.tenantId,
+  const { error: upsertError } = await db.from('company_settings').upsert({
+    company_id: session.companyId,
     report_send_time: data.reportSendTime,
     report_timezone: data.reportTimezone,
     report_recipients_all: data.reportRecipientsAll,
     stalled_project_days: data.stalledProjectDays,
     unworked_lead_hours: data.unworkedLeadHours,
     max_whisper_usd_monthly: String(data.maxWhisperUsdMonthly),
-  }, { onConflict: 'tenant_id' })
+  }, { onConflict: 'company_id' })
 
   if (upsertError) {
     return { error: 'Fehler beim Speichern. Bitte versuchen Sie es erneut.' }
   }
 
   await writeAuditLog({
-    tenantId: session.tenantId,
+    companyId: session.companyId,
     actorId: session.profile.id,
     action: 'report_settings.updated',
     tableName: 'tenant_settings',
@@ -54,14 +54,14 @@ export async function saveReportSettingsAction(data: {
 
 export async function triggerManualReportAction(): Promise<{ error?: string; success?: boolean }> {
   const session = await getSession()
-  if (!session?.tenantId) return { error: 'Nicht autorisiert' }
+  if (!session?.companyId) return { error: 'Nicht autorisiert' }
 
   // In production, this would enqueue a BullMQ job
   // For now, log and return success
-  console.log(`[manual-report] Triggered for tenant ${session.tenantId}`)
+  console.log(`[manual-report] Triggered for tenant ${session.companyId}`)
 
   await writeAuditLog({
-    tenantId: session.tenantId,
+    companyId: session.companyId,
     actorId: session.profile.id,
     action: 'report.manual_trigger',
     tableName: 'daily_reports',
