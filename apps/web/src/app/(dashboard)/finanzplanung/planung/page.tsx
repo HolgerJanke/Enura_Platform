@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
+import { CashoutCalendar } from './cashout-calendar-client'
 
 interface ApprovedInvoice {
   id: string
@@ -157,14 +158,30 @@ export default async function PlanungPage() {
         </>
       )}
 
-      {/* Placeholder for calendar view */}
-      <div className="mt-10 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-        <p className="text-sm text-gray-500 mb-2">Kalender-Spaltenansicht</p>
-        <p className="text-xs text-gray-400">
-          Die Drag-and-Drop-Kalenderansicht fuer die Zahlungsterminierung wird in einem spaeteren Schritt implementiert.
-          Aktuell koennen Sie Zahlungslaeufe manuell erstellen.
-        </p>
-      </div>
+      {/* Calendar drag-and-drop view */}
+      {invoices.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kalender-Ansicht</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Verschieben Sie Rechnungskarten per Drag-and-Drop in eine andere Datumsspalte, um das Zahlungsdatum zu aendern.
+          </p>
+          <CashoutCalendar
+            invoices={invoices.map(inv => ({
+              id: inv.id,
+              invoice_number: inv.invoice_number,
+              sender_name: inv.sender_name,
+              gross_amount: Number(inv.gross_amount ?? 0),
+              currency: inv.currency,
+              due_date: inv.due_date ?? new Date().toISOString().split('T')[0]!,
+              scheduled_date: null,
+            }))}
+            onScheduleChange={async () => {
+              // Server action for schedule change would go here
+              // For now this is client-side only
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

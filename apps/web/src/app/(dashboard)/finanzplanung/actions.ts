@@ -316,3 +316,41 @@ export async function rejectPaymentRun(
   revalidatePath('/finanzplanung/genehmigung')
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Schedule invoice payment date (drag-and-drop in calendar)
+// ---------------------------------------------------------------------------
+
+export async function scheduleInvoicePayment(
+  invoiceId: string,
+  scheduledDate: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession()
+  if (!session) return { success: false, error: 'Nicht authentifiziert.' }
+
+  const hasPlan = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:plan_cashout')
+  if (!hasPlan) return { success: false, error: 'Keine Berechtigung.' }
+
+  const supabase = createSupabaseServerClient()
+
+  const { error } = await supabase
+    .from('invoices_incoming')
+    .update({ status: 'scheduled', due_date: scheduledDate })
+    .eq('id', invoiceId)
+    .eq('status', 'approved')
+
+  if (error) return { success: false, error: error.message }
+
+  // Update linked liquidity_event_instance scheduled date
+  await supabase
+    .from('liquidity_event_instances')
+    .update({
+      scheduled_date: scheduledDate,
+      scheduled_by: session.profile.id,
+      scheduled_at: new Date().toISOString(),
+    })
+    .eq('invoice_id', invoiceId)
+
+  revalidatePath('/finanzplanung/planung')
+  return { success: true }
+}

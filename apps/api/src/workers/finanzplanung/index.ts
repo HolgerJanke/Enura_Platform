@@ -15,3 +15,19 @@ export {
   type PaymentFileExportJobData,
   type ExportResult,
 } from './payment-file-export.js'
+
+export {
+  pollInvoiceEmails,
+  startEmailPolling,
+  stopEmailPolling,
+  getDefaultEmailConfig,
+  type EmailIncomerConfig,
+  type EmailPollResult,
+} from './email-incomer.js'
+
+export {
+  sendApprovalRequest,
+  processWhatsAppResponse,
+  type ApprovalRequestData,
+  type WhatsAppResponseData,
+} from './whatsapp-approval.js'
