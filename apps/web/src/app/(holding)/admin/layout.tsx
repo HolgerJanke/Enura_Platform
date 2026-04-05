@@ -15,6 +15,7 @@ const HOLDING_NAV_ITEMS = [
   { label: 'Zertifizierungen', href: '/admin/compliance/certifications', icon: 'award' },
   { label: 'Branding', href: '/admin/settings/branding', icon: 'palette' },
   { label: 'Berechtigungen', href: '/admin/settings/permissions', icon: 'lock' },
+  { label: 'Add-ons', href: '/admin/settings/addons', icon: 'puzzle' },
   { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
 

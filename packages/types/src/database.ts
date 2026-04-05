@@ -2662,6 +2662,9 @@ export interface HoldingSubscriptionRow {
   trial_ends_at: string | null;
   activated_at: string | null;
   notes: string | null;
+  finanzplanung_enabled: boolean;
+  finanzplanung_activated_at: string | null;
+  finanzplanung_notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -2680,6 +2683,9 @@ export interface HoldingSubscriptionInsert {
   trial_ends_at?: string | null;
   activated_at?: string | null;
   notes?: string | null;
+  finanzplanung_enabled?: boolean;
+  finanzplanung_activated_at?: string | null;
+  finanzplanung_notes?: string | null;
 }
 
 export interface HoldingSubscriptionUpdate {
@@ -2694,6 +2700,9 @@ export interface HoldingSubscriptionUpdate {
   trial_ends_at?: string | null;
   activated_at?: string | null;
   notes?: string | null;
+  finanzplanung_enabled?: boolean;
+  finanzplanung_activated_at?: string | null;
+  finanzplanung_notes?: string | null;
 }
 
 // =============================================================================
