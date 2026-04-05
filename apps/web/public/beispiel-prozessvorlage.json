@@ -1,0 +1,69 @@
+{
+  "name": "PV-Anlage Verkaufsprozess",
+  "description": "Standard-Verkaufsprozess fuer Photovoltaik-Anlagen von der Erstanfrage bis zum Vertragsabschluss.",
+  "category": "verkauf",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "name": "Lead-Eingang",
+      "description": "Neuer Lead wird erfasst und dem zustaendigen Setter zugewiesen.",
+      "responsible_roles": ["leadkontrolle"],
+      "sort_order": 0,
+      "typical_hours": 1,
+      "warning_days": 1,
+      "show_in_flowchart": true
+    },
+    {
+      "name": "Erstgespraech",
+      "description": "Telefonisches Erstgespraech mit dem Interessenten zur Bedarfsermittlung.",
+      "responsible_roles": ["setter"],
+      "sort_order": 1,
+      "typical_hours": 1,
+      "show_in_flowchart": true
+    },
+    {
+      "name": "Terminvereinbarung",
+      "description": "Vor-Ort-Beratungstermin wird mit dem Interessenten vereinbart.",
+      "responsible_roles": ["setter"],
+      "sort_order": 2,
+      "typical_hours": 0.5,
+      "show_in_flowchart": true
+    },
+    {
+      "name": "Beratungstermin",
+      "description": "Vor-Ort Beratung, Dachvermessung und Bedarfsanalyse.",
+      "responsible_roles": ["berater"],
+      "sort_order": 3,
+      "typical_hours": 4,
+      "warning_days": 3,
+      "show_in_flowchart": true
+    },
+    {
+      "name": "Angebotserstellung",
+      "description": "Individuelles Angebot wird basierend auf der Beratung erstellt.",
+      "responsible_roles": ["berater", "innendienst"],
+      "sort_order": 4,
+      "typical_hours": 3,
+      "warning_days": 5,
+      "show_in_flowchart": true
+    },
+    {
+      "name": "Nachfassung",
+      "description": "Telefonische Nachfassung nach Angebotsversand.",
+      "responsible_roles": ["berater"],
+      "sort_order": 5,
+      "typical_hours": 1,
+      "warning_days": 7,
+      "show_in_flowchart": true
+    },
+    {
+      "name": "Vertragsabschluss",
+      "description": "Vertrag wird unterschrieben und an den Innendienst uebergeben.",
+      "responsible_roles": ["berater"],
+      "sort_order": 6,
+      "typical_hours": 2,
+      "show_in_flowchart": true,
+      "liquidity_marker": "trigger"
+    }
+  ]
+}
