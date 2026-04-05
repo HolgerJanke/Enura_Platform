@@ -8,6 +8,8 @@ const PROMPT_NAMES = [
   'daily-report',
   'daily-report-system',
   'script-check',
+  'invoice-extraction',
+  'invoice-extraction-system',
 ] as const
 
 export type PromptName = (typeof PROMPT_NAMES)[number]
