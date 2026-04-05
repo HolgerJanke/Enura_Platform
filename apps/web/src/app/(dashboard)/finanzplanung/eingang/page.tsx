@@ -121,8 +121,10 @@ export default async function EingangPage() {
             <tbody className="divide-y divide-gray-200">
               {rows.map((inv) => (
                 <tr key={inv.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-mono text-gray-900">
-                    {inv.invoice_number ?? '—'}
+                  <td className="px-4 py-3 text-sm font-mono">
+                    <Link href={`/finanzplanung/eingang/${inv.id}`} className="text-blue-600 hover:underline">
+                      {inv.invoice_number ?? inv.id.slice(0, 8)}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     {inv.sender_name ?? 'Unbekannt'}
