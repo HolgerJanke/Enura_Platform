@@ -28,8 +28,8 @@ interface LiquidityEvent {
   marker_type: string
   direction: string
   plan_currency: string
-  plan_amount: string | null
-  plan_date: string | null
+  budget_amount: string | null
+  budget_date: string | null
   actual_date: string | null
   actual_currency: string | null
   actual_amount: string | null
@@ -131,9 +131,9 @@ export function LiquidityClient({
     past.setDate(past.getDate() - periodDays)
 
     return events.filter((e) => {
-      if (!e.plan_date) return false
+      if (!e.budget_date) return false
       if (e.plan_currency !== currency) return false
-      const d = new Date(e.plan_date)
+      const d = new Date(e.budget_date)
       return d >= past && d <= cutoff
     })
   }, [events, periodDays, currency])
@@ -144,8 +144,8 @@ export function LiquidityClient({
     const orderedKeys: string[] = []
 
     for (const evt of filteredEvents) {
-      if (!evt.plan_date) continue
-      const key = periodKey(evt.plan_date, groupBy)
+      if (!evt.budget_date) continue
+      const key = periodKey(evt.budget_date, groupBy)
 
       if (!bucketMap.has(key)) {
         bucketMap.set(key, {
@@ -164,7 +164,7 @@ export function LiquidityClient({
       }
 
       const bucket = bucketMap.get(key)!
-      const planAmt = Number(evt.plan_amount ?? 0)
+      const planAmt = Number(evt.budget_amount ?? 0)
       const actualAmt = Number(evt.actual_amount ?? 0)
 
       if (evt.direction === 'income') {
@@ -200,8 +200,8 @@ export function LiquidityClient({
   // All events (for the table) — combine plan and overdue
   const allTableEvents = useMemo(() => {
     return [...filteredEvents].sort((a, b) => {
-      const da = a.plan_date ?? ''
-      const db = b.plan_date ?? ''
+      const da = a.budget_date ?? ''
+      const db = b.budget_date ?? ''
       return da.localeCompare(db)
     })
   }, [filteredEvents])
@@ -380,8 +380,8 @@ export function LiquidityClient({
           </h2>
           <div className="space-y-3">
             {overdueEvents.map((evt) => {
-              const daysOver = evt.plan_date
-                ? daysDiff(evt.plan_date, new Date().toISOString().split('T')[0]!)
+              const daysOver = evt.budget_date
+                ? daysDiff(evt.budget_date, new Date().toISOString().split('T')[0]!)
                 : 0
               return (
                 <div
@@ -394,8 +394,8 @@ export function LiquidityClient({
                     </p>
                     <p className="text-xs text-brand-text-secondary">
                       {evt.direction === 'income' ? 'Einnahme' : 'Ausgabe'} &middot;{' '}
-                      Plan: {evt.plan_date ? formatDate(evt.plan_date) : '–'} &middot;{' '}
-                      {formatAmount(Number(evt.plan_amount ?? 0), evt.plan_currency)} &middot;{' '}
+                      Plan: {evt.budget_date ? formatDate(evt.budget_date) : '–'} &middot;{' '}
+                      {formatAmount(Number(evt.budget_amount ?? 0), evt.plan_currency)} &middot;{' '}
                       <span className="text-red-600 font-medium">{daysOver} Tage ueberfaellig</span>
                     </p>
                   </div>
@@ -445,7 +445,7 @@ export function LiquidityClient({
                 </tr>
               )}
               {allTableEvents.map((evt) => {
-                const planAmt = Number(evt.plan_amount ?? 0)
+                const planAmt = Number(evt.budget_amount ?? 0)
                 const actualAmt = Number(evt.actual_amount ?? 0)
                 const amtDev = evt.actual_date ? actualAmt - planAmt : null
                 const dateDev = evt.date_deviation_days
@@ -468,7 +468,7 @@ export function LiquidityClient({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-brand-text-primary tabular-nums">
-                      {evt.plan_date ? formatDate(evt.plan_date) : '–'}
+                      {evt.budget_date ? formatDate(evt.budget_date) : '–'}
                     </td>
                     <td className="px-4 py-3 text-right text-brand-text-primary tabular-nums">
                       {formatAmount(planAmt, evt.plan_currency)}

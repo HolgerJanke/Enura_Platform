@@ -78,7 +78,7 @@ export async function saveManualEntry(input: ManualEntryInput): Promise<ActionRe
   // Fetch the event to compute deviations
   const { data: eventRaw, error: fetchErr } = await supabase
     .from('liquidity_event_instances')
-    .select('plan_amount, plan_date, plan_currency')
+    .select('budget_amount, budget_date, plan_currency')
     .eq('id', eventInstanceId)
     .eq('company_id', companyId)
     .single()
@@ -88,8 +88,8 @@ export async function saveManualEntry(input: ManualEntryInput): Promise<ActionRe
   }
 
   const event = eventRaw as Record<string, unknown>
-  const planAmount = Number(event['plan_amount'] ?? 0)
-  const planDate = event['plan_date'] as string | null
+  const planAmount = Number(event['budget_amount'] ?? 0)
+  const planDate = event['budget_date'] as string | null
 
   // Compute deviations
   const amountDeviation = actualAmount - planAmount

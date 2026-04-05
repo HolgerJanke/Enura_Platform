@@ -171,21 +171,21 @@ export async function aggregateLiquidity(
 ): Promise<LiquidityAggregationResult> {
   const { companyId, from, to, groupBy, currency = 'CHF' } = options
 
-  // Fetch all liquidity event instances in the date range (using plan_date)
+  // Fetch all liquidity event instances in the date range (using budget_date)
   const { data: events, error } = await supabase
     .from('liquidity_event_instances')
     .select(`
       id, project_id, step_name, marker_type, direction,
-      plan_currency, plan_amount, plan_date,
+      plan_currency, budget_amount, budget_date,
       actual_date, actual_currency, actual_amount, fx_rate,
       actual_source, amount_deviation, date_deviation_days,
       trigger_activated_at
     `)
     .eq('company_id', companyId)
     .eq('marker_type', 'event')
-    .gte('plan_date', from)
-    .lte('plan_date', to)
-    .order('plan_date', { ascending: true })
+    .gte('budget_date', from)
+    .lte('budget_date', to)
+    .order('budget_date', { ascending: true })
 
   if (error) {
     throw new Error(`Fehler beim Laden der Liquiditaetsereignisse: ${error.message}`)
@@ -220,17 +220,17 @@ export async function aggregateLiquidity(
 
   // Distribute events into periods
   for (const row of rows) {
-    if (!row.plan_date) continue
+    if (!row.budget_date) continue
 
     // Currency filter: only include events in the target currency
     if (row.plan_currency !== currency) continue
 
-    const planDate = toDate(row.plan_date)
+    const planDate = toDate(row.budget_date)
     const key = periodKeyForDate(planDate, groupBy)
     const bucket = periodMap.get(key)
     if (!bucket) continue
 
-    const planAmount = Number(row.plan_amount ?? 0)
+    const planAmount = Number(row.budget_amount ?? 0)
     const actualAmount = Number(row.actual_amount ?? 0)
 
     if (row.direction === 'income') {
@@ -276,19 +276,19 @@ export async function aggregateLiquidity(
     }
   })
 
-  // Fetch overdue events (plan_date in past, no actual_date)
+  // Fetch overdue events (budget_date in past, no actual_date)
   const today = new Date().toISOString().split('T')[0]!
   const { data: overdueRows, error: overdueErr } = await supabase
     .from('liquidity_event_instances')
     .select(`
       id, project_id, step_name, direction,
-      plan_date, plan_amount, plan_currency
+      budget_date, budget_amount, plan_currency
     `)
     .eq('company_id', companyId)
     .eq('marker_type', 'event')
-    .lt('plan_date', today)
+    .lt('budget_date', today)
     .is('actual_date', null)
-    .order('plan_date', { ascending: true })
+    .order('budget_date', { ascending: true })
 
   if (overdueErr) {
     throw new Error(`Fehler beim Laden der ueberfaelligen Ereignisse: ${overdueErr.message}`)
@@ -319,10 +319,10 @@ export async function aggregateLiquidity(
     projectTitle: projectTitleMap.get(row.project_id) ?? 'Unbekanntes Projekt',
     stepName: row.step_name,
     direction: row.direction,
-    planDate: row.plan_date!,
-    planAmount: Number(row.plan_amount ?? 0),
+    planDate: row.budget_date!,
+    planAmount: Number(row.budget_amount ?? 0),
     planCurrency: row.plan_currency,
-    daysOverdue: diffDays(toDate(row.plan_date!), todayDate),
+    daysOverdue: diffDays(toDate(row.budget_date!), todayDate),
   }))
 
   return {

@@ -83,15 +83,15 @@ export default async function HoldingFinancePage() {
       // Fetch event instances in the window
       const { data: eventsRaw } = await supabase
         .from('liquidity_event_instances')
-        .select('direction, plan_amount, actual_amount, actual_date')
+        .select('direction, budget_amount, actual_amount, actual_date')
         .eq('company_id', company.id)
         .eq('marker_type', 'event')
-        .gte('plan_date', fromStr)
-        .lte('plan_date', toStr)
+        .gte('budget_date', fromStr)
+        .lte('budget_date', toStr)
 
       const events = (eventsRaw ?? []) as Array<{
         direction: string
-        plan_amount: string | null
+        budget_amount: string | null
         actual_amount: string | null
         actual_date: string | null
       }>
@@ -102,7 +102,7 @@ export default async function HoldingFinancePage() {
       let totalActualExpense = 0
 
       for (const evt of events) {
-        const planAmt = Number(evt.plan_amount ?? 0)
+        const planAmt = Number(evt.budget_amount ?? 0)
         const actualAmt = Number(evt.actual_amount ?? 0)
 
         if (evt.direction === 'income') {
@@ -123,7 +123,7 @@ export default async function HoldingFinancePage() {
         .select('id', { count: 'exact', head: true })
         .eq('company_id', company.id)
         .eq('marker_type', 'event')
-        .lt('plan_date', todayStr)
+        .lt('budget_date', todayStr)
         .is('actual_date', null)
 
       // Health: how well does actual track plan? (capped at 100)

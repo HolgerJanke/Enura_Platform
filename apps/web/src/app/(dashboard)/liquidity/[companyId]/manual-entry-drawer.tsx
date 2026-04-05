@@ -17,8 +17,8 @@ interface LiquidityEvent {
   marker_type: string
   direction: string
   plan_currency: string
-  plan_amount: string | null
-  plan_date: string | null
+  budget_amount: string | null
+  budget_date: string | null
   actual_date: string | null
   actual_currency: string | null
   actual_amount: string | null
@@ -41,7 +41,7 @@ interface Props {
 // ---------------------------------------------------------------------------
 
 export function ManualEntryDrawer({ event, companyId, projectName, onClose }: Props) {
-  const planAmount = Number(event.plan_amount ?? 0)
+  const planAmount = Number(event.budget_amount ?? 0)
   const planCurrency = event.plan_currency
 
   const [actualDate, setActualDate] = useState(
@@ -149,7 +149,7 @@ export function ManualEntryDrawer({ event, companyId, projectName, onClose }: Pr
                 <span>
                   {event.direction === 'income' ? 'Einnahme' : 'Ausgabe'}
                 </span>
-                <span>Plan: {event.plan_date ? formatDate(event.plan_date) : '–'}</span>
+                <span>Plan: {event.budget_date ? formatDate(event.budget_date) : '–'}</span>
                 <span>Plan: {formatCHF(planAmount)}</span>
               </div>
             </div>

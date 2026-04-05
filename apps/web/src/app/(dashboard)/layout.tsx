@@ -3,6 +3,7 @@ import { getSession } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buildProcessNavGroups } from '@/lib/process-nav'
+import { checkFinanzplanungActive } from '@/lib/finanzplanung-guard'
 import { DashboardShell } from '@/components/dashboard-shell'
 import { AdminBar } from '@/components/AdminBar'
 import type { MainProcessGroup } from '@/lib/process-nav'
@@ -85,6 +86,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
       .eq('severity', 'critical')
 
     criticalAnomalyCount = count ?? 0
+  }
+
+  // Check if Finanzplanung module is active for this company
+  const hasFinanzplanung = await checkFinanzplanungActive(session)
+  const hasFpRead = hasFinanzplanung && (session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:read'))
+
+  // Add Finanzplanung nav items if module is active
+  if (hasFpRead) {
+    staticNavItems.push(
+      { label: 'Finanzplanung', href: '/finanzplanung', icon: 'Banknote', permission: 'module:finanzplanung:read' },
+    )
   }
 
   const isSuperUser = session.roles.some(r => r.key === 'super_user')

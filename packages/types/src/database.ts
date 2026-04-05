@@ -2389,11 +2389,11 @@ export interface LiquidityEventInstanceRow {
   linked_instance_id: string | null;
   direction: LiquidityDirection;
   plan_currency: string;
-  plan_amount: string | null;
+  budget_amount: string | null;
   amount_type: LiquidityAmountType;
   plan_delay_days: number | null;
   trigger_activated_at: string | null;
-  plan_date: string | null;
+  budget_date: string | null;
   actual_date: string | null;
   actual_currency: string | null;
   actual_amount: string | null;
@@ -2405,6 +2405,20 @@ export interface LiquidityEventInstanceRow {
   matched_by: string | null;
   amount_deviation: string | null;
   date_deviation_days: number | null;
+  // Scheduled (set by Cash-out Planer)
+  scheduled_amount: string | null;
+  scheduled_date: string | null;
+  scheduled_by: string | null;
+  scheduled_at: string | null;
+  // Residual values
+  residual_1_amount: string | null;
+  residual_1_date: string | null;
+  residual_2_amount: string | null;
+  residual_2_date: string | null;
+  residual_3_amount: string | null;
+  residual_3_date: string | null;
+  // Invoice link
+  invoice_id: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -2424,11 +2438,11 @@ export interface LiquidityEventInstanceInsert {
   linked_instance_id?: string | null;
   direction: LiquidityDirection;
   plan_currency?: string;
-  plan_amount?: string | null;
+  budget_amount?: string | null;
   amount_type?: LiquidityAmountType;
   plan_delay_days?: number | null;
   trigger_activated_at?: string | null;
-  plan_date?: string | null;
+  budget_date?: string | null;
   actual_date?: string | null;
   actual_currency?: string | null;
   actual_amount?: string | null;
@@ -2440,6 +2454,17 @@ export interface LiquidityEventInstanceInsert {
   matched_by?: string | null;
   amount_deviation?: string | null;
   date_deviation_days?: number | null;
+  scheduled_amount?: string | null;
+  scheduled_date?: string | null;
+  scheduled_by?: string | null;
+  scheduled_at?: string | null;
+  residual_1_amount?: string | null;
+  residual_1_date?: string | null;
+  residual_2_amount?: string | null;
+  residual_2_date?: string | null;
+  residual_3_amount?: string | null;
+  residual_3_date?: string | null;
+  invoice_id?: string | null;
   notes?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -2447,10 +2472,10 @@ export interface LiquidityEventInstanceInsert {
 
 export interface LiquidityEventInstanceUpdate {
   linked_instance_id?: string | null;
-  plan_amount?: string | null;
+  budget_amount?: string | null;
   plan_delay_days?: number | null;
   trigger_activated_at?: string | null;
-  plan_date?: string | null;
+  budget_date?: string | null;
   actual_date?: string | null;
   actual_currency?: string | null;
   actual_amount?: string | null;
@@ -2880,6 +2905,278 @@ export interface HelpFeedbackUpdate {
 }
 
 // =============================================================================
+// TABLE: company_feature_flags (Finanzplanung licensing)
+// =============================================================================
+
+export interface CompanyFeatureFlagsRow {
+  company_id: string;
+  holding_id: string;
+  finanzplanung_enabled: boolean;
+  finanzplanung_activated_at: string | null;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface CompanyFeatureFlagsInsert {
+  company_id: string;
+  holding_id: string;
+  finanzplanung_enabled?: boolean;
+  finanzplanung_activated_at?: string | null;
+  updated_by?: string | null;
+}
+
+export interface CompanyFeatureFlagsUpdate {
+  finanzplanung_enabled?: boolean;
+  finanzplanung_activated_at?: string | null;
+  updated_by?: string | null;
+}
+
+// =============================================================================
+// TABLE: suppliers
+// =============================================================================
+
+export interface SupplierRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  name: string;
+  name_normalized: string;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country: string;
+  registration_number: string | null;
+  vat_number: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  iban: string | null;
+  bic: string | null;
+  bank_name: string | null;
+  preferred_payment_days: number;
+  is_active: boolean;
+  created_from_invoice: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupplierInsert {
+  holding_id: string;
+  company_id?: string | null;
+  name: string;
+  country?: string;
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  registration_number?: string | null;
+  vat_number?: string | null;
+  contact_name?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  iban?: string | null;
+  bic?: string | null;
+  bank_name?: string | null;
+  preferred_payment_days?: number;
+  is_active?: boolean;
+  created_from_invoice?: string | null;
+  created_by?: string | null;
+}
+
+export interface SupplierUpdate {
+  name?: string;
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  country?: string;
+  registration_number?: string | null;
+  vat_number?: string | null;
+  contact_name?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  iban?: string | null;
+  bic?: string | null;
+  bank_name?: string | null;
+  preferred_payment_days?: number;
+  is_active?: boolean;
+}
+
+// =============================================================================
+// Finanzplanung: Invoice types
+// =============================================================================
+
+export type FinanzplanungInvoiceStatus =
+  | 'received' | 'extraction_done' | 'match_review'
+  | 'in_validation' | 'returned_formal' | 'formally_approved'
+  | 'pending_approval' | 'returned_internal' | 'returned_sender'
+  | 'approved' | 'scheduled' | 'in_payment_run' | 'paid';
+
+export interface InvoiceIncomingRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  project_id: string | null;
+  step_id: string | null;
+  supplier_id: string | null;
+  raw_storage_path: string;
+  raw_filename: string | null;
+  raw_mime_type: string | null;
+  incomer_type: 'email' | 'sftp' | 'webhook' | 'manual_upload';
+  incomer_ref: string | null;
+  incomer_received_at: string;
+  extracted_data: Record<string, unknown> | null;
+  extraction_status: 'pending' | 'processing' | 'completed' | 'failed';
+  extraction_error: string | null;
+  extraction_model: string | null;
+  extraction_at: string | null;
+  invoice_number: string | null;
+  invoice_date: string | null;
+  recipient_name: string | null;
+  recipient_address: string | null;
+  recipient_reg_number: string | null;
+  sender_name: string | null;
+  sender_address: string | null;
+  sender_reg_number: string | null;
+  sender_vat_number: string | null;
+  sender_email: string | null;
+  sender_contact_name: string | null;
+  sender_contact_phone: string | null;
+  net_amount: number | null;
+  vat_rate: number | null;
+  vat_amount: number | null;
+  gross_amount: number | null;
+  currency: string;
+  payment_terms_days: number | null;
+  payment_terms_text: string | null;
+  due_date: string | null;
+  project_ref_raw: string | null;
+  customer_name_raw: string | null;
+  customer_address_raw: string | null;
+  match_confidence: number | null;
+  match_method: string | null;
+  status: FinanzplanungInvoiceStatus;
+  is_duplicate: boolean;
+  duplicate_of: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvoiceIncomingInsert {
+  holding_id: string;
+  company_id: string;
+  raw_storage_path: string;
+  incomer_type: 'email' | 'sftp' | 'webhook' | 'manual_upload';
+  currency?: string;
+  status?: FinanzplanungInvoiceStatus;
+  [key: string]: unknown;
+}
+
+export interface InvoiceIncomingUpdate {
+  [key: string]: unknown;
+}
+
+export interface InvoiceLineItemRow {
+  id: string;
+  invoice_id: string;
+  holding_id: string;
+  company_id: string;
+  position: number;
+  article_number: string | null;
+  description: string;
+  quantity: number | null;
+  unit: string | null;
+  unit_price: number | null;
+  line_total: number | null;
+  vat_rate: number | null;
+}
+
+// =============================================================================
+// Finanzplanung: Payment types
+// =============================================================================
+
+export type PaymentRunStatus =
+  | 'draft' | 'submitted' | 'under_review'
+  | 'approved' | 'rejected' | 'exported' | 'confirmed_paid';
+
+export interface PaymentRunRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  run_date: string;
+  name: string | null;
+  created_by: string;
+  created_at: string;
+  total_amount: number;
+  item_count: number;
+  currency: string;
+  status: PaymentRunStatus;
+  submitted_by: string | null;
+  submitted_at: string | null;
+  planner_reviewed_all: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  approver_reviewed_all: boolean;
+  rejection_reason: string | null;
+  payment_format: string | null;
+  file_storage_path: string | null;
+  exported_at: string | null;
+  exported_by: string | null;
+  notes: string | null;
+}
+
+export interface PaymentRunItemRow {
+  id: string;
+  run_id: string;
+  holding_id: string;
+  company_id: string;
+  invoice_id: string;
+  supplier_id: string | null;
+  creditor_name: string;
+  creditor_iban: string;
+  creditor_bic: string | null;
+  amount: number;
+  currency: string;
+  payment_reference: string | null;
+  remittance_info: string | null;
+  reviewed_by_planner: boolean;
+  reviewed_by_planner_at: string | null;
+  reviewed_by_approver: boolean;
+  reviewed_by_approver_at: string | null;
+  sort_order: number;
+}
+
+export interface CashoutResidualDecisionRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  instance_id: string;
+  invoice_id: string;
+  residual_number: 1 | 2 | 3;
+  decision: 'keep' | 'zero';
+  residual_amount: number | null;
+  residual_date: string | null;
+  decided_by: string;
+  decided_at: string;
+  notes: string | null;
+}
+
+export interface CompanyBankingConfigRow {
+  company_id: string;
+  holding_id: string;
+  iban: string | null;
+  bic: string | null;
+  bank_name: string | null;
+  account_holder_name: string | null;
+  payment_format: 'pain001_sepa' | 'pain001_ch' | 'mt101' | 'csv_custom';
+  csv_column_mapping: Record<string, unknown> | null;
+  creditor_id: string | null;
+  updated_at: string;
+}
+
+// =============================================================================
 // Supabase JS Client Compatible Database Type
 // =============================================================================
 
@@ -2950,6 +3247,14 @@ export interface Database {
       help_snippets: { Row: HelpSnippetRow; Insert: HelpSnippetInsert; Update: HelpSnippetUpdate; Relationships: [] };
       user_tour_progress: { Row: UserTourProgressRow; Insert: UserTourProgressInsert; Update: UserTourProgressUpdate; Relationships: [] };
       help_feedback: { Row: HelpFeedbackRow; Insert: HelpFeedbackInsert; Update: HelpFeedbackUpdate; Relationships: [] };
+      company_feature_flags: { Row: CompanyFeatureFlagsRow; Insert: CompanyFeatureFlagsInsert; Update: CompanyFeatureFlagsUpdate; Relationships: [] };
+      suppliers: { Row: SupplierRow; Insert: SupplierInsert; Update: SupplierUpdate; Relationships: [] };
+      invoices_incoming: { Row: InvoiceIncomingRow; Insert: InvoiceIncomingInsert; Update: InvoiceIncomingUpdate; Relationships: [] };
+      invoice_line_items: { Row: InvoiceLineItemRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
+      payment_runs: { Row: PaymentRunRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
+      payment_run_items: { Row: PaymentRunItemRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
+      cashout_residual_decisions: { Row: CashoutResidualDecisionRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
+      company_banking_config: { Row: CompanyBankingConfigRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

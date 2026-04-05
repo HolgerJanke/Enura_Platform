@@ -86,13 +86,13 @@ export async function matchBexioPayments(
     .from('liquidity_event_instances')
     .select(`
       id, project_id, step_name, direction, plan_currency,
-      plan_amount, plan_date, actual_date, actual_source
+      budget_amount, budget_date, actual_date, actual_source
     `)
     .eq('company_id', companyId)
     .eq('marker_type', 'event')
     .is('actual_date', null)
-    .not('plan_amount', 'is', null)
-    .order('plan_date', { ascending: true })
+    .not('budget_amount', 'is', null)
+    .order('budget_date', { ascending: true })
 
   if (evtErr) {
     throw new Error(`Fehler beim Laden der Liquiditaetsereignisse: ${evtErr.message}`)
@@ -117,7 +117,7 @@ export async function matchBexioPayments(
     for (const event of events) {
       if (matchedEventIds.has(event.id)) continue
 
-      const planAmount = Math.abs(Number(event.plan_amount ?? 0))
+      const planAmount = Math.abs(Number(event.budget_amount ?? 0))
       if (planAmount === 0) continue
 
       // Check amount similarity (within 5%)
@@ -127,8 +127,8 @@ export async function matchBexioPayments(
       }
 
       // Check date proximity
-      const dateDelta = event.plan_date
-        ? daysDiff(payment.received_at, event.plan_date)
+      const dateDelta = event.budget_date
+        ? daysDiff(payment.received_at, event.budget_date)
         : MAX_DATE_DELTA_DAYS
 
       if (dateDelta > MAX_DATE_DELTA_DAYS) continue
@@ -169,7 +169,7 @@ export async function matchBexioPayments(
 
     const paymentAmount = Math.abs(Number(payment.amount_chf))
     const event = events.find((e) => e.id === match.eventInstanceId)
-    const planAmount = event ? Math.abs(Number(event.plan_amount ?? 0)) : 0
+    const planAmount = event ? Math.abs(Number(event.budget_amount ?? 0)) : 0
 
     const { error: updateErr } = await supabase
       .from('liquidity_event_instances')

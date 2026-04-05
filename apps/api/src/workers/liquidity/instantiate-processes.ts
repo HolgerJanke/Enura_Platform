@@ -150,7 +150,7 @@ export async function instantiateProcessesForProject(
           marker_type: liq.marker_type,
           direction: liq.direction,
           plan_currency: liq.plan_currency,
-          plan_amount: liq.plan_amount,
+          budget_amount: liq.plan_amount,
           amount_type: liq.amount_type,
           plan_delay_days: liq.plan_delay_days ?? 0,
         })

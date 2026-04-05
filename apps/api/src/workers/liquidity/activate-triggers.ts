@@ -1,7 +1,7 @@
 // =============================================================================
 // Activate Liquidity Triggers — Called when a project advances to a new phase.
 // Finds trigger instances for the project, sets trigger_activated_at,
-// and computes plan_date on the linked event instance.
+// and computes budget_date on the linked event instance.
 // =============================================================================
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -40,7 +40,7 @@ export async function activateLiquidityTriggers(
     .from('liquidity_event_instances')
     .select(`
       id, linked_instance_id, plan_delay_days,
-      direction, plan_currency, plan_amount
+      direction, plan_currency, budget_amount
     `)
     .eq('project_id', projectId)
     .eq('step_id', stepId)
@@ -72,7 +72,7 @@ export async function activateLiquidityTriggers(
 
     result.triggersActivated++
 
-    // Compute plan_date on the linked event instance (if exists)
+    // Compute budget_date on the linked event instance (if exists)
     if (!trigger.linked_instance_id) continue
 
     const delayDays = trigger.plan_delay_days ?? 0
@@ -83,7 +83,7 @@ export async function activateLiquidityTriggers(
     const { error: updateEventErr } = await supabase
       .from('liquidity_event_instances')
       .update({
-        plan_date: planDateStr,
+        budget_date: planDateStr,
         trigger_activated_at: nowISO,
       })
       .eq('id', trigger.linked_instance_id)

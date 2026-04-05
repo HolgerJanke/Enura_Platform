@@ -17,8 +17,8 @@ interface LiquidityEventRow {
   marker_type: string
   direction: string
   plan_currency: string
-  plan_amount: string | null
-  plan_date: string | null
+  budget_amount: string | null
+  budget_date: string | null
   actual_date: string | null
   actual_currency: string | null
   actual_amount: string | null
@@ -74,15 +74,15 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
     .from('liquidity_event_instances')
     .select(`
       id, project_id, step_name, process_step_id, marker_type, direction,
-      plan_currency, plan_amount, plan_date,
+      plan_currency, budget_amount, budget_date,
       actual_date, actual_currency, actual_amount, actual_source,
       amount_deviation, date_deviation_days, trigger_activated_at, notes
     `)
     .eq('company_id', companyId)
     .eq('marker_type', 'event')
-    .gte('plan_date', fromStr)
-    .lte('plan_date', toStr)
-    .order('plan_date', { ascending: true })
+    .gte('budget_date', fromStr)
+    .lte('budget_date', toStr)
+    .order('budget_date', { ascending: true })
 
   const events = (eventsRaw ?? []) as unknown as LiquidityEventRow[]
 
@@ -92,15 +92,15 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
     .from('liquidity_event_instances')
     .select(`
       id, project_id, step_name, process_step_id, marker_type, direction,
-      plan_currency, plan_amount, plan_date,
+      plan_currency, budget_amount, budget_date,
       actual_date, actual_currency, actual_amount, actual_source,
       amount_deviation, date_deviation_days, trigger_activated_at, notes
     `)
     .eq('company_id', companyId)
     .eq('marker_type', 'event')
-    .lt('plan_date', todayStr)
+    .lt('budget_date', todayStr)
     .is('actual_date', null)
-    .order('plan_date', { ascending: true })
+    .order('budget_date', { ascending: true })
 
   const overdueEvents = (overdueRaw ?? []) as unknown as LiquidityEventRow[]
 
