@@ -31,7 +31,8 @@ async function getHoldingDetail(holdingId: string) {
 
   if (!holding) return null
 
-  const [companiesRes, subscriptionRes, usersRes, adminsRes] = await Promise.all([
+  // Step 1: fetch companies and subscription in parallel
+  const [companiesRes, subscriptionRes, adminsRes] = await Promise.all([
     supabase
       .from('companies')
       .select('*')
@@ -43,16 +44,21 @@ async function getHoldingDetail(holdingId: string) {
       .eq('holding_id', holdingId)
       .single(),
     supabase
-      .from('profiles')
-      .select('id, first_name, last_name, email, display_name, company_id')
-      .eq('holding_id', holdingId)
-      .eq('is_active', true)
-      .order('last_name'),
-    supabase
       .from('holding_admins_v2')
       .select('profile_id, is_owner')
       .eq('holding_id', holdingId),
   ])
+
+  // Step 2: fetch all users belonging to companies in this holding
+  const companyIds = (companiesRes.data ?? []).map((c: Record<string, unknown>) => c['id'] as string)
+  const usersRes = companyIds.length > 0
+    ? await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, display_name, company_id')
+        .eq('is_active', true)
+        .in('company_id', companyIds)
+        .order('last_name')
+    : { data: [] }
 
   const users = (usersRes.data ?? []) as Array<{
     id: string; first_name: string | null; last_name: string | null;
