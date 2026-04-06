@@ -54,7 +54,7 @@ async function getHoldingDetail(holdingId: string) {
   const usersRes = companyIds.length > 0
     ? await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, display_name, company_id')
+        .select('id, first_name, last_name, display_name, company_id')
         .eq('is_active', true)
         .in('company_id', companyIds)
         .order('last_name')
@@ -62,7 +62,7 @@ async function getHoldingDetail(holdingId: string) {
 
   const users = (usersRes.data ?? []) as Array<{
     id: string; first_name: string | null; last_name: string | null;
-    email: string | null; display_name: string; company_id: string | null
+    display_name: string; company_id: string | null
   }>
   const adminProfileIds = new Set(
     ((adminsRes.data ?? []) as Array<{ profile_id: string }>).map((a) => a.profile_id),

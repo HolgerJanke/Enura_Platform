@@ -7,7 +7,6 @@ interface User {
   id: string
   first_name: string | null
   last_name: string | null
-  email: string | null
   display_name: string
   company_id: string | null
 }
@@ -86,7 +85,7 @@ export function HoldingAdminManager({ holdingId, users, adminProfileIds }: Props
                   {user.first_name ?? ''} {user.last_name ?? ''}
                   {!user.first_name && !user.last_name && user.display_name}
                 </p>
-                <p className="text-xs text-gray-500">{user.email ?? '—'}</p>
+                <p className="text-xs text-gray-500">{user.display_name}</p>
               </div>
               <button
                 type="button"
@@ -116,7 +115,7 @@ export function HoldingAdminManager({ holdingId, users, adminProfileIds }: Props
               <option value="">Benutzer auswaehlen...</option>
               {nonAdminUsers.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.first_name ?? ''} {user.last_name ?? ''} ({user.email ?? '—'})
+                  {user.first_name ?? ''} {user.last_name ?? ''} ({user.display_name})
                 </option>
               ))}
             </select>
