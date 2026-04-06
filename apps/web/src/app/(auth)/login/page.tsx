@@ -56,7 +56,7 @@ export default function LoginPage() {
             type="email"
             required
             autoComplete="email"
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-shadow"
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A56DB] focus:border-transparent transition-shadow"
             placeholder="name@firma.ch"
           />
         </div>
@@ -97,8 +97,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          style={{ backgroundColor: 'var(--brand-primary, #1A56DB)' }}
+          className="w-full rounded-xl bg-[#1A56DB] px-4 py-3.5 text-sm font-semibold text-white hover:bg-[#1648B8] focus:outline-none focus:ring-2 focus:ring-[#1A56DB] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isPending ? 'Wird angemeldet...' : 'Anmelden'}
         </button>
