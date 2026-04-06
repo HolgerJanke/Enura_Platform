@@ -169,21 +169,142 @@ export async function completeWizard(
     console.error('Onboarding-Datensatz konnte nicht erstellt werden:', onboardingError.message)
   }
 
-  // 5. Create user invitation for the holding admin
-  const { error: invitationError } = await serviceClient
+  // 5. Get the first company ID (just created above)
+  const { data: firstCompany } = await serviceClient
+    .from('companies')
+    .select('id')
+    .eq('holding_id', holdingId)
+    .limit(1)
+    .single()
+
+  const companyId = firstCompany ? (firstCompany as { id: string }).id : null
+
+  // 6. Create the admin user account
+  const tempPassword = `Enura-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}!`
+
+  const { data: authUser, error: authError } = await serviceClient.auth.admin.createUser({
+    email: input.adminEmail,
+    password: tempPassword,
+    email_confirm: true,
+    user_metadata: {
+      first_name: input.adminFirstName,
+      last_name: input.adminLastName,
+    },
+  })
+
+  if (authError || !authUser?.user) {
+    // User might already exist — try to find them
+    const { data: existingUsers } = await serviceClient.auth.admin.listUsers()
+    const existing = existingUsers?.users?.find((u) => u.email === input.adminEmail)
+
+    if (existing) {
+      // User exists — update their profile to link to this holding + company
+      await serviceClient
+        .from('profiles')
+        .update({
+          holding_id: holdingId,
+          company_id: companyId,
+          first_name: input.adminFirstName,
+          last_name: input.adminLastName,
+        })
+        .eq('id', existing.id)
+
+      // Make them holding admin
+      await serviceClient
+        .from('holding_admins')
+        .upsert({ profile_id: existing.id }, { onConflict: 'profile_id' })
+
+      await serviceClient
+        .from('holding_admins_v2')
+        .upsert(
+          { holding_id: holdingId, profile_id: existing.id, is_owner: true },
+          { onConflict: 'holding_id,profile_id' },
+        )
+
+      // Assign super_user role for the first company
+      if (companyId) {
+        const { data: superRole } = await serviceClient
+          .from('roles')
+          .select('id')
+          .eq('company_id', companyId)
+          .eq('key', 'super_user')
+          .single()
+
+        if (superRole) {
+          await serviceClient
+            .from('profile_roles')
+            .upsert(
+              { profile_id: existing.id, role_id: (superRole as { id: string }).id },
+              { onConflict: 'profile_id,role_id' },
+            )
+        }
+      }
+
+      return { success: true, holdingId }
+    }
+
+    return { success: false, error: `Benutzer konnte nicht erstellt werden: ${authError?.message ?? 'Unbekannter Fehler'}` }
+  }
+
+  const userId = authUser.user.id
+
+  // 7. Create profile record
+  await serviceClient
+    .from('profiles')
+    .upsert({
+      id: userId,
+      holding_id: holdingId,
+      company_id: companyId,
+      first_name: input.adminFirstName,
+      last_name: input.adminLastName,
+      must_reset_password: true,
+      totp_enabled: false,
+      is_active: true,
+    }, { onConflict: 'id' })
+
+  // 8. Make them holding admin
+  await serviceClient
+    .from('holding_admins')
+    .upsert({ profile_id: userId }, { onConflict: 'profile_id' })
+
+  await serviceClient
+    .from('holding_admins_v2')
+    .upsert(
+      { holding_id: holdingId, profile_id: userId, is_owner: true },
+      { onConflict: 'holding_id,profile_id' },
+    )
+
+  // 9. Assign super_user role for the first company
+  if (companyId) {
+    const { data: superRole } = await serviceClient
+      .from('roles')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('key', 'super_user')
+      .single()
+
+    if (superRole) {
+      await serviceClient
+        .from('profile_roles')
+        .upsert(
+          { profile_id: userId, role_id: (superRole as { id: string }).id },
+          { onConflict: 'profile_id,role_id' },
+        )
+    }
+  }
+
+  // 10. Create invitation record (for tracking)
+  await serviceClient
     .from('user_invitations')
     .insert({
       holding_id: holdingId,
+      company_id: companyId,
       email: input.adminEmail,
       role_name: 'holding_admin',
       invited_by: session.profile.id,
     })
 
-  if (invitationError) {
-    return { success: false, error: `Einladung konnte nicht erstellt werden: ${invitationError.message}` }
-  }
-
-  // TODO: Send invitation email via Resend when configured
+  // TODO: Send invitation email with temp password via Resend
 
   return { success: true, holdingId }
 }
