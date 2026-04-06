@@ -151,7 +151,7 @@ function connectorCellDisplay(connector: ConnectorInfo | undefined): { symbol: s
 type Tab = 'uebersicht' | 'connectors' | 'ki'
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'uebersicht', label: 'Uebersicht' },
+  { key: 'uebersicht', label: 'Übersicht' },
   { key: 'connectors', label: 'Connectors' },
   { key: 'ki', label: 'KI-Nutzung' },
 ]
@@ -187,7 +187,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
       </div>
 
       {/* ================================================================== */}
-      {/* Tab 1: Uebersicht                                                 */}
+      {/* Tab 1: Übersicht                                                  */}
       {/* ================================================================== */}
       {activeTab === 'uebersicht' && (
         <div>
@@ -308,7 +308,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
 
                     {/* Last activity */}
                     <div className="text-xs text-gray-400 border-t border-gray-100 pt-2 mt-2">
-                      Letzte Aktivitaet:{' '}
+                      Letzte Aktivität:{' '}
                       {tenant.lastActivityAt ? formatRelativeTime(tenant.lastActivityAt) : 'Keine'}
                     </div>
                   </Link>
@@ -328,7 +328,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
             <div className="px-5 py-4 border-b border-gray-200">
               <h2 className="text-base font-medium text-gray-900">Connector-Status aller Unternehmen</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Uebersicht ueber den Synchronisationsstatus aller konfigurierten Konnektoren.
+                Übersicht über den Synchronisationsstatus aller konfigurierten Konnektoren.
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -422,7 +422,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
             <div className="px-5 py-4 border-b border-gray-200">
               <h2 className="text-base font-medium text-gray-900">KI-Nutzung (aktueller Monat)</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Whisper-Transkriptionen, Claude-Tokens und geschaetzte Kosten pro Unternehmen.
+                Whisper-Transkriptionen, Claude-Tokens und geschätzte Kosten pro Unternehmen.
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -436,7 +436,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
                       Transkriptionen (MTD)
                     </th>
                     <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Geschaetzte Whisper-Kosten
+                      Geschätzte Whisper-Kosten
                     </th>
                     <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                       Berichte generiert

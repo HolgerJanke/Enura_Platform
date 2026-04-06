@@ -62,7 +62,7 @@ export default async function BeraterPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-sm text-brand-text-secondary">
-            Durchgefuehrte Termine
+            Durchgeführte Termine
           </p>
           <p className="text-2xl font-semibold text-brand-text-primary mt-1">
             {formatNumber(metrics?.appointments_done ?? 0)}
@@ -86,7 +86,7 @@ export default async function BeraterPage() {
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-sm text-brand-text-secondary">
-            Aktivitaeten heute
+            Aktivitäten heute
           </p>
           <p className="text-2xl font-semibold text-brand-text-primary mt-1">
             {formatNumber(metrics?.activities_total ?? 0)}

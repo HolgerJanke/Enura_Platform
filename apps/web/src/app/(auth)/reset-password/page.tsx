@@ -46,7 +46,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      aria-label="Passwort aendern"
+      aria-label="Passwort ändern"
       className="w-full rounded-brand bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
     >
       {pending ? (
@@ -75,7 +75,7 @@ function SubmitButton() {
           Wird gespeichert...
         </span>
       ) : (
-        'Passwort aendern'
+        'Passwort ändern'
       )}
     </button>
   )

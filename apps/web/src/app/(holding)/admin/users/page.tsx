@@ -141,8 +141,8 @@ export default async function HoldingUsersPage() {
       <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
         <h2 className="text-sm font-medium text-blue-900 mb-1">Hinweis</h2>
         <p className="text-sm text-blue-700">
-          Holding-Administratoren haben Zugriff auf alle Unternehmen und koennen
-          Mandanten-Super-User fuer Supportzwecke imitieren. Alle Aktionen werden
+          Holding-Administratoren haben Zugriff auf alle Unternehmen und können
+          Mandanten-Super-User für Supportzwecke imitieren. Alle Aktionen werden
           im Audit-Log protokolliert.
         </p>
       </div>

@@ -168,7 +168,7 @@ export default function NewTenantPage() {
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Link>
       </div>
 
@@ -256,7 +256,7 @@ export default function NewTenantPage() {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="brand-primary" className="block text-sm font-medium text-gray-700 mb-1">
-                    Primaerfarbe
+                    Primärfarbe
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -281,13 +281,13 @@ export default function NewTenantPage() {
                         }))
                       }
                       className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      aria-label="Primaerfarbe Hex-Wert"
+                      aria-label="Primärfarbe Hex-Wert"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="brand-secondary" className="block text-sm font-medium text-gray-700 mb-1">
-                    Sekundaerfarbe
+                    Sekundärfarbe
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -312,7 +312,7 @@ export default function NewTenantPage() {
                         }))
                       }
                       className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      aria-label="Sekundaerfarbe Hex-Wert"
+                      aria-label="Sekundärfarbe Hex-Wert"
                     />
                   </div>
                 </div>
@@ -397,8 +397,8 @@ export default function NewTenantPage() {
                       fontFamily: form.branding.font,
                     }}
                   >
-                    <p className="text-sm font-medium">Primaer-Karte</p>
-                    <p className="text-xs opacity-80 mt-1">Beispielinhalt in der Primaerfarbe</p>
+                    <p className="text-sm font-medium">Primär-Karte</p>
+                    <p className="text-xs opacity-80 mt-1">Beispielinhalt in der Primärfarbe</p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -409,7 +409,7 @@ export default function NewTenantPage() {
                         borderRadius: form.branding.radius,
                       }}
                     >
-                      Primaer-Button
+                      Primär-Button
                     </button>
                     <span
                       className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-white rounded-full"
@@ -426,7 +426,7 @@ export default function NewTenantPage() {
                     }}
                   >
                     <p className="text-sm font-medium" style={{ color: form.branding.secondary }}>
-                      Sekundaertext
+                      Sekundärtext
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Schrift: {form.branding.font} | Radius: {form.branding.radius}
@@ -441,7 +441,7 @@ export default function NewTenantPage() {
                 onClick={() => setStep(1)}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Zurueck
+                Zurück
               </button>
               <button
                 type="button"
@@ -460,8 +460,8 @@ export default function NewTenantPage() {
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Super User erstellen</h2>
             <p className="text-sm text-gray-500 mb-4">
-              Der Super User ist der Hauptadministrator des Unternehmens. Er erhaelt eine
-              Einladungs-E-Mail mit einem temporaeren Passwort.
+              Der Super User ist der Hauptadministrator des Unternehmens. Er erhält eine
+              Einladungs-E-Mail mit einem temporären Passwort.
             </p>
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
@@ -527,7 +527,7 @@ export default function NewTenantPage() {
                 onClick={() => setStep(2)}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Zurueck
+                Zurück
               </button>
               <button
                 type="button"
@@ -639,7 +639,7 @@ export default function NewTenantPage() {
                 onClick={() => setStep(3)}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Zurueck
+                Zurück
               </button>
               <button
                 type="button"

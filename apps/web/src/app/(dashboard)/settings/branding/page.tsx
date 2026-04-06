@@ -1,15 +1,15 @@
 import { requirePermission } from '@/lib/permissions'
 
 const BRAND_TOKENS: ReadonlyArray<{ key: string; label: string; description: string; isColor: boolean }> = [
-  { key: '--brand-primary', label: 'Primaerfarbe', description: 'Hauptaktionsfarbe fuer Buttons und aktive Elemente', isColor: true },
-  { key: '--brand-secondary', label: 'Sekundaerfarbe', description: 'Texte und Ueberschriften', isColor: true },
+  { key: '--brand-primary', label: 'Primärfarbe', description: 'Hauptaktionsfarbe für Buttons und aktive Elemente', isColor: true },
+  { key: '--brand-secondary', label: 'Sekundärfarbe', description: 'Texte und Überschriften', isColor: true },
   { key: '--brand-accent', label: 'Akzentfarbe', description: 'Hervorhebungen und Badges', isColor: true },
   { key: '--brand-background', label: 'Hintergrundfarbe', description: 'Seitenhintergrund', isColor: true },
-  { key: '--brand-surface', label: 'Oberflaechenfarbe', description: 'Karten- und Panel-Hintergrund', isColor: true },
-  { key: '--brand-text-primary', label: 'Primaerer Text', description: 'Haupttextfarbe', isColor: true },
-  { key: '--brand-text-secondary', label: 'Sekundaerer Text', description: 'Gedaempfte Textfarbe', isColor: true },
+  { key: '--brand-surface', label: 'Oberflächenfarbe', description: 'Karten- und Panel-Hintergrund', isColor: true },
+  { key: '--brand-text-primary', label: 'Primärer Text', description: 'Haupttextfarbe', isColor: true },
+  { key: '--brand-text-secondary', label: 'Sekundärer Text', description: 'Gedämpfte Textfarbe', isColor: true },
   { key: '--brand-font', label: 'Schriftart', description: 'Schriftfamilie', isColor: false },
-  { key: '--brand-radius', label: 'Eckenradius', description: 'Basis-Eckenradius fuer alle Elemente', isColor: false },
+  { key: '--brand-radius', label: 'Eckenradius', description: 'Basis-Eckenradius für alle Elemente', isColor: false },
 ]
 
 function getComputedCSSVar(key: string): string {
@@ -24,14 +24,14 @@ export default async function BrandingSettingsPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-brand-text-primary mb-2">Branding</h1>
-      <p className="text-brand-text-secondary mb-6">Verfuegbar in Phase 3</p>
+      <p className="text-brand-text-secondary mb-6">Verfügbar in Phase 3</p>
 
       <div className="bg-brand-surface rounded-brand p-6 border border-gray-200 mb-6">
         <h2 className="text-lg font-medium text-brand-text-primary mb-4">Aktuelle Markenwerte</h2>
         <p className="text-sm text-brand-text-secondary mb-6">
           Diese Werte werden aus der Mandantenkonfiguration geladen und als CSS Custom Properties
-          in die Seite injiziert. Nach der Supabase-Anbindung koennen Super User die Werte
-          ueber einen Brand-Editor aendern.
+          in die Seite injiziert. Nach der Supabase-Anbindung können Super User die Werte
+          über einen Brand-Editor ändern.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -77,13 +77,13 @@ export default async function BrandingSettingsPage() {
               className="rounded-brand px-4 py-2 text-sm font-medium text-white"
               style={{ backgroundColor: 'var(--brand-primary)' }}
             >
-              Primaer-Button
+              Primär-Button
             </button>
             <button
               type="button"
               className="rounded-brand border border-gray-300 bg-brand-background px-4 py-2 text-sm font-medium text-brand-text-primary"
             >
-              Sekundaer-Button
+              Sekundär-Button
             </button>
             <span
               className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white"

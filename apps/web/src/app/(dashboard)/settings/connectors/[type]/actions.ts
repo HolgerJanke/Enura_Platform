@@ -76,7 +76,7 @@ export async function testConnectorAction(
         const key = credentials['serviceAccountKey'] as string
         JSON.parse(key)
       } catch {
-        return { error: 'Service Account Key ist kein gueltiges JSON.' }
+        return { error: 'Service Account Key ist kein gültiges JSON.' }
       }
       break
     }

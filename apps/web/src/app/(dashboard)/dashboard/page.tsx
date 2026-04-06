@@ -60,7 +60,7 @@ export default async function DashboardPage() {
         Willkommen, {displayName}
       </h1>
       <p className="text-brand-text-secondary mb-8">
-        {tenantName} &mdash; Uebersicht vom {formatDate(today)}
+        {tenantName} &mdash; Übersicht vom {formatDate(today)}
       </p>
 
       {/* Top-level aggregated KPIs */}
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               </tr>
               <tr>
                 <td className="py-1.5 text-brand-text-secondary">
-                  Aktivitaeten
+                  Aktivitäten
                 </td>
                 <td className="py-1.5 text-right font-medium text-brand-text-primary">
                   {formatNumber(metrics?.berater.activities_total ?? 0)}

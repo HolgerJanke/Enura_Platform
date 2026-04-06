@@ -14,7 +14,7 @@ export default async function InnendienstPage() {
           <ul className="space-y-2 text-brand-text-secondary">
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-primary flex-shrink-0" />
-              Offene Planungsauftraege
+              Offene Planungsaufträge
             </li>
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-primary flex-shrink-0" />
@@ -45,8 +45,8 @@ export default async function InnendienstPage() {
 
           <h2 className="text-lg font-medium text-brand-text-primary mt-6 mb-4">Beschreibung</h2>
           <p className="text-sm text-brand-text-secondary">
-            Das Innendienst-Modul bietet eine Uebersicht ueber alle Planungsauftraege
-            und deren aktuellen Status. Die Mitarbeiter koennen offene Auftraege priorisieren,
+            Das Innendienst-Modul bietet eine Übersicht über alle Planungsaufträge
+            und deren aktuellen Status. Die Mitarbeiter können offene Aufträge priorisieren,
             blockierte Projekte identifizieren und den IA-Status (Installationsanmeldung)
             nachverfolgen.
           </p>

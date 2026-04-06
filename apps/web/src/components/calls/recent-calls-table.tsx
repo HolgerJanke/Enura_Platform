@@ -252,7 +252,7 @@ export function RecentCallsTable({
                       onClick={() => setSelectedCallId(call.id)}
                       className="rounded-brand px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
                       style={{ backgroundColor: 'var(--brand-primary)' }}
-                      aria-label={`Details fuer Anruf vom ${formatDateTime(call.started_at)} anzeigen`}
+                      aria-label={`Details für Anruf vom ${formatDateTime(call.started_at)} anzeigen`}
                     >
                       Details
                     </button>

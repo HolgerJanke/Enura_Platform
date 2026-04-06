@@ -34,13 +34,13 @@ function validateInput(data: CreateTenantInput): string | null {
     return 'Der Slug darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten (2-50 Zeichen).'
   }
   if (!HEX_COLOR_REGEX.test(data.branding.primary)) {
-    return 'Ungueltige Primaerfarbe. Bitte geben Sie einen gueltigen Hex-Farbwert ein.'
+    return 'Ungültige Primärfarbe. Bitte geben Sie einen gültigen Hex-Farbwert ein.'
   }
   if (!HEX_COLOR_REGEX.test(data.branding.secondary)) {
-    return 'Ungueltige Sekundaerfarbe. Bitte geben Sie einen gueltigen Hex-Farbwert ein.'
+    return 'Ungültige Sekundärfarbe. Bitte geben Sie einen gültigen Hex-Farbwert ein.'
   }
   if (!HEX_COLOR_REGEX.test(data.branding.accent)) {
-    return 'Ungueltige Akzentfarbe. Bitte geben Sie einen gueltigen Hex-Farbwert ein.'
+    return 'Ungültige Akzentfarbe. Bitte geben Sie einen gültigen Hex-Farbwert ein.'
   }
   if (!data.branding.font || data.branding.font.length < 1) {
     return 'Bitte geben Sie eine Schriftart an.'
@@ -52,7 +52,7 @@ function validateInput(data: CreateTenantInput): string | null {
     return 'Bitte geben Sie den Nachnamen des Super Users ein.'
   }
   if (!data.superUser.email || !data.superUser.email.includes('@')) {
-    return 'Bitte geben Sie eine gueltige E-Mail-Adresse ein.'
+    return 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
   }
   return null
 }

@@ -22,7 +22,7 @@ export async function createUserAction(data: {
     roleIds: data.roleIds,
   })
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? 'Ungueltige Eingabe' }
+    return { error: parsed.error.errors[0]?.message ?? 'Ungültige Eingabe' }
   }
 
   const serviceClient = createSupabaseServiceClient()
@@ -210,7 +210,7 @@ export async function toggleUserActiveAction(
 
   // Cannot deactivate yourself
   if (userId === session.profile.id) {
-    return { error: 'Sie koennen sich nicht selbst deaktivieren.' }
+    return { error: 'Sie können sich nicht selbst deaktivieren.' }
   }
 
   const serviceClient = createSupabaseServiceClient()

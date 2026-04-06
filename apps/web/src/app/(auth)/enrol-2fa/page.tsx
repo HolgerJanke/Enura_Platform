@@ -195,7 +195,7 @@ export default function EnrolTwoFactorPage() {
             <div
               className="bg-white p-4 rounded-brand border border-gray-200"
               dangerouslySetInnerHTML={{ __html: enrolmentData.qrCode }}
-              aria-label="QR-Code fuer Authenticator-App"
+              aria-label="QR-Code für Authenticator-App"
             />
           </div>
 

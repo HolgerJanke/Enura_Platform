@@ -234,7 +234,7 @@ export function ReportSettingsForm({ settings }: Props) {
               style={ringStyle}
             />
             <p className="text-xs text-brand-text-secondary mt-1">
-              Monatliches Budget fuer KI-Transkription. Bei Ueberschreitung wird die Transkription pausiert.
+              Monatliches Budget für KI-Transkription. Bei Überschreitung wird die Transkription pausiert.
             </p>
           </div>
         </div>

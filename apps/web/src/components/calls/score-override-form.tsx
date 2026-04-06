@@ -150,7 +150,7 @@ export function ScoreOverrideForm({
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Grund fuer die Anpassung..."
+          placeholder="Grund für die Anpassung..."
           className="w-full rounded-brand border border-gray-300 px-3 py-2 text-sm text-brand-text-primary placeholder:text-brand-text-secondary focus:border-[var(--brand-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]"
           aria-label="Bemerkungen zur Bewertungsanpassung"
         />

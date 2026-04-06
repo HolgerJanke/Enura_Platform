@@ -294,8 +294,8 @@ export function UserListClient({
                           }
                           disabled={isPending}
                           className="rounded-brand px-2.5 py-1.5 text-xs font-medium text-brand-text-secondary hover:bg-gray-100 transition-colors disabled:opacity-50"
-                          title="Passwort zuruecksetzen"
-                          aria-label={`Passwort zuruecksetzen fuer ${displayName}`}
+                          title="Passwort zurücksetzen"
+                          aria-label={`Passwort zurücksetzen für ${displayName}`}
                         >
                           Passwort
                         </button>
@@ -306,7 +306,7 @@ export function UserListClient({
                           disabled={isPending}
                           className="rounded-brand px-2.5 py-1.5 text-xs font-medium text-brand-text-secondary hover:bg-gray-100 transition-colors disabled:opacity-50"
                           title="Rollen bearbeiten"
-                          aria-label={`Rollen bearbeiten fuer ${displayName}`}
+                          aria-label={`Rollen bearbeiten für ${displayName}`}
                         >
                           Rollen
                         </button>
@@ -407,11 +407,11 @@ export function UserListClient({
             <p className="text-sm text-brand-text-secondary mb-4">
               {confirmAction.type === 'reset_password' ? (
                 <>
-                  Das Passwort fuer{' '}
+                  Das Passwort für{' '}
                   <strong className="text-brand-text-primary">
                     {confirmAction.userName}
                   </strong>{' '}
-                  wird zurueckgesetzt. Der Benutzer erhaelt ein temporaeres
+                  wird zurückgesetzt. Der Benutzer erhält ein temporäres
                   Passwort und muss sich erneut anmelden.
                 </>
               ) : confirmAction.active ? (
@@ -472,7 +472,7 @@ export function UserListClient({
                 {isPending
                   ? 'Bitte warten...'
                   : confirmAction.type === 'reset_password'
-                    ? 'Zuruecksetzen'
+                    ? 'Zurücksetzen'
                     : confirmAction.active
                       ? 'Aktivieren'
                       : 'Deaktivieren'}
