@@ -1,0 +1,6 @@
+{
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter @enura/types build && pnpm --filter @enura/ui build && pnpm --filter web build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs"
+}
