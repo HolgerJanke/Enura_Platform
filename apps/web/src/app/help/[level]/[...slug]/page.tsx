@@ -244,6 +244,372 @@ Die Tabellen \`calls\`, \`cashflow_entries\`, \`calendar_events\`, \`kpi_snapsho
 2. Fuehren Sie die Migration lokal aus.
 3. Synchronisieren Sie das Prisma-Schema mit \`pnpm prisma db pull\`.
   `,
+  'liquiditaetsplanung': `
+## Liquiditaetsplanung
+
+Die Liquiditaetsplanung zeigt Budget-, Plan- und Ist-Werte fuer alle Zahlungsstroeme Ihrer Projekte.
+
+### Drei Kategorien
+
+- **Budget**: Geplanter Betrag aus dem Prozessschritt-Template (vom Holding Admin im Process Builder festgelegt)
+- **Plan (Scheduled)**: Durch den Cash-out-Planer terminierte Zahlung — entsteht nach technischer Genehmigung einer Rechnung
+- **Ist (Actual)**: Tatsaechlicher Zahlungseingang/-ausgang (aus Bexio-Abgleich, Bank-Upload oder manueller Eingabe)
+
+### Anzeigelogik
+
+Die Anzeige folgt einer Prioritaet: **Ist > Plan > Budget**. Wenn ein Ist-Wert vorhanden ist, wird dieser angezeigt. Plan und Budget erscheinen als Vergleichszeile.
+
+### Restwerte
+
+Wenn eine Rechnung kleiner als das Budget ist, kann der Cash-out-Planer einen Restwert anlegen. Maximal drei Restwerte pro Prozessschritt sind moeglich.
+
+### Manueller Eintrag
+
+Klicken Sie auf ein Liquiditaetsereignis, um manuell Ist-Werte einzutragen (z.B. bei fehlender Bexio-Anbindung).
+  `,
+  'anomalien': `
+## Anomalien und Warnungen
+
+Das Anomalie-Modul erkennt automatisch kritische Abweichungen in Ihren Geschaeftsprozessen.
+
+### Schweregrade
+
+- **Kritisch** (rot): Sofortige Aufmerksamkeit erforderlich — erscheint als Banner im Dashboard
+- **Warnung** (gelb): Potenzielle Probleme, die beobachtet werden sollten
+- **Info** (blau): Informative Hinweise ohne Handlungsbedarf
+
+### Behandlung
+
+Klicken Sie auf eine Anomalie, um Details zu sehen. Sie koennen Anomalien als "behandelt" markieren oder Kommentare hinzufuegen.
+  `,
+  'branding': `
+## Corporate Design / Branding
+
+Verwalten Sie das visuelle Erscheinungsbild Ihrer Firmenumgebung.
+
+### Markenfarben
+
+Jede Company erbt die Grundfarben von der Holding. Super User koennen einzelne Farben ueberschreiben:
+- **Primaerfarbe**: Hauptaktionsfarbe fuer Buttons und aktive Elemente
+- **Sekundaerfarbe**: Texte und Ueberschriften
+- **Akzentfarbe**: Hervorhebungen und Badges
+- **Hintergrund/Oberflaeche**: Seiten- und Kartenhintergrund
+- **Textfarben**: Haupt- und Nebentextfarbe
+
+### Erweiterte Designwerte
+
+Schatten, Schriftgroessen, Zeilenhoehe und Rahmenbreite koennen feinjustiert werden.
+
+### Benutzerdefiniertes CSS
+
+Laden Sie eine eigene CSS-Datei hoch fuer fortgeschrittene Anpassungen. Die Datei wird vor dem Hochladen auf Sicherheit geprueft.
+
+### Vorschau
+
+Im Vorschau-Tab sehen Sie eine Live-Vorschau Ihrer Designaenderungen vor dem Speichern.
+  `,
+  'benutzer-verwalten': `
+## Benutzer verwalten
+
+Super User und Administratoren koennen Benutzer anlegen, Rollen zuweisen und Passwoerter zuruecksetzen.
+
+### Neuen Benutzer anlegen
+
+1. Navigieren Sie zu **Benutzer** in den Einstellungen.
+2. Klicken Sie auf **Neuer Benutzer**.
+3. Geben Sie Name, E-Mail und die gewuenschte Rolle ein.
+4. Der Benutzer erhaelt ein temporaeres Passwort und muss es beim ersten Login aendern.
+
+### Rollen
+
+Jede Rolle bestimmt, welche Module der Benutzer sehen kann:
+- **Setter**: Anrufe und Terminbuchungen
+- **Berater**: Pipeline und Abschluesse
+- **Innendienst**: Planung und IA-Status
+- **Buchhaltung**: Finanzen und Cashflow
+- **Geschaeftsfuehrung**: Alle Module (nur Lesen)
+- **Teamleiter**: Setter, Berater und Leads
+- **Super User**: Voller Zugriff inkl. Einstellungen
+
+### Finanzplanung-Rollen
+
+Falls das Finanzplanung-Modul aktiviert ist, stehen zusaetzliche Rollen zur Verfuegung:
+- **Rechnungspruefer**: Formale und inhaltliche Pruefung
+- **Rechnungsgenehmiger**: Technische Freigabe
+- **Cash-out-Planer**: Zahlungsterminierung
+- **Finanzieller Genehmiger**: Finale Zahlungsfreigabe
+  `,
+  'integrationen': `
+## Integrationen und Connectoren
+
+Verbinden Sie externe Systeme mit der Plattform, um Daten automatisch zu synchronisieren.
+
+### Verfuegbare Connectoren
+
+| Connector | Typ | Synchronisation |
+|-----------|-----|-----------------|
+| Reonic CRM | REST API | Alle 15 Minuten |
+| 3CX Cloud | REST + Webhook | Alle 15 Minuten |
+| Bexio | OAuth 2.0 | Stuendlich |
+| Google Calendar | Google OAuth | Alle 15 Minuten |
+| Leadnotes | REST API | Alle 15 Minuten |
+
+### Einrichtung
+
+1. Navigieren Sie zu **Integrationen** in den Einstellungen.
+2. Waehlen Sie den gewuenschten Connector.
+3. Geben Sie die API-Zugangsdaten ein.
+4. Klicken Sie auf **Verbindung testen**.
+5. Nach erfolgreichem Test wird die automatische Synchronisation gestartet.
+
+### Connector-Status
+
+Der Gesundheitsstatus jedes Connectors wird auf der Uebersichtsseite angezeigt. Bei Fehlern erhalten Sie eine Warnung im Dashboard.
+  `,
+  'leitfaden': `
+## Leitfaden / Anrufskript
+
+Erstellen und verwalten Sie Anrufskripte, die von der KI-Anrufanalyse als Bewertungsgrundlage verwendet werden.
+
+### Skript erstellen
+
+1. Navigieren Sie zu **Leitfaden** in den Einstellungen.
+2. Bearbeiten Sie den Skripttext im Editor.
+3. Klicken Sie auf **Speichern**.
+
+### KI-Bewertung
+
+Die KI bewertet Setter-Anrufe anhand des hinterlegten Skripts auf vier Dimensionen:
+- Skripttreue
+- Einwandbehandlung
+- Gespraechsfuehrung
+- Terminvereinbarung
+
+Jede Dimension erhaelt einen Score von 1-10.
+  `,
+  'finanzplanung-uebersicht': `
+## Finanzplanung — Uebersicht
+
+Das Finanzplanung-Modul ist ein separates Add-on, das von der Holding lizenziert und pro Unternehmen aktiviert wird. Es deckt die Cash-OUT-Seite ab: eingehende Rechnungen, deren Validierung, Genehmigung und gesteuerte Auszahlungsplanung.
+
+### Module
+
+Das Finanzplanung-Modul besteht aus drei Bereichen:
+
+1. **Rechnungseingang**: Eingehende Rechnungen werden per E-Mail, Upload oder API empfangen und durch KI automatisch ausgelesen.
+2. **Validierungs-Workflow**: Dreistufiger Pruef- und Freigabeprozess (formale Pruefung → inhaltliche Pruefung → technische Genehmigung).
+3. **Cash-out-Planung**: Genehmigte Rechnungen terminieren, Zahlungslaeufe erstellen und Zahlungsdateien exportieren.
+
+### Rollen
+
+| Rolle | Zustaendigkeit |
+|-------|----------------|
+| Rechnungspruefer | Formale und inhaltliche Pruefung (Schritt 1 + 2) |
+| Rechnungsgenehmiger | Technische Freigabe (Schritt 3) |
+| Cash-out-Planer | Zahlungsterminierung und Zahlungslauf-Erstellung |
+| Finanzieller Genehmiger | Finale Freigabe von Zahlungslaeufen |
+
+### Aktivierung
+
+Das Modul wird ueber **Holding Admin → Add-ons** pro Unternehmen aktiviert.
+  `,
+  'finanzplanung-eingang': `
+## Finanzplanung — Rechnungseingang
+
+### Rechnungen empfangen
+
+Rechnungen koennen auf drei Wegen eingehen:
+- **E-Mail**: Automatisches Polling eines dedizierten Rechnungseingangs-Postfachs
+- **Manueller Upload**: PDF oder Bild direkt in der Plattform hochladen
+- **API/Webhook**: Push-Eingang aus Buchhaltungssoftware (spaeter)
+
+### KI-Extraktion
+
+Sobald eine Rechnung eingeht, extrahiert die KI automatisch:
+- Rechnungssteller (Name, Adresse, USt-Nr., Kontaktdaten)
+- Empfaenger
+- Rechnungsnummer und -datum
+- Einzelne Positionen (Beschreibung, Menge, Preis)
+- Summen (Netto, USt, Brutto)
+- Zahlungsziel und Faelligkeitsdatum
+
+### Projekt-Matching
+
+Die extrahierten Daten werden automatisch einem Projekt zugeordnet. Bei niedriger Konfidenz (< 80%) erscheint die Rechnung im Status "Match-Pruefung" und muss manuell zugewiesen werden.
+
+### Dreistufiger Validierungs-Workflow
+
+**Schritt 1 — Formale Pruefung** (Rechnungspruefer):
+- Vollstaendige Absenderangaben vorhanden?
+- Rechnungsnummer und -datum vorhanden?
+- USt-Ausweis korrekt?
+- Entscheidung: Weiter zu Schritt 2 oder Zuruecksenden
+
+**Schritt 2 — Inhaltliche Pruefung** (Rechnungspruefer):
+- Faelligkeitsdatum pruefen oder ueberschreiben
+- Budget-Vergleich (Rechnungswert vs. Prozessschritt-Budget)
+- Entscheidung: Weiter zu Schritt 3 oder Zuruecksenden
+
+**Schritt 3 — Technische Genehmigung** (Rechnungsgenehmiger):
+- Rechnungsdetails, Scan-Vorschau und Validator-Kommentar pruefen
+- Genehmigung ueber Plattform oder WhatsApp
+- Entscheidung: Genehmigen oder Ablehnen
+  `,
+  'finanzplanung-planung': `
+## Finanzplanung — Zahlungsplanung
+
+### Cash-out-Planungs-Tool
+
+Nach technischer Genehmigung erscheinen Rechnungen im Planungs-Tool des Cash-out-Planers.
+
+### Kalender-Ansicht
+
+Die Hauptansicht zeigt Rechnungen als Karten in Datumsspalten:
+- **Taeglich**: Detaillierte kurzfristige Planung
+- **Woechentlich**: Mittelfristige Uebersicht
+- **Monatlich**: Strategische Liquiditaetsplanung
+
+Per Drag-and-Drop koennen Rechnungskarten in andere Datumsspalten verschoben werden, um das Zahlungsdatum zu aendern.
+
+### Zahlungslauf erstellen
+
+1. Waehlen Sie genehmigte Rechnungen aus
+2. Erstellen Sie einen Zahlungslauf fuer ein bestimmtes Datum
+3. Pruefen Sie jede Position im Zahlungslauf
+4. Reichen Sie den Zahlungslauf zur Genehmigung ein
+
+### Finale Freigabe
+
+Der Finanzielle Genehmiger muss jede Position mindestens einmal oeffnen, bevor der "Finale Freigabe"-Button aktiv wird. Nach Freigabe wird die Zahlungsdatei generiert.
+
+### Zahlungsdatei-Formate
+
+- **pain.001 CH** (Swiss Payment Standards / SPS)
+- **pain.001 SEPA** (EU-Standard)
+- **MT101** (SWIFT Legacy)
+- **CSV** (konfigurierbar)
+
+Die Datei wird zum Download bereitgestellt und manuell im E-Banking importiert.
+  `,
+  'finanzplanung-lieferanten': `
+## Finanzplanung — Lieferanten
+
+### Lieferanten-Stammdaten
+
+Die Lieferantentabelle wird automatisch aus eingehenden Rechnungen befuellt. Der Cash-out-Planer kann Lieferanten auch manuell anlegen und bearbeiten.
+
+### Felder
+
+- **Name und Adresse**: Firmenname, Strasse, PLZ, Ort, Land
+- **Identifikatoren**: Handelsregisternummer, USt-IdNr.
+- **Kontakt**: Ansprechpartner, Telefon, E-Mail
+- **Banking**: IBAN, BIC, Bankname
+- **Zahlungsziel**: Bevorzugtes Zahlungsziel in Tagen (Standard: 30)
+
+### Automatisches Matching
+
+Bei eingehenden Rechnungen wird der Rechnungssteller automatisch mit bestehenden Lieferanten abgeglichen — zuerst ueber USt-Nr., dann IBAN, dann normalisierter Name. Wird kein Match gefunden, wird ein neuer Lieferant angelegt.
+  `,
+  'prozessvorlagen': `
+## Prozessvorlagen hochladen
+
+### JSON-Vorlagen
+
+Prozessvorlagen werden als JSON-Dateien hochgeladen und stehen danach beim Erstellen neuer Prozesse als Ausgangsbasis zur Verfuegung.
+
+### Format
+
+Die JSON-Datei muss folgende Struktur haben:
+
+\`\`\`json
+{
+  "name": "Prozessname",
+  "description": "Beschreibung",
+  "category": "verkauf",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "name": "Schrittname",
+      "description": "Beschreibung",
+      "responsible_roles": ["setter"],
+      "sort_order": 0,
+      "typical_hours": 1,
+      "show_in_flowchart": true
+    }
+  ]
+}
+\`\`\`
+
+### Kategorien
+
+Erlaubte Kategorien: verkauf, planung, abwicklung, betrieb, sonstige
+
+### Beispielvorlage
+
+Laden Sie die Beispielvorlage unter **Vorlagen verwalten → Beispielvorlage herunterladen** herunter.
+  `,
+  'prozess-builder': `
+## Prozess-Builder
+
+Der Prozess-Builder ermoeglicht Holding-Administratoren, Geschaeftsprozesse fuer ihre Tochtergesellschaften zu entwerfen.
+
+### Prozess erstellen
+
+1. Navigieren Sie zu **Prozesse** im Holding-Admin-Bereich.
+2. Waehlen Sie ein Unternehmen und klicken Sie auf **Neuer Prozess**.
+3. Waehlen Sie optional eine Vorlage als Ausgangsbasis.
+4. Definieren Sie Schritte mit Verantwortlichkeiten, Zeitvorgaben und Liquiditaetsmarkern.
+
+### Prozessschritte
+
+Jeder Schritt kann konfiguriert werden mit:
+- **Name und Beschreibung**
+- **Verantwortliche Rollen**: Wer ist fuer diesen Schritt zustaendig?
+- **Erwartete Dauer**: Sollzeit in Stunden
+- **Warnung nach X Tagen**: Automatische Warnung bei Verzoegerung
+- **Liquiditaetsmarker**: Trigger oder Event fuer die Liquiditaetsplanung
+- **Datenquellen**: Welche externen Systeme liefern Daten?
+- **Schnittstellen**: API-Verbindungen fuer automatische Datenuebertragung
+
+### Deployment
+
+Fertige Prozesse werden ueber den Deployment-Workflow an die Zielunternehmen verteilt. Aenderungen erfordern eine neue Version und Genehmigung.
+  `,
+  'addons': `
+## Add-on Module verwalten
+
+### Finanzplanung-Modul
+
+Das Finanzplanung-Modul ist ein separates Add-on, das nicht im Grundpaket enthalten ist.
+
+### Aktivierung
+
+1. **Holding-Ebene**: Das Modul muss zuerst fuer Ihre Holding lizenziert werden. Wenden Sie sich an Ihren Enura-Ansprechpartner.
+2. **Company-Ebene**: Nach der Lizenzierung koennen Sie das Modul ueber **Add-ons** in den Holding-Einstellungen pro Unternehmen aktivieren/deaktivieren.
+
+### Toggle
+
+Verwenden Sie den Schalter neben jedem Unternehmen, um das Modul zu aktivieren oder zu deaktivieren. Die Aenderung wird sofort wirksam.
+  `,
+  'compliance': `
+## Compliance und Zertifizierungen
+
+### Compliance-Regeln
+
+Definieren Sie Compliance-Regeln, die automatisch gegen Ihre Geschaeftsprozesse geprueft werden. Regeln koennen manuell oder automatisch ausgewertet werden.
+
+### Pruefungen
+
+Compliance-Pruefungen werden regelmaessig durchgefuehrt und dokumentiert. Jede Pruefung erhaelt einen Status: bestanden, nicht bestanden, oder ausstehend.
+
+### Zertifizierungen
+
+Verwalten Sie Zertifizierungen (z.B. ISO 9001, ISO 14001) mit Ablaufdaten. Das System warnt rechtzeitig vor auslaufenden Zertifizierungen.
+
+### Dokumente
+
+Laden Sie Compliance-relevante Dokumente hoch und verknuepfen Sie diese mit Regeln und Pruefungen.
+  `,
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOutAction } from '@/app/actions'
 import type { MainProcessGroup } from '@/lib/process-nav'
+import { getHelpArticleForPath } from '@/app/help/data'
 
 type NavItem = {
   label: string
@@ -155,11 +156,18 @@ export function DashboardShell({
           <ul className="space-y-1">
             {navItems.map((item) => {
               const active = isActive(item.href)
+              // Context-aware help: resolve to the article for the current page
+              const resolvedHref = item.href === '/help'
+                ? (() => {
+                    const match = getHelpArticleForPath(pathname)
+                    return match ? `/help/${match.level}/${match.slug}` : '/help'
+                  })()
+                : item.href
 
               return (
                 <li key={item.href}>
                   <Link
-                    href={item.href}
+                    href={resolvedHref}
                     onClick={() => setSidebarOpen(false)}
                     className={`
                       flex items-center gap-3 rounded-brand px-3 py-2.5 text-sm font-medium
