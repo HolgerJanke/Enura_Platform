@@ -14,6 +14,7 @@ type NavItem = {
 type HoldingShellProps = {
   navItems: NavItem[]
   userName: string
+  holdingName?: string
   children: React.ReactNode
 }
 
@@ -40,7 +41,7 @@ function NavIcon({ icon }: { icon: string }) {
   }
 }
 
-export function HoldingShell({ navItems, userName, children }: HoldingShellProps) {
+export function HoldingShell({ navItems, userName, holdingName = 'Holding', children }: HoldingShellProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -75,7 +76,7 @@ export function HoldingShell({ navItems, userName, children }: HoldingShellProps
             E
           </div>
           <div>
-            <span className="block text-sm font-semibold text-gray-900">Enura Group</span>
+            <span className="block text-sm font-semibold text-gray-900">{holdingName}</span>
             <span className="block text-xs text-gray-500">Administration</span>
           </div>
         </div>
@@ -160,7 +161,7 @@ export function HoldingShell({ navItems, userName, children }: HoldingShellProps
               />
             </svg>
           </button>
-          <span className="ml-3 text-sm font-semibold text-gray-900">Enura Group Administration</span>
+          <span className="ml-3 text-sm font-semibold text-gray-900">{holdingName} — Verwaltung</span>
         </header>
 
         <main className="flex-1 overflow-y-auto">{children}</main>

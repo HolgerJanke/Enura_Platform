@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/session'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { HoldingShell } from '@/components/holding-shell'
 import { AdminBar } from '@/components/AdminBar'
 
@@ -64,12 +65,22 @@ export default async function HoldingAdminLayout({ children }: { children: React
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
-  const holdingName = 'Holding-Verwaltung'
+  // Fetch actual holding name
+  let holdingName = 'Holding'
+  if (session.holdingId) {
+    const supabase = createSupabaseServerClient()
+    const { data: holding } = await supabase
+      .from('holdings')
+      .select('name')
+      .eq('id', session.holdingId)
+      .single()
+    if (holding) holdingName = (holding as { name: string }).name
+  }
 
   return (
     <>
       <AdminBar variant="holding-admin" label={holdingName} items={HOLDING_ADMIN_BAR_NAV} />
-      <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName}>
+      <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName} holdingName={holdingName}>
         {children}
       </HoldingShell>
     </>
