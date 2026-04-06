@@ -30,6 +30,7 @@ export function EnuraAddonsClient({ holdings }: { holdings: HoldingFlag[] }) {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   function handleToggle(holdingId: string, enabled: boolean) {
+    const holdingName = flags.find((h) => h.id === holdingId)?.name ?? 'Holding'
     startTransition(async () => {
       setFeedback(null)
       const result = await toggleHoldingFinanzplanung(holdingId, enabled)
@@ -37,7 +38,7 @@ export function EnuraAddonsClient({ holdings }: { holdings: HoldingFlag[] }) {
         setFlags((prev) =>
           prev.map((h) => (h.id === holdingId ? { ...h, finanzplanung_enabled: enabled } : h)),
         )
-        setFeedback({ type: 'success', message: enabled ? 'Modul fuer Holding aktiviert.' : 'Modul fuer Holding deaktiviert.' })
+        setFeedback({ type: 'success', message: `${holdingName}: Finanzplanung ${enabled ? 'aktiviert' : 'deaktiviert'}.` })
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler beim Speichern.' })
       }
@@ -114,6 +115,7 @@ export function HoldingAddonsClient({
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   function handleToggle(companyId: string, enabled: boolean) {
+    const companyName = flags.find((c) => c.id === companyId)?.name ?? 'Unternehmen'
     startTransition(async () => {
       setFeedback(null)
       const result = await toggleCompanyFinanzplanung(companyId, enabled)
@@ -121,7 +123,7 @@ export function HoldingAddonsClient({
         setFlags((prev) =>
           prev.map((c) => (c.id === companyId ? { ...c, finanzplanung_enabled: enabled } : c)),
         )
-        setFeedback({ type: 'success', message: enabled ? 'Modul aktiviert.' : 'Modul deaktiviert.' })
+        setFeedback({ type: 'success', message: `${companyName}: Finanzplanung ${enabled ? 'aktiviert' : 'deaktiviert'}.` })
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler beim Speichern.' })
       }
