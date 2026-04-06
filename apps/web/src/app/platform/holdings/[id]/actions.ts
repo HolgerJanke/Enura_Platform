@@ -97,3 +97,73 @@ export async function updateSubscription(formData: FormData): Promise<{ success:
   revalidatePath(`/platform/holdings/${holdingId}`)
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Holding Admin promotion (Enura Admin only)
+// ---------------------------------------------------------------------------
+
+export async function promoteToHoldingAdmin(
+  holdingId: string,
+  profileId: string,
+): Promise<{ success: boolean; error?: string }> {
+  await requireEnuraSession()
+
+  const supabase = createSupabaseServerClient()
+
+  // Verify user belongs to this holding
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, holding_id')
+    .eq('id', profileId)
+    .single()
+
+  if (!profile) return { success: false, error: 'Benutzer nicht gefunden.' }
+
+  // Update user's holding_id if not set
+  if (!(profile as Record<string, unknown>)['holding_id']) {
+    await supabase.from('profiles').update({ holding_id: holdingId }).eq('id', profileId)
+  }
+
+  // Insert into holding_admins (legacy table checked by session)
+  await supabase
+    .from('holding_admins')
+    .upsert({ profile_id: profileId }, { onConflict: 'profile_id' })
+
+  // Also insert into holding_admins_v2 (per-holding)
+  const { error } = await supabase
+    .from('holding_admins_v2')
+    .upsert(
+      { holding_id: holdingId, profile_id: profileId, is_owner: false },
+      { onConflict: 'holding_id,profile_id' },
+    )
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath(`/platform/holdings/${holdingId}`)
+  return { success: true }
+}
+
+export async function removeHoldingAdmin(
+  holdingId: string,
+  profileId: string,
+): Promise<{ success: boolean; error?: string }> {
+  await requireEnuraSession()
+
+  const supabase = createSupabaseServerClient()
+
+  // Remove from holding_admins_v2
+  await supabase
+    .from('holding_admins_v2')
+    .delete()
+    .eq('holding_id', holdingId)
+    .eq('profile_id', profileId)
+
+  // Remove from legacy holding_admins
+  await supabase
+    .from('holding_admins')
+    .delete()
+    .eq('profile_id', profileId)
+
+  revalidatePath(`/platform/holdings/${holdingId}`)
+  return { success: true }
+}

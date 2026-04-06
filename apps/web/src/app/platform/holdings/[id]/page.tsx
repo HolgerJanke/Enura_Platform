@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireEnuraAdmin } from '@/lib/permissions'
 import { HoldingDetailClient } from './holding-detail-client'
+import { HoldingAdminManager } from './holding-admin-manager'
 import type { HoldingRow, CompanyRow } from '@enura/types'
 
 type HoldingSubscription = {
@@ -31,7 +31,7 @@ async function getHoldingDetail(holdingId: string) {
 
   if (!holding) return null
 
-  const [companiesRes, subscriptionRes, usersRes] = await Promise.all([
+  const [companiesRes, subscriptionRes, usersRes, adminsRes] = await Promise.all([
     supabase
       .from('companies')
       .select('*')
@@ -44,15 +44,31 @@ async function getHoldingDetail(holdingId: string) {
       .single(),
     supabase
       .from('profiles')
-      .select('id')
+      .select('id, first_name, last_name, email, display_name, company_id')
+      .eq('holding_id', holdingId)
+      .eq('is_active', true)
+      .order('last_name'),
+    supabase
+      .from('holding_admins_v2')
+      .select('profile_id, is_owner')
       .eq('holding_id', holdingId),
   ])
+
+  const users = (usersRes.data ?? []) as Array<{
+    id: string; first_name: string | null; last_name: string | null;
+    email: string | null; display_name: string; company_id: string | null
+  }>
+  const adminProfileIds = new Set(
+    ((adminsRes.data ?? []) as Array<{ profile_id: string }>).map((a) => a.profile_id),
+  )
 
   return {
     holding: holding as HoldingRow,
     companies: (companiesRes.data ?? []) as CompanyRow[],
     subscription: subscriptionRes.data as HoldingSubscription | null,
-    totalUsers: (usersRes.data ?? []).length,
+    totalUsers: users.length,
+    users,
+    adminProfileIds: Array.from(adminProfileIds),
   }
 }
 
@@ -79,6 +95,15 @@ export default async function HoldingDetailPage({
         subscription={detail.subscription}
         totalUsers={detail.totalUsers}
       />
+
+      {/* Admin management */}
+      <div className="mt-8">
+        <HoldingAdminManager
+          holdingId={detail.holding.id}
+          users={detail.users}
+          adminProfileIds={detail.adminProfileIds}
+        />
+      </div>
     </div>
   )
 }

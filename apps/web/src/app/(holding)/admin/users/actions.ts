@@ -485,3 +485,95 @@ export async function revokeInvitation(
   revalidatePath('/admin/users')
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Promote to Super User for a company
+// ---------------------------------------------------------------------------
+
+export async function promoteToCompanySuperUser(
+  companyId: string,
+  profileId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+
+  const { data: role } = await supabase
+    .from('roles')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('key', 'super_user')
+    .single()
+
+  if (!role) return { success: false, error: 'Super-User-Rolle nicht gefunden.' }
+
+  const { error } = await supabase
+    .from('profile_roles')
+    .upsert(
+      { profile_id: profileId, role_id: (role as { id: string }).id },
+      { onConflict: 'profile_id,role_id' },
+    )
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
+// Remove Super User role
+// ---------------------------------------------------------------------------
+
+export async function removeCompanySuperUser(
+  companyId: string,
+  profileId: string,
+): Promise<{ success: boolean; error?: string }> {
+  await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+
+  const { data: role } = await supabase
+    .from('roles')
+    .select('id')
+    .eq('company_id', companyId)
+    .eq('key', 'super_user')
+    .single()
+
+  if (!role) return { success: false, error: 'Rolle nicht gefunden.' }
+
+  const { error } = await supabase
+    .from('profile_roles')
+    .delete()
+    .eq('profile_id', profileId)
+    .eq('role_id', (role as { id: string }).id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
+// Promote to Holding Admin (peer promotion)
+// ---------------------------------------------------------------------------
+
+export async function promoteToHoldingAdminFromHolding(
+  profileId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+
+  await supabase
+    .from('holding_admins')
+    .upsert({ profile_id: profileId }, { onConflict: 'profile_id' })
+
+  const { error } = await supabase
+    .from('holding_admins_v2')
+    .upsert(
+      { holding_id: session.holdingId ?? '', profile_id: profileId, is_owner: false },
+      { onConflict: 'holding_id,profile_id' },
+    )
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
