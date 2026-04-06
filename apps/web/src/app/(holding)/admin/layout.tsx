@@ -32,14 +32,31 @@ const HOLDING_ADMIN_BAR_NAV = [
 export default async function HoldingAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
 
-  if (!session || !session.isHoldingAdmin) {
+  if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">Sitzung wird geladen...</p>
-          <a href="/login" className="text-blue-600 underline text-sm">Zur Anmeldung</a>
+      <>
+        <script dangerouslySetInnerHTML={{ __html: 'window.location.href="/login"' }} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">Weiterleitung zur Anmeldung...</p>
+            <a href="/login" className="text-blue-600 underline text-sm">Zur Anmeldung</a>
+          </div>
         </div>
-      </div>
+      </>
+    )
+  }
+
+  if (!session.isHoldingAdmin) {
+    return (
+      <>
+        <script dangerouslySetInnerHTML={{ __html: 'window.location.href="/dashboard"' }} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">Kein Zugriff. Weiterleitung...</p>
+            <a href="/dashboard" className="text-blue-600 underline text-sm">Zum Dashboard</a>
+          </div>
+        </div>
+      </>
     )
   }
 

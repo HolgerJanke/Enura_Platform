@@ -24,14 +24,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // The middleware handles the actual auth redirect
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-background">
-        <div className="text-center">
-          <p className="text-brand-text-secondary mb-4">Sitzung wird geladen...</p>
-          <a href="/login" className="text-brand-primary underline text-sm">
-            Zur Anmeldung
-          </a>
+      <>
+        <script dangerouslySetInnerHTML={{ __html: 'window.location.href="/login"' }} />
+        <div className="min-h-screen flex items-center justify-center bg-brand-background">
+          <div className="text-center">
+            <p className="text-brand-text-secondary mb-4">Weiterleitung zur Anmeldung...</p>
+            <a href="/login" className="text-brand-primary underline text-sm">
+              Zur Anmeldung
+            </a>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
