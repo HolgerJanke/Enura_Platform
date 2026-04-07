@@ -8,6 +8,8 @@ import {
   resetUser2fa,
   resendInvitation,
   revokeInvitation,
+  updateUserRolesFromHolding,
+  getCompanyRoles,
   type UserWithCompany,
   type PendingInvitation,
 } from './actions'
@@ -52,6 +54,12 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
     label: string
   } | null>(null)
 
+  // Role editing state
+  const [roleEditUser, setRoleEditUser] = useState<UserWithCompany | null>(null)
+  const [availableRoles, setAvailableRoles] = useState<Array<{ id: string; key: string; label: string; description: string | null }>>([])
+  const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set())
+  const [roleEditLoading, setRoleEditLoading] = useState(false)
+
   const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase()
     if (!q) return true
@@ -93,6 +101,49 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
         runAction(() => revokeInvitation(confirmAction.id))
         break
     }
+  }
+
+  async function openRoleEditor(user: UserWithCompany) {
+    if (!user.companyId) return
+    setRoleEditUser(user)
+    setRoleEditLoading(true)
+    try {
+      const roles = await getCompanyRoles(user.companyId)
+      setAvailableRoles(roles)
+      // Set current roles by matching role labels to role IDs
+      const currentIds = new Set(
+        roles.filter((r) => user.roles.includes(r.label) || user.roles.includes(r.key)).map((r) => r.id),
+      )
+      setSelectedRoleIds(currentIds)
+    } catch {
+      setFeedback({ type: 'error', message: 'Rollen konnten nicht geladen werden.' })
+      setRoleEditUser(null)
+    }
+    setRoleEditLoading(false)
+  }
+
+  function toggleRole(roleId: string) {
+    setSelectedRoleIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(roleId)) next.delete(roleId)
+      else next.add(roleId)
+      return next
+    })
+  }
+
+  function saveRoles() {
+    if (!roleEditUser?.companyId) return
+    const userId = roleEditUser.id
+    const companyId = roleEditUser.companyId
+    startTransition(async () => {
+      const result = await updateUserRolesFromHolding(userId, companyId, [...selectedRoleIds])
+      if (result.success) {
+        setFeedback({ type: 'success', message: `Rollen fuer ${roleEditUser.displayName} aktualisiert.` })
+      } else {
+        setFeedback({ type: 'error', message: result.error ?? 'Fehler beim Speichern.' })
+      }
+      setRoleEditUser(null)
+    })
   }
 
   return (
@@ -262,6 +313,16 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1">
+                          {user.companyId && (
+                            <button
+                              type="button"
+                              onClick={() => openRoleEditor(user)}
+                              className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                              aria-label={`Rollen fuer ${user.displayName} bearbeiten`}
+                            >
+                              Rollen
+                            </button>
+                          )}
                           {user.isActive ? (
                             <button
                               type="button"
@@ -404,6 +465,65 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role edit modal */}
+      {roleEditUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              Rollen bearbeiten
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {roleEditUser.firstName} {roleEditUser.lastName} — {roleEditUser.companyName}
+            </p>
+
+            {roleEditLoading ? (
+              <p className="text-sm text-gray-500 py-4">Rollen werden geladen...</p>
+            ) : (
+              <fieldset className="space-y-2 max-h-80 overflow-y-auto">
+                {availableRoles.map((role) => (
+                  <label
+                    key={role.id}
+                    className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRoleIds.has(role.id)}
+                      onChange={() => toggleRole(role.id)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{role.label}</p>
+                      <p className="text-xs text-gray-500">{role.key}</p>
+                      {role.description && (
+                        <p className="text-xs text-gray-400 mt-0.5">{role.description}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                type="button"
+                onClick={() => setRoleEditUser(null)}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                disabled={isPending || selectedRoleIds.size === 0}
+                onClick={saveRoles}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isPending ? 'Wird gespeichert...' : 'Speichern'}
+              </button>
             </div>
           </div>
         </div>

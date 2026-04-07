@@ -577,3 +577,87 @@ export async function promoteToHoldingAdminFromHolding(
   revalidatePath('/admin/users')
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Update user roles from holding admin (cross-company)
+// ---------------------------------------------------------------------------
+
+export async function updateUserRolesFromHolding(
+  profileId: string,
+  companyId: string,
+  roleIds: string[],
+): Promise<{ success: boolean; error?: string }> {
+  const session = await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+
+  // Verify company belongs to this holding
+  const { data: company } = await supabase
+    .from('companies')
+    .select('id, holding_id')
+    .eq('id', companyId)
+    .single()
+
+  if (!company || (company as Record<string, unknown>)['holding_id'] !== session.holdingId) {
+    return { success: false, error: 'Unternehmen gehoert nicht zu dieser Holding.' }
+  }
+
+  // Get all roles for this company to validate roleIds
+  const { data: companyRoles } = await supabase
+    .from('roles')
+    .select('id')
+    .eq('company_id', companyId)
+
+  const validRoleIds = new Set((companyRoles ?? []).map((r) => (r as { id: string }).id))
+  const filteredRoleIds = roleIds.filter((id) => validRoleIds.has(id))
+
+  // Get current roles for this user in this company
+  const { data: currentRoles } = await supabase
+    .from('profile_roles')
+    .select('role_id')
+    .eq('profile_id', profileId)
+
+  const currentRoleIds = new Set(
+    ((currentRoles ?? []) as Array<{ role_id: string }>)
+      .map((r) => r.role_id)
+      .filter((id) => validRoleIds.has(id)),
+  )
+
+  const toAdd = filteredRoleIds.filter((id) => !currentRoleIds.has(id))
+  const toRemove = [...currentRoleIds].filter((id) => !filteredRoleIds.includes(id))
+
+  if (toAdd.length > 0) {
+    await supabase
+      .from('profile_roles')
+      .upsert(
+        toAdd.map((roleId) => ({ profile_id: profileId, role_id: roleId })),
+        { onConflict: 'profile_id,role_id' },
+      )
+  }
+
+  for (const roleId of toRemove) {
+    await supabase
+      .from('profile_roles')
+      .delete()
+      .eq('profile_id', profileId)
+      .eq('role_id', roleId)
+  }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+export async function getCompanyRoles(
+  companyId: string,
+): Promise<Array<{ id: string; key: string; label: string; description: string | null }>> {
+  await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+
+  const { data } = await supabase
+    .from('roles')
+    .select('id, key, label, description')
+    .eq('company_id', companyId)
+    .eq('is_system', true)
+    .order('label')
+
+  return (data ?? []) as Array<{ id: string; key: string; label: string; description: string | null }>
+}
