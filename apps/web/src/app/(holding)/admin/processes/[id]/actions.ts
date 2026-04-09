@@ -136,7 +136,7 @@ export async function addStepAction(input: z.infer<typeof AddStepSchema>): Promi
     .single()
 
   if (error) {
-    return { success: false, error: 'Fehler beim Hinzufuegen des Schritts.' }
+    return { success: false, error: `Fehler: ${error.message} (Code: ${error.code})` }
   }
 
   revalidateProcess(processId)
