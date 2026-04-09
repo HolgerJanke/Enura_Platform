@@ -56,8 +56,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { label: 'Anomalien', href: '/anomalies', icon: 'AlertTriangle', permission: 'module:admin:read' },
     { label: 'Berichte', href: '/reports', icon: 'FileText', permission: 'module:reports:read' },
     ...(session.isEnuraAdmin ? [{ label: 'Plattform', href: '/platform', icon: 'Globe', permission: null as string | null }] : []),
-    ...(session.isHoldingAdmin ? [{ label: 'Holding', href: '/admin', icon: 'Building2', permission: null as string | null }] : []),
-    { label: 'Integrationen', href: '/settings/connectors', icon: 'Link', permission: 'module:admin:read' },
     { label: 'Branding', href: '/settings/branding', icon: 'Palette', permission: 'module:admin:branding' },
     { label: 'Leitfaden', href: '/settings/call-script', icon: 'BookOpen', permission: 'module:admin:write' },
     { label: 'Bericht-Einst.', href: '/settings/reports', icon: 'Sliders', permission: 'module:admin:write' },
@@ -117,6 +115,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         userName={displayName}
         userRole={roleLabel}
         hasAdminBar={showSuperUserBar}
+        isHoldingAdmin={session.isHoldingAdmin}
       >
         {criticalAnomalyCount > 0 && (
         <div className="border-b border-red-300 bg-red-600 px-4 py-2.5 text-white">
