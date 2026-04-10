@@ -41,55 +41,37 @@ export function ProcessHouseEditorClient({ companyId, processes }: Props) {
     })
   }
 
-  function handleMoveUp(processId: string, processType: string) {
-    setItems((prev) => {
-      const group = prev.filter((p) => p.process_type === processType)
-      const idx = group.findIndex((p) => p.id === processId)
-      if (idx <= 0) return prev
-      // Swap sort orders
-      const updated = prev.map((p) => {
-        if (p.id === group[idx]!.id) return { ...p, house_sort_order: group[idx - 1]!.house_sort_order }
-        if (p.id === group[idx - 1]!.id) return { ...p, house_sort_order: group[idx]!.house_sort_order }
-        return p
-      })
-      return updated
-    })
-
-    // Save reorder
-    const group = items.filter((p) => p.process_type === processType)
+  function handleMove(processId: string, processType: string, direction: 'up' | 'down') {
+    const group = items
+      .filter((p) => p.process_type === processType)
+      .sort((a, b) => a.house_sort_order - b.house_sort_order)
     const idx = group.findIndex((p) => p.id === processId)
-    if (idx <= 0) return
-    const order = group.map((p, i) => ({ processId: p.id, sortOrder: i }))
-    // Swap
-    const temp = order[idx]!.sortOrder
-    order[idx]!.sortOrder = order[idx - 1]!.sortOrder
-    order[idx - 1]!.sortOrder = temp
+
+    if (direction === 'up' && idx <= 0) return
+    if (direction === 'down' && idx >= group.length - 1) return
+
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    const currentItem = group[idx]!
+    const swapItem = group[swapIdx]!
+
+    // Swap sort orders in local state
+    setItems((prev) => prev.map((p) => {
+      if (p.id === currentItem.id) return { ...p, house_sort_order: swapItem.house_sort_order }
+      if (p.id === swapItem.id) return { ...p, house_sort_order: currentItem.house_sort_order }
+      return p
+    }))
+
+    // Build new order and save
+    const newOrder = group.map((p, i) => {
+      if (i === idx) return { processId: swapItem.id, sortOrder: i }
+      if (i === swapIdx) return { processId: currentItem.id, sortOrder: i }
+      return { processId: p.id, sortOrder: i }
+    })
 
     startTransition(async () => {
-      await reorderProcessHouseAction(companyId, processType as 'M' | 'P' | 'S', order)
-    })
-  }
-
-  function handleMoveDown(processId: string, processType: string) {
-    const group = items.filter((p) => p.process_type === processType)
-    const idx = group.findIndex((p) => p.id === processId)
-    if (idx >= group.length - 1) return
-
-    setItems((prev) => {
-      return prev.map((p) => {
-        if (p.id === group[idx]!.id) return { ...p, house_sort_order: group[idx + 1]!.house_sort_order }
-        if (p.id === group[idx + 1]!.id) return { ...p, house_sort_order: group[idx]!.house_sort_order }
-        return p
-      })
-    })
-
-    const order = group.map((p, i) => ({ processId: p.id, sortOrder: i }))
-    const temp = order[idx]!.sortOrder
-    order[idx]!.sortOrder = order[idx + 1]!.sortOrder
-    order[idx + 1]!.sortOrder = temp
-
-    startTransition(async () => {
-      await reorderProcessHouseAction(companyId, processType as 'M' | 'P' | 'S', order)
+      await reorderProcessHouseAction(companyId, processType as 'M' | 'P' | 'S', newOrder)
+      setFeedback('Reihenfolge aktualisiert.')
+      setTimeout(() => setFeedback(null), 2000)
     })
   }
 
@@ -122,8 +104,8 @@ export function ProcessHouseEditorClient({ companyId, processes }: Props) {
                       {proc.status}
                     </span>
                     <div className="flex gap-1">
-                      <button type="button" disabled={i === 0 || isPending} onClick={() => handleMoveUp(proc.id, key)} className="rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 disabled:opacity-30" aria-label="Nach oben">↑</button>
-                      <button type="button" disabled={i === group.length - 1 || isPending} onClick={() => handleMoveDown(proc.id, key)} className="rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 disabled:opacity-30" aria-label="Nach unten">↓</button>
+                      <button type="button" disabled={i === 0 || isPending} onClick={() => handleMove(proc.id, key, 'up')} className="rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 disabled:opacity-30" aria-label="Nach oben">↑</button>
+                      <button type="button" disabled={i === group.length - 1 || isPending} onClick={() => handleMove(proc.id, key, 'down')} className="rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 disabled:opacity-30" aria-label="Nach unten">↓</button>
                     </div>
                   </div>
                 ))}
