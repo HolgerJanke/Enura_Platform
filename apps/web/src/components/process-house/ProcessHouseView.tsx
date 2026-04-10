@@ -39,17 +39,18 @@ const FOUND_Y_OFFSET = 20
 const FOUND_H = 90
 const FOUND_GAP = 15
 
-// Colors
+// Colors — uses brand CSS vars so each company gets its own look
+// Fallbacks are provided for SSR / non-branded contexts
 const COLORS = {
-  roofFill: '#0D9488',       // teal-600
+  roofFill: 'var(--brand-secondary, #1A1A1A)',
   roofText: '#FFFFFF',
-  arrowFill: '#16A34A',      // green-600
+  arrowFill: 'var(--brand-primary, #1A56DB)',
   arrowText: '#FFFFFF',
-  foundFill: '#0EA5E9',      // sky-500
+  foundFill: 'var(--brand-accent, #F3A917)',
   foundText: '#FFFFFF',
-  pillarFill: '#F59E0B',     // amber-500
+  pillarFill: 'var(--brand-text-secondary, #6B7280)',
   pillarText: '#FFFFFF',
-  hoverStroke: '#1E293B',
+  hoverStroke: 'var(--brand-text-primary, #111827)',
 }
 
 // ---------------------------------------------------------------------------
@@ -146,7 +147,8 @@ export function ProcessHouseView({
               >
                 <polygon
                   points={arrowPoints}
-                  fill={isHovered ? '#15803D' : COLORS.arrowFill}
+                  fill={COLORS.arrowFill}
+                  opacity={isHovered ? 0.85 : 1}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
                   style={{ transition: 'fill 0.15s' }}
@@ -189,7 +191,8 @@ export function ProcessHouseView({
                 {/* Small roof */}
                 <polygon
                   points={`${x + foundW / 2},${foundY} ${x},${bodyY} ${x + foundW},${bodyY}`}
-                  fill={isHovered ? '#0284C7' : COLORS.foundFill}
+                  fill={COLORS.foundFill}
+                  opacity={isHovered ? 0.85 : 1}
                   style={{ transition: 'fill 0.15s' }}
                 />
                 {/* Body */}
@@ -198,7 +201,8 @@ export function ProcessHouseView({
                   y={bodyY}
                   width={foundW}
                   height={bodyH}
-                  fill={isHovered ? '#0284C7' : COLORS.foundFill}
+                  fill={COLORS.foundFill}
+                  opacity={isHovered ? 0.85 : 1}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
                   style={{ transition: 'fill 0.15s' }}
