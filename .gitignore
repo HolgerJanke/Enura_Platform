@@ -7,6 +7,11 @@ dist/
 .env.*.local
 *.log
 .DS_Store
+# macOS Finder duplicates
+* 2.*
+* 2
+* 3.*
+* 3
 coverage/
 .vercel/
 .cache/
