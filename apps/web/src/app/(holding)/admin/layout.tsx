@@ -11,6 +11,7 @@ const HOLDING_NAV_ITEMS = [
   { label: 'Secrets', href: '/admin/secrets', icon: 'key' },
   { label: 'Tools', href: '/admin/tools', icon: 'wrench' },
   { label: 'Prozesse', href: '/admin/processes', icon: 'workflow' },
+  { label: 'Prozesshaus', href: '/admin/processes/house', icon: 'building' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'bar-chart' },
   { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
   { label: 'Zertifizierungen', href: '/admin/compliance/certifications', icon: 'award' },

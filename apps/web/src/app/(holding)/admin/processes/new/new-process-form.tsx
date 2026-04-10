@@ -9,6 +9,12 @@ import { createProcessAction, type CreateProcessResult } from './actions'
 // Constants
 // ---------------------------------------------------------------------------
 
+const PROCESS_TYPES = [
+  { value: 'M', label: 'M — Management / Strategisch' },
+  { value: 'P', label: 'P — Kernprozess' },
+  { value: 'S', label: 'S — Stützprozess' },
+] as const
+
 const CATEGORIES = [
   { value: 'verkauf', label: 'Verkauf' },
   { value: 'planung', label: 'Planung' },
@@ -145,6 +151,28 @@ export function NewProcessForm({
       </div>
 
       {/* Category */}
+      {/* Process type (Prozesshaus) */}
+      <div>
+        <label htmlFor="processType" className="block text-sm font-medium text-gray-700 mb-1">
+          Prozesstyp (Prozesshaus)
+        </label>
+        <select
+          id="processType"
+          name="processType"
+          className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+        >
+          <option value="">Keinen Typ zuweisen</option>
+          {PROCESS_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-gray-400">
+          M = Strategisch, P = Kernprozess, S = Stützprozess
+        </p>
+      </div>
+
       <div>
         <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
           Kategorie

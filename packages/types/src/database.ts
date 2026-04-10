@@ -1726,6 +1726,8 @@ export interface ProcessDefinitionRow {
   version: string;
   deployed_at: string | null;
   deployed_version: string | null;
+  process_type: 'M' | 'P' | 'S' | null;
+  house_sort_order: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -1744,6 +1746,8 @@ export interface ProcessDefinitionInsert {
   visible_roles?: string[];
   status?: string;
   version?: string;
+  process_type?: 'M' | 'P' | 'S' | null;
+  house_sort_order?: number;
   created_by?: string | null;
 }
 
@@ -1759,6 +1763,82 @@ export interface ProcessDefinitionUpdate {
   version?: string;
   deployed_at?: string | null;
   deployed_version?: string | null;
+  process_type?: 'M' | 'P' | 'S' | null;
+  house_sort_order?: number;
+}
+
+// =============================================================================
+// TABLE: process_kpi_definitions
+// =============================================================================
+
+export interface ProcessKpiDefinitionRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  name: string;
+  description: string | null;
+  unit: string;
+  target_value: number | null;
+  warning_threshold: number | null;
+  critical_threshold: number | null;
+  data_source: string | null;
+  visible_roles: string[];
+  sort_order: number;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessKpiDefinitionInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  name: string;
+  description?: string | null;
+  unit?: string;
+  target_value?: number | null;
+  warning_threshold?: number | null;
+  critical_threshold?: number | null;
+  data_source?: string | null;
+  visible_roles?: string[];
+  sort_order?: number;
+  is_active?: boolean;
+  created_by?: string | null;
+}
+
+export interface ProcessKpiDefinitionUpdate {
+  name?: string;
+  description?: string | null;
+  unit?: string;
+  target_value?: number | null;
+  warning_threshold?: number | null;
+  critical_threshold?: number | null;
+  data_source?: string | null;
+  visible_roles?: string[];
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+// =============================================================================
+// TABLE: process_kpi_values
+// =============================================================================
+
+export interface ProcessKpiValueRow {
+  id: string;
+  kpi_id: string;
+  period_date: string;
+  value: number | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ProcessKpiValueInsert {
+  kpi_id: string;
+  period_date: string;
+  value?: number | null;
+  metadata?: Record<string, unknown>;
 }
 
 // =============================================================================
@@ -3264,6 +3344,8 @@ export interface Database {
       payment_run_items: { Row: PaymentRunItemRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
       cashout_residual_decisions: { Row: CashoutResidualDecisionRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
       company_banking_config: { Row: CompanyBankingConfigRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
+      process_kpi_definitions: { Row: ProcessKpiDefinitionRow; Insert: ProcessKpiDefinitionInsert; Update: ProcessKpiDefinitionUpdate; Relationships: [] };
+      process_kpi_values: { Row: ProcessKpiValueRow; Insert: ProcessKpiValueInsert; Update: Record<string, unknown>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

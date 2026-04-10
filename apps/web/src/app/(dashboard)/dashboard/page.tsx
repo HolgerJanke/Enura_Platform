@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/session'
+import { ProcessHouseContainer } from '@/components/process-house/ProcessHouseContainer'
 import { getCompanyContext } from '@/lib/tenant'
 import { getDataAccess } from '@/lib/data-access'
 import {
@@ -193,6 +194,14 @@ export default async function DashboardPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Process House */}
+      <div className="bg-brand-surface rounded-brand p-6 border border-gray-200 mb-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-secondary mb-4">
+          Prozesshaus
+        </h2>
+        <ProcessHouseContainer />
       </div>
 
       {/* Connector health */}

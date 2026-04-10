@@ -19,6 +19,7 @@ const CreateProcessSchema = z.object({
   menuIcon: z.string().max(50).optional().default('clipboard'),
   visibleRoles: z.array(z.string()).min(1, 'Mindestens eine Rolle auswählen'),
   templateId: z.string().uuid().nullable().optional(),
+  processType: z.enum(['M', 'P', 'S']).nullable().optional(),
 })
 
 // ---------------------------------------------------------------------------
@@ -49,6 +50,7 @@ export async function createProcessAction(
     menuIcon: formData.get('menuIcon') || 'clipboard',
     visibleRoles: rawVisibleRoles,
     templateId: templateIdRaw && templateIdRaw !== '' ? templateIdRaw : null,
+    processType: (formData.get('processType') as string) || null,
   })
 
   if (!parsed.success) {
@@ -62,7 +64,7 @@ export async function createProcessAction(
     return { fieldErrors }
   }
 
-  const { companyId, name, category, menuLabel, menuIcon, visibleRoles, templateId } = parsed.data
+  const { companyId, name, category, menuLabel, menuIcon, visibleRoles, templateId, processType } = parsed.data
 
   const supabase = createSupabaseServerClient()
 
@@ -92,6 +94,7 @@ export async function createProcessAction(
       visible_roles: visibleRoles,
       status: 'draft',
       version: '1.0.0',
+      process_type: processType ?? null,
       created_by: session.profile.id,
     })
     .select('id')
