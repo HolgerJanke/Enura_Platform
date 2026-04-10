@@ -77,6 +77,15 @@ export function ProcessHouseEditorClient({ companyId, processes }: Props) {
 
   const unassigned = items.filter((p) => !p.process_type)
 
+  if (items.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+        <p className="text-sm text-gray-500">Dieses Unternehmen hat noch keine Prozesse.</p>
+        <p className="text-xs text-gray-400 mt-1">Erstellen Sie Prozesse unter „Prozesse" und weisen Sie ihnen dann hier einen Typ zu.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       {feedback && (

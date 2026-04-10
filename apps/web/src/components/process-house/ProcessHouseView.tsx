@@ -81,13 +81,13 @@ export function ProcessHouseView({
         aria-label="Prozesshaus-Visualisierung"
       >
         {/* Left Customer Pillar */}
-        <rect x={0} y={ROOF_Y + ROOF_H - 10} width={PILLAR_W} height={totalH - ROOF_Y - ROOF_H - 30} rx={4} fill={COLORS.pillarFill} />
+        <rect x={0} y={ROOF_Y + ROOF_H - 10} width={PILLAR_W} height={totalH - ROOF_Y - ROOF_H - 30} rx={4} style={{ fill: COLORS.pillarFill }} />
         <text x={PILLAR_W / 2} y={ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(-90, ${PILLAR_W / 2}, ${ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2})`}>
           Kunde
         </text>
 
         {/* Right Customer Pillar */}
-        <rect x={W - PILLAR_W} y={ROOF_Y + ROOF_H - 10} width={PILLAR_W} height={totalH - ROOF_Y - ROOF_H - 30} rx={4} fill={COLORS.pillarFill} />
+        <rect x={W - PILLAR_W} y={ROOF_Y + ROOF_H - 10} width={PILLAR_W} height={totalH - ROOF_Y - ROOF_H - 30} rx={4} style={{ fill: COLORS.pillarFill }} />
         <text x={W - PILLAR_W / 2} y={ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(90, ${W - PILLAR_W / 2}, ${ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2})`}>
           Kunde
         </text>
@@ -95,7 +95,7 @@ export function ProcessHouseView({
         {/* Roof — Management processes (triangle) */}
         <polygon
           points={`${W / 2},${ROOF_Y} ${CONTENT_X},${ROOF_Y + ROOF_H} ${CONTENT_X + CONTENT_W},${ROOF_Y + ROOF_H}`}
-          fill={COLORS.roofFill}
+          style={{ fill: COLORS.roofFill }}
           rx={6}
         />
         {managementProcesses.length > 0 ? (
@@ -147,11 +147,9 @@ export function ProcessHouseView({
               >
                 <polygon
                   points={arrowPoints}
-                  fill={COLORS.arrowFill}
-                  opacity={isHovered ? 0.85 : 1}
+                  style={{ fill: COLORS.arrowFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
-                  style={{ transition: 'fill 0.15s' }}
                 />
                 <text
                   x={CONTENT_X + CONTENT_W / 2}
@@ -191,9 +189,7 @@ export function ProcessHouseView({
                 {/* Small roof */}
                 <polygon
                   points={`${x + foundW / 2},${foundY} ${x},${bodyY} ${x + foundW},${bodyY}`}
-                  fill={COLORS.foundFill}
-                  opacity={isHovered ? 0.85 : 1}
-                  style={{ transition: 'fill 0.15s' }}
+                  style={{ fill: COLORS.foundFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
                 />
                 {/* Body */}
                 <rect
@@ -201,11 +197,9 @@ export function ProcessHouseView({
                   y={bodyY}
                   width={foundW}
                   height={bodyH}
-                  fill={COLORS.foundFill}
-                  opacity={isHovered ? 0.85 : 1}
+                  style={{ fill: COLORS.foundFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
-                  style={{ transition: 'fill 0.15s' }}
                 />
                 {/* Label */}
                 <text
