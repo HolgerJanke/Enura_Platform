@@ -79,11 +79,8 @@ export default async function HoldingAdminLayout({ children }: { children: React
   }
 
   return (
-    <>
-      <AdminBar variant="holding-admin" label={holdingName} items={HOLDING_ADMIN_BAR_NAV} />
-      <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName} holdingName={holdingName}>
-        {children}
-      </HoldingShell>
-    </>
+    <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName} holdingName={holdingName}>
+      {children}
+    </HoldingShell>
   )
 }
