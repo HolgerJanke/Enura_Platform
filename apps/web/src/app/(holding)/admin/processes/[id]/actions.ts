@@ -80,7 +80,7 @@ export async function saveProcessAction(input: z.infer<typeof SaveProcessSchema>
     .eq('id', processId)
 
   if (error) {
-    return { success: false, error: 'Fehler beim Speichern.' }
+    return { success: false, error: `Speichern: ${error.message} (Code: ${error.code})` }
   }
 
   revalidateProcess(processId)
@@ -192,7 +192,7 @@ export async function updateStepAction(input: z.infer<typeof UpdateStepSchema>):
     .eq('id', stepId)
 
   if (error) {
-    return { success: false, error: 'Fehler beim Aktualisieren des Schritts.' }
+    return { success: false, error: `Schritt-Update: ${error.message} (Code: ${error.code})` }
   }
 
   revalidateProcess(processId)
@@ -306,7 +306,7 @@ export async function addSourceAction(input: z.infer<typeof AddSourceSchema>): P
     .single()
 
   if (error) {
-    return { success: false, error: 'Fehler beim Hinzufuegen der Quelle.' }
+    return { success: false, error: `Quelle: ${error.message} (Code: ${error.code})` }
   }
 
   revalidateProcess(parsed.data.processId)
@@ -431,7 +431,7 @@ export async function addInterfaceAction(input: z.infer<typeof AddInterfaceSchem
     .single()
 
   if (error) {
-    return { success: false, error: 'Fehler beim Hinzufuegen der Schnittstelle.' }
+    return { success: false, error: `Schnittstelle: ${error.message} (Code: ${error.code})` }
   }
 
   revalidateProcess(d.processId)
