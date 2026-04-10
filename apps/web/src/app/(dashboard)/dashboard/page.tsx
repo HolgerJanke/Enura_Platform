@@ -2,15 +2,8 @@ import { getSession } from '@/lib/session'
 import { ProcessHouseContainer } from '@/components/process-house/ProcessHouseContainer'
 import { getCompanyContext } from '@/lib/tenant'
 import { getDataAccess } from '@/lib/data-access'
-import {
-  formatCHF,
-  formatPercent,
-  formatNumber,
-  formatDate,
-  formatDuration,
-  KPI_SNAPSHOT_TYPES,
-} from '@enura/types'
-import type { TenantDailySummaryMetrics, ConnectorRow } from '@enura/types'
+import { formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
+import type { ConnectorRow } from '@enura/types'
 
 export default async function DashboardPage() {
   const session = await getSession()
@@ -33,7 +26,7 @@ export default async function DashboardPage() {
     db.connectors.findByCompanyId(session.companyId),
   ])
 
-  const metrics = snapshot?.metrics as TenantDailySummaryMetrics | undefined
+  const _metrics = snapshot?.metrics
 
   // Connector status display mapping
   const connectorStatusLabel: Record<string, { label: string; className: string }> = {
@@ -63,138 +56,6 @@ export default async function DashboardPage() {
       <p className="text-brand-text-secondary mb-8">
         {companyName} &mdash; Übersicht vom {formatDate(today)}
       </p>
-
-      {/* Top-level aggregated KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Offene Leads</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatNumber(metrics?.leads.leads_unworked_count ?? 0)}
-          </p>
-        </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Anrufe heute</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatNumber(metrics?.setter.calls_total ?? 0)}
-          </p>
-        </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Offene Angebote</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatNumber(metrics?.berater.offers_created ?? 0)}
-          </p>
-        </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Umsatz MTD</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatCHF(metrics?.finance?.revenue_total_chf ?? 0)}
-          </p>
-        </div>
-      </div>
-
-      {/* Module summaries */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Setter summary */}
-        <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
-          <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Setter
-          </h2>
-          <table className="w-full text-sm">
-            <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="py-1.5 text-brand-text-secondary">
-                  Erreichbarkeit
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatPercent(metrics?.setter.reach_rate ?? 0)}
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100">
-                <td className="py-1.5 text-brand-text-secondary">
-                  Termine gebucht
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatNumber(metrics?.setter.appointments_booked ?? 0)}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 text-brand-text-secondary">
-                  Durchschnittl. Dauer
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatDuration(metrics?.setter.avg_duration_sec ?? 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Berater summary */}
-        <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
-          <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Berater
-          </h2>
-          <table className="w-full text-sm">
-            <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="py-1.5 text-brand-text-secondary">
-                  Abschlussrate
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatPercent(metrics?.berater.closing_rate ?? 0)}
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100">
-                <td className="py-1.5 text-brand-text-secondary">
-                  Pipeline-Wert
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatCHF(metrics?.berater.pipeline_value_chf ?? 0)}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 text-brand-text-secondary">
-                  Aktivitäten
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatNumber(metrics?.berater.activities_total ?? 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Projects summary */}
-        <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
-          <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Projekte
-          </h2>
-          <table className="w-full text-sm">
-            <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="py-1.5 text-brand-text-secondary">Aktiv</td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatNumber(metrics?.projects.total_active ?? 0)}
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100">
-                <td className="py-1.5 text-brand-text-secondary">Blockiert</td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatNumber(metrics?.projects.stalled_count ?? 0)}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-1.5 text-brand-text-secondary">
-                  Abgeschlossen (30T)
-                </td>
-                <td className="py-1.5 text-right font-medium text-brand-text-primary">
-                  {formatNumber(metrics?.projects.completed_30d ?? 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* Process House */}
       <div className="bg-brand-surface rounded-brand p-6 border border-gray-200 mb-6">
