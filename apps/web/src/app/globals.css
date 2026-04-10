@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #1A56DB;
+  --brand-secondary: #1A1A1A;
+  --brand-accent: #F3A917;
+  --brand-background: #FFFFFF;
+  --brand-surface: #F9FAFB;
+  --brand-text-primary: #111827;
+  --brand-text-secondary: #6B7280;
+  --brand-font: 'Inter', system-ui, sans-serif;
+  --brand-radius: 8px;
+
+  /* Extended design tokens */
+  --brand-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --brand-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --brand-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --brand-spacing-base: 4px;
+  --brand-font-size-base: 16px;
+  --brand-font-size-scale: 1.25;
+  --brand-font-weight-normal: 400;
+  --brand-font-weight-semibold: 600;
+  --brand-letter-spacing: 0em;
+  --brand-line-height: 1.5;
+  --brand-border-width: 1px;
+}
+
+body {
+  font-family: var(--brand-font);
+}
+
+/* Ensure mobile-only elements are hidden on desktop (belt-and-suspenders with lg:hidden) */
+@media (min-width: 1024px) {
+  .mobile-only {
+    display: none !important;
+  }
+}

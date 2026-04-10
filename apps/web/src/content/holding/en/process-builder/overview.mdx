@@ -1,0 +1,49 @@
+---
+title: "Process Builder Overview"
+description: "Visually define and deploy business processes"
+section: "process-builder"
+lastUpdated: "2026-03-30"
+---
+
+# Process Builder Overview
+
+The Process Builder is the central tool for mapping your business processes. It allows holding administrators to define complex workflows as step sequences, link them to external systems, and deploy them for tenants.
+
+## What Is a Process?
+
+A process describes a recurring business workflow from start to finish. Example: The PV installation process at Alpen Energie spans 27 phases — from the initial consultation through planning to commissioning. Each phase is represented as a step card in the Process Builder.
+
+## Step Cards
+
+Each process step is displayed as a card. A step card contains:
+
+- **Step name**: A unique label (e.g., "Create Offer", "Obtain Building Permit")
+- **Responsible role**: Which user role executes this step (Advisor, Back Office, Construction)
+- **Information sources**: Where the required data comes from (CRM fields, documents, manual input)
+- **Interfaces**: Which external systems are accessed (Bexio, Reonic, Google Calendar)
+- **Liquidity markers**: Optional link to cashflow planning
+
+## Information Sources vs. Interfaces
+
+This distinction matters:
+
+**Information sources** describe *what data* a step needs. This could be a CRM field ("Customer address"), a document ("Roof plan"), or a manual input ("Construction date confirmed").
+
+**Interfaces** describe *which system* delivers or receives the data. The Reonic connector provides project data, the Bexio connector receives invoice information.
+
+## Deployment Workflow
+
+1. **Create**: Add steps, arrange them, define sources and interfaces.
+2. **Validate**: The platform checks for missing required fields and broken links.
+3. **Deploy**: Publish the process. A new version is created.
+4. **Activate**: The new version becomes the active version. Tenants only see the active version.
+
+## Versioning
+
+Every change to a deployed process creates a new version. You can:
+
+- View and compare older versions
+- Roll back to a previous version
+- See who made which change and when
+
+The active version is always the one used in production. Drafts are only visible to holding administrators.

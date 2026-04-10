@@ -1,0 +1,25 @@
+{
+  "name": "enura-platform",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "seed:dev": "tsx scripts/seed-dev.ts",
+    "test:db": "echo 'Run: supabase db test --db-url $DATABASE_URL'",
+    "test:e2e": "pnpm --filter @enura/web test:e2e",
+    "backfill:snapshots": "tsx scripts/backfill-snapshots.ts",
+    "validate:env": "tsx scripts/validate-env.ts"
+  },
+  "devDependencies": {
+    "next": "14.2.21",
+    "tsx": "^4.19.2",
+    "turbo": "^2.4.0"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  }
+}

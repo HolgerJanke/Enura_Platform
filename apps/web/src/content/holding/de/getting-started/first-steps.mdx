@@ -1,0 +1,43 @@
+---
+title: "Erste Schritte als Holding-Administrator"
+description: "Schritt-fuer-Schritt-Anleitung fuer den Einstieg in die Enura Holding-Verwaltung"
+section: "getting-started"
+lastUpdated: "2026-03-30"
+---
+
+# Erste Schritte als Holding-Administrator
+
+Als Holding-Administrator haben Sie die vollstaendige Kontrolle ueber alle Mandanten der Enura Gruppe. Sie verwalten Tochtergesellschaften, konfigurieren Integrationen und ueberwachen den Betrieb der gesamten Plattform.
+
+## Was bedeutet die Holding-Rolle?
+
+Die Holding-Ebene ist von den einzelnen Mandanten getrennt. Sie sehen alle Unternehmen, alle Daten und alle mandantenuebergreifenden Analysen. Mandanten-Benutzer koennen Ihre Daten nicht sehen — und umgekehrt greifen Sie auf Mandanten-Daten nur gezielt ueber die Impersonierungs-Funktion zu.
+
+## Die 5 Einrichtungsschritte
+
+### 1. Secrets einrichten
+
+Bevor Connectoren arbeiten koennen, muessen die API-Schluessel hinterlegt werden. Navigieren Sie zu **Verwaltung > Secrets** und erstellen Sie fuer jeden externen Dienst (Reonic, 3CX, Bexio, Google) einen verschluesselten Secret-Eintrag. Beachten Sie die Namenskonvention: `SCREAMING_SNAKE_CASE`.
+
+### 2. Externe Tools konfigurieren
+
+Unter **Verwaltung > Connectoren** aktivieren Sie die Schnittstellen zu den externen Systemen. Jeder Connector muss mit einem gueltigen Secret verknuepft werden. Pruefen Sie nach der Einrichtung den Sync-Status.
+
+### 3. Prozesse definieren
+
+Der **Process Builder** erlaubt es Ihnen, Geschaeftsprozesse als Schrittfolgen abzubilden. Jeder Schritt hat Informationsquellen, Schnittstellen und optional Liquiditaetsmarker. Beginnen Sie mit dem Standard-PV-Installationsprozess als Vorlage.
+
+### 4. Prozesse bereitstellen
+
+Nachdem alle Schritte definiert und geprueft sind, stellen Sie den Prozess bereit. Die Bereitstellung erzeugt eine neue Version. Mandanten arbeiten immer mit der aktiven Version — aeltere Versionen bleiben als Backup erhalten.
+
+### 5. Team einrichten
+
+Erstellen Sie Mandanten-Benutzer unter **Verwaltung > Benutzer**. Weisen Sie jedem Benutzer eine Rolle zu (Setter, Berater, Innendienst usw.). Temporaere Passwoerter werden automatisch generiert — beim ersten Login muss der Benutzer ein eigenes Passwort setzen und 2FA aktivieren.
+
+## Naechste Schritte
+
+- [Secret-Verwaltung](/help/holding/secrets/overview) — Details zur verschluesselten Speicherung
+- [Process Builder](/help/holding/process-builder/overview) — Prozesse visuell erstellen
+- [Feldmapping](/help/holding/process-builder/field-mapping) — Quelldaten mit Zielfeldern verbinden
+- [Liquiditaetsmarker](/help/holding/process-builder/liquidity-markers) — Cashflow-relevante Schritte definieren

@@ -1,0 +1,43 @@
+---
+title: "First Steps as Holding Administrator"
+description: "Step-by-step guide for getting started with the Enura Holding management"
+section: "getting-started"
+lastUpdated: "2026-03-30"
+---
+
+# First Steps as Holding Administrator
+
+As a holding administrator, you have full control over all tenants in the Enura Group. You manage subsidiaries, configure integrations, and monitor the operation of the entire platform.
+
+## What Does the Holding Role Mean?
+
+The holding layer is separated from individual tenants. You see all companies, all data, and all cross-tenant analytics. Tenant users cannot see your data — and conversely, you access tenant data only through the impersonation feature, which is logged in the audit trail.
+
+## The 5 Setup Steps
+
+### 1. Configure Secrets
+
+Before connectors can operate, API keys must be stored. Navigate to **Administration > Secrets** and create an encrypted secret entry for each external service (Reonic, 3CX, Bexio, Google). Follow the naming convention: `SCREAMING_SNAKE_CASE`.
+
+### 2. Configure External Tools
+
+Under **Administration > Connectors**, activate the interfaces to external systems. Each connector must be linked to a valid secret. Check the sync status after setup.
+
+### 3. Define Processes
+
+The **Process Builder** allows you to model business processes as step sequences. Each step has information sources, interfaces, and optionally liquidity markers. Start with the standard PV installation process as a template.
+
+### 4. Deploy Processes
+
+Once all steps are defined and validated, deploy the process. Deployment creates a new version. Tenants always work with the active version — older versions are preserved as backups.
+
+### 5. Set Up Team
+
+Create tenant users under **Administration > Users**. Assign each user a role (Setter, Advisor, Back Office, etc.). Temporary passwords are generated automatically — on first login, the user must set their own password and activate 2FA.
+
+## Next Steps
+
+- [Secret Management](/help/holding/secrets/overview) — Details on encrypted storage
+- [Process Builder](/help/holding/process-builder/overview) — Visually create processes
+- [Field Mapping](/help/holding/process-builder/field-mapping) — Connect source data to target fields
+- [Liquidity Markers](/help/holding/process-builder/liquidity-markers) — Define cashflow-relevant steps
