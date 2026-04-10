@@ -11,7 +11,7 @@ const QUICK_LINKS_BY_ROLE: Record<string, QuickLink[]> = {
     { title: 'Termine buchen', href: '/help/company/setter-dashboard', description: 'Termine anlegen und verwalten', icon: 'Calendar' },
   ],
   berater: [
-    { title: 'Pipeline-Uebersicht', href: '/help/company/berater-dashboard', description: 'Offerten und Abschluesse', icon: 'Briefcase' },
+    { title: 'Pipeline-Übersicht', href: '/help/company/berater-dashboard', description: 'Offerten und Abschlüsse', icon: 'Briefcase' },
     { title: 'Umsatz verfolgen', href: '/help/company/finanzen-cashflow', description: 'Umsatz und Provisionen', icon: 'Banknote' },
   ],
   teamleiter: [
@@ -19,8 +19,8 @@ const QUICK_LINKS_BY_ROLE: Record<string, QuickLink[]> = {
     { title: 'Berichte', href: '/help/company/tagesberichte', description: 'Tagesberichte und Coaching', icon: 'ClipboardList' },
   ],
   geschaeftsfuehrung: [
-    { title: 'Dashboard-Uebersicht', href: '/help/company/erste-schritte', description: 'Alle Module im Ueberblick', icon: 'LayoutDashboard' },
-    { title: 'Finanzen', href: '/help/company/finanzen-cashflow', description: 'Cashflow und Liquiditaet', icon: 'Banknote' },
+    { title: 'Dashboard-Übersicht', href: '/help/company/erste-schritte', description: 'Alle Module im Überblick', icon: 'LayoutDashboard' },
+    { title: 'Finanzen', href: '/help/company/finanzen-cashflow', description: 'Cashflow und Liquidität', icon: 'Banknote' },
   ],
   innendienst: [
     { title: 'Planung', href: '/help/company/projekte-kanban', description: 'Projektplanung und IA-Status', icon: 'ClipboardList' },
@@ -33,7 +33,7 @@ const QUICK_LINKS_BY_ROLE: Record<string, QuickLink[]> = {
   ],
   super_user: [
     { title: 'Benutzer verwalten', href: '/help/holding/rollen-berechtigungen', description: 'Rollen und Rechte zuweisen', icon: 'Settings' },
-    { title: 'Connectors', href: '/help/holding/connector-einstellungen', description: 'API-Verbindungen pruefen', icon: 'Settings' },
+    { title: 'Connectors', href: '/help/holding/connector-einstellungen', description: 'API-Verbindungen prüfen', icon: 'Settings' },
   ],
 }
 

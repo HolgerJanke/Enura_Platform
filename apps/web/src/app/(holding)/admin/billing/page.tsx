@@ -47,7 +47,7 @@ export default async function HoldingBillingPage() {
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">Abrechnung</h1>
       <p className="text-sm text-gray-500 mb-8">
-        Uebersicht ueber Ihr Abonnement und die Nutzung durch Ihre Unternehmen.
+        Übersicht über Ihr Abonnement und die Nutzung durch Ihre Unternehmen.
       </p>
 
       {/* Subscription Overview */}

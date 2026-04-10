@@ -105,7 +105,7 @@ export default async function PlatformOverviewPage() {
     <div className="p-6 lg:p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Plattform-Uebersicht</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Plattform-Übersicht</h1>
           <p className="mt-1 text-sm text-gray-500">
             Alle Holdings und Unternehmen auf der Enura-Plattform
           </p>
@@ -199,9 +199,9 @@ export default async function PlatformOverviewPage() {
                         <Link
                           href={`/platform/holdings/${holding.id}`}
                           className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
-                          aria-label={`${holding.name} oeffnen`}
+                          aria-label={`${holding.name} öffnen`}
                         >
-                          Oeffnen
+                          Öffnen
                         </Link>
                         {holding.status === 'active' && (
                           <form action={`/platform/holdings/${holding.id}`}>

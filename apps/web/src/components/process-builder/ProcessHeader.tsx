@@ -16,7 +16,7 @@ const CATEGORIES: Array<{ value: ProcessDefinitionRow['category']; label: string
 
 const ALL_ROLES = [
   { key: 'super_user', label: 'Super User' },
-  { key: 'geschaeftsfuehrung', label: 'Geschaeftsfuehrung' },
+  { key: 'geschaeftsfuehrung', label: 'Geschäftsführung' },
   { key: 'teamleiter', label: 'Teamleiter' },
   { key: 'setter', label: 'Setter' },
   { key: 'berater', label: 'Berater' },
@@ -154,7 +154,7 @@ export function ProcessHeader({
 
       {/* Visible roles */}
       <div>
-        <p className="block text-sm font-medium text-gray-600 mb-2">Sichtbar fuer Rollen</p>
+        <p className="block text-sm font-medium text-gray-600 mb-2">Sichtbar für Rollen</p>
         <div className="space-y-1">
           {ALL_ROLES.map((role) => (
             <label

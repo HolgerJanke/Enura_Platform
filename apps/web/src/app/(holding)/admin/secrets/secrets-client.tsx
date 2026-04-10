@@ -78,8 +78,8 @@ function rotationStatusColor(status: 'ok' | 'warning' | 'overdue' | 'none'): str
 function rotationStatusLabel(status: 'ok' | 'warning' | 'overdue' | 'none'): string {
   switch (status) {
     case 'ok': return 'OK'
-    case 'warning': return 'Bald faellig'
-    case 'overdue': return 'Ueberfaellig'
+    case 'warning': return 'Bald fällig'
+    case 'overdue': return 'Überfällig'
     case 'none': return 'Keine Rotation'
   }
 }

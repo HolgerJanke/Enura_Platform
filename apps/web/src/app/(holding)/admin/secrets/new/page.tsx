@@ -83,11 +83,11 @@ export default function NewSecretPage() {
           href="/admin/secrets"
           className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
-          &larr; Zurueck zur Secret-Verwaltung
+          &larr; Zurück zur Secret-Verwaltung
         </Link>
         <h1 className="text-2xl font-semibold text-gray-900 mt-2">Neues Secret anlegen</h1>
         <p className="text-gray-500 mt-1">
-          Erstellen Sie ein neues Secret fuer Ihre Holding. Der Wert wird sicher im Vault gespeichert.
+          Erstellen Sie ein neues Secret für Ihre Holding. Der Wert wird sicher im Vault gespeichert.
         </p>
       </div>
 
@@ -138,9 +138,9 @@ export default function NewSecretPage() {
             onChange={(e) => setSecretType(e.target.value)}
             required
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Secret-Typ auswaehlen"
+            aria-label="Secret-Typ auswählen"
           >
-            <option value="">Typ auswaehlen...</option>
+            <option value="">Typ auswählen...</option>
             {SECRET_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
@@ -211,7 +211,7 @@ export default function NewSecretPage() {
             aria-label="Rotationsintervall in Tagen"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Leer lassen, wenn keine automatische Rotationserinnerung gewuenscht ist.
+            Leer lassen, wenn keine automatische Rotationserinnerung gewünscht ist.
           </p>
           {fieldErrors['rotation_interval_days'] && (
             <p className="mt-1 text-xs text-red-600">

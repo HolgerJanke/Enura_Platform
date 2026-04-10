@@ -108,7 +108,7 @@ BEGIN
 
   -- geschaeftsfuehrung: all read permissions
   INSERT INTO public.roles (company_id, holding_id, key, label, is_system)
-  VALUES (NEW.id, NEW.holding_id, 'geschaeftsfuehrung', 'Geschaeftsfuehrung', TRUE)
+  VALUES (NEW.id, NEW.holding_id, 'geschaeftsfuehrung', 'Geschäftsführung', TRUE)
   RETURNING id INTO v_role_id;
 
   INSERT INTO public.role_permissions (role_id, permission_id)

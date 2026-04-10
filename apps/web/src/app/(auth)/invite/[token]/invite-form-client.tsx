@@ -41,7 +41,7 @@ export function InviteFormClient({
       return
     }
     if (password !== confirmPassword) {
-      setError('Die Passwoerter stimmen nicht ueberein.')
+      setError('Die Passwörter stimmen nicht ueberein.')
       return
     }
 
@@ -142,7 +142,7 @@ export function InviteFormClient({
       {/* Confirm password */}
       <div>
         <label htmlFor="invite-confirm-password" className="block text-sm font-medium text-gray-700 mb-1.5">
-          Passwort bestaetigen
+          Passwort bestätigen
         </label>
         <input
           id="invite-confirm-password"
@@ -154,7 +154,7 @@ export function InviteFormClient({
           autoComplete="new-password"
           className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           placeholder="Passwort wiederholen"
-          aria-label="Passwort bestaetigen"
+          aria-label="Passwort bestätigen"
         />
       </div>
 

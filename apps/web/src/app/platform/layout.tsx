@@ -4,7 +4,7 @@ import { PlatformShell } from '@/components/platform-shell'
 
 const PLATFORM_NAV_ITEMS = [
   { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
-  { label: 'Uebersicht', href: '/platform', icon: 'overview' },
+  { label: 'Übersicht', href: '/platform', icon: 'overview' },
   { label: 'Neue Holding', href: '/platform/holdings/new', icon: 'building' },
   { label: 'Add-ons', href: '/admin/settings/addons', icon: 'puzzle' },
   { label: 'Gesundheit', href: '/platform/health', icon: 'health' },

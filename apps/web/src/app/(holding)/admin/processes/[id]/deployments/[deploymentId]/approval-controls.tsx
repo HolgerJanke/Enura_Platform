@@ -158,7 +158,7 @@ export function ApprovalControls({
               onClick={handleReject}
               disabled={isPending || !rejectReason.trim()}
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Ablehnung bestaetigen"
+              aria-label="Ablehnung bestätigen"
             >
               {isPending ? (
                 <svg
@@ -171,7 +171,7 @@ export function ApprovalControls({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               ) : null}
-              Ablehnung bestaetigen
+              Ablehnung bestätigen
             </button>
 
             <button

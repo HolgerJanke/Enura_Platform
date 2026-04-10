@@ -17,7 +17,7 @@ export default async function InvoiceUploadPage() {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-semibold text-gray-900">Rechnung hochladen</h1>
         <Link href="/finanzplanung" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Zurueck
+          ← Zurück
         </Link>
       </div>
       <p className="text-sm text-gray-500 mb-8">
@@ -33,10 +33,10 @@ export default async function InvoiceUploadPage() {
           <p className="text-sm font-medium text-gray-700 mb-1">
             PDF, JPG oder PNG hier ablegen
           </p>
-          <p className="text-xs text-gray-500 mb-4">oder Datei auswaehlen (max. 10 MB)</p>
+          <p className="text-xs text-gray-500 mb-4">oder Datei auswählen (max. 10 MB)</p>
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-center">
             <p className="text-sm text-amber-800">
-              Die KI-Extraktions-Engine wird in einem spaeteren Schritt aktiviert.
+              Die KI-Extraktions-Engine wird in einem späteren Schritt aktiviert.
               Nach der Aktivierung werden hochgeladene Rechnungen automatisch analysiert
               und dem Validierungs-Workflow zugewiesen.
             </p>
@@ -44,7 +44,7 @@ export default async function InvoiceUploadPage() {
         </div>
 
         <div className="mt-6 rounded-lg border border-gray-200 bg-white p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-2">Unterstuetzte Formate</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-2">Unterstützte Formate</h3>
           <ul className="space-y-1.5 text-sm text-gray-600">
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -56,7 +56,7 @@ export default async function InvoiceUploadPage() {
             </li>
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-gray-300" />
-              E-Rechnungen (ZUGFeRD, XRechnung) — spaeter
+              E-Rechnungen (ZUGFeRD, XRechnung) — später
             </li>
           </ul>
         </div>

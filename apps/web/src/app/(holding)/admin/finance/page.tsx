@@ -156,7 +156,7 @@ export default async function HoldingFinancePage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">
-          Liquiditaetsuebersicht (Holding)
+          Liquiditätsuebersicht (Holding)
         </h1>
         <p className="text-gray-500 mt-1">
           Konsolidierte Finanzuebersicht aller Tochtergesellschaften &mdash; Stand: {formatDate(today)}
@@ -182,7 +182,7 @@ export default async function HoldingFinancePage() {
           </p>
         </div>
         <div className="rounded-lg bg-white border border-gray-200 p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Ueberfaellige Ereignisse (gesamt)</p>
+          <p className="text-sm text-gray-500">Überfällige Ereignisse (gesamt)</p>
           <p
             className={`text-2xl font-semibold mt-1 ${
               totalOverdue > 0 ? 'text-red-600' : 'text-green-600'
@@ -197,7 +197,7 @@ export default async function HoldingFinancePage() {
       <div className="rounded-lg bg-white border border-gray-200 overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">
-            Unternehmen im Ueberblick
+            Unternehmen im Überblick
           </h2>
         </div>
         <div className="overflow-x-auto">
@@ -207,7 +207,7 @@ export default async function HoldingFinancePage() {
                 <th className="px-6 py-3 text-left font-medium text-gray-500">Unternehmen</th>
                 <th className="px-6 py-3 text-right font-medium text-gray-500">Netto-Cashflow</th>
                 <th className="px-6 py-3 text-center font-medium text-gray-500">Gesundheit</th>
-                <th className="px-6 py-3 text-right font-medium text-gray-500">Ueberfaellig</th>
+                <th className="px-6 py-3 text-right font-medium text-gray-500">Überfällig</th>
                 <th className="px-6 py-3 text-right font-medium text-gray-500">Einnahmen (Ist)</th>
                 <th className="px-6 py-3 text-right font-medium text-gray-500">Ausgaben (Ist)</th>
               </tr>

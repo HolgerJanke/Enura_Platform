@@ -49,7 +49,7 @@ export default async function FinancePage() {
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-sm text-brand-text-secondary">
-            Ueberfaellige Rechnungen
+            Überfällige Rechnungen
           </p>
           <p className="text-2xl font-semibold text-brand-text-primary mt-1">
             {formatNumber(metrics?.overdue_count ?? 0)}
@@ -72,7 +72,7 @@ export default async function FinancePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
           <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Liquiditaetsprognose
+            Liquiditätsprognose
           </h2>
           <table className="w-full text-sm">
             <thead>
@@ -123,11 +123,11 @@ export default async function FinancePage() {
         metrics.forecast_30d_chf < 0 && (
           <div className="rounded-brand bg-red-50 border border-red-200 p-4">
             <p className="text-sm font-medium text-red-800">
-              Liquiditaetswarnung
+              Liquiditätswarnung
             </p>
             <p className="text-sm text-red-700 mt-1">
-              Die 30-Tage-Liquiditaetsprognose ist negativ (
-              {formatCHF(metrics.forecast_30d_chf)}). Bitte pruefen Sie offene
+              Die 30-Tage-Liquiditätsprognose ist negativ (
+              {formatCHF(metrics.forecast_30d_chf)}). Bitte prüfen Sie offene
               Forderungen und geplante Ausgaben.
             </p>
           </div>

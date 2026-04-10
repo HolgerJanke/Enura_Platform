@@ -343,7 +343,7 @@ function ProgressView({ steps }: { steps: EnrichedStep[] }) {
       {liquiditySteps.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h3 className="mb-4 text-sm font-semibold text-[var(--brand-text-primary,#111827)]">
-            Liquiditaetsereignisse
+            Liquiditätsereignisse
           </h3>
           <div className="space-y-3">
             {liquiditySteps.map((step) => (

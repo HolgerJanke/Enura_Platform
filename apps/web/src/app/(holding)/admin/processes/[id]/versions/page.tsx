@@ -172,7 +172,7 @@ export default async function ProcessVersionsPage({
                   scope="col"
                   className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
-                  Aenderungen
+                  Änderungen
                 </th>
                 <th
                   scope="col"
@@ -215,7 +215,7 @@ export default async function ProcessVersionsPage({
                     <Link
                       href={`/admin/processes/${processId}/deployments/${entry.id}`}
                       className="text-[var(--brand-primary,#1A56DB)] hover:underline"
-                      aria-label={`Diff fuer Version ${entry.version} anzeigen`}
+                      aria-label={`Diff für Version ${entry.version} anzeigen`}
                     >
                       Diff anzeigen
                     </Link>

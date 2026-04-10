@@ -11,7 +11,7 @@ export const SETTER_TOUR: TourStep[] = [
     position: 'right',
     title: 'Setter-Dashboard',
     content:
-      'Hier finden Sie Ihre persoenlichen Anruf-Statistiken, Terminquoten und KI-gestuetzte Gespraechsanalysen. Klicken Sie auf diesen Menuepunkt, um Ihr Dashboard zu oeffnen.',
+      'Hier finden Sie Ihre persönlichen Anruf-Statistiken, Terminquoten und KI-gestützte Gesprächsanalysen. Klicken Sie auf diesen Menüpunkt, um Ihr Dashboard zu öffnen.',
     actionLabel: 'Weiter',
   },
   {
@@ -20,7 +20,7 @@ export const SETTER_TOUR: TourStep[] = [
     position: 'bottom',
     title: 'Ihre KPIs',
     content:
-      'Diese Kacheln zeigen Ihre wichtigsten Kennzahlen: Anrufe pro Tag, Erreichbarkeitsquote, gebuchte Termine und durchschnittliche Gespraechsdauer. Gruene Pfeile bedeuten Verbesserung gegenueber der Vorwoche.',
+      'Diese Kacheln zeigen Ihre wichtigsten Kennzahlen: Anrufe pro Tag, Erreichbarkeitsquote, gebuchte Termine und durchschnittliche Gesprächsdauer. Grüne Pfeile bedeuten Verbesserung gegenüber der Vorwoche.',
     actionLabel: 'Weiter',
   },
   {
@@ -29,7 +29,7 @@ export const SETTER_TOUR: TourStep[] = [
     position: 'top',
     title: 'Letzte Anrufe',
     content:
-      'In dieser Tabelle sehen Sie Ihre letzten Gespraeche mit KI-Score und Verbesserungsvorschlaegen. Klicken Sie auf einen Eintrag, um die detaillierte Analyse zu oeffnen.',
+      'In dieser Tabelle sehen Sie Ihre letzten Gespräche mit KI-Score und Verbesserungsvorschlägen. Klicken Sie auf einen Eintrag, um die detaillierte Analyse zu öffnen.',
     actionLabel: 'Verstanden',
   },
 ]
@@ -41,14 +41,14 @@ export const BERATER_TOUR: TourStep[] = [
     position: 'right',
     title: 'Berater-Dashboard',
     content:
-      'Ihr Berater-Bereich zeigt Pipeline-Uebersicht, Abschlussquoten und Umsatz pro Berater. Alle Daten werden automatisch aus dem CRM synchronisiert.',
+      'Ihr Berater-Bereich zeigt Pipeline-Übersicht, Abschlussquoten und Umsatz pro Berater. Alle Daten werden automatisch aus dem CRM synchronisiert.',
     actionLabel: 'Weiter',
   },
   {
     id: 'berater-pipeline',
     targetId: 'pipeline-overview',
     position: 'bottom',
-    title: 'Pipeline-Uebersicht',
+    title: 'Pipeline-Übersicht',
     content:
       'Hier sehen Sie Ihre offenen Angebote nach Status: Entwurf, Versendet, in Verhandlung. Die Summen zeigen das potenzielle Volumen in CHF.',
     actionLabel: 'Weiter',
@@ -71,7 +71,7 @@ export const INNENDIENST_TOUR: TourStep[] = [
     position: 'right',
     title: 'Innendienst-Bereich',
     content:
-      'Hier verwalten Sie offene Planungsauftraege, blockierte Projekte und den IA-Status. Die Uebersicht wird automatisch mit dem CRM synchronisiert.',
+      'Hier verwalten Sie offene Planungsaufträge, blockierte Projekte und den IA-Status. Die Übersicht wird automatisch mit dem CRM synchronisiert.',
     actionLabel: 'Weiter',
   },
   {
@@ -80,7 +80,7 @@ export const INNENDIENST_TOUR: TourStep[] = [
     position: 'bottom',
     title: 'Planungswarteschlange',
     content:
-      'Diese Liste zeigt alle offenen Planungsauftraege sortiert nach Prioritaet. Rote Markierungen weisen auf Projekte hin, die laenger als 5 Tage blockiert sind.',
+      'Diese Liste zeigt alle offenen Planungsaufträge sortiert nach Priorität. Rote Markierungen weisen auf Projekte hin, die länger als 5 Tage blockiert sind.',
     actionLabel: 'Weiter',
   },
   {
@@ -89,7 +89,7 @@ export const INNENDIENST_TOUR: TourStep[] = [
     position: 'top',
     title: 'IA-Status',
     content:
-      'Der IA-Status zeigt den Fortschritt der internen Abnahme. Nutzen Sie die Filterfunktion, um gezielt nach Status oder Zustaendigem zu suchen.',
+      'Der IA-Status zeigt den Fortschritt der internen Abnahme. Nutzen Sie die Filterfunktion, um gezielt nach Status oder Zuständigem zu suchen.',
     actionLabel: 'Verstanden',
   },
 ]
@@ -101,16 +101,16 @@ export const BUCHHALTUNG_TOUR: TourStep[] = [
     position: 'right',
     title: 'Finanzen',
     content:
-      'Im Finanz-Dashboard sehen Sie Rechnungsstatus, Cashflow und offene Forderungen. Die Daten werden stuendlich mit Bexio synchronisiert.',
+      'Im Finanz-Dashboard sehen Sie Rechnungsstatus, Cashflow und offene Forderungen. Die Daten werden stündlich mit Bexio synchronisiert.',
     actionLabel: 'Weiter',
   },
   {
     id: 'buch-invoices',
     targetId: 'invoice-overview',
     position: 'bottom',
-    title: 'Rechnungsuebersicht',
+    title: 'Rechnungsübersicht',
     content:
-      'Hier sind alle Rechnungen nach Status gruppiert: Entwurf, Versendet, Bezahlt, Ueberfaellig. Klicken Sie auf eine Kategorie, um die Einzelposten zu sehen.',
+      'Hier sind alle Rechnungen nach Status gruppiert: Entwurf, Versendet, Bezahlt, Überfällig. Klicken Sie auf eine Kategorie, um die Einzelposten zu sehen.',
     actionLabel: 'Weiter',
   },
   {
@@ -119,7 +119,7 @@ export const BUCHHALTUNG_TOUR: TourStep[] = [
     position: 'top',
     title: 'Cashflow-Diagramm',
     content:
-      'Das Cashflow-Diagramm zeigt Plan- und Ist-Werte im Vergleich. Gelbe Bereiche markieren Perioden, in denen die Liquiditaet unter den konfigurierten Schwellenwert faellt.',
+      'Das Cashflow-Diagramm zeigt Plan- und Ist-Werte im Vergleich. Gelbe Bereiche markieren Perioden, in denen die Liquidität unter den konfigurierten Schwellenwert fällt.',
     actionLabel: 'Verstanden',
   },
 ]
@@ -131,7 +131,7 @@ export const HOLDING_ADMIN_TOUR: TourStep[] = [
     position: 'bottom',
     title: 'Mandanten-Verwaltung',
     content:
-      'Hier verwalten Sie alle Tochtergesellschaften der Holding. Sie koennen neue Mandanten anlegen, Branding konfigurieren und den Connector-Status pruefen.',
+      'Hier verwalten Sie alle Tochtergesellschaften der Holding. Sie können neue Mandanten anlegen, Branding konfigurieren und den Connector-Status prüfen.',
     actionLabel: 'Weiter',
   },
   {
@@ -140,7 +140,7 @@ export const HOLDING_ADMIN_TOUR: TourStep[] = [
     position: 'bottom',
     title: 'Connector-Gesundheit',
     content:
-      'Diese Ansicht zeigt den Synchronisations-Status aller Connectoren ueber alle Mandanten hinweg. Rote Eintraege erfordern sofortige Aufmerksamkeit.',
+      'Diese Ansicht zeigt den Synchronisations-Status aller Connectoren über alle Mandanten hinweg. Rote Einträge erfordern sofortige Aufmerksamkeit.',
     actionLabel: 'Weiter',
   },
   {
@@ -149,7 +149,7 @@ export const HOLDING_ADMIN_TOUR: TourStep[] = [
     position: 'left',
     title: 'Mandant impersonieren',
     content:
-      'Mit dieser Funktion koennen Sie sich als Super User eines Mandanten einloggen, um Support zu leisten. Jede Impersonierung wird im Audit-Log protokolliert.',
+      'Mit dieser Funktion können Sie sich als Super User eines Mandanten einloggen, um Support zu leisten. Jede Impersonierung wird im Audit-Log protokolliert.',
     actionLabel: 'Verstanden',
   },
 ]
@@ -165,7 +165,7 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'right',
     title: 'Prozess-Navigation',
     content:
-      'In der Seitenleiste sehen Sie alle definierten Prozesse, gruppiert nach Kategorie. Waehlen Sie einen Prozess aus, um dessen Schritte zu bearbeiten.',
+      'In der Seitenleiste sehen Sie alle definierten Prozesse, gruppiert nach Kategorie. Wählen Sie einen Prozess aus, um dessen Schritte zu bearbeiten.',
     actionLabel: 'Weiter',
   },
   {
@@ -174,7 +174,7 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'bottom',
     title: 'Prozess-Canvas',
     content:
-      'Der Canvas zeigt den gesamten Prozessablauf als Kette von Schrittkarten. Jede Karte repraesentiert eine Phase mit Informationsquellen und Schnittstellen.',
+      'Der Canvas zeigt den gesamten Prozessablauf als Kette von Schrittkarten. Jede Karte repräsentiert eine Phase mit Informationsquellen und Schnittstellen.',
     actionLabel: 'Weiter',
   },
   {
@@ -192,7 +192,7 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'left',
     title: 'Informationsquellen',
     content:
-      'Informationsquellen definieren, woher ein Schritt seine Daten bezieht. Das koennen CRM-Felder, Dokumente oder manuelle Eingaben sein.',
+      'Informationsquellen definieren, woher ein Schritt seine Daten bezieht. Das können CRM-Felder, Dokumente oder manuelle Eingaben sein.',
     actionLabel: 'Weiter',
   },
   {
@@ -217,9 +217,9 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     id: 'pb-liquidity',
     targetId: 'liquidity-markers-section',
     position: 'bottom',
-    title: 'Liquiditaetsmarker',
+    title: 'Liquiditätsmarker',
     content:
-      'Liquiditaetsmarker verknuepfen Prozessschritte mit der Cashflow-Planung. Sie definieren, wann ein Zahlungsereignis erwartet wird und wie es den Liquiditaetsplan beeinflusst.',
+      'Liquiditätsmarker verknüpfen Prozessschritte mit der Cashflow-Planung. Sie definieren, wann ein Zahlungsereignis erwartet wird und wie es den Liquiditätsplan beeinflusst.',
     actionLabel: 'Weiter',
   },
   {
@@ -228,7 +228,7 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'left',
     title: 'Versionierung',
     content:
-      'Jede Aenderung an einem Prozess erzeugt eine neue Version. Sie koennen aeltere Versionen einsehen und bei Bedarf wiederherstellen. Nur die aktive Version wird im Betrieb verwendet.',
+      'Jede Änderung an einem Prozess erzeugt eine neue Version. Sie können ältere Versionen einsehen und bei Bedarf wiederherstellen. Nur die aktive Version wird im Betrieb verwendet.',
     actionLabel: 'Weiter',
   },
   {
@@ -237,8 +237,8 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'bottom',
     title: 'Prozess bereitstellen',
     content:
-      'Wenn alle Schritte definiert und geprueft sind, klicken Sie auf "Bereitstellen", um den Prozess fuer die Mandanten freizuschalten. Die vorherige Version bleibt als Backup erhalten.',
-    actionLabel: 'Tour abschliessen',
+      'Wenn alle Schritte definiert und geprüft sind, klicken Sie auf "Bereitstellen", um den Prozess für die Mandanten freizuschalten. Die vorherige Version bleibt als Backup erhalten.',
+    actionLabel: 'Tour abschließen',
   },
 ]
 
@@ -255,11 +255,11 @@ export type TourId =
   | 'process_builder_walkthrough'
 
 export const TOUR_REGISTRY: Record<TourId, { label: string; steps: TourStep[] }> = {
-  setter_onboarding: { label: 'Setter Einfuehrung', steps: SETTER_TOUR },
-  berater_onboarding: { label: 'Berater Einfuehrung', steps: BERATER_TOUR },
-  innendienst_onboarding: { label: 'Innendienst Einfuehrung', steps: INNENDIENST_TOUR },
-  buchhaltung_onboarding: { label: 'Buchhaltung Einfuehrung', steps: BUCHHALTUNG_TOUR },
-  holding_admin_onboarding: { label: 'Holding-Admin Einfuehrung', steps: HOLDING_ADMIN_TOUR },
+  setter_onboarding: { label: 'Setter Einführung', steps: SETTER_TOUR },
+  berater_onboarding: { label: 'Berater Einführung', steps: BERATER_TOUR },
+  innendienst_onboarding: { label: 'Innendienst Einführung', steps: INNENDIENST_TOUR },
+  buchhaltung_onboarding: { label: 'Buchhaltung Einführung', steps: BUCHHALTUNG_TOUR },
+  holding_admin_onboarding: { label: 'Holding-Admin Einführung', steps: HOLDING_ADMIN_TOUR },
   process_builder_walkthrough: {
     label: 'Process Builder Anleitung',
     steps: PROCESS_BUILDER_WALKTHROUGH,

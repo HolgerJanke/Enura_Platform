@@ -67,7 +67,7 @@ export default async function NewProcessPage({
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">Neuer Prozess</h1>
         <p className="text-gray-500 mt-1">
-          Erstellen Sie einen neuen Geschaeftsprozess fuer ein Unternehmen.
+          Erstellen Sie einen neuen Geschäftsprozess für ein Unternehmen.
         </p>
       </div>
 

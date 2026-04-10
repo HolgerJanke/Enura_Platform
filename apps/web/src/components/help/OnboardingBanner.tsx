@@ -55,7 +55,7 @@ export function OnboardingBanner({
       <div
         className="fixed bottom-4 right-4 z-[9000] w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-lg"
         role="complementary"
-        aria-label="Einfuehrungstour"
+        aria-label="Einführungstour"
       >
         {/* Header with dismiss */}
         <div className="mb-2 flex items-center justify-between">
@@ -66,7 +66,7 @@ export function OnboardingBanner({
             type="button"
             onClick={handleDismiss}
             className="text-[var(--brand-text-secondary,#6B7280)] hover:text-[var(--brand-text-primary,#111827)]"
-            aria-label="Banner schliessen"
+            aria-label="Banner schließen"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

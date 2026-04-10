@@ -52,7 +52,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { label: 'Innendienst', href: '/innendienst', icon: 'ClipboardList', permission: 'module:innendienst:read' },
     { label: 'Projekte', href: '/projects', icon: 'Building', permission: 'module:bau:read' },
     { label: 'Finanzen', href: '/finance', icon: 'Banknote', permission: 'module:finance:read' },
-    { label: 'Liquiditaet', href: '/liquidity', icon: 'TrendingUp', permission: 'module:finance:read' },
+    { label: 'Liquidität', href: '/liquidity', icon: 'TrendingUp', permission: 'module:finance:read' },
     { label: 'Anomalien', href: '/anomalies', icon: 'AlertTriangle', permission: 'module:admin:read' },
     { label: 'Berichte', href: '/reports', icon: 'FileText', permission: 'module:reports:read' },
     ...(session.isEnuraAdmin ? [{ label: 'Plattform', href: '/platform', icon: 'Globe', permission: null as string | null }] : []),

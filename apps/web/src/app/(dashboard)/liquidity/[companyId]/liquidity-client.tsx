@@ -233,7 +233,7 @@ export function LiquidityClient({
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as GroupBy)}
           >
-            <option value="weekly">Woechentlich</option>
+            <option value="weekly">Wöchentlich</option>
             <option value="monthly">Monatlich</option>
           </select>
         </div>
@@ -284,7 +284,7 @@ export function LiquidityClient({
         </h2>
         {periods.length === 0 ? (
           <p className="text-sm text-brand-text-secondary py-8 text-center">
-            Keine Liquiditaetsereignisse im gewaehlten Zeitraum.
+            Keine Liquiditätsereignisse im gewaehlten Zeitraum.
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={360}>
@@ -376,7 +376,7 @@ export function LiquidityClient({
       {overdueEvents.length > 0 && (
         <div className="rounded-brand border-2 border-red-300 bg-red-50 p-4 sm:p-6 mb-8">
           <h2 className="text-lg font-medium text-red-800 mb-4">
-            Ueberfaellige Ereignisse ({overdueEvents.length})
+            Überfällige Ereignisse ({overdueEvents.length})
           </h2>
           <div className="space-y-3">
             {overdueEvents.map((evt) => {
@@ -396,14 +396,14 @@ export function LiquidityClient({
                       {evt.direction === 'income' ? 'Einnahme' : 'Ausgabe'} &middot;{' '}
                       Plan: {evt.budget_date ? formatDate(evt.budget_date) : '–'} &middot;{' '}
                       {formatAmount(Number(evt.budget_amount ?? 0), evt.plan_currency)} &middot;{' '}
-                      <span className="text-red-600 font-medium">{daysOver} Tage ueberfaellig</span>
+                      <span className="text-red-600 font-medium">{daysOver} Tage überfällig</span>
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleCaptureActual(evt)}
                     className="inline-flex items-center gap-1.5 rounded-brand bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700"
-                    aria-label={`Ist-Wert erfassen fuer ${evt.step_name}`}
+                    aria-label={`Ist-Wert erfassen für ${evt.step_name}`}
                   >
                     Ist-Wert erfassen
                   </button>

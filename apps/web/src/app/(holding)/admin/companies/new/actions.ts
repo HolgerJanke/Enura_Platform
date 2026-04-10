@@ -50,14 +50,14 @@ type SuperUserInvitationInput = {
 
 const DEFAULT_ROLES: ReadonlyArray<{ key: string; label: string; description: string }> = [
   { key: 'super_user', label: 'Super User', description: 'Vollzugriff auf alle Unternehmensfunktionen' },
-  { key: 'geschaeftsfuehrung', label: 'Geschaeftsfuehrung', description: 'Alle Module, alle Mitarbeiter, Coaching-Ansicht' },
+  { key: 'geschaeftsfuehrung', label: 'Geschäftsführung', description: 'Alle Module, alle Mitarbeiter, Coaching-Ansicht' },
   { key: 'teamleiter', label: 'Teamleiter', description: 'Team-KPIs (Setter oder Berater), kein Finanzmodul' },
   { key: 'setter', label: 'Setter', description: 'Eigene Anrufe, eigene Termine, eigene KPIs' },
   { key: 'berater', label: 'Berater', description: 'Eigene Pipeline, eigene Termine, eigene KPIs' },
   { key: 'innendienst', label: 'Innendienst', description: 'Planung, Projektphasen, IA-Status' },
   { key: 'bau', label: 'Bau / Montage', description: 'Zugewiesene Projekte, Installationstermine, Material' },
   { key: 'buchhaltung', label: 'Buchhaltung', description: 'Rechnungen, Cashflow, Zahlungen' },
-  { key: 'leadkontrolle', label: 'Leadkontrolle', description: 'Alle Leads, Lead-Qualitaet, kein Finanzmodul' },
+  { key: 'leadkontrolle', label: 'Leadkontrolle', description: 'Alle Leads, Lead-Qualität, kein Finanzmodul' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -201,7 +201,7 @@ export async function sendSuperUserInvitation(
 
   // Validate email
   if (!input.email || !input.email.includes('@')) {
-    return { success: false, error: 'Bitte geben Sie eine gueltige E-Mail-Adresse ein.' }
+    return { success: false, error: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.' }
   }
   if (!input.firstName.trim()) {
     return { success: false, error: 'Vorname ist erforderlich.' }
@@ -219,7 +219,7 @@ export async function sendSuperUserInvitation(
     .single()
 
   if (!company) {
-    return { success: false, error: 'Ungueltiges Unternehmen.' }
+    return { success: false, error: 'Ungültiges Unternehmen.' }
   }
 
   // Check for existing invitation
@@ -232,7 +232,7 @@ export async function sendSuperUserInvitation(
     .maybeSingle()
 
   if (existingInvite) {
-    return { success: false, error: 'Eine Einladung fuer diese E-Mail-Adresse ist bereits ausstehend.' }
+    return { success: false, error: 'Eine Einladung für diese E-Mail-Adresse ist bereits ausstehend.' }
   }
 
   // Generate invitation token

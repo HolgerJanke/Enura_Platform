@@ -90,7 +90,7 @@ export default async function TenantProcessPage({
       <div className="p-6">
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
           <p className="text-sm text-gray-500">
-            Dieser Prozess wurde nicht gefunden oder ist nicht verfuegbar.
+            Dieser Prozess wurde nicht gefunden oder ist nicht verfügbar.
           </p>
         </div>
       </div>

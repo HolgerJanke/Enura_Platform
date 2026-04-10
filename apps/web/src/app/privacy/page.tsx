@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Datenschutzerklaerung',
-  description: 'Datenschutzerklaerung der Enura Group Plattform',
+  title: 'Datenschutzerklärung',
+  description: 'Datenschutzerklärung der Enura Group Plattform',
 }
 
 export default function PrivacyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         className="mb-8 text-3xl font-bold"
         style={{ color: 'var(--brand-secondary, #1A1A1A)' }}
       >
-        Datenschutzerklaerung
+        Datenschutzerklärung
       </h1>
 
       <section className="mb-8">
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           1. Verantwortliche Stelle
         </h2>
         <p className="mb-2 leading-relaxed" style={{ color: 'var(--brand-text-secondary, #6B7280)' }}>
-          Verantwortlich fuer die Datenverarbeitung auf dieser Plattform ist die
+          Verantwortlich für die Datenverarbeitung auf dieser Plattform ist die
           Enura Group AG. Bei Fragen zum Datenschutz wenden Sie sich bitte an
           unseren Datenschutzbeauftragten unter{' '}
           <a
@@ -54,7 +54,7 @@ export default function PrivacyPage() {
         <ul className="ml-6 list-disc space-y-1" style={{ color: 'var(--brand-text-secondary, #6B7280)' }}>
           <li>
             <strong>Anmeldedaten:</strong> E-Mail-Adresse, gehashtes Passwort,
-            TOTP-Schluessel fuer die Zwei-Faktor-Authentifizierung.
+            TOTP-Schlüssel für die Zwei-Faktor-Authentifizierung.
           </li>
           <li>
             <strong>Nutzungsdaten:</strong> Zugriffszeiten, aufgerufene Module,
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Technische Daten:</strong> IP-Adresse, Browser-Typ,
-            Betriebssystem — ausschliesslich zur Sicherstellung des Betriebs.
+            Betriebssystem — ausschließlich zur Sicherstellung des Betriebs.
           </li>
         </ul>
       </section>
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
           3. Cookies
         </h2>
         <p className="mb-2 leading-relaxed" style={{ color: 'var(--brand-text-secondary, #6B7280)' }}>
-          Diese Plattform verwendet ausschliesslich technisch notwendige
+          Diese Plattform verwendet ausschließlich technisch notwendige
           Cookies. Dazu gehoeren:
         </p>
         <ul className="ml-6 list-disc space-y-1" style={{ color: 'var(--brand-text-secondary, #6B7280)' }}>
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Cookie-Einwilligung:</strong> Speichert Ihre Zustimmung zu
-            diesem Hinweis (1 Jahr gueltig).
+            diesem Hinweis (1 Jahr gültig).
           </li>
         </ul>
         <p className="mt-2 leading-relaxed" style={{ color: 'var(--brand-text-secondary, #6B7280)' }}>
@@ -122,7 +122,7 @@ export default function PrivacyPage() {
             <strong>Upstash:</strong> Redis-Cache (EU-Region).
           </li>
           <li>
-            <strong>Anthropic:</strong> KI-gestuetzte Anrufanalyse — es werden
+            <strong>Anthropic:</strong> KI-gestützte Anrufanalyse — es werden
             keine personenbezogenen Kundendaten an die KI uebermittelt.
             Transkripte werden vor der Verarbeitung anonymisiert.
           </li>
@@ -145,13 +145,13 @@ export default function PrivacyPage() {
           folgende Rechte:
         </p>
         <ul className="ml-6 list-disc space-y-1" style={{ color: 'var(--brand-text-secondary, #6B7280)' }}>
-          <li>Recht auf Auskunft ueber Ihre gespeicherten Daten</li>
+          <li>Recht auf Auskunft über Ihre gespeicherten Daten</li>
           <li>Recht auf Berichtigung unrichtiger Daten</li>
           <li>Recht auf Loeschung Ihrer Daten</li>
           <li>Recht auf Einschraenkung der Verarbeitung</li>
           <li>Recht auf Datenuebertragbarkeit</li>
           <li>
-            Beschwerderecht bei der zustaendigen Aufsichtsbehoerde (EDOEB fuer
+            Beschwerderecht bei der zuständigen Aufsichtsbehörde (EDOEB für
             die Schweiz)
           </li>
         </ul>

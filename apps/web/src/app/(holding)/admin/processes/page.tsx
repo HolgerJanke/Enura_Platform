@@ -88,7 +88,7 @@ export default async function ProcessListPage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Prozess-Builder</h1>
           <p className="text-gray-500 mt-1">
-            Geschaeftsprozesse fuer Tochtergesellschaften entwerfen und verwalten
+            Geschäftsprozesse für Tochtergesellschaften entwerfen und verwalten
           </p>
         </div>
         <Link

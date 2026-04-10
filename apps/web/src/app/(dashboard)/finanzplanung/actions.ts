@@ -21,7 +21,7 @@ export async function performValidationAction(
   const hasValidate = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:validate')
   const hasApprove = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:approve_invoice')
 
-  if (step <= 2 && !hasValidate) return { success: false, error: 'Keine Berechtigung zum Pruefen.' }
+  if (step <= 2 && !hasValidate) return { success: false, error: 'Keine Berechtigung zum Prüfen.' }
   if (step === 3 && !hasApprove) return { success: false, error: 'Keine Berechtigung zum Genehmigen.' }
 
   const supabase = createSupabaseServerClient()
@@ -185,7 +185,7 @@ export async function createPaymentRun(
     .eq('status', 'approved')
 
   if (!invoices || invoices.length === 0) {
-    return { success: false, error: 'Keine genehmigten Rechnungen ausgewaehlt.' }
+    return { success: false, error: 'Keine genehmigten Rechnungen ausgewählt.' }
   }
 
   const totalAmount = invoices.reduce((sum, inv) => sum + Number((inv as Record<string, unknown>)['gross_amount'] ?? 0), 0)

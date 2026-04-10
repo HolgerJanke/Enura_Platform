@@ -102,7 +102,7 @@ export async function sendApprovalRequest(
 
   const approverPhone = (profile as Record<string, unknown>)['phone'] as string | null
   if (!approverPhone) {
-    return { success: false, error: 'Keine Telefonnummer fuer den Genehmiger hinterlegt.' }
+    return { success: false, error: 'Keine Telefonnummer für den Genehmiger hinterlegt.' }
   }
 
   const approverName = [
@@ -143,7 +143,7 @@ export async function sendApprovalRequest(
     `Rechnungssteller: ${inv['sender_name'] ?? 'Unbekannt'}`,
     `Rechnungsnr.: ${inv['invoice_number'] ?? '—'}`,
     `Betrag: ${currency} ${amount.toLocaleString('de-CH', { minimumFractionDigits: 2 })}`,
-    dueDate ? `Faelligkeit: ${new Date(dueDate).toLocaleDateString('de-CH')}` : '',
+    dueDate ? `Fälligkeit: ${new Date(dueDate).toLocaleDateString('de-CH')}` : '',
     ``,
     `Antworten Sie mit "Genehmigt" oder einem Kommentar.`,
     `Ref: ${data.invoiceId.slice(0, 8)}`,

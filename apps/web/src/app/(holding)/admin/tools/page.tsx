@@ -88,7 +88,7 @@ export default async function ToolsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Tool-Registry</h1>
           <p className="text-gray-500 mt-1">
-            Verwalten Sie externe Tools und Integrationen fuer Ihre Holding
+            Verwalten Sie externe Tools und Integrationen für Ihre Holding
           </p>
         </div>
         <Link

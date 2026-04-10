@@ -70,7 +70,7 @@ export async function verifyEnrolmentAction(
   })
 
   if (verifyError) {
-    return { error: 'Ungueltiger Code. Bitte versuchen Sie es erneut.' }
+    return { error: 'Ungültiger Code. Bitte versuchen Sie es erneut.' }
   }
 
   // Update profile

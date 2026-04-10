@@ -62,7 +62,7 @@ export async function saveProcessAction(input: z.infer<typeof SaveProcessSchema>
   await requireHoldingSession()
   const parsed = SaveProcessSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const { processId, name, category, menuLabel, menuIcon, visibleRoles } = parsed.data
@@ -104,7 +104,7 @@ export async function addStepAction(input: z.infer<typeof AddStepSchema>): Promi
   await requireHoldingSession()
   const parsed = AddStepSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const { processId, holdingId, companyId, name, mainProcess, sortOrder } = parsed.data
@@ -165,7 +165,7 @@ export async function updateStepAction(input: z.infer<typeof UpdateStepSchema>):
   await requireHoldingSession()
   const parsed = UpdateStepSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const { stepId, processId, ...updates } = parsed.data
@@ -214,7 +214,7 @@ export async function deleteStepAction(stepId: string, processId: string): Promi
     .eq('id', stepId)
 
   if (error) {
-    return { success: false, error: 'Fehler beim Loeschen des Schritts.' }
+    return { success: false, error: 'Fehler beim Löschen des Schritts.' }
   }
 
   revalidateProcess(processId)
@@ -239,7 +239,7 @@ export async function reorderStepsAction(input: z.infer<typeof ReorderSchema>): 
   await requireHoldingSession()
   const parsed = ReorderSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const { processId, order } = parsed.data
@@ -285,7 +285,7 @@ export async function addSourceAction(input: z.infer<typeof AddSourceSchema>): P
   await requireHoldingSession()
   const parsed = AddSourceSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const supabase = createSupabaseServerClient()
@@ -327,7 +327,7 @@ export async function updateSourceAction(input: z.infer<typeof UpdateSourceSchem
   await requireHoldingSession()
   const parsed = UpdateSourceSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const { sourceId, processId, ...updates } = parsed.data
@@ -363,7 +363,7 @@ export async function deleteSourceAction(sourceId: string, processId: string): P
     .eq('id', sourceId)
 
   if (error) {
-    return { success: false, error: 'Fehler beim Loeschen der Quelle.' }
+    return { success: false, error: 'Fehler beim Löschen der Quelle.' }
   }
 
   revalidateProcess(processId)
@@ -399,7 +399,7 @@ export async function addInterfaceAction(input: z.infer<typeof AddInterfaceSchem
   await requireHoldingSession()
   const parsed = AddInterfaceSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const d = parsed.data
@@ -461,7 +461,7 @@ export async function updateInterfaceAction(input: z.infer<typeof UpdateInterfac
   await requireHoldingSession()
   const parsed = UpdateInterfaceSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const { interfaceId, processId, ...updates } = parsed.data
@@ -506,7 +506,7 @@ export async function deleteInterfaceAction(interfaceId: string, processId: stri
     .eq('id', interfaceId)
 
   if (error) {
-    return { success: false, error: 'Fehler beim Loeschen der Schnittstelle.' }
+    return { success: false, error: 'Fehler beim Löschen der Schnittstelle.' }
   }
 
   revalidateProcess(processId)
@@ -536,7 +536,7 @@ export async function updateLiquidityAction(input: z.infer<typeof UpdateLiquidit
   await requireHoldingSession()
   const parsed = UpdateLiquiditySchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabe' }
+    return { success: false, error: 'Ungültige Eingabe' }
   }
 
   const d = parsed.data
@@ -571,7 +571,7 @@ export async function updateLiquidityAction(input: z.infer<typeof UpdateLiquidit
       .eq('id', (existing as { id: string }).id)
 
     if (error) {
-      return { success: false, error: 'Fehler beim Aktualisieren der Liquiditaet.' }
+      return { success: false, error: 'Fehler beim Aktualisieren der Liquidität.' }
     }
   } else {
     const { error } = await supabase
@@ -579,7 +579,7 @@ export async function updateLiquidityAction(input: z.infer<typeof UpdateLiquidit
       .insert(row)
 
     if (error) {
-      return { success: false, error: 'Fehler beim Erstellen der Liquiditaet.' }
+      return { success: false, error: 'Fehler beim Erstellen der Liquidität.' }
     }
   }
 
@@ -620,7 +620,7 @@ export async function finaliseProcessAction(processId: string): Promise<ActionRe
   // Validation: every step must have a name
   const stepsWithoutName = steps.filter((s) => !s['name'])
   if (stepsWithoutName.length > 0) {
-    return { success: false, error: 'Alle Schritte muessen einen Namen haben.' }
+    return { success: false, error: 'Alle Schritte müssen einen Namen haben.' }
   }
 
   const currentVersion = definition['version'] as string

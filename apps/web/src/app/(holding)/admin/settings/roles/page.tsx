@@ -83,7 +83,7 @@ export default async function RolesPage({
         />
       ) : (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-          <p className="text-sm text-gray-500">Kein Unternehmen ausgewaehlt.</p>
+          <p className="text-sm text-gray-500">Kein Unternehmen ausgewählt.</p>
         </div>
       )}
     </div>

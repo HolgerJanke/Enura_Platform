@@ -151,7 +151,7 @@ function connectorCellDisplay(connector: ConnectorInfo | undefined): { symbol: s
 type Tab = 'uebersicht' | 'connectors' | 'ki'
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'uebersicht', label: 'Uebersicht' },
+  { key: 'uebersicht', label: 'Übersicht' },
   { key: 'connectors', label: 'Connectors' },
   { key: 'ki', label: 'KI-Nutzung' },
 ]
@@ -187,7 +187,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
       </div>
 
       {/* ================================================================== */}
-      {/* Tab 1: Uebersicht                                                 */}
+      {/* Tab 1: Übersicht                                                  */}
       {/* ================================================================== */}
       {activeTab === 'uebersicht' && (
         <div>
@@ -328,7 +328,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
             <div className="px-5 py-4 border-b border-gray-200">
               <h2 className="text-base font-medium text-gray-900">Connector-Status aller Unternehmen</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Uebersicht ueber den Synchronisationsstatus aller konfigurierten Konnektoren.
+                Übersicht über den Synchronisationsstatus aller konfigurierten Konnektoren.
               </p>
             </div>
             <div className="overflow-x-auto">

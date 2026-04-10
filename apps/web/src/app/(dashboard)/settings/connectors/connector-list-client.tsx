@@ -208,7 +208,7 @@ export function ConnectorListClient({
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-12.75c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125m-12 12.75h9.75m-9.75 0a1.125 1.125 0 0 1-1.125-1.125" />
                       </svg>
-                      <span>{recordsSynced} Datensaetze</span>
+                      <span>{recordsSynced} Datensätze</span>
                     </div>
                   )}
                 </div>

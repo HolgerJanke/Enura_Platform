@@ -22,7 +22,7 @@ export async function createUserAction(data: {
     roleIds: data.roleIds,
   })
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? 'Ungueltige Eingabe' }
+    return { error: parsed.error.errors[0]?.message ?? 'Ungültige Eingabe' }
   }
 
   const serviceClient = createSupabaseServiceClient()
@@ -174,7 +174,7 @@ export async function resetUserPasswordAction(
     password: tempPassword,
   })
 
-  if (error) return { error: 'Passwort konnte nicht zurueckgesetzt werden.' }
+  if (error) return { error: 'Passwort konnte nicht zurückgesetzt werden.' }
 
   // Mark user as needing password reset and re-enrol 2FA
   await serviceClient
@@ -210,7 +210,7 @@ export async function toggleUserActiveAction(
 
   // Cannot deactivate yourself
   if (userId === session.profile.id) {
-    return { error: 'Sie koennen sich nicht selbst deaktivieren.' }
+    return { error: 'Sie können sich nicht selbst deaktivieren.' }
   }
 
   const serviceClient = createSupabaseServiceClient()
@@ -221,7 +221,7 @@ export async function toggleUserActiveAction(
     .eq('id', userId)
     .eq('company_id', session.companyId)
 
-  if (error) return { error: 'Status konnte nicht geaendert werden.' }
+  if (error) return { error: 'Status konnte nicht geändert werden.' }
 
   await writeAuditLog({
     companyId: session.companyId,

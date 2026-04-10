@@ -235,9 +235,9 @@ export function CompanyWizardClient({ steps, holdingId }: Props) {
           onClick={handleBack}
           disabled={currentStep === 1 || isPending}
           className="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-          aria-label="Zurueck"
+          aria-label="Zurück"
         >
-          Zurueck
+          Zurück
         </button>
 
         {currentStep < 4 ? (
@@ -332,19 +332,19 @@ function StepBranding({
           onChange={(e) => updateField('inheritBranding', e.target.checked)}
           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-        <span className="text-sm text-gray-700">Holding-Branding uebernehmen</span>
+        <span className="text-sm text-gray-700">Holding-Branding übernehmen</span>
       </label>
 
       {!data.inheritBranding && (
         <>
           <div className="grid grid-cols-2 gap-4">
-            <ColorField label="Primaerfarbe" value={data.primaryColor} onChange={(v) => updateField('primaryColor', v)} />
-            <ColorField label="Sekundaerfarbe" value={data.secondaryColor} onChange={(v) => updateField('secondaryColor', v)} />
+            <ColorField label="Primärfarbe" value={data.primaryColor} onChange={(v) => updateField('primaryColor', v)} />
+            <ColorField label="Sekundärfarbe" value={data.secondaryColor} onChange={(v) => updateField('secondaryColor', v)} />
             <ColorField label="Akzentfarbe" value={data.accentColor} onChange={(v) => updateField('accentColor', v)} />
             <ColorField label="Hintergrund" value={data.backgroundColor} onChange={(v) => updateField('backgroundColor', v)} />
-            <ColorField label="Oberflaeche" value={data.surfaceColor} onChange={(v) => updateField('surfaceColor', v)} />
-            <ColorField label="Text Primaer" value={data.textPrimary} onChange={(v) => updateField('textPrimary', v)} />
-            <ColorField label="Text Sekundaer" value={data.textSecondary} onChange={(v) => updateField('textSecondary', v)} />
+            <ColorField label="Oberfläche" value={data.surfaceColor} onChange={(v) => updateField('surfaceColor', v)} />
+            <ColorField label="Text Primär" value={data.textPrimary} onChange={(v) => updateField('textPrimary', v)} />
+            <ColorField label="Text Sekundär" value={data.textSecondary} onChange={(v) => updateField('textSecondary', v)} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -477,7 +477,7 @@ function StepDomain({
                 className="whitespace-nowrap rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
                 aria-label="Domain verifizieren"
               >
-                {isPending ? 'Pruefen...' : 'Verifizieren'}
+                {isPending ? 'Prüfen...' : 'Verifizieren'}
               </button>
             </div>
           </div>
@@ -535,7 +535,7 @@ function StepSuperUser({
     <div className="space-y-5">
       <h2 className="text-lg font-semibold text-gray-900">Super-User Einladung</h2>
       <p className="text-sm text-gray-500">
-        Der Super-User ist der erste Administrator des Unternehmens. Er erhaelt eine Einladung per E-Mail.
+        Der Super-User ist der erste Administrator des Unternehmens. Er erhält eine Einladung per E-Mail.
       </p>
 
       <div>

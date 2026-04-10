@@ -28,7 +28,7 @@ export async function updateHolding(formData: FormData): Promise<{ success: bool
   if (primaryDomain !== null) updates.primary_domain = primaryDomain
 
   if (Object.keys(updates).length === 0) {
-    return { success: false, error: 'Keine Aenderungen' }
+    return { success: false, error: 'Keine Änderungen' }
   }
 
   const { error } = await supabase

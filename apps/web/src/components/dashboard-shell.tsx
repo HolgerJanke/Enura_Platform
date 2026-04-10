@@ -27,7 +27,7 @@ type DashboardShellProps = {
 
 const ROLE_LABELS: Record<string, string> = {
   super_user: 'Super User',
-  geschaeftsfuehrung: 'Geschaeftsfuehrung',
+  geschaeftsfuehrung: 'Geschäftsführung',
   teamleiter: 'Teamleiter',
   setter: 'Setter',
   berater: 'Berater',
@@ -123,7 +123,7 @@ export function DashboardShell({
           }}
           role="button"
           tabIndex={0}
-          aria-label="Seitenleiste schliessen"
+          aria-label="Seitenleiste schließen"
         />
       )}
 
@@ -332,7 +332,7 @@ export function DashboardShell({
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="flex h-11 w-11 items-center justify-center rounded-brand text-brand-text-secondary hover:bg-gray-100 hover:text-brand-text-primary"
-            aria-label="Navigation oeffnen"
+            aria-label="Navigation öffnen"
           >
             <svg
               className="h-6 w-6"
@@ -430,7 +430,7 @@ export function DashboardShell({
             }}
             role="button"
             tabIndex={0}
-            aria-label="Drawer schliessen"
+            aria-label="Drawer schließen"
           />
 
           {/* Drawer panel — slides up from bottom */}
@@ -449,7 +449,7 @@ export function DashboardShell({
                 type="button"
                 onClick={() => setMoreDrawerOpen(false)}
                 className="flex h-11 w-11 items-center justify-center rounded-brand text-brand-text-secondary hover:bg-gray-100"
-                aria-label="Schliessen"
+                aria-label="Schließen"
               >
                 <svg
                   className="h-5 w-5"

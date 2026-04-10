@@ -63,7 +63,7 @@ export default async function ProcessTemplatesPage() {
           href="/admin/processes"
           className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
-          ← Zurueck zu Prozesse
+          ← Zurück zu Prozesse
         </Link>
       </div>
       <p className="text-sm text-gray-500 mb-8">

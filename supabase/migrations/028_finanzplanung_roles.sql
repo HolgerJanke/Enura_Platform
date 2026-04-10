@@ -6,10 +6,10 @@ BEGIN;
 -- 1. Add Finanzplanung permissions (no 'module' column — key encodes it)
 INSERT INTO public.permissions (key, label, description) VALUES
   ('module:finanzplanung:read',            'Finanzplanung lesen',              'Finanzplanungsmodul anzeigen'),
-  ('module:finanzplanung:validate',        'Rechnungen pruefen',               'Eingangsrechnungen formal und inhaltlich pruefen'),
+  ('module:finanzplanung:validate',        'Rechnungen prüfen',                'Eingangsrechnungen formal und inhaltlich prüfen'),
   ('module:finanzplanung:approve_invoice', 'Rechnungen genehmigen',            'Rechnungen technisch genehmigen'),
-  ('module:finanzplanung:plan_cashout',    'Zahlungsausgaenge planen',         'Zahlungslaeufe erstellen und planen'),
-  ('module:finanzplanung:approve_payment', 'Zahlungslaeufe genehmigen',        'Zahlungslaeufe final genehmigen'),
+  ('module:finanzplanung:plan_cashout',    'Zahlungsausgänge planen',          'Zahlungsläufe erstellen und planen'),
+  ('module:finanzplanung:approve_payment', 'Zahlungsläufe genehmigen',         'Zahlungsläufe final genehmigen'),
   ('module:finanzplanung:export_payment',  'Zahlungsdateien exportieren',      'Pain.001 / CSV Zahlungsdateien erzeugen'),
   ('module:finanzplanung:manage_suppliers','Lieferanten verwalten',            'Lieferanten-Stammdaten anlegen und bearbeiten')
 ON CONFLICT (key) DO NOTHING;
@@ -95,7 +95,7 @@ BEGIN
 
   -- geschaeftsfuehrung: all read permissions
   INSERT INTO public.roles (company_id, holding_id, key, label, is_system)
-  VALUES (NEW.id, NEW.holding_id, 'geschaeftsfuehrung', 'Geschaeftsfuehrung', TRUE)
+  VALUES (NEW.id, NEW.holding_id, 'geschaeftsfuehrung', 'Geschäftsführung', TRUE)
   RETURNING id INTO v_role_id;
   INSERT INTO public.role_permissions (role_id, permission_id)
   SELECT v_role_id, id FROM public.permissions WHERE key LIKE 'module:%:read'

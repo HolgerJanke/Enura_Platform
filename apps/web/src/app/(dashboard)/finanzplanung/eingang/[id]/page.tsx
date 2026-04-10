@@ -76,7 +76,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500 mb-4">Rechnung nicht gefunden.</p>
-        <Link href="/finanzplanung/eingang" className="text-blue-600 underline text-sm">Zurueck zum Eingang</Link>
+        <Link href="/finanzplanung/eingang" className="text-blue-600 underline text-sm">Zurück zum Eingang</Link>
       </div>
     )
   }
@@ -119,7 +119,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/finanzplanung/eingang" className="text-sm text-gray-500 hover:text-gray-700 mb-1 inline-block">
-            ← Zurueck zum Eingang
+            ← Zurück zum Eingang
           </Link>
           <h1 className="text-2xl font-semibold text-gray-900">
             Rechnung {inv.invoice_number ?? inv.id.slice(0, 8)}
@@ -148,7 +148,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 {inv.sender_address && <p className="text-gray-500 text-xs">{inv.sender_address}</p>}
               </div>
               <div>
-                <span className="text-gray-500">Empfaenger</span>
+                <span className="text-gray-500">Empfänger</span>
                 <p className="font-medium text-gray-900">{inv.recipient_name ?? '—'}</p>
               </div>
               <div>
@@ -166,7 +166,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 <p className="font-medium text-gray-900 font-mono">{inv.sender_vat_number ?? '—'}</p>
               </div>
               <div>
-                <span className="text-gray-500">Faelligkeitsdatum</span>
+                <span className="text-gray-500">Fälligkeitsdatum</span>
                 <p className="font-medium text-gray-900">
                   {inv.due_date ? new Date(inv.due_date).toLocaleDateString('de-CH') : '—'}
                 </p>
@@ -261,7 +261,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           <div className="rounded-lg border border-gray-200 bg-white p-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-4">Validierungsprotokoll</h2>
             {logs.length === 0 ? (
-              <p className="text-sm text-gray-500">Noch keine Validierungsschritte durchgefuehrt.</p>
+              <p className="text-sm text-gray-500">Noch keine Validierungsschritte durchgeführt.</p>
             ) : (
               <div className="space-y-3">
                 {logs.map((log) => (

@@ -47,7 +47,7 @@ export async function verify2faAction(code: string): Promise<{ error?: string }>
   })
 
   if (verifyError) {
-    return { error: 'Ungueltiger Code. Bitte versuchen Sie es erneut.' }
+    return { error: 'Ungültiger Code. Bitte versuchen Sie es erneut.' }
   }
 
   // Audit

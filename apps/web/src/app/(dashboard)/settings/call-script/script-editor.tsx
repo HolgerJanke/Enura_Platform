@@ -88,7 +88,7 @@ export function ScriptEditor({ activeScript, allScripts }: Props) {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-brand-text-primary">
-          Gespraechsleitfaden
+          Gesprächsleitfaden
         </h1>
         {activeScript ? (
           <p className="text-brand-text-secondary mt-1">
@@ -113,7 +113,7 @@ export function ScriptEditor({ activeScript, allScripts }: Props) {
           <h2 className="text-lg font-medium text-brand-text-primary">Leitfaden bearbeiten</h2>
           {hasChanges && (
             <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
-              Ungespeicherte Aenderungen
+              Ungespeicherte Änderungen
             </span>
           )}
         </div>
@@ -125,11 +125,11 @@ export function ScriptEditor({ activeScript, allScripts }: Props) {
             setSaveSuccess(false)
             setSaveError(null)
           }}
-          placeholder="Geben Sie hier den Gespraechsleitfaden ein...&#10;&#10;Beispiel:&#10;1. Begruessung: Guten Tag, mein Name ist [Name] von [Firma]...&#10;2. Bedarfsermittlung: Haben Sie sich schon einmal mit dem Thema Photovoltaik beschaeftigt?&#10;3. Terminvereinbarung: Wann passt es Ihnen am besten fuer ein unverbindliches Beratungsgespraech?"
+          placeholder="Geben Sie hier den Gesprächsleitfaden ein...&#10;&#10;Beispiel:&#10;1. Begrüßung: Guten Tag, mein Name ist [Name] von [Firma]...&#10;2. Bedarfsermittlung: Haben Sie sich schon einmal mit dem Thema Photovoltaik beschäftigt?&#10;3. Terminvereinbarung: Wann passt es Ihnen am besten für ein unverbindliches Beratungsgespräch?"
           rows={16}
           className="w-full rounded-brand border border-gray-300 bg-brand-background px-4 py-3 font-mono text-sm text-brand-text-primary placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 resize-y"
           style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
-          aria-label="Gespraechsleitfaden bearbeiten"
+          aria-label="Gesprächsleitfaden bearbeiten"
         />
 
         {/* Feedback messages */}

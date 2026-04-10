@@ -223,7 +223,7 @@ export async function assembleKpiData(
     warnings.push({
       type: 'overdue_invoice',
       severity: overdueAmount > 50_000 ? 'high' : overdueCount >= 3 ? 'medium' : 'low',
-      message: `${overdueCount} ueberfaellige Rechnung${overdueCount === 1 ? '' : 'en'} (CHF ${overdueAmount.toLocaleString('de-CH', { minimumFractionDigits: 2 })}).`,
+      message: `${overdueCount} überfällige Rechnung${overdueCount === 1 ? '' : 'en'} (CHF ${overdueAmount.toLocaleString('de-CH', { minimumFractionDigits: 2 })}).`,
       count: overdueCount,
       amount: overdueAmount,
     })

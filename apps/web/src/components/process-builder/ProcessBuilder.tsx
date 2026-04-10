@@ -224,7 +224,7 @@ export function ProcessBuilder({ data }: { data: ProcessBuilderData }) {
           <Link
             href="/admin/processes"
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Zurueck zur Prozessliste"
+            aria-label="Zurück zur Prozessliste"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

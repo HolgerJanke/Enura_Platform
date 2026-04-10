@@ -47,12 +47,12 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
       setError(null)
 
       if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-        setError('Bitte alle Pflichtfelder ausfuellen.')
+        setError('Bitte alle Pflichtfelder ausfüllen.')
         return
       }
 
       if (selectedRoleIds.length === 0) {
-        setError('Bitte mindestens eine Rolle auswaehlen.')
+        setError('Bitte mindestens eine Rolle auswählen.')
         return
       }
 
@@ -93,7 +93,7 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
         }}
         role="button"
         tabIndex={-1}
-        aria-label="Dialog schliessen"
+        aria-label="Dialog schließen"
       />
 
       {/* Modal */}
@@ -106,7 +106,7 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
             type="button"
             onClick={onClose}
             className="rounded-brand p-1.5 text-brand-text-secondary hover:bg-gray-100 transition-colors"
-            aria-label="Dialog schliessen"
+            aria-label="Dialog schließen"
           >
             <svg
               className="h-5 w-5"
@@ -207,7 +207,7 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
             <div className="space-y-2 max-h-48 overflow-y-auto rounded-brand border border-gray-200 p-3">
               {roles.length === 0 && (
                 <p className="text-sm text-brand-text-secondary">
-                  Keine Rollen verfuegbar.
+                  Keine Rollen verfügbar.
                 </p>
               )}
               {roles.map((role) => (

@@ -227,7 +227,7 @@ export default async function DeployPage({
                       <Link
                         href={`/admin/processes/${processId}/deployments/${d.id}`}
                         className="text-[var(--brand-primary,#1A56DB)] hover:underline"
-                        aria-label={`Details fuer Deployment v${d.version}`}
+                        aria-label={`Details für Deployment v${d.version}`}
                       >
                         Details
                       </Link>

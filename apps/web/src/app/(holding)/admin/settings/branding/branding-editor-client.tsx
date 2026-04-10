@@ -168,7 +168,7 @@ export function BrandingEditorClient({ initialBranding }: BrandingEditorClientPr
                 accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 onChange={handleLogoUpload}
                 className="hidden"
-                aria-label="Logo-Datei auswaehlen"
+                aria-label="Logo-Datei auswählen"
               />
               <button
                 type="button"
@@ -188,13 +188,13 @@ export function BrandingEditorClient({ initialBranding }: BrandingEditorClientPr
         <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">Farben</h3>
           <div className="space-y-4">
-            <ColorField id="primary" label="Primaerfarbe" value={branding.primary} onChange={(v) => update('primary', v)} />
-            <ColorField id="secondary" label="Sekundaerfarbe" value={branding.secondary} onChange={(v) => update('secondary', v)} />
+            <ColorField id="primary" label="Primärfarbe" value={branding.primary} onChange={(v) => update('primary', v)} />
+            <ColorField id="secondary" label="Sekundärfarbe" value={branding.secondary} onChange={(v) => update('secondary', v)} />
             <ColorField id="accent" label="Akzentfarbe" value={branding.accent} onChange={(v) => update('accent', v)} />
             <ColorField id="background" label="Hintergrund" value={branding.background} onChange={(v) => update('background', v)} />
-            <ColorField id="surface" label="Oberflaeche" value={branding.surface} onChange={(v) => update('surface', v)} />
-            <ColorField id="textPrimary" label="Text (primaer)" value={branding.textPrimary} onChange={(v) => update('textPrimary', v)} />
-            <ColorField id="textSecondary" label="Text (sekundaer)" value={branding.textSecondary} onChange={(v) => update('textSecondary', v)} />
+            <ColorField id="surface" label="Oberfläche" value={branding.surface} onChange={(v) => update('surface', v)} />
+            <ColorField id="textPrimary" label="Text (primär)" value={branding.textPrimary} onChange={(v) => update('textPrimary', v)} />
+            <ColorField id="textSecondary" label="Text (sekundär)" value={branding.textSecondary} onChange={(v) => update('textSecondary', v)} />
           </div>
         </div>
 
@@ -216,7 +216,7 @@ export function BrandingEditorClient({ initialBranding }: BrandingEditorClientPr
                 update('fontUrl', selected?.url ?? null)
               }}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              aria-label="Schriftart auswaehlen"
+              aria-label="Schriftart auswählen"
             >
               {FONT_OPTIONS.map((f) => (
                 <option key={f.value} value={f.value}>
@@ -333,7 +333,7 @@ export function BrandingEditorClient({ initialBranding }: BrandingEditorClientPr
                   className="text-sm font-medium"
                   style={{ color: 'var(--preview-text-primary)', fontFamily: `var(--preview-font), sans-serif` }}
                 >
-                  Uebersicht
+                  Übersicht
                 </p>
                 <p
                   className="text-xs mt-1"
@@ -374,7 +374,7 @@ export function BrandingEditorClient({ initialBranding }: BrandingEditorClientPr
                     borderRadius: 'var(--preview-radius)',
                   }}
                 >
-                  Primaer
+                  Primär
                 </button>
                 <button
                   type="button"
@@ -391,7 +391,7 @@ export function BrandingEditorClient({ initialBranding }: BrandingEditorClientPr
           </div>
 
           <p className="mt-3 text-xs text-gray-400">
-            Echtzeit-Vorschau. Aenderungen werden erst nach dem Speichern wirksam.
+            Echtzeit-Vorschau. Änderungen werden erst nach dem Speichern wirksam.
           </p>
         </div>
       </div>

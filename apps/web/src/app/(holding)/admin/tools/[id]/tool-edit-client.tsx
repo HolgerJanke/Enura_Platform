@@ -152,7 +152,7 @@ export function ToolEditClient({ tool, availableSecrets }: ToolEditClientProps) 
         href="/admin/tools"
         className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
-        &larr; Zurueck zur Tool-Registry
+        &larr; Zurück zur Tool-Registry
       </Link>
 
       <div className="flex items-center justify-between mt-4 mb-8">
@@ -339,7 +339,7 @@ export function ToolEditClient({ tool, availableSecrets }: ToolEditClientProps) 
             value={secretRef}
             onChange={(e) => setSecretRef(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Secret-Referenz auswaehlen"
+            aria-label="Secret-Referenz auswählen"
           >
             <option value="">Kein Secret</option>
             {availableSecrets.map((name) => (
@@ -349,7 +349,7 @@ export function ToolEditClient({ tool, availableSecrets }: ToolEditClientProps) 
             ))}
           </select>
           <p className="mt-1 text-xs text-gray-500">
-            Waehlen Sie ein vorhandenes Secret aus der Secret-Verwaltung.
+            Wählen Sie ein vorhandenes Secret aus der Secret-Verwaltung.
           </p>
           {fieldErrors['secret_ref'] && (
             <p className="mt-1 text-xs text-red-600">{fieldErrors['secret_ref'].join(', ')}</p>
@@ -414,7 +414,7 @@ export function ToolEditClient({ tool, availableSecrets }: ToolEditClientProps) 
                 Wird gespeichert...
               </>
             ) : (
-              'Aenderungen speichern'
+              'Änderungen speichern'
             )}
           </button>
           <Link

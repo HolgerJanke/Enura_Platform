@@ -95,7 +95,7 @@ export async function matchBexioPayments(
     .order('budget_date', { ascending: true })
 
   if (evtErr) {
-    throw new Error(`Fehler beim Laden der Liquiditaetsereignisse: ${evtErr.message}`)
+    throw new Error(`Fehler beim Laden der Liquiditätsereignisse: ${evtErr.message}`)
   }
 
   const events = (eventsRaw ?? []) as unknown as LiquidityEventInstanceRow[]

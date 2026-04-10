@@ -17,7 +17,7 @@ export async function resetPasswordAction(
 
   if (!parsed.success) {
     const firstError = parsed.error.errors[0]
-    return { error: firstError?.message ?? 'Ungueltige Eingabe' }
+    return { error: firstError?.message ?? 'Ungültige Eingabe' }
   }
 
   const supabase = await createSupabaseServerClient()
@@ -38,7 +38,7 @@ export async function resetPasswordAction(
 
   if (updateError) {
     return {
-      error: 'Passwort konnte nicht geaendert werden. Bitte versuchen Sie es erneut.',
+      error: 'Passwort konnte nicht geändert werden. Bitte versuchen Sie es erneut.',
     }
   }
 

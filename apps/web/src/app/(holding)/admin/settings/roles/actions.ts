@@ -230,7 +230,7 @@ export async function deleteCustomRole(
 
   if (!role) return { success: false, error: 'Rolle nicht gefunden.' }
   if ((role as Record<string, unknown>)['is_system']) {
-    return { success: false, error: 'Systemrollen koennen nicht geloescht werden.' }
+    return { success: false, error: 'Systemrollen können nicht gelöscht werden.' }
   }
 
   // Delete role_permissions first, then role (cascade should handle but be explicit)

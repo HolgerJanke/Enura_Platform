@@ -18,13 +18,13 @@ const BRAND_KEYS: ReadonlyArray<{
   label: string
   isColor: boolean
 }> = [
-  { key: 'primary', label: 'Primaerfarbe', isColor: true },
-  { key: 'secondary', label: 'Sekundaerfarbe', isColor: true },
+  { key: 'primary', label: 'Primärfarbe', isColor: true },
+  { key: 'secondary', label: 'Sekundärfarbe', isColor: true },
   { key: 'accent', label: 'Akzentfarbe', isColor: true },
   { key: 'background', label: 'Hintergrund', isColor: true },
-  { key: 'surface', label: 'Oberflaeche', isColor: true },
-  { key: 'textPrimary', label: 'Text (primaer)', isColor: true },
-  { key: 'textSecondary', label: 'Text (sekundaer)', isColor: true },
+  { key: 'surface', label: 'Oberfläche', isColor: true },
+  { key: 'textPrimary', label: 'Text (primär)', isColor: true },
+  { key: 'textSecondary', label: 'Text (sekundär)', isColor: true },
   { key: 'font', label: 'Schriftart', isColor: false },
   { key: 'radius', label: 'Eckenradius', isColor: false },
 ]
@@ -85,7 +85,7 @@ export default function CompanyBrandingPage() {
     startTransition(async () => {
       const result = await saveCompanyBrandingOverrides(companyId, overrides)
       if (result.success) {
-        setFeedback({ type: 'success', message: 'Branding-Ueberschreibungen erfolgreich gespeichert.' })
+        setFeedback({ type: 'success', message: 'Branding-Überschreibungen erfolgreich gespeichert.' })
         setHasChanges(false)
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Unbekannter Fehler.' })
@@ -127,7 +127,7 @@ export default function CompanyBrandingPage() {
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Link>
       </div>
 
@@ -136,8 +136,8 @@ export default function CompanyBrandingPage() {
           Branding: {companyName}
         </h1>
         <p className="text-gray-500 mt-1">
-          Ueberschreiben Sie einzelne Branding-Werte fuer dieses Unternehmen.
-          Nicht ueberschriebene Werte werden vom Holding-Standard geerbt.
+          Überschreiben Sie einzelne Branding-Werte für dieses Unternehmen.
+          Nicht überschriebene Werte werden vom Holding-Standard geerbt.
         </p>
       </div>
 
@@ -228,7 +228,7 @@ export default function CompanyBrandingPage() {
                     type="button"
                     role="switch"
                     aria-checked={isOverridden}
-                    aria-label={`${label} ueberschreiben`}
+                    aria-label={`${label} überschreiben`}
                     onClick={() => toggleOverride(key)}
                     className={`
                       relative inline-flex h-5 w-9 items-center rounded-full transition-colors
@@ -260,9 +260,9 @@ export default function CompanyBrandingPage() {
             rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-colors
             ${isPending || !hasChanges ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}
           `}
-          aria-label="Ueberschreibungen speichern"
+          aria-label="Überschreibungen speichern"
         >
-          {isPending ? 'Speichern...' : 'Ueberschreibungen speichern'}
+          {isPending ? 'Speichern...' : 'Überschreibungen speichern'}
         </button>
       </div>
 
@@ -270,9 +270,9 @@ export default function CompanyBrandingPage() {
       <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
         <h2 className="text-sm font-medium text-blue-900 mb-1">Hinweis</h2>
         <p className="text-sm text-blue-700">
-          Nur aktivierte Ueberschreibungen werden gespeichert. Alle anderen Werte
+          Nur aktivierte Überschreibungen werden gespeichert. Alle anderen Werte
           werden automatisch vom Holding-Standard geerbt. Beim Deaktivieren einer
-          Ueberschreibung wird der Wert auf den Holding-Standard zurueckgesetzt.
+          Überschreibung wird der Wert auf den Holding-Standard zurückgesetzt.
         </p>
       </div>
     </div>

@@ -11,7 +11,7 @@ BEGIN
   RETURNING id INTO v_super_role_id;
 
   INSERT INTO public.roles (company_id, holding_id, key, label, is_system) VALUES
-    (NEW.id, NEW.holding_id, 'geschaeftsfuehrung', 'Geschaeftsfuehrung', TRUE),
+    (NEW.id, NEW.holding_id, 'geschaeftsfuehrung', 'Geschäftsführung', TRUE),
     (NEW.id, NEW.holding_id, 'teamleiter',         'Teamleiter',          TRUE),
     (NEW.id, NEW.holding_id, 'setter',             'Setter',              TRUE),
     (NEW.id, NEW.holding_id, 'berater',            'Berater',             TRUE),

@@ -53,7 +53,7 @@ export default function CookieBanner() {
             className="underline underline-offset-2"
             style={{ color: 'var(--brand-primary, #1A56DB)' }}
           >
-            Datenschutzerklaerung
+            Datenschutzerklärung
           </Link>
           .
         </p>

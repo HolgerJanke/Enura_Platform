@@ -177,7 +177,7 @@ export async function uploadCustomCSS(
   }
 
   const file = formData.get('file') as File | null
-  if (!file) return { error: 'Keine Datei ausgewaehlt.' }
+  if (!file) return { error: 'Keine Datei ausgewählt.' }
 
   if (!file.name.endsWith('.css')) {
     return { error: 'Nur .css-Dateien sind erlaubt.' }
@@ -327,7 +327,7 @@ export async function saveCompanyBrandTokens(
   }
 
   if (Object.keys(updatePayload).length === 0) {
-    return { error: 'Keine Aenderungen vorhanden.' }
+    return { error: 'Keine Änderungen vorhanden.' }
   }
 
   try {

@@ -45,20 +45,20 @@ const CreateToolSchema = z.object({
       'Slug muss lowercase sein und darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten',
     ),
   category: z.enum(TOOL_CATEGORIES, {
-    errorMap: () => ({ message: 'Bitte waehlen Sie eine Kategorie' }),
+    errorMap: () => ({ message: 'Bitte wählen Sie eine Kategorie' }),
   }),
   base_url: z
     .string()
-    .url('Bitte geben Sie eine gueltige URL ein')
+    .url('Bitte geben Sie eine gültige URL ein')
     .optional()
     .or(z.literal('')),
   auth_type: z.enum(AUTH_TYPES, {
-    errorMap: () => ({ message: 'Bitte waehlen Sie einen Auth-Typ' }),
+    errorMap: () => ({ message: 'Bitte wählen Sie einen Auth-Typ' }),
   }),
   secret_ref: z.string().max(200).optional().or(z.literal('')),
   docs_url: z
     .string()
-    .url('Bitte geben Sie eine gueltige URL ein')
+    .url('Bitte geben Sie eine gültige URL ein')
     .optional()
     .or(z.literal('')),
 })

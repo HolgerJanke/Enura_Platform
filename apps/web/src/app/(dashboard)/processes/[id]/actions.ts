@@ -75,20 +75,20 @@ export async function saveRedactionalEdits(
   // Check: must be super_user or holding admin
   const isSuperUser = session.roles.some((r) => r.key === 'super_user')
   if (!isSuperUser && !session.isHoldingAdmin) {
-    return { success: false, error: 'Keine Berechtigung fuer redaktionelle Bearbeitung.' }
+    return { success: false, error: 'Keine Berechtigung für redaktionelle Bearbeitung.' }
   }
 
   // Validate input
   const parsed = SaveRedactionalEditsSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabedaten.' }
+    return { success: false, error: 'Ungültige Eingabedaten.' }
   }
 
   const { processId, changeNote, stepEdits, sourceEdits, interfaceEdits } = parsed.data
 
   // Check no edits provided
   if (stepEdits.length === 0 && sourceEdits.length === 0 && interfaceEdits.length === 0) {
-    return { success: false, error: 'Keine Aenderungen zum Speichern.' }
+    return { success: false, error: 'Keine Änderungen zum Speichern.' }
   }
 
   const supabase = createSupabaseServerClient()
@@ -111,7 +111,7 @@ export async function saveRedactionalEdits(
     session.companyId &&
     (defRow['company_id'] as string | null) !== session.companyId
   ) {
-    return { success: false, error: 'Keine Berechtigung fuer diesen Prozess.' }
+    return { success: false, error: 'Keine Berechtigung für diesen Prozess.' }
   }
 
   // Check holding permission_matrix for process_edit_redactional
@@ -188,7 +188,7 @@ export async function saveRedactionalEdits(
 
   const hasError = allResults.some((r) => r.error)
   if (hasError) {
-    return { success: false, error: 'Fehler beim Speichern der Aenderungen.' }
+    return { success: false, error: 'Fehler beim Speichern der Änderungen.' }
   }
 
   // Update version on process_definitions

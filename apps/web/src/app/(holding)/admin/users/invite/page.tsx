@@ -11,7 +11,7 @@ import { inviteUser } from '../actions'
 
 const ROLE_OPTIONS: ReadonlyArray<{ key: string; label: string }> = [
   { key: 'super_user', label: 'Super User' },
-  { key: 'geschaeftsfuehrung', label: 'Geschaeftsfuehrung' },
+  { key: 'geschaeftsfuehrung', label: 'Geschäftsführung' },
   { key: 'teamleiter', label: 'Teamleiter' },
   { key: 'setter', label: 'Setter' },
   { key: 'berater', label: 'Berater' },
@@ -68,15 +68,15 @@ export default function InviteUserPage() {
       return
     }
     if (!email.trim() || !email.includes('@')) {
-      setError('Bitte geben Sie eine gueltige E-Mail-Adresse ein.')
+      setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
       return
     }
     if (!companyId) {
-      setError('Bitte waehlen Sie ein Unternehmen aus.')
+      setError('Bitte wählen Sie ein Unternehmen aus.')
       return
     }
     if (!roleKey || !selectedRole) {
-      setError('Bitte waehlen Sie eine Rolle aus.')
+      setError('Bitte wählen Sie eine Rolle aus.')
       return
     }
 
@@ -108,7 +108,7 @@ export default function InviteUserPage() {
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Zurueck zur Benutzerverwaltung
+          Zurück zur Benutzerverwaltung
         </Link>
       </div>
 
@@ -116,7 +116,7 @@ export default function InviteUserPage() {
         <h1 className="text-2xl font-semibold text-gray-900">Benutzer einladen</h1>
         <p className="text-gray-500 mt-1">
           Laden Sie einen neuen Benutzer zu einem Unternehmen ein.
-          Der Benutzer erhaelt eine E-Mail mit einem temporaeren Passwort.
+          Der Benutzer erhält eine E-Mail mit einem temporären Passwort.
         </p>
       </div>
 
@@ -138,9 +138,9 @@ export default function InviteUserPage() {
               value={companyId}
               onChange={(e) => setCompanyId(e.target.value)}
               className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              aria-label="Unternehmen auswaehlen"
+              aria-label="Unternehmen auswählen"
             >
-              <option value="">Unternehmen waehlen...</option>
+              <option value="">Unternehmen wählen...</option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -207,9 +207,9 @@ export default function InviteUserPage() {
               value={roleKey}
               onChange={(e) => setRoleKey(e.target.value)}
               className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              aria-label="Rolle auswaehlen"
+              aria-label="Rolle auswählen"
             >
-              <option value="">Rolle waehlen...</option>
+              <option value="">Rolle wählen...</option>
               {ROLE_OPTIONS.map((r) => (
                 <option key={r.key} value={r.key}>
                   {r.label}
@@ -254,7 +254,7 @@ export default function InviteUserPage() {
         <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
           <h2 className="text-sm font-medium text-blue-900 mb-1">Hinweis</h2>
           <p className="text-sm text-blue-700">
-            Der Benutzer erhaelt ein temporaeres Passwort und muss bei der ersten
+            Der Benutzer erhält ein temporäres Passwort und muss bei der ersten
             Anmeldung ein neues Passwort setzen sowie die Zwei-Faktor-Authentifizierung
             einrichten. Alle Einladungen laufen nach 7 Tagen ab.
           </p>

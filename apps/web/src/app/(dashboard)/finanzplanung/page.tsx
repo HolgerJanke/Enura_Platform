@@ -77,7 +77,7 @@ export default async function FinanzplanungPage() {
       bg: 'bg-green-50',
     },
     {
-      label: 'Ueberfaellig',
+      label: 'Überfällig',
       value: overdueCount,
       href: '/finanzplanung/eingang',
       color: overdueCount > 0 ? 'text-red-600' : 'text-gray-400',
@@ -127,7 +127,7 @@ export default async function FinanzplanungPage() {
               </div>
               <h3 className="text-sm font-semibold text-gray-900">Rechnungseingang</h3>
             </div>
-            <p className="text-xs text-gray-500">Eingehende Rechnungen pruefen und validieren</p>
+            <p className="text-xs text-gray-500">Eingehende Rechnungen prüfen und validieren</p>
           </Link>
         )}
 
@@ -193,7 +193,7 @@ export default async function FinanzplanungPage() {
               </div>
               <h3 className="text-sm font-semibold text-gray-900">Genehmigungen</h3>
             </div>
-            <p className="text-xs text-gray-500">Zahlungslaeufe pruefen und freigeben</p>
+            <p className="text-xs text-gray-500">Zahlungsläufe prüfen und freigeben</p>
           </Link>
         )}
       </div>

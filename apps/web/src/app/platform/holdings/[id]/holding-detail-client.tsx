@@ -31,7 +31,7 @@ type Props = {
 type TabKey = 'uebersicht' | 'companies' | 'subscription'
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'uebersicht', label: 'Uebersicht' },
+  { key: 'uebersicht', label: 'Übersicht' },
   { key: 'companies', label: 'Unternehmen' },
   { key: 'subscription', label: 'Abonnement' },
 ]
@@ -207,7 +207,7 @@ export function HoldingDetailClient({ holding, companies, subscription, totalUse
 
               {/* Domain */}
               <div className="flex items-center justify-between">
-                <dt className="text-sm font-medium text-gray-500">Primaer-Domain</dt>
+                <dt className="text-sm font-medium text-gray-500">Primär-Domain</dt>
                 <dd className="flex items-center gap-2">
                   {editingField === 'domain' ? (
                     <>
@@ -268,7 +268,7 @@ export function HoldingDetailClient({ holding, companies, subscription, totalUse
             <div className="rounded-lg border border-red-200 bg-red-50 p-6">
               <h3 className="text-sm font-semibold text-red-800">Gefahrenzone</h3>
               <p className="mt-1 text-sm text-red-700">
-                Das Sperren des Holdings deaktiviert den Zugriff fuer alle Benutzer und Unternehmen.
+                Das Sperren des Holdings deaktiviert den Zugriff für alle Benutzer und Unternehmen.
               </p>
               <button
                 type="button"
@@ -293,7 +293,7 @@ export function HoldingDetailClient({ holding, companies, subscription, totalUse
             <Link
               href={`/admin/companies/new?holding=${holding.id}`}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              aria-label="Neues Unternehmen hinzufuegen"
+              aria-label="Neues Unternehmen hinzufügen"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -418,7 +418,7 @@ export function HoldingDetailClient({ holding, companies, subscription, totalUse
                       onChange={(e) => setLiquidityEnabled(e.target.checked)}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">Liquiditaetsplanung aktiviert</span>
+                    <span className="text-sm text-gray-700">Liquiditätsplanung aktiviert</span>
                   </label>
                 </div>
               </fieldset>

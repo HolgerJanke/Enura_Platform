@@ -12,7 +12,7 @@ export async function loginAction(
   })
 
   if (!parsed.success) {
-    return { error: 'Ungueltige Eingabe. Bitte ueberpruefen Sie Ihre Angaben.' }
+    return { error: 'Ungültige Eingabe. Bitte ueberprüfen Sie Ihre Angaben.' }
   }
 
   const supabase = createSupabaseServerClient()

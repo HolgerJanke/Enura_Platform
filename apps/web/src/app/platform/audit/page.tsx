@@ -33,7 +33,7 @@ export default async function AuditLogPage() {
 
       {auditEntries.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-          <p className="text-gray-500">Keine Audit-Eintraege vorhanden.</p>
+          <p className="text-gray-500">Keine Audit-Einträge vorhanden.</p>
         </div>
       ) : (
         <div className="overflow-x-auto">

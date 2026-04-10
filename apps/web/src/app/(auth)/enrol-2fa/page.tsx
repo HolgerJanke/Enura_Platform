@@ -195,14 +195,14 @@ export default function EnrolTwoFactorPage() {
             <div
               className="bg-white p-4 rounded-brand border border-gray-200"
               dangerouslySetInnerHTML={{ __html: enrolmentData.qrCode }}
-              aria-label="QR-Code fuer Authenticator-App"
+              aria-label="QR-Code für Authenticator-App"
             />
           </div>
 
           {/* Secret key display */}
           <div className="mb-6">
             <p className="text-sm text-brand-text-secondary mb-2 text-center">
-              Oder geben Sie diesen Schluessel manuell ein:
+              Oder geben Sie diesen Schlüssel manuell ein:
             </p>
             <div className="flex items-center justify-center gap-2">
               <code className="bg-gray-100 px-3 py-2 rounded-brand text-sm font-mono text-brand-text-primary tracking-wider select-all">
@@ -211,7 +211,7 @@ export default function EnrolTwoFactorPage() {
               <button
                 type="button"
                 onClick={copySecret}
-                aria-label="Schluessel kopieren"
+                aria-label="Schlüssel kopieren"
                 className="shrink-0 rounded-brand border border-gray-300 bg-brand-background px-3 py-2 text-sm text-brand-text-secondary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
               >
                 {copied ? 'Kopiert' : 'Kopieren'}
@@ -277,7 +277,7 @@ export default function EnrolTwoFactorPage() {
                 }}
                 className="flex-1 rounded-brand border border-gray-300 bg-brand-background px-4 py-2.5 text-sm font-medium text-brand-text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-colors"
               >
-                Zurueck
+                Zurück
               </button>
               <button
                 type="button"

@@ -39,9 +39,9 @@ export const ANOMALY_TYPE_LABELS: Record<AnomalyType, string> = {
   appointment_rate_drop: 'Terminquote gesunken',
   lead_ingestion_stopped: 'Lead-Eingang gestoppt',
   project_phase_stuck: 'Projekt blockiert',
-  invoice_overdue_spike: 'Ueberfaellige Rechnungen gestiegen',
+  invoice_overdue_spike: 'Überfällige Rechnungen gestiegen',
   connector_sync_failure: 'Connector-Sync fehlgeschlagen',
-  call_quality_drop: 'Anrufqualitaet gesunken',
+  call_quality_drop: 'Anrufqualität gesunken',
 }
 
 export const ANOMALY_SEVERITY_LABELS: Record<AnomalySeverity, string> = {

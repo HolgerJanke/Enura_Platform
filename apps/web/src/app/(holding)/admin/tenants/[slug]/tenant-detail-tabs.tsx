@@ -165,7 +165,7 @@ export function TenantDetailTabs({
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'overview', label: 'Uebersicht' },
+    { key: 'overview', label: 'Übersicht' },
     { key: 'branding', label: 'Branding' },
     { key: 'users', label: 'Benutzer' },
   ]
@@ -247,7 +247,7 @@ export function TenantDetailTabs({
                       style={{ backgroundColor: branding.primary_color }}
                     />
                     <div>
-                      <p className="text-xs text-gray-500">Primaerfarbe</p>
+                      <p className="text-xs text-gray-500">Primärfarbe</p>
                       <p className="text-sm font-mono text-gray-900">{branding.primary_color}</p>
                     </div>
                   </div>
@@ -272,7 +272,7 @@ export function TenantDetailTabs({
                     className="rounded-lg px-3 py-1.5 text-xs font-medium text-white"
                     style={{ backgroundColor: branding.primary_color, borderRadius: branding.border_radius }}
                   >
-                    Primaer-Button
+                    Primär-Button
                   </button>
                   <span
                     className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
@@ -359,7 +359,7 @@ export function TenantDetailTabs({
               <div className="space-y-4">
                 <div>
                   <label htmlFor="edit-primary" className="block text-sm font-medium text-gray-700 mb-1">
-                    Primaerfarbe
+                    Primärfarbe
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -374,13 +374,13 @@ export function TenantDetailTabs({
                       value={brandingForm.primary}
                       onChange={(e) => setBrandingForm((prev) => ({ ...prev, primary: e.target.value }))}
                       className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      aria-label="Primaerfarbe Hex-Wert"
+                      aria-label="Primärfarbe Hex-Wert"
                     />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="edit-secondary" className="block text-sm font-medium text-gray-700 mb-1">
-                    Sekundaerfarbe
+                    Sekundärfarbe
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -395,7 +395,7 @@ export function TenantDetailTabs({
                       value={brandingForm.secondary}
                       onChange={(e) => setBrandingForm((prev) => ({ ...prev, secondary: e.target.value }))}
                       className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      aria-label="Sekundaerfarbe Hex-Wert"
+                      aria-label="Sekundärfarbe Hex-Wert"
                     />
                   </div>
                 </div>
@@ -458,7 +458,7 @@ export function TenantDetailTabs({
                       fontFamily: brandingForm.font,
                     }}
                   >
-                    <p className="text-sm font-medium">Primaer-Karte</p>
+                    <p className="text-sm font-medium">Primär-Karte</p>
                     <p className="text-xs opacity-80 mt-1">Beispielinhalt</p>
                   </div>
                   <div className="flex gap-2">
@@ -470,7 +470,7 @@ export function TenantDetailTabs({
                         borderRadius: brandingForm.radius,
                       }}
                     >
-                      Primaer-Button
+                      Primär-Button
                     </button>
                     <span
                       className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-white rounded-full"
@@ -484,7 +484,7 @@ export function TenantDetailTabs({
                     style={{ borderRadius: brandingForm.radius, fontFamily: brandingForm.font }}
                   >
                     <p className="text-sm font-medium" style={{ color: brandingForm.secondary }}>
-                      Sekundaertext
+                      Sekundärtext
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Schrift: {brandingForm.font} | Radius: {brandingForm.radius}
@@ -539,7 +539,7 @@ export function TenantDetailTabs({
                       </code>
                     </div>
                     <div>
-                      <label className="block text-xs text-green-700 mb-0.5">Gueltig bis</label>
+                      <label className="block text-xs text-green-700 mb-0.5">Gültig bis</label>
                       <p className="text-sm text-green-800">
                         {new Date(impersonation.result.expiresAt).toLocaleString('de-CH')}
                       </p>
@@ -560,7 +560,7 @@ export function TenantDetailTabs({
                     onClick={() => setImpersonation(null)}
                     className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
                   >
-                    Schliessen
+                    Schließen
                   </button>
                 </div>
               </div>
@@ -588,7 +588,7 @@ export function TenantDetailTabs({
                     <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.168 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                   </svg>
                   <p className="text-xs text-yellow-700">
-                    Die Session ist 30 Minuten gueltig. Alle Aktionen werden im Audit-Log unter Ihrem Admin-Account protokolliert.
+                    Die Session ist 30 Minuten gültig. Alle Aktionen werden im Audit-Log unter Ihrem Admin-Account protokolliert.
                   </p>
                 </div>
                 <div className="flex justify-end gap-3">

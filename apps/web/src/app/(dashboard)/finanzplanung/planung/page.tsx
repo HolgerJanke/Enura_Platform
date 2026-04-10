@@ -18,8 +18,8 @@ export default async function PlanungPage() {
   if (!canPlan) {
     return (
       <div className="p-8 text-center">
-        <p className="text-gray-500 mb-4">Keine Berechtigung fuer die Zahlungsplanung.</p>
-        <Link href="/finanzplanung" className="text-blue-600 underline text-sm">Zurueck</Link>
+        <p className="text-gray-500 mb-4">Keine Berechtigung für die Zahlungsplanung.</p>
+        <Link href="/finanzplanung" className="text-blue-600 underline text-sm">Zurück</Link>
       </div>
     )
   }
@@ -58,11 +58,11 @@ export default async function PlanungPage() {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-semibold text-gray-900">Zahlungsplanung</h1>
         <Link href="/finanzplanung" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Zurueck
+          ← Zurück
         </Link>
       </div>
       <p className="text-sm text-gray-500 mb-8">
-        Genehmigte Rechnungen terminieren und Zahlungslaeufe erstellen.
+        Genehmigte Rechnungen terminieren und Zahlungsläufe erstellen.
       </p>
 
       {/* Summary */}
@@ -78,7 +78,7 @@ export default async function PlanungPage() {
           </p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <p className="text-sm text-gray-500">Aktive Zahlungslaeufe</p>
+          <p className="text-sm text-gray-500">Aktive Zahlungsläufe</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{activeRuns.length}</p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default async function PlanungPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nr.</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Glaeubiger</th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Betrag</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Faelligkeit</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Fälligkeit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -114,7 +114,7 @@ export default async function PlanungPage() {
                     </td>
                     <td className={`px-4 py-3 text-sm ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
                       {inv.due_date ? new Date(inv.due_date).toLocaleDateString('de-CH') : '—'}
-                      {isOverdue && ' (ueberfaellig)'}
+                      {isOverdue && ' (überfällig)'}
                     </td>
                   </tr>
                 )
@@ -127,7 +127,7 @@ export default async function PlanungPage() {
       {/* Active payment runs */}
       {activeRuns.length > 0 && (
         <>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Aktive Zahlungslaeufe</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Aktive Zahlungsläufe</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeRuns.map((run) => (
               <Link
@@ -163,7 +163,7 @@ export default async function PlanungPage() {
         <div className="mt-10">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Kalender-Ansicht</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Verschieben Sie Rechnungskarten per Drag-and-Drop in eine andere Datumsspalte, um das Zahlungsdatum zu aendern.
+            Verschieben Sie Rechnungskarten per Drag-and-Drop in eine andere Datumsspalte, um das Zahlungsdatum zu ändern.
           </p>
           <CashoutCalendar
             invoices={invoices.map(inv => ({

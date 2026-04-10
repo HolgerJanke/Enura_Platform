@@ -32,7 +32,7 @@ const MAIN_PROCESS_OPTIONS = [
 
 const ALL_ROLES = [
   { key: 'super_user', label: 'Super User' },
-  { key: 'geschaeftsfuehrung', label: 'Geschaeftsfuehrung' },
+  { key: 'geschaeftsfuehrung', label: 'Geschäftsführung' },
   { key: 'teamleiter', label: 'Teamleiter' },
   { key: 'setter', label: 'Setter' },
   { key: 'berater', label: 'Berater' },
@@ -141,7 +141,7 @@ export function StepCard({
 
   // Delete step
   const handleDelete = useCallback(async () => {
-    if (!confirm('Schritt wirklich loeschen? Alle zugehoerigen Quellen, Schnittstellen und Liquiditaetsdaten werden ebenfalls geloescht.')) {
+    if (!confirm('Schritt wirklich löschen? Alle zugehörigen Quellen, Schnittstellen und Liquiditätsdaten werden ebenfalls gelöscht.')) {
       return
     }
     setIsDeleting(true)
@@ -266,7 +266,7 @@ export function StepCard({
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Liquiditaet
+            Liquidität
             {liquidityData && (
               <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-white/20 text-[10px]">
                 1
@@ -314,8 +314,8 @@ export function StepCard({
             type="button"
             onClick={handleDelete}
             className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-            aria-label="Schritt loeschen"
-            title="Loeschen"
+            aria-label="Schritt löschen"
+            title="Löschen"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -440,7 +440,7 @@ export function StepCard({
 
             {/* Liquidity marker */}
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Liquiditaetsmarker</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Liquiditätsmarker</label>
               <select
                 value={liquidityMarker ?? ''}
                 onChange={(e) => {

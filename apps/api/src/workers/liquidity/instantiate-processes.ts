@@ -115,7 +115,7 @@ export async function instantiateProcessesForProject(
 
     if (liqErr) {
       result.errors.push(
-        `Fehler beim Laden der Liquiditaetsdaten fuer ${process.name}: ${liqErr.message}`,
+        `Fehler beim Laden der Liquiditätsdaten für ${process.name}: ${liqErr.message}`,
       )
       continue
     }
@@ -159,7 +159,7 @@ export async function instantiateProcessesForProject(
 
       if (evtErr) {
         result.errors.push(
-          `Fehler beim Erstellen des Liquiditaetsereignisses fuer Schritt "${step.name}": ${evtErr.message}`,
+          `Fehler beim Erstellen des Liquiditätsereignisses für Schritt "${step.name}": ${evtErr.message}`,
         )
         continue
       }

@@ -190,7 +190,7 @@ export function PermissionMatrixClient({ initialMatrix }: PermissionMatrixClient
       <div className="mt-8 flex items-center justify-between">
         <p className="text-xs text-gray-400">
           Mit einem Schloss-Symbol gekennzeichnete Berechtigungen sind plattformseitig
-          erzwungen und koennen nicht deaktiviert werden.
+          erzwungen und können nicht deaktiviert werden.
         </p>
         <button
           type="button"

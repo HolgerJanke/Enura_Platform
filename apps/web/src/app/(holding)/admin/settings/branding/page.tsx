@@ -10,7 +10,7 @@ export default async function HoldingBrandingPage() {
   try {
     branding = await getHoldingBranding()
   } catch {
-    return (<div className="p-8 text-center"><p className="text-gray-500">Branding konnte nicht geladen werden.</p><a href="/admin" className="text-blue-600 underline">Zurueck</a></div>)
+    return (<div className="p-8 text-center"><p className="text-gray-500">Branding konnte nicht geladen werden.</p><a href="/admin" className="text-blue-600 underline">Zurück</a></div>)
   }
   if (!branding) return (<div className="p-8 text-center"><p className="text-gray-500">Keine Branding-Daten.</p></div>)
 
@@ -19,8 +19,8 @@ export default async function HoldingBrandingPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">Holding-Branding</h1>
         <p className="text-gray-500 mt-1">
-          Definieren Sie das Standard-Erscheinungsbild fuer die gesamte Holding.
-          Tochtergesellschaften koennen einzelne Werte ueberschreiben.
+          Definieren Sie das Standard-Erscheinungsbild für die gesamte Holding.
+          Tochtergesellschaften können einzelne Werte überschreiben.
         </p>
       </div>
 

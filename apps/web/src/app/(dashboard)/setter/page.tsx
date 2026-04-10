@@ -145,7 +145,7 @@ export default async function SetterPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
           <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Anruf-Aufschluesselung
+            Anruf-Aufschlüsselung
           </h2>
           <table className="w-full text-sm">
             <tbody>

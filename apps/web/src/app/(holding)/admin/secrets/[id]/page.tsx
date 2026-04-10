@@ -57,7 +57,7 @@ export default async function SecretDetailPage({
     .single()
 
   if (secretError || !secret) {
-    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurück</a></div>)
   }
 
   const secretRecord = secret as Record<string, unknown>

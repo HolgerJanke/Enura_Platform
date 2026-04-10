@@ -69,7 +69,7 @@ export function TemplateUploadForm() {
         setParsed(json)
         setClientError(null)
       } catch {
-        setClientError('Die Datei enthaelt kein gueltiges JSON.')
+        setClientError('Die Datei enthält kein gültiges JSON.')
         setParsed(null)
       }
     }
@@ -144,7 +144,7 @@ export function TemplateUploadForm() {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click() }}
-        aria-label="JSON-Datei auswaehlen oder ablegen"
+        aria-label="JSON-Datei auswählen oder ablegen"
       >
         <svg className="mb-3 h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -159,7 +159,7 @@ export function TemplateUploadForm() {
           accept=".json"
           onChange={handleFileSelect}
           className="hidden"
-          aria-label="JSON-Datei auswaehlen"
+          aria-label="JSON-Datei auswählen"
         />
       </div>
 

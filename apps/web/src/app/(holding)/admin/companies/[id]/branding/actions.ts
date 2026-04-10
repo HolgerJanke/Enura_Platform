@@ -58,7 +58,7 @@ export async function saveCompanyBranding(
     .single()
 
   if (!company) {
-    return { success: false, error: 'Ungueltiges Unternehmen oder kein Zugriff.' }
+    return { success: false, error: 'Ungültiges Unternehmen oder kein Zugriff.' }
   }
 
   // Map camelCase keys to snake_case DB columns

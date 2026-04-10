@@ -74,7 +74,7 @@ export function EnuraAddonsClient({ holdings }: { holdings: HoldingFlag[] }) {
                 `}
                 role="switch"
                 aria-checked={holding.finanzplanung_enabled}
-                aria-label={`Finanzplanung fuer ${holding.name}`}
+                aria-label={`Finanzplanung für ${holding.name}`}
               >
                 <span
                   className={`
@@ -152,7 +152,7 @@ export function HoldingAddonsClient({
         {!holdingEnabled ? (
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
             <p className="text-sm text-amber-800">
-              Das Finanzplanung-Modul ist fuer Ihre Holding noch nicht aktiviert.
+              Das Finanzplanung-Modul ist für Ihre Holding noch nicht aktiviert.
               Wenden Sie sich an Ihren Enura-Ansprechpartner, um das Modul zu lizenzieren.
             </p>
           </div>
@@ -179,7 +179,7 @@ export function HoldingAddonsClient({
                     `}
                     role="switch"
                     aria-checked={company.finanzplanung_enabled}
-                    aria-label={`Finanzplanung fuer ${company.name}`}
+                    aria-label={`Finanzplanung für ${company.name}`}
                   >
                     <span
                       className={`

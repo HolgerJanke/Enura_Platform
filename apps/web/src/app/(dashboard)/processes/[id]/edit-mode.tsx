@@ -39,7 +39,7 @@ interface EditModeProps {
 
 const ROLE_LABELS: Record<string, string> = {
   super_user: 'Super User',
-  geschaeftsfuehrung: 'Geschaeftsfuehrung',
+  geschaeftsfuehrung: 'Geschäftsführung',
   teamleiter: 'Teamleiter',
   setter: 'Setter',
   berater: 'Berater',
@@ -204,11 +204,11 @@ export function EditMode({
 
   const handleSave = useCallback(() => {
     if (!changeNote.trim()) {
-      setErrorMessage('Bitte eine Aenderungsnotiz eingeben.')
+      setErrorMessage('Bitte eine Änderungsnotiz eingeben.')
       return
     }
     if (!hasChanges()) {
-      setErrorMessage('Keine Aenderungen zum Speichern.')
+      setErrorMessage('Keine Änderungen zum Speichern.')
       return
     }
 
@@ -286,7 +286,7 @@ export function EditMode({
             Bearbeitungsmodus aktiv
           </span>
           <span className="text-xs text-amber-600">
-            — Nur redaktionelle Felder sind bearbeitbar. Strukturelle Aenderungen ueber Holding-Admin.
+            — Nur redaktionelle Felder sind bearbeitbar. Strukturelle Änderungen über Holding-Admin.
           </span>
         </div>
       </div>
@@ -405,7 +405,7 @@ export function EditMode({
                             onChange={(e) => updateSourceDraft(src.id, 'label', e.target.value)}
                             className="rounded border border-amber-200 px-2 py-1 text-xs focus:border-amber-400 focus:outline-none"
                             placeholder="Label"
-                            aria-label={`Quellen-Label fuer ${src.label}`}
+                            aria-label={`Quellen-Label für ${src.label}`}
                           />
                           <input
                             type="text"
@@ -413,7 +413,7 @@ export function EditMode({
                             onChange={(e) => updateSourceDraft(src.id, 'tool_name', e.target.value)}
                             className="rounded border border-amber-200 px-2 py-1 text-xs focus:border-amber-400 focus:outline-none"
                             placeholder="Tool-Name"
-                            aria-label={`Tool-Name fuer ${src.label}`}
+                            aria-label={`Tool-Name für ${src.label}`}
                           />
                           <input
                             type="text"
@@ -421,7 +421,7 @@ export function EditMode({
                             onChange={(e) => updateSourceDraft(src.id, 'endpoint', e.target.value)}
                             className="rounded border border-amber-200 px-2 py-1 text-xs font-mono focus:border-amber-400 focus:outline-none"
                             placeholder="Endpoint"
-                            aria-label={`Endpoint fuer ${src.label}`}
+                            aria-label={`Endpoint für ${src.label}`}
                           />
                         </div>
                       )
@@ -448,7 +448,7 @@ export function EditMode({
                             onChange={(e) => updateInterfaceDraft(iface.id, 'label', e.target.value)}
                             className="rounded border border-amber-200 px-2 py-1 text-xs focus:border-amber-400 focus:outline-none"
                             placeholder="Label"
-                            aria-label={`Schnittstellen-Label fuer ${iface.label}`}
+                            aria-label={`Schnittstellen-Label für ${iface.label}`}
                           />
                           <input
                             type="text"
@@ -456,7 +456,7 @@ export function EditMode({
                             onChange={(e) => updateInterfaceDraft(iface.id, 'endpoint', e.target.value)}
                             className="rounded border border-amber-200 px-2 py-1 text-xs font-mono focus:border-amber-400 focus:outline-none"
                             placeholder="Endpoint"
-                            aria-label={`Endpoint fuer ${iface.label}`}
+                            aria-label={`Endpoint für ${iface.label}`}
                           />
                         </div>
                       )
@@ -477,9 +477,9 @@ export function EditMode({
               type="text"
               value={changeNote}
               onChange={(e) => setChangeNote(e.target.value)}
-              placeholder="Aenderungsnotiz (erforderlich)..."
+              placeholder="Änderungsnotiz (erforderlich)..."
               className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-[var(--brand-text-primary,#111827)] focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
-              aria-label="Aenderungsnotiz"
+              aria-label="Änderungsnotiz"
             />
           </div>
           <div className="flex items-center gap-3">

@@ -70,16 +70,16 @@ interface ComplianceClientProps {
 // ---------------------------------------------------------------------------
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'uebersicht', label: 'Uebersicht' },
-  { key: 'pruefpunkte', label: 'Pruefpunkte' },
+  { key: 'uebersicht', label: 'Übersicht' },
+  { key: 'pruefpunkte', label: 'Prüfpunkte' },
   { key: 'dokumente', label: 'Dokumente' },
 ]
 
 const STATUS_LABELS: Record<string, string> = {
   open: 'Offen',
-  fulfilled: 'Erfuellt',
-  overdue: 'Ueberfaellig',
-  waived: 'Zurueckgestellt',
+  fulfilled: 'Erfüllt',
+  overdue: 'Überfällig',
+  waived: 'Zurückgestellt',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -163,7 +163,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
     startTransition(async () => {
       const res = await fulfillCheck(checkId)
       setActionMessage(res.success
-        ? { type: 'success', text: 'Pruefpunkt als erfuellt markiert.' }
+        ? { type: 'success', text: 'Prüfpunkt als erfüllt markiert.' }
         : { type: 'error', text: res.error ?? 'Unbekannter Fehler' })
     })
   }
@@ -173,7 +173,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
     startTransition(async () => {
       const res = await waiveCheck(waiveCheckId, waiveReason)
       setActionMessage(res.success
-        ? { type: 'success', text: 'Pruefpunkt zurueckgestellt.' }
+        ? { type: 'success', text: 'Prüfpunkt zurückgestellt.' }
         : { type: 'error', text: res.error ?? 'Unbekannter Fehler' })
       setWaiveCheckId(null)
       setWaiveReason('')
@@ -222,7 +222,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
             onClick={() => setActionMessage(null)}
             className="ml-3 font-medium underline"
           >
-            Schliessen
+            Schließen
           </button>
         </div>
       )}
@@ -247,7 +247,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
       </div>
 
       {/* ================================================================= */}
-      {/* Tab: Uebersicht */}
+      {/* Tab: Übersicht */}
       {/* ================================================================= */}
       {activeTab === 'uebersicht' && (
         <div className="space-y-6">
@@ -264,17 +264,17 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
           {/* Summary cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SummaryCard
-              label="Offene Pruefpunkte"
+              label="Offene Prüfpunkte"
               value={summary.openChecks}
               color={summary.openChecks > 0 ? 'yellow' : 'green'}
             />
             <SummaryCard
-              label="Ueberfaellige Pruefpunkte"
+              label="Überfällige Prüfpunkte"
               value={summary.overdueChecks}
               color={summary.overdueChecks > 0 ? 'red' : 'green'}
             />
             <SummaryCard
-              label="Erfuellte Pruefpunkte"
+              label="Erfüllte Prüfpunkte"
               value={summary.fulfilledChecks}
               color="green"
             />
@@ -299,7 +299,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
           {summary.overdueChecks > 0 && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4">
               <h3 className="text-sm font-semibold text-red-900 mb-2">
-                Ueberfaellige Pruefpunkte
+                Überfällige Prüfpunkte
               </h3>
               <ul className="space-y-1">
                 {checks
@@ -307,7 +307,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                   .slice(0, 5)
                   .map((c) => (
                     <li key={c.id} className="text-sm text-red-700">
-                      {c.rule_title} — faellig seit {formatDate(c.due_at)}
+                      {c.rule_title} — fällig seit {formatDate(c.due_at)}
                       {c.company_name && ` (${c.company_name})`}
                     </li>
                   ))}
@@ -326,7 +326,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
       )}
 
       {/* ================================================================= */}
-      {/* Tab: Pruefpunkte */}
+      {/* Tab: Prüfpunkte */}
       {/* ================================================================= */}
       {activeTab === 'pruefpunkte' && (
         <div>
@@ -334,12 +334,12 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
           {waiveCheckId && (
             <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                Pruefpunkt zurueckstellen
+                Prüfpunkt zurückstellen
               </h3>
               <textarea
                 className="w-full rounded-md border border-gray-300 p-2 text-sm"
                 rows={3}
-                placeholder="Begruendung eingeben..."
+                placeholder="Begründung eingeben..."
                 value={waiveReason}
                 onChange={(e) => setWaiveReason(e.target.value)}
               />
@@ -349,7 +349,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                   disabled={isPending || !waiveReason.trim()}
                   className="rounded-md bg-gray-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
                 >
-                  Bestaetigen
+                  Bestätigen
                 </button>
                 <button
                   onClick={() => { setWaiveCheckId(null); setWaiveReason('') }}
@@ -362,7 +362,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
           )}
 
           {checks.length === 0 ? (
-            <p className="text-sm text-gray-500">Keine Pruefpunkte vorhanden.</p>
+            <p className="text-sm text-gray-500">Keine Prüfpunkte vorhanden.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -372,7 +372,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                     <th className="pb-2 pr-4 font-medium">Unternehmen</th>
                     <th className="pb-2 pr-4 font-medium">Status</th>
                     <th className="pb-2 pr-4 font-medium">Schwere</th>
-                    <th className="pb-2 pr-4 font-medium">Faellig</th>
+                    <th className="pb-2 pr-4 font-medium">Fällig</th>
                     <th className="pb-2 pr-4 font-medium">Anforderung</th>
                     <th className="pb-2 font-medium">Aktionen</th>
                   </tr>
@@ -402,7 +402,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                         {formatDate(check.due_at)}
                         {check.fulfilled_at && (
                           <span className="block text-xs text-green-600">
-                            Erfuellt: {formatDate(check.fulfilled_at)}
+                            Erfüllt: {formatDate(check.fulfilled_at)}
                           </span>
                         )}
                       </td>
@@ -417,14 +417,14 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                               disabled={isPending}
                               className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
                             >
-                              Erfuellen
+                              Erfüllen
                             </button>
                             <button
                               onClick={() => setWaiveCheckId(check.id)}
                               disabled={isPending}
                               className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             >
-                              Zurueckstellen
+                              Zurückstellen
                             </button>
                           </div>
                         ) : (
@@ -493,7 +493,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                   </div>
                   <div>
                     <label htmlFor="doc-valid-from" className="block text-sm font-medium text-gray-700 mb-1">
-                      Gueltig ab
+                      Gültig ab
                     </label>
                     <input
                       id="doc-valid-from"
@@ -504,7 +504,7 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                   </div>
                   <div>
                     <label htmlFor="doc-expires" className="block text-sm font-medium text-gray-700 mb-1">
-                      Laeuft ab am
+                      Läuft ab am
                     </label>
                     <input
                       id="doc-expires"
@@ -558,9 +558,9 @@ export function ComplianceClient({ checks, documents, certifications, summary }:
                     <th className="pb-2 pr-4 font-medium">Titel</th>
                     <th className="pb-2 pr-4 font-medium">Typ</th>
                     <th className="pb-2 pr-4 font-medium">Unternehmen</th>
-                    <th className="pb-2 pr-4 font-medium">Groesse</th>
-                    <th className="pb-2 pr-4 font-medium">Gueltig ab</th>
-                    <th className="pb-2 pr-4 font-medium">Laeuft ab</th>
+                    <th className="pb-2 pr-4 font-medium">Größe</th>
+                    <th className="pb-2 pr-4 font-medium">Gültig ab</th>
+                    <th className="pb-2 pr-4 font-medium">Läuft ab</th>
                     <th className="pb-2 pr-4 font-medium">Hochgeladen</th>
                     <th className="pb-2 font-medium">Aktion</th>
                   </tr>

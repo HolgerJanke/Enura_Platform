@@ -79,7 +79,7 @@ export default async function LeadsPage() {
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-sm text-brand-text-secondary">
-            Lead-Qualitaetsrate
+            Lead-Qualitätsrate
           </p>
           <p className="text-2xl font-semibold text-brand-text-primary mt-1">
             {formatPercent(qualityRate)}
@@ -161,7 +161,7 @@ export default async function LeadsPage() {
             </table>
           ) : (
             <p className="text-sm text-brand-text-secondary">
-              Keine Quellen-Daten verfuegbar.
+              Keine Quellen-Daten verfügbar.
             </p>
           )}
         </div>

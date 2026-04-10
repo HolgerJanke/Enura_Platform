@@ -160,7 +160,7 @@ export async function uploadLogo(formData: FormData): Promise<{ url?: string; er
 
   const file = formData.get('logo') as File | null
   if (!file) {
-    return { error: 'Keine Datei ausgewaehlt.' }
+    return { error: 'Keine Datei ausgewählt.' }
   }
 
   // Validate file type
@@ -267,7 +267,7 @@ export async function saveCompanyBrandingOverrides(
     .single()
 
   if (!company) {
-    return { success: false, error: 'Ungueltiges Unternehmen.' }
+    return { success: false, error: 'Ungültiges Unternehmen.' }
   }
 
   const updatePayload: Record<string, unknown> = {}

@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     body = (await request.json()) as FeedbackBody
   } catch {
-    return NextResponse.json({ error: 'Ungueltiger Request-Body.' }, { status: 400 })
+    return NextResponse.json({ error: 'Ungültiger Request-Body.' }, { status: 400 })
   }
 
   const { articleSlug, articleLevel, rating } = body

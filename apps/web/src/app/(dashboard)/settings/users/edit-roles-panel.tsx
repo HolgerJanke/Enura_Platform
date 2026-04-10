@@ -78,7 +78,7 @@ export function EditRolesPanel({
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label={`Rollen bearbeiten fuer ${displayName}`}
+      aria-label={`Rollen bearbeiten für ${displayName}`}
     >
       {/* Backdrop */}
       <div
@@ -89,7 +89,7 @@ export function EditRolesPanel({
         }}
         role="button"
         tabIndex={-1}
-        aria-label="Panel schliessen"
+        aria-label="Panel schließen"
       />
 
       {/* Slide-over panel */}
@@ -108,7 +108,7 @@ export function EditRolesPanel({
             type="button"
             onClick={onClose}
             className="rounded-brand p-1.5 text-brand-text-secondary hover:bg-gray-100 transition-colors"
-            aria-label="Panel schliessen"
+            aria-label="Panel schließen"
           >
             <svg
               className="h-5 w-5"
@@ -134,7 +134,7 @@ export function EditRolesPanel({
               className="rounded-brand border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700 mb-4"
               role="status"
             >
-              Sie koennen Ihre eigenen Rollen nicht aendern.
+              Sie können Ihre eigenen Rollen nicht ändern.
             </div>
           )}
 

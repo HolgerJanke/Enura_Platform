@@ -29,7 +29,7 @@ const CreateSecretSchema = z.object({
       'Name muss SCREAMING_SNAKE_CASE sein (z.B. REONIC_API_KEY)',
     ),
   secret_type: z.enum(SECRET_TYPES, {
-    errorMap: () => ({ message: 'Bitte waehlen Sie einen Secret-Typ' }),
+    errorMap: () => ({ message: 'Bitte wählen Sie einen Secret-Typ' }),
   }),
   scope: z
     .string()

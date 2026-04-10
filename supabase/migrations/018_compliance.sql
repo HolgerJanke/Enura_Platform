@@ -190,11 +190,11 @@ CREATE INDEX IF NOT EXISTS idx_certifications_expires
 INSERT INTO public.compliance_rules (rule_code, title, description, trigger_event, trigger_filter, requirement, deadline_days, severity, legal_basis) VALUES
 (
   'THIRD_COUNTRY_SCC',
-  'Standardvertragsklauseln fuer Drittlandtransfer',
-  'Bei Anbindung eines Connectors mit Datenverarbeitung ausserhalb der EU/CH muessen SCC abgeschlossen werden.',
+  'Standardvertragsklauseln für Drittlandtransfer',
+  'Bei Anbindung eines Connectors mit Datenverarbeitung außerhalb der EU/CH müssen SCC abgeschlossen werden.',
   'connector_created',
   '{"third_country": true}',
-  'SCC-Vertrag mit dem Auftragsverarbeiter abschliessen und als Dokument hochladen.',
+  'SCC-Vertrag mit dem Auftragsverarbeiter abschließen und als Dokument hochladen.',
   30,
   'critical',
   'Art. 46 Abs. 2 lit. c DSGVO / Art. 16 Abs. 2 lit. d DSG'
@@ -205,15 +205,15 @@ INSERT INTO public.compliance_rules (rule_code, title, description, trigger_even
   'Jeder externe Datenverarbeiter (Connector) erfordert einen AVV.',
   'connector_created',
   '{}',
-  'AVV mit dem Anbieter abschliessen und als Dokument (Typ: avv) hochladen.',
+  'AVV mit dem Anbieter abschließen und als Dokument (Typ: avv) hochladen.',
   14,
   'critical',
   'Art. 28 DSGVO / Art. 9 DSG'
 ),
 (
   'AUDIO_CONSENT',
-  'Einwilligung fuer Gespraechsaufzeichnung',
-  'Vor Aktivierung der 3CX-Aufzeichnung muss die Einwilligung der Gespraechsteilnehmer sichergestellt sein.',
+  'Einwilligung für Gesprächsaufzeichnung',
+  'Vor Aktivierung der 3CX-Aufzeichnung muss die Einwilligung der Gesprächsteilnehmer sichergestellt sein.',
   'connector_created',
   '{"connector_type": "3cx"}',
   'Einwilligungsformular konfigurieren und Nachweis hochladen (Typ: consent_form).',
@@ -224,10 +224,10 @@ INSERT INTO public.compliance_rules (rule_code, title, description, trigger_even
 (
   'FINANCIAL_RETENTION',
   'Aufbewahrungspflicht Finanzdaten',
-  'Finanzdaten (Rechnungen, Zahlungen) muessen mindestens 10 Jahre aufbewahrt werden.',
+  'Finanzdaten (Rechnungen, Zahlungen) müssen mindestens 10 Jahre aufbewahrt werden.',
   'scheduled',
   '{"schedule": "yearly"}',
-  'Jaehrliche Pruefung der Archivierung und Loeschfristen fuer Finanzdaten.',
+  'Jährliche Prüfung der Archivierung und Löschfristen für Finanzdaten.',
   90,
   'warning',
   'Art. 958f OR (CH) / § 147 AO (DE)'
@@ -235,7 +235,7 @@ INSERT INTO public.compliance_rules (rule_code, title, description, trigger_even
 (
   'OAUTH_SECRET_ROTATION',
   'OAuth-Secret-Rotation',
-  'OAuth-Client-Secrets muessen regelmaessig rotiert werden.',
+  'OAuth-Client-Secrets müssen regelmäßig rotiert werden.',
   'secret_rotated',
   '{"secret_type": "oauth2_token"}',
   'Secret rotieren und neuen Token im Connector hinterlegen.',
@@ -245,22 +245,22 @@ INSERT INTO public.compliance_rules (rule_code, title, description, trigger_even
 ),
 (
   'NEW_HOLDING_BASELINE',
-  'Datenschutz-Grundausstattung fuer neues Holding',
-  'Beim Erstellen eines Holdings muessen grundlegende Datenschutzdokumente vorhanden sein (TOM, VVT).',
+  'Datenschutz-Grundausstattung für neues Holding',
+  'Beim Erstellen eines Holdings müssen grundlegende Datenschutzdokumente vorhanden sein (TOM, VVT).',
   'holding_created',
   '{}',
-  'TOM-Dokument und Verzeichnis der Verarbeitungstaetigkeiten (VVT) hochladen.',
+  'TOM-Dokument und Verzeichnis der Verarbeitungstätigkeiten (VVT) hochladen.',
   60,
   'critical',
   'Art. 30 DSGVO / Art. 12 DSG'
 ),
 (
   'HIGH_RISK_DSFA',
-  'Datenschutz-Folgenabschaetzung (DSFA)',
-  'Bei Verarbeitung mit hohem Risiko (z.B. KI-Analyse von Gespraechen) ist eine DSFA erforderlich.',
+  'Datenschutz-Folgenabschätzung (DSFA)',
+  'Bei Verarbeitung mit hohem Risiko (z.B. KI-Analyse von Gesprächen) ist eine DSFA erforderlich.',
   'manual',
   '{}',
-  'DSFA durchfuehren und als Dokument (Typ: dsfa) hochladen.',
+  'DSFA durchführen und als Dokument (Typ: dsfa) hochladen.',
   90,
   'critical',
   'Art. 35 DSGVO / Art. 22 DSG'

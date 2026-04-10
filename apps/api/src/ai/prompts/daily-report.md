@@ -47,18 +47,18 @@
 
 ## Aufgabe
 
-Erstelle basierend auf den oben aufgeführten KPI-Daten einen strukturierten Tagesbericht. Antworte ausschliesslich mit einem JSON-Objekt im folgenden Format:
+Erstelle basierend auf den oben aufgeführten KPI-Daten einen strukturierten Tagesbericht. Antworte ausschließlich mit einem JSON-Objekt im folgenden Format:
 
 ```json
 {
-  "executive_summary": "<Zusammenfassung in 3-5 Sätzen: wichtigste Erkenntnis, grösste Herausforderung, Empfehlung>",
+  "executive_summary": "<Zusammenfassung in 3-5 Sätzen: wichtigste Erkenntnis, größte Herausforderung, Empfehlung>",
   "highlights": [
     "<Positive Entwicklung 1 mit konkreten Zahlen>",
     "<Positive Entwicklung 2 mit konkreten Zahlen>"
   ],
   "concerns": [
-    "<Bedenken 1 mit Fakten und Massnahmenvorschlag>",
-    "<Bedenken 2 mit Fakten und Massnahmenvorschlag>"
+    "<Bedenken 1 mit Fakten und Maßnahmenvorschlag>",
+    "<Bedenken 2 mit Fakten und Maßnahmenvorschlag>"
   ],
   "coaching": [
     {
@@ -68,8 +68,8 @@ Erstelle basierend auf den oben aufgeführten KPI-Daten einen strukturierten Tag
     }
   ],
   "open_actions": [
-    "<Offene Massnahme 1>",
-    "<Offene Massnahme 2>"
+    "<Offene Maßnahme 1>",
+    "<Offene Maßnahme 2>"
   ],
   "tomorrow_focus": "<Fokus für den nächsten Arbeitstag in 2-3 Sätzen>"
 }
@@ -81,4 +81,4 @@ Wichtige Hinweise:
 - Formuliere alle Texte auf Hochdeutsch, professionell und prägnant.
 - Nenne konkrete Zahlen, Prozentsätze und Trends.
 - Coaching-Hinweise sollen motivierend und konstruktiv sein — keine Schuldzuweisungen.
-- Antworte ausschliesslich mit dem JSON-Objekt, ohne zusätzlichen Text.
+- Antworte ausschließlich mit dem JSON-Objekt, ohne zusätzlichen Text.

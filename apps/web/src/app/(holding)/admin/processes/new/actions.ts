@@ -10,14 +10,14 @@ import { z } from 'zod'
 // ---------------------------------------------------------------------------
 
 const CreateProcessSchema = z.object({
-  companyId: z.string().uuid('Ungueltiges Unternehmen'),
+  companyId: z.string().uuid('Ungültiges Unternehmen'),
   name: z.string().min(1, 'Name ist erforderlich').max(200),
   category: z.enum(['verkauf', 'planung', 'abwicklung', 'betrieb', 'sonstige'], {
     errorMap: () => ({ message: 'Kategorie ist erforderlich' }),
   }),
   menuLabel: z.string().min(1, 'Menuelabel ist erforderlich').max(100),
   menuIcon: z.string().max(50).optional().default('clipboard'),
-  visibleRoles: z.array(z.string()).min(1, 'Mindestens eine Rolle auswaehlen'),
+  visibleRoles: z.array(z.string()).min(1, 'Mindestens eine Rolle auswählen'),
   templateId: z.string().uuid().nullable().optional(),
 })
 
@@ -99,7 +99,7 @@ export async function createProcessAction(
 
   if (insertError || !newProcess) {
     if (insertError?.code === '23505') {
-      return { error: 'Ein Prozess mit diesem Namen existiert bereits fuer dieses Unternehmen.' }
+      return { error: 'Ein Prozess mit diesem Namen existiert bereits für dieses Unternehmen.' }
     }
     return { error: 'Fehler beim Erstellen des Prozesses.' }
   }

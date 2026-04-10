@@ -77,7 +77,7 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
     startTransition(async () => {
       const result = await action()
       if (result.success) {
-        setFeedback({ type: 'success', message: 'Aktion erfolgreich ausgefuehrt.' })
+        setFeedback({ type: 'success', message: 'Aktion erfolgreich ausgeführt.' })
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Unbekannter Fehler.' })
       }
@@ -138,7 +138,7 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
     startTransition(async () => {
       const result = await updateUserRolesFromHolding(userId, companyId, [...selectedRoleIds])
       if (result.success) {
-        setFeedback({ type: 'success', message: `Rollen fuer ${roleEditUser.displayName} aktualisiert.` })
+        setFeedback({ type: 'success', message: `Rollen für ${roleEditUser.displayName} aktualisiert.` })
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler beim Speichern.' })
       }
@@ -165,9 +165,9 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">Bestaetigung</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Bestätigung</h3>
             <p className="mt-2 text-sm text-gray-600">
-              Sind Sie sicher, dass Sie diese Aktion ausfuehren moechten?
+              Sind Sie sicher, dass Sie diese Aktion ausführen möchten?
               <br />
               <span className="font-medium">{confirmAction.label}</span>
             </p>
@@ -185,9 +185,9 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                 onClick={handleConfirm}
                 disabled={isPending}
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-gray-300"
-                aria-label="Bestaetigen"
+                aria-label="Bestätigen"
               >
-                {isPending ? 'Wird ausgefuehrt...' : 'Bestaetigen'}
+                {isPending ? 'Wird ausgeführt...' : 'Bestätigen'}
               </button>
             </div>
           </div>
@@ -318,7 +318,7 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                               type="button"
                               onClick={() => openRoleEditor(user)}
                               className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-                              aria-label={`Rollen fuer ${user.displayName} bearbeiten`}
+                              aria-label={`Rollen für ${user.displayName} bearbeiten`}
                             >
                               Rollen
                             </button>
@@ -361,11 +361,11 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                                 setConfirmAction({
                                   type: '2fa_reset',
                                   id: user.id,
-                                  label: `2FA fuer "${user.displayName}" zuruecksetzen`,
+                                  label: `2FA für "${user.displayName}" zurücksetzen`,
                                 })
                               }
                               className="rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 transition-colors"
-                              aria-label={`2FA fuer ${user.displayName} zuruecksetzen`}
+                              aria-label={`2FA für ${user.displayName} zurücksetzen`}
                             >
                               2FA Reset
                             </button>
@@ -398,7 +398,7 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Unternehmen</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Rolle</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Eingeladen am</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">Laeuft ab</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500">Läuft ab</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">Eingeladen von</th>
                     <th className="px-4 py-3 text-right font-medium text-gray-500">Aktionen</th>
                   </tr>
@@ -440,7 +440,7 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                               }}
                               disabled={isPending}
                               className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-                              aria-label={`Einladung fuer ${inv.email} erneut senden`}
+                              aria-label={`Einladung für ${inv.email} erneut senden`}
                             >
                               Erneut senden
                             </button>
@@ -450,11 +450,11 @@ export function UsersClient({ initialUsers, initialInvitations }: UsersClientPro
                                 setConfirmAction({
                                   type: 'revoke',
                                   id: inv.id,
-                                  label: `Einladung fuer "${inv.email}" widerrufen`,
+                                  label: `Einladung für "${inv.email}" widerrufen`,
                                 })
                               }
                               className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
-                              aria-label={`Einladung fuer ${inv.email} widerrufen`}
+                              aria-label={`Einladung für ${inv.email} widerrufen`}
                             >
                               Widerrufen
                             </button>

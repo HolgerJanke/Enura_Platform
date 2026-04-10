@@ -30,7 +30,7 @@ const TemplateUploadSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
   category: z.enum(CATEGORIES, {
     errorMap: () => ({
-      message: 'Ungueltige Kategorie. Erlaubt: verkauf, planung, abwicklung, betrieb, sonstige',
+      message: 'Ungültige Kategorie. Erlaubt: verkauf, planung, abwicklung, betrieb, sonstige',
     }),
   }),
   steps: z.array(TemplateStepSchema).min(1, 'Mindestens ein Schritt erforderlich'),
@@ -79,7 +79,7 @@ export async function uploadTemplateAction(
   // Permission: holding admin OR super_user
   const isSuperUser = session.roles.some((r) => r.key === 'super_user')
   if (!session.isHoldingAdmin && !isSuperUser) {
-    return { success: false, error: 'Keine Berechtigung. Nur Holding-Admins und Super User koennen Vorlagen hochladen.' }
+    return { success: false, error: 'Keine Berechtigung. Nur Holding-Admins und Super User können Vorlagen hochladen.' }
   }
 
   // Security scan

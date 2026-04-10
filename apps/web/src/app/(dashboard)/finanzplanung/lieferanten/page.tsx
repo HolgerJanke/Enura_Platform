@@ -22,7 +22,7 @@ export default async function LieferantenPage() {
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500 mb-4">Kein Zugriff auf Lieferanten-Verwaltung.</p>
-        <Link href="/finanzplanung" className="text-blue-600 underline text-sm">Zurueck zur Finanzplanung</Link>
+        <Link href="/finanzplanung" className="text-blue-600 underline text-sm">Zurück zur Finanzplanung</Link>
       </div>
     )
   }
@@ -44,11 +44,11 @@ export default async function LieferantenPage() {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-semibold text-gray-900">Lieferanten</h1>
         <Link href="/finanzplanung" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Zurueck
+          ← Zurück
         </Link>
       </div>
       <p className="text-sm text-gray-500 mb-6">
-        Lieferanten-Stammdaten fuer die Rechnungsverarbeitung und Zahlungsdatei-Erstellung.
+        Lieferanten-Stammdaten für die Rechnungsverarbeitung und Zahlungsdatei-Erstellung.
       </p>
 
       {rows.length === 0 ? (
@@ -59,7 +59,7 @@ export default async function LieferantenPage() {
           <p className="text-sm text-gray-500 mb-2">Noch keine Lieferanten erfasst.</p>
           <p className="text-xs text-gray-400">
             Lieferanten werden automatisch aus eingehenden Rechnungen angelegt
-            oder koennen manuell hinzugefuegt werden.
+            oder können manuell hinzugefügt werden.
           </p>
         </div>
       ) : (

@@ -62,7 +62,7 @@ export async function saveManualEntry(input: ManualEntryInput): Promise<ActionRe
   // Validate input
   const parsed = ManualEntrySchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabedaten.' }
+    return { success: false, error: 'Ungültige Eingabedaten.' }
   }
 
   const { eventInstanceId, companyId, actualDate, actualAmount, actualCurrency, fxRate, notes } =
@@ -84,7 +84,7 @@ export async function saveManualEntry(input: ManualEntryInput): Promise<ActionRe
     .single()
 
   if (fetchErr || !eventRaw) {
-    return { success: false, error: 'Liquiditaetsereignis nicht gefunden.' }
+    return { success: false, error: 'Liquiditätsereignis nicht gefunden.' }
   }
 
   const event = eventRaw as Record<string, unknown>
@@ -166,7 +166,7 @@ export async function uploadBankFile(input: UploadBankFileInput): Promise<Action
 
   const parsed = UploadBankFileSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: 'Ungueltige Eingabedaten.' }
+    return { success: false, error: 'Ungültige Eingabedaten.' }
   }
 
   const { companyId, filename, fileFormat, storagePath, periodFrom, periodTo, transactionCount } =

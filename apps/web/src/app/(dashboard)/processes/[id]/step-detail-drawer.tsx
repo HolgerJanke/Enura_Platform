@@ -9,7 +9,7 @@ import type { EnrichedStep } from './page'
 
 const ROLE_LABELS: Record<string, string> = {
   super_user: 'Super User',
-  geschaeftsfuehrung: 'Geschaeftsfuehrung',
+  geschaeftsfuehrung: 'Geschäftsführung',
   teamleiter: 'Teamleiter',
   setter: 'Setter',
   berater: 'Berater',
@@ -84,7 +84,7 @@ export function StepDetailDrawer({ step, onClose }: StepDetailDrawerProps) {
         onClick={onClose}
         role="button"
         tabIndex={0}
-        aria-label="Drawer schliessen"
+        aria-label="Drawer schließen"
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') onClose()
         }}
@@ -115,7 +115,7 @@ export function StepDetailDrawer({ step, onClose }: StepDetailDrawerProps) {
             type="button"
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Schliessen"
+            aria-label="Schließen"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -215,12 +215,12 @@ export function StepDetailDrawer({ step, onClose }: StepDetailDrawerProps) {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-[var(--brand-primary,#1A56DB)] hover:bg-gray-50 transition-colors"
-                          aria-label={`${source.tool_name} in Tool oeffnen`}
+                          aria-label={`${source.tool_name} in Tool öffnen`}
                         >
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
-                          In Tool oeffnen
+                          In Tool öffnen
                         </a>
                       )}
                     </div>
@@ -274,7 +274,7 @@ export function StepDetailDrawer({ step, onClose }: StepDetailDrawerProps) {
           {step.liquidity && (
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--brand-text-secondary,#6B7280)]">
-                Liquiditaet
+                Liquidität
               </h3>
               <div
                 className={`rounded-lg border p-4 ${
@@ -286,7 +286,7 @@ export function StepDetailDrawer({ step, onClose }: StepDetailDrawerProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-medium text-gray-500">
-                      {step.liquidity.direction === 'income' ? 'Einnahme' : 'Ausgabe'} ({step.liquidity.marker_type === 'trigger' ? 'Ausloeser' : 'Ereignis'})
+                      {step.liquidity.direction === 'income' ? 'Einnahme' : 'Ausgabe'} ({step.liquidity.marker_type === 'trigger' ? 'Auslöser' : 'Ereignis'})
                     </p>
                   </div>
                   {step.liquidity.plan_amount !== null && (

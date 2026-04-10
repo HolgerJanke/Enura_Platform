@@ -328,9 +328,9 @@ export function WizardClient({ steps }: Props) {
           onClick={handleBack}
           disabled={currentStep === 1 || isPending}
           className="rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-          aria-label="Zurueck"
+          aria-label="Zurück"
         >
-          Zurueck
+          Zurück
         </button>
 
         {currentStep < 6 ? (
@@ -403,7 +403,7 @@ function StepHoldingDetails({
           {/* Availability indicator */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-3">
             {data.slugChecking && (
-              <span className="text-xs text-gray-400">Pruefen...</span>
+              <span className="text-xs text-gray-400">Prüfen...</span>
             )}
             {!data.slugChecking && data.slugAvailable === true && (
               <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -421,7 +421,7 @@ function StepHoldingDetails({
           <p className="mt-1 text-xs text-red-600">Dieser Slug ist bereits vergeben.</p>
         )}
         {!data.slugChecking && data.slugAvailable === true && (
-          <p className="mt-1 text-xs text-green-600">Slug ist verfuegbar.</p>
+          <p className="mt-1 text-xs text-green-600">Slug ist verfügbar.</p>
         )}
       </div>
     </div>
@@ -443,13 +443,13 @@ function StepBranding({
       <h2 className="text-lg font-semibold text-gray-900">Branding</h2>
 
       <div className="grid grid-cols-2 gap-4">
-        <ColorPicker label="Primaerfarbe" value={data.primaryColor} onChange={(v) => updateField('primaryColor', v)} />
-        <ColorPicker label="Sekundaerfarbe" value={data.secondaryColor} onChange={(v) => updateField('secondaryColor', v)} />
+        <ColorPicker label="Primärfarbe" value={data.primaryColor} onChange={(v) => updateField('primaryColor', v)} />
+        <ColorPicker label="Sekundärfarbe" value={data.secondaryColor} onChange={(v) => updateField('secondaryColor', v)} />
         <ColorPicker label="Akzentfarbe" value={data.accentColor} onChange={(v) => updateField('accentColor', v)} />
         <ColorPicker label="Hintergrund" value={data.backgroundColor} onChange={(v) => updateField('backgroundColor', v)} />
-        <ColorPicker label="Oberflaeche" value={data.surfaceColor} onChange={(v) => updateField('surfaceColor', v)} />
-        <ColorPicker label="Text Primaer" value={data.textPrimary} onChange={(v) => updateField('textPrimary', v)} />
-        <ColorPicker label="Text Sekundaer" value={data.textSecondary} onChange={(v) => updateField('textSecondary', v)} />
+        <ColorPicker label="Oberfläche" value={data.surfaceColor} onChange={(v) => updateField('surfaceColor', v)} />
+        <ColorPicker label="Text Primär" value={data.textPrimary} onChange={(v) => updateField('textPrimary', v)} />
+        <ColorPicker label="Text Sekundär" value={data.textSecondary} onChange={(v) => updateField('textSecondary', v)} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -510,14 +510,14 @@ function StepBranding({
             className="mb-3 inline-block rounded-md px-4 py-2 text-sm font-semibold text-white"
             style={{ backgroundColor: data.primaryColor, borderRadius: data.borderRadius }}
           >
-            Primaer-Button
+            Primär-Button
           </div>
           <div
             className="rounded-lg p-4"
             style={{ backgroundColor: data.surfaceColor, borderRadius: data.borderRadius }}
           >
             <p style={{ color: data.textPrimary }} className="text-sm font-medium">Beispiel-Ueberschrift</p>
-            <p style={{ color: data.textSecondary }} className="mt-1 text-xs">Sekundaerer Hilfetext</p>
+            <p style={{ color: data.textSecondary }} className="mt-1 text-xs">Sekundärer Hilfetext</p>
             <span
               className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
               style={{ backgroundColor: data.accentColor }}
@@ -695,7 +695,7 @@ function StepAdminInvitation({
     <div className="space-y-5">
       <h2 className="text-lg font-semibold text-gray-900">Admin-Einladung</h2>
       <p className="text-sm text-gray-500">
-        Laden Sie den ersten Holding-Administrator ein. Dieser Benutzer erhaelt eine E-Mail mit einem Einladungslink.
+        Laden Sie den ersten Holding-Administrator ein. Dieser Benutzer erhält eine E-Mail mit einem Einladungslink.
       </p>
 
       <div>
@@ -750,7 +750,7 @@ function StepConfirmation({ data }: { data: WizardData }) {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-900">Zusammenfassung</h2>
       <p className="text-sm text-gray-500">
-        Pruefen Sie alle Angaben, bevor Sie das Holding erstellen.
+        Prüfen Sie alle Angaben, bevor Sie das Holding erstellen.
       </p>
 
       <div className="space-y-4">

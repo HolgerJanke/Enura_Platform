@@ -151,7 +151,7 @@ function ComplianceCard({ compliance }: { compliance: ComplianceSummary }) {
         </div>
         <div>
           <p className="text-2xl font-bold text-green-600">{compliance.fulfilled}</p>
-          <p className="text-xs text-gray-500">Erfuellt</p>
+          <p className="text-xs text-gray-500">Erfüllt</p>
         </div>
         <div>
           <p className="text-2xl font-bold text-yellow-600">{compliance.pending}</p>
@@ -159,7 +159,7 @@ function ComplianceCard({ compliance }: { compliance: ComplianceSummary }) {
         </div>
         <div>
           <p className="text-2xl font-bold text-red-600">{compliance.overdue}</p>
-          <p className="text-xs text-gray-500">Ueberfaellig</p>
+          <p className="text-xs text-gray-500">Überfällig</p>
         </div>
       </div>
       <div className="mt-4">
@@ -229,7 +229,7 @@ export function AnalyticsClient({ initialKpis }: AnalyticsClientProps) {
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             } disabled:opacity-50`}
-            aria-label={`Zeitraum ${periodLabels[p]} auswaehlen`}
+            aria-label={`Zeitraum ${periodLabels[p]} auswählen`}
             aria-pressed={period === p}
           >
             {periodLabels[p]}
@@ -252,7 +252,7 @@ export function AnalyticsClient({ initialKpis }: AnalyticsClientProps) {
           trendLabel={`${kpis.totalCompanies} Unternehmen`}
         />
         <KpiCard
-          label="Abschluesse"
+          label="Abschlüsse"
           value={kpis.totalWonOffers.toLocaleString('de-CH')}
           trend={kpis.totalWonOffers > 0 ? 'up' : 'neutral'}
           trendLabel={
@@ -301,7 +301,7 @@ export function AnalyticsClient({ initialKpis }: AnalyticsClientProps) {
 
         {/* Offers per company */}
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Abschluesse pro Unternehmen</h3>
+          <h3 className="mb-4 text-sm font-semibold text-gray-900">Abschlüsse pro Unternehmen</h3>
           {kpis.companyKpis.length === 0 ? (
             <p className="text-sm text-gray-500">Keine Unternehmen vorhanden.</p>
           ) : (

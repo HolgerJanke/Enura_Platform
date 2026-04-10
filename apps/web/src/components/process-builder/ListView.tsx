@@ -9,7 +9,7 @@ import type { EnrichedStep } from '@/app/(dashboard)/processes/[id]/page'
 
 const ROLE_LABELS: Record<string, string> = {
   super_user: 'Super User',
-  geschaeftsfuehrung: 'Geschaeftsfuehrung',
+  geschaeftsfuehrung: 'Geschäftsführung',
   teamleiter: 'Teamleiter',
   setter: 'Setter',
   berater: 'Berater',
@@ -310,7 +310,7 @@ export function ListView({ steps, onStepClick }: ListViewProps) {
                         handleStepClick(step.id)
                       }}
                       className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-[var(--brand-primary,#1A56DB)] hover:bg-gray-50 transition-colors"
-                      aria-label={`Details fuer ${step.name} oeffnen`}
+                      aria-label={`Details für ${step.name} öffnen`}
                     >
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

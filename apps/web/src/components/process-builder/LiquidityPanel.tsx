@@ -88,7 +88,7 @@ export function LiquidityPanel({
     return (
       <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
         <p className="text-sm text-yellow-800">
-          Um Liquiditaetsdaten zu erfassen, setzen Sie zuerst den Liquiditaetsmarker
+          Um Liquiditätsdaten zu erfassen, setzen Sie zuerst den Liquiditätsmarker
           dieses Schritts auf &quot;Trigger&quot; oder &quot;Event&quot;.
         </p>
       </div>
@@ -101,7 +101,7 @@ export function LiquidityPanel({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium text-gray-700">Liquiditaet</h4>
+        <h4 className="text-sm font-medium text-gray-700">Liquidität</h4>
         {saveError && <span className="text-xs text-red-600">{saveError}</span>}
       </div>
 
@@ -177,7 +177,7 @@ export function LiquidityPanel({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Verzoegerung (Tage)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Verzögerung (Tage)</label>
               <input
                 type="number"
                 value={planDelayDays ?? ''}
@@ -195,7 +195,7 @@ export function LiquidityPanel({
         {/* Linked trigger step (only for event) */}
         {isEvent && (
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Verknuepfter Trigger-Schritt</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Verknüpfter Trigger-Schritt</label>
             <select
               value={triggerStepId}
               onChange={(e) => setTriggerStepId(e.target.value)}
@@ -236,7 +236,7 @@ export function LiquidityPanel({
           disabled={isSaving}
           className="inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
         >
-          {isSaving ? 'Speichern...' : 'Liquiditaet speichern'}
+          {isSaving ? 'Speichern...' : 'Liquidität speichern'}
         </button>
       </div>
     </div>

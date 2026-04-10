@@ -31,7 +31,7 @@ const LEVEL_LABELS: Record<string, string> = {
 }
 
 const LEVEL_DESCRIPTIONS: Record<string, string> = {
-  company: 'Anleitungen fuer den taeglichen Gebrauch der BI-Module.',
+  company: 'Anleitungen für den täglichen Gebrauch der BI-Module.',
   holding: 'Mandantenverwaltung, Connectors und Berechtigungen.',
   meta: 'Plattformweite Einstellungen und technische Dokumentation.',
 }

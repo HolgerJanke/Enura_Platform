@@ -46,7 +46,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      aria-label="Passwort aendern"
+      aria-label="Passwort ändern"
       className="w-full rounded-brand bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
     >
       {pending ? (
@@ -75,7 +75,7 @@ function SubmitButton() {
           Wird gespeichert...
         </span>
       ) : (
-        'Passwort aendern'
+        'Passwort ändern'
       )}
     </button>
   )
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="bg-brand-surface rounded-brand p-8 shadow-sm border border-gray-200">
       <h2 className="text-xl font-semibold text-brand-text-primary mb-2 text-center">
-        Passwort zuruecksetzen
+        Passwort zurücksetzen
       </h2>
       <p className="text-sm text-brand-text-secondary mb-6 text-center">
         Bitte setzen Sie ein neues Passwort, um fortzufahren.
@@ -198,14 +198,14 @@ export default function ResetPasswordPage() {
             htmlFor="confirmPassword"
             className="block text-sm font-medium text-brand-text-primary mb-1.5"
           >
-            Passwort bestaetigen
+            Passwort bestätigen
           </label>
           <input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
             autoComplete="new-password"
-            aria-label="Passwort bestaetigen"
+            aria-label="Passwort bestätigen"
             className="w-full rounded-brand border border-gray-300 px-3 py-2.5 text-sm text-brand-text-primary bg-brand-background placeholder:text-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
             placeholder="Passwort erneut eingeben"
           />

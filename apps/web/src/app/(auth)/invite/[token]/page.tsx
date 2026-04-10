@@ -29,9 +29,9 @@ export default async function InvitePage({ params }: InvitePageProps) {
           <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
           </svg>
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">Ungueltige Einladung</h2>
+          <h2 className="mt-4 text-xl font-semibold text-gray-900">Ungültige Einladung</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Dieser Einladungslink ist ungueltig. Bitte wenden Sie sich an Ihren Administrator.
+            Dieser Einladungslink ist ungültig. Bitte wenden Sie sich an Ihren Administrator.
           </p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           </svg>
           <h2 className="mt-4 text-xl font-semibold text-gray-900">Bereits angenommen</h2>
           <p className="mt-2 text-sm text-gray-500">
-            Diese Einladung wurde bereits angenommen. Sie koennen sich unter{' '}
+            Diese Einladung wurde bereits angenommen. Sie können sich unter{' '}
             <a href="/login" className="text-blue-600 hover:underline">/login</a> anmelden.
           </p>
         </div>
@@ -90,7 +90,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
               month: '2-digit',
               year: 'numeric',
             })}{' '}
-            abgelaufen. Bitte wenden Sie sich an Ihren Administrator fuer eine neue Einladung.
+            abgelaufen. Bitte wenden Sie sich an Ihren Administrator für eine neue Einladung.
           </p>
         </div>
       </div>

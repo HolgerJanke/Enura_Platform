@@ -86,7 +86,7 @@ export function ReportSettingsForm({ settings }: Props) {
           Berichtseinstellungen
         </h1>
         <p className="text-brand-text-secondary mt-1">
-          Konfigurieren Sie den taeglichen Bericht und Warnschwellen.
+          Konfigurieren Sie den täglichen Bericht und Warnschwellen.
         </p>
       </div>
 
@@ -109,7 +109,7 @@ export function ReportSettingsForm({ settings }: Props) {
               style={ringStyle}
             />
             <p className="text-xs text-brand-text-secondary mt-1">
-              Der Bericht wird taeglich zu dieser Uhrzeit versendet.
+              Der Bericht wird täglich zu dieser Uhrzeit versendet.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export function ReportSettingsForm({ settings }: Props) {
         {/* Recipients */}
         <div className="mt-5">
           <label className="block text-sm font-medium text-brand-text-primary mb-2">
-            Empfaenger
+            Empfänger
           </label>
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -164,7 +164,7 @@ export function ReportSettingsForm({ settings }: Props) {
             </label>
           </div>
           <p className="text-xs text-brand-text-secondary mt-1">
-            &quot;Nur berechtigte Benutzer&quot; sendet den Bericht an Geschaeftsfuehrung und Teamleiter.
+            &quot;Nur berechtigte Benutzer&quot; sendet den Bericht an Geschäftsführung und Teamleiter.
           </p>
         </div>
       </div>
@@ -173,7 +173,7 @@ export function ReportSettingsForm({ settings }: Props) {
       <div className="bg-brand-surface rounded-brand border border-gray-200 p-6 mb-6">
         <h2 className="text-lg font-medium text-brand-text-primary mb-4">Warnschwellen</h2>
         <p className="text-sm text-brand-text-secondary mb-5">
-          Der taegliche Bericht hebt Metriken hervor, die diese Schwellenwerte ueberschreiten.
+          Der tägliche Bericht hebt Metriken hervor, die diese Schwellenwerte ueberschreiten.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -193,7 +193,7 @@ export function ReportSettingsForm({ settings }: Props) {
               style={ringStyle}
             />
             <p className="text-xs text-brand-text-secondary mt-1">
-              Warnung, wenn ein Projekt laenger als X Tage in einer Phase stagniert.
+              Warnung, wenn ein Projekt länger als X Tage in einer Phase stagniert.
             </p>
           </div>
 
@@ -213,7 +213,7 @@ export function ReportSettingsForm({ settings }: Props) {
               style={ringStyle}
             />
             <p className="text-xs text-brand-text-secondary mt-1">
-              Warnung, wenn ein Lead laenger als X Stunden nicht kontaktiert wurde.
+              Warnung, wenn ein Lead länger als X Stunden nicht kontaktiert wurde.
             </p>
           </div>
 
@@ -234,7 +234,7 @@ export function ReportSettingsForm({ settings }: Props) {
               style={ringStyle}
             />
             <p className="text-xs text-brand-text-secondary mt-1">
-              Monatliches Budget fuer KI-Transkription. Bei Ueberschreitung wird die Transkription pausiert.
+              Monatliches Budget für KI-Transkription. Bei Ueberschreitung wird die Transkription pausiert.
             </p>
           </div>
         </div>

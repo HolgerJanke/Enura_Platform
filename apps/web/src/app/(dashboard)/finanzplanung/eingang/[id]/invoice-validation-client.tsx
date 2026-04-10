@@ -12,7 +12,7 @@ interface Props {
   dueDate: string | null
 }
 
-const STEP_LABELS = ['Formale Pruefung', 'Inhaltliche Pruefung', 'Technische Genehmigung']
+const STEP_LABELS = ['Formale Prüfung', 'Inhaltliche Prüfung', 'Technische Genehmigung']
 
 export function InvoiceValidationClient({ invoiceId, currentStep, status, canValidate, canApprove, dueDate }: Props) {
   const [comment, setComment] = useState('')
@@ -34,7 +34,7 @@ export function InvoiceValidationClient({ invoiceId, currentStep, status, canVal
         action === 'due_date_override' ? dateOverride : undefined,
       )
       if (result.success) {
-        setFeedback({ type: 'success', message: 'Aktion erfolgreich ausgefuehrt.' })
+        setFeedback({ type: 'success', message: 'Aktion erfolgreich ausgeführt.' })
         setComment('')
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler.' })
@@ -72,20 +72,20 @@ export function InvoiceValidationClient({ invoiceId, currentStep, status, canVal
 
       {isTerminal && (
         <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-800">
-          Rechnung vollstaendig validiert und genehmigt.
+          Rechnung vollständig validiert und genehmigt.
         </div>
       )}
 
       {isReturned && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-          Rechnung zurueckgesendet. Warten auf Korrektur.
+          Rechnung zurückgesendet. Warten auf Korrektur.
         </div>
       )}
 
       {/* Step 1: Formal check */}
       {currentStep === 1 && canValidate && !isTerminal && !isReturned && (
         <div className="space-y-3">
-          <p className="text-xs text-gray-500">Pruefen Sie die formalen Pflichtangaben der Rechnung.</p>
+          <p className="text-xs text-gray-500">Prüfen Sie die formalen Pflichtangaben der Rechnung.</p>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -108,7 +108,7 @@ export function InvoiceValidationClient({ invoiceId, currentStep, status, canVal
               onClick={() => handleAction(1, 'formal_return')}
               className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
             >
-              Zuruecksenden
+              Zurücksenden
             </button>
           </div>
         </div>
@@ -117,9 +117,9 @@ export function InvoiceValidationClient({ invoiceId, currentStep, status, canVal
       {/* Step 2: Content check */}
       {currentStep === 2 && canValidate && !isTerminal && (
         <div className="space-y-3">
-          <p className="text-xs text-gray-500">Pruefen Sie den Inhalt und das Faelligkeitsdatum.</p>
+          <p className="text-xs text-gray-500">Prüfen Sie den Inhalt und das Fälligkeitsdatum.</p>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Faelligkeitsdatum</label>
+            <label className="text-xs text-gray-500 mb-1 block">Fälligkeitsdatum</label>
             <input
               type="date"
               value={dateOverride}
@@ -152,7 +152,7 @@ export function InvoiceValidationClient({ invoiceId, currentStep, status, canVal
               onClick={() => handleAction(2, 'content_return')}
               className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
             >
-              Zuruecksenden
+              Zurücksenden
             </button>
           </div>
         </div>

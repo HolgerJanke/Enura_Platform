@@ -57,7 +57,7 @@ export function HoldingShell({ navItems, userName, holdingName = 'Holding', chil
           }}
           role="button"
           tabIndex={0}
-          aria-label="Seitenleiste schliessen"
+          aria-label="Seitenleiste schließen"
         />
       )}
 
@@ -144,7 +144,7 @@ export function HoldingShell({ navItems, userName, holdingName = 'Holding', chil
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            aria-label="Navigation oeffnen"
+            aria-label="Navigation öffnen"
           >
             <svg
               className="h-6 w-6"

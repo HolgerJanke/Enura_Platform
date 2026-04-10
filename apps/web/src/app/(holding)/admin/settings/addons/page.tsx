@@ -99,7 +99,7 @@ export default async function AddonsPage() {
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">Add-on Module</h1>
       <p className="text-sm text-gray-500 mb-8">
-        Zusaetzliche Module fuer Ihre Holding und deren Unternehmen verwalten.
+        Zusätzliche Module für Ihre Holding und deren Unternehmen verwalten.
       </p>
       <HoldingAddonsClient holdingEnabled={holdingEnabled} companies={companiesWithFlags} />
     </div>

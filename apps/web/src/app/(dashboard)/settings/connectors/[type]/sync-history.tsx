@@ -75,7 +75,7 @@ function SyncStatusBadge({ status }: { status: string }) {
         <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
         </svg>
-        Laeuft
+        Läuft
       </span>
     )
   }
@@ -94,7 +94,7 @@ export function SyncHistory({ logs }: Props) {
       <div className="bg-brand-surface rounded-brand border border-gray-200 p-6">
         <h2 className="text-lg font-medium text-brand-text-primary mb-2">Synchronisierungsverlauf</h2>
         <p className="text-sm text-brand-text-secondary">
-          Noch keine Synchronisierungen durchgefuehrt.
+          Noch keine Synchronisierungen durchgeführt.
         </p>
       </div>
     )

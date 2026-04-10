@@ -85,7 +85,7 @@ export function RolesMatrixClient({ companyId, companyName, initialRoles, permis
         if (!result.success) errors++
       }
       if (errors === 0) {
-        setFeedback({ type: 'success', message: 'Alle Aenderungen gespeichert.' })
+        setFeedback({ type: 'success', message: 'Alle Änderungen gespeichert.' })
         setHasChanges(false)
       } else {
         setFeedback({ type: 'error', message: `${errors} Rolle(n) konnten nicht gespeichert werden.` })
@@ -123,14 +123,14 @@ export function RolesMatrixClient({ companyId, companyName, initialRoles, permis
   function handleDeleteRole(roleId: string) {
     const role = roles.find((r) => r.id === roleId)
     if (!role || role.isSystem) return
-    if (!confirm(`Rolle "${role.label}" loeschen? Alle Zuweisungen werden entfernt.`)) return
+    if (!confirm(`Rolle "${role.label}" löschen? Alle Zuweisungen werden entfernt.`)) return
 
     startTransition(async () => {
       const result = await deleteCustomRole(roleId)
       if (result.success) {
         setRoles((prev) => prev.filter((r) => r.id !== roleId))
         setMatrix((prev) => { const next = new Map(prev); next.delete(roleId); return next })
-        setFeedback({ type: 'success', message: `Rolle "${role.label}" geloescht.` })
+        setFeedback({ type: 'success', message: `Rolle "${role.label}" gelöscht.` })
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler.' })
       }
@@ -177,7 +177,7 @@ export function RolesMatrixClient({ companyId, companyName, initialRoles, permis
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Neue Rolle erstellen</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Schluessel (key)</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Schlüssel (key)</label>
               <input
                 type="text"
                 value={newRoleKey}
@@ -247,9 +247,9 @@ export function RolesMatrixClient({ companyId, companyName, initialRoles, permis
                         type="button"
                         onClick={() => handleDeleteRole(role.id)}
                         className="text-[10px] text-red-500 hover:text-red-700"
-                        aria-label={`Rolle ${role.label} loeschen`}
+                        aria-label={`Rolle ${role.label} löschen`}
                       >
-                        Loeschen
+                        Löschen
                       </button>
                     )}
                   </div>
@@ -292,7 +292,7 @@ export function RolesMatrixClient({ companyId, companyName, initialRoles, permis
                                 ? 'text-gray-400 cursor-not-allowed'
                                 : 'text-blue-600 cursor-pointer'
                             }`}
-                            aria-label={`${perm.label} fuer ${role.label}`}
+                            aria-label={`${perm.label} für ${role.label}`}
                           />
                         </td>
                       )

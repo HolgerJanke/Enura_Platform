@@ -160,7 +160,7 @@ export function HelpTip({
                   className="mt-3 inline-block text-xs font-medium hover:underline"
                   style={{ color: 'var(--brand-primary)' }}
                 >
-                  Vollstaendigen Artikel lesen →
+                  Vollständigen Artikel lesen →
                 </Link>
               )}
             </>

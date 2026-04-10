@@ -72,15 +72,15 @@ const CORE_TOKEN_LABELS: ReadonlyArray<{
   description: string
   isColor: boolean
 }> = [
-  { key: 'primary', label: 'Primaerfarbe', description: 'Hauptaktionsfarbe fuer Buttons und aktive Elemente', isColor: true },
-  { key: 'secondary', label: 'Sekundaerfarbe', description: 'Texte und Ueberschriften', isColor: true },
+  { key: 'primary', label: 'Primärfarbe', description: 'Hauptaktionsfarbe für Buttons und aktive Elemente', isColor: true },
+  { key: 'secondary', label: 'Sekundärfarbe', description: 'Texte und Überschriften', isColor: true },
   { key: 'accent', label: 'Akzentfarbe', description: 'Hervorhebungen und Badges', isColor: true },
   { key: 'background', label: 'Hintergrundfarbe', description: 'Seitenhintergrund', isColor: true },
-  { key: 'surface', label: 'Oberflaechenfarbe', description: 'Karten- und Panel-Hintergrund', isColor: true },
-  { key: 'textPrimary', label: 'Primaerer Text', description: 'Haupttextfarbe', isColor: true },
-  { key: 'textSecondary', label: 'Sekundaerer Text', description: 'Gedaempfte Textfarbe', isColor: true },
+  { key: 'surface', label: 'Oberflächenfarbe', description: 'Karten- und Panel-Hintergrund', isColor: true },
+  { key: 'textPrimary', label: 'Primärer Text', description: 'Haupttextfarbe', isColor: true },
+  { key: 'textSecondary', label: 'Sekundärer Text', description: 'Gedämpfte Textfarbe', isColor: true },
   { key: 'font', label: 'Schriftart', description: 'Schriftfamilie', isColor: false },
-  { key: 'radius', label: 'Eckenradius', description: 'Basis-Eckenradius fuer alle Elemente', isColor: false },
+  { key: 'radius', label: 'Eckenradius', description: 'Basis-Eckenradius für alle Elemente', isColor: false },
 ]
 
 type ExtendedTokenConfig = {
@@ -99,7 +99,7 @@ const EXTENDED_TOKEN_CONFIGS: ReadonlyArray<ExtendedTokenConfig> = [
   { key: 'shadowMd', label: 'Schatten (mittel)', type: 'text' },
   { key: 'shadowLg', label: 'Schatten (gross)', type: 'text' },
   { key: 'spacingBase', label: 'Abstand Basis', type: 'slider', min: 2, max: 8, step: 1, unit: 'px' },
-  { key: 'fontSizeBase', label: 'Schriftgroesse Basis', type: 'slider', min: 14, max: 20, step: 1, unit: 'px' },
+  { key: 'fontSizeBase', label: 'Schriftgröße Basis', type: 'slider', min: 14, max: 20, step: 1, unit: 'px' },
   {
     key: 'fontWeightNormal', label: 'Schriftstärke (normal)', type: 'dropdown',
     options: [
@@ -117,7 +117,7 @@ const EXTENDED_TOKEN_CONFIGS: ReadonlyArray<ExtendedTokenConfig> = [
     ],
   },
   { key: 'letterSpacing', label: 'Zeichenabstand', type: 'slider', min: -0.05, max: 0.1, step: 0.005, unit: 'em' },
-  { key: 'lineHeight', label: 'Zeilenhoehe', type: 'slider', min: 1.2, max: 2.0, step: 0.05, unit: '' },
+  { key: 'lineHeight', label: 'Zeilenhöhe', type: 'slider', min: 1.2, max: 2.0, step: 0.05, unit: '' },
   { key: 'borderWidth', label: 'Rahmenbreite', type: 'slider', min: 0, max: 3, step: 0.5, unit: 'px' },
 ]
 
@@ -273,7 +273,7 @@ function MarkenfarbenTab({
         </div>
         <p className="text-sm text-[var(--brand-text-secondary)] mb-6">
           {canEdit
-            ? 'Klicken Sie auf einen Farbwert, um ihn fuer Ihr Unternehmen anzupassen.'
+            ? 'Klicken Sie auf einen Farbwert, um ihn für Ihr Unternehmen anzupassen.'
             : 'Diese Werte werden von der Holding-Konfiguration vererbt.'}
         </p>
 
@@ -363,7 +363,7 @@ function MarkenfarbenTab({
       {!canEdit && !hasHoldingAccess && (
         <div className="bg-[var(--brand-surface)] rounded-[var(--brand-radius)] p-4 border border-gray-200">
           <p className="text-sm text-[var(--brand-text-secondary)]">
-            Kontaktieren Sie Ihren Administrator, um Aenderungen an den
+            Kontaktieren Sie Ihren Administrator, um Änderungen an den
             Markenfarben vorzunehmen.
           </p>
         </div>
@@ -449,7 +449,7 @@ function ErweitertTab({
         </h2>
         <p className="text-sm text-[var(--brand-text-secondary)] mb-6">
           Aktivieren Sie den Schalter, um den Holding-Standardwert mit einem
-          firmenspezifischen Wert zu ueberschreiben.
+          firmenspezifischen Wert zu überschreiben.
         </p>
 
         <div className="space-y-4">
@@ -480,7 +480,7 @@ function ErweitertTab({
                   type="button"
                   role="switch"
                   aria-checked={isEnabled}
-                  aria-label={`${config.label} ueberschreiben`}
+                  aria-label={`${config.label} überschreiben`}
                   onClick={() => toggleKey(config.key)}
                   className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
                     isEnabled ? 'bg-[var(--brand-primary)]' : 'bg-gray-300'
@@ -625,7 +625,7 @@ function CustomCSSTab({
     }
 
     if (file.size > 100 * 1024) {
-      setErrors(['CSS-Datei ueberschreitet die maximale Groesse von 100 KB.'])
+      setErrors(['CSS-Datei ueberschreitet die maximale Größe von 100 KB.'])
       return
     }
 
@@ -708,7 +708,7 @@ function CustomCSSTab({
             </p>
             <textarea
               readOnly
-              value={cssPreview ?? '(Vorschau wird beim naechsten Upload angezeigt)'}
+              value={cssPreview ?? '(Vorschau wird beim nächsten Upload angezeigt)'}
               className="w-full h-[300px] max-h-[300px] overflow-auto rounded-[var(--brand-radius)] border border-gray-300 bg-gray-50 p-3 text-xs font-mono text-[var(--brand-text-primary)] resize-none"
               aria-label="CSS-Vorschau"
             />
@@ -833,7 +833,7 @@ function CustomCSSTab({
 
         {/* Help text */}
         <p className="mt-4 text-xs text-gray-400">
-          Erlaubt: CSS-Klassen und -Regeln fuer Ihr Corporate Design. Nicht erlaubt: @import,
+          Erlaubt: CSS-Klassen und -Regeln für Ihr Corporate Design. Nicht erlaubt: @import,
           JavaScript, externe URLs.
         </p>
       </div>
@@ -916,7 +916,7 @@ function VorschauTab({
             }}
           >
             Dies ist ein Beispieltext, der zeigt, wie der Inhalt mit den aktuellen
-            Designwerten aussieht. Die Schriftgroesse, der Zeilenabstand und die Farben
+            Designwerten aussieht. Die Schriftgröße, der Zeilenabstand und die Farben
             spiegeln die konfigurierten Werte wider.
           </p>
 
@@ -940,7 +940,7 @@ function VorschauTab({
               className="text-xs"
               style={{ color: companyTokens.textSecondary }}
             >
-              Eine typische Karte mit Schatten, Rahmen und Oberflaechenfarbe.
+              Eine typische Karte mit Schatten, Rahmen und Oberflächenfarbe.
             </p>
           </div>
 
@@ -955,7 +955,7 @@ function VorschauTab({
                 boxShadow: merged.shadowSm,
               }}
             >
-              Primaer-Button
+              Primär-Button
             </button>
             <button
               type="button"
@@ -967,7 +967,7 @@ function VorschauTab({
                 border: `${merged.borderWidth} solid #d1d5db`,
               }}
             >
-              Sekundaer-Button
+              Sekundär-Button
             </button>
             <span
               className="inline-flex items-center px-3 py-1 text-xs font-medium text-white"
@@ -1006,7 +1006,7 @@ function VorschauTab({
           {/* Custom CSS indicator */}
           {customCSSPath && (
             <p className="text-xs text-gray-400 mt-4">
-              Benutzerdefiniertes CSS aktiv: Die tatsaechliche Darstellung kann von
+              Benutzerdefiniertes CSS aktiv: Die tatsächliche Darstellung kann von
               dieser Vorschau abweichen.
             </p>
           )}

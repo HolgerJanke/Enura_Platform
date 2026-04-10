@@ -106,7 +106,7 @@ export default async function ReportDetailPage({
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
-        Zurueck zum Archiv
+        Zurück zum Archiv
       </Link>
 
       {/* Header */}
@@ -119,7 +119,7 @@ export default async function ReportDetailPage({
         </p>
         <div className="flex items-center gap-4 mt-2 text-xs text-brand-text-secondary">
           <span>Gesendet: {formatDateTime(typedReport.sent_at)}</span>
-          <span>{recipientCount} Empfaenger</span>
+          <span>{recipientCount} Empfänger</span>
         </div>
       </div>
 
@@ -245,7 +245,7 @@ export default async function ReportDetailPage({
       {/* Tomorrow Focus */}
       {sections.tomorrow_focus && sections.tomorrow_focus.length > 0 && (
         <SectionCard>
-          <SectionHeading>Fokus fuer morgen</SectionHeading>
+          <SectionHeading>Fokus für morgen</SectionHeading>
           <ul className="space-y-2">
             {sections.tomorrow_focus.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-brand-text-primary">
@@ -276,7 +276,7 @@ export default async function ReportDetailPage({
         (!sections.tomorrow_focus || sections.tomorrow_focus.length === 0) && (
         <div className="bg-brand-surface rounded-brand border border-gray-200 p-8 text-center">
           <p className="text-sm text-brand-text-secondary">
-            Dieser Bericht enthaelt keine strukturierten Abschnitte.
+            Dieser Bericht enthält keine strukturierten Abschnitte.
           </p>
         </div>
       )}

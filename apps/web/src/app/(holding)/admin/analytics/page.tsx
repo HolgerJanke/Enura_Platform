@@ -18,7 +18,7 @@ export default async function AnalyticsPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Analytik</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Aggregierte KPIs und Unternehmensvergleiche ueber alle Gesellschaften im Holding.
+          Aggregierte KPIs und Unternehmensvergleiche über alle Gesellschaften im Holding.
         </p>
       </div>
 

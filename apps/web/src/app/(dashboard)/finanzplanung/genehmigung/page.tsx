@@ -6,7 +6,7 @@ import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 const RUN_STATUS_LABELS: Record<string, string> = {
   draft: 'Entwurf',
   submitted: 'Eingereicht',
-  under_review: 'In Pruefung',
+  under_review: 'In Prüfung',
   approved: 'Genehmigt',
   rejected: 'Abgelehnt',
   exported: 'Exportiert',
@@ -65,11 +65,11 @@ export default async function GenehmigungPage() {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-semibold text-gray-900">Genehmigungen</h1>
         <Link href="/finanzplanung" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Zurueck
+          ← Zurück
         </Link>
       </div>
       <p className="text-sm text-gray-500 mb-6">
-        Zahlungslaeufe pruefen und freigeben.
+        Zahlungsläufe prüfen und freigeben.
         {pendingCount > 0 && (
           <span className="ml-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
             {pendingCount} ausstehend
@@ -79,7 +79,7 @@ export default async function GenehmigungPage() {
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
-          <p className="text-sm text-gray-500">Keine Zahlungslaeufe vorhanden.</p>
+          <p className="text-sm text-gray-500">Keine Zahlungsläufe vorhanden.</p>
         </div>
       ) : (
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">

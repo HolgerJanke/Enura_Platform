@@ -66,7 +66,7 @@ export function HoldingAdminManager({ holdingId, users, adminProfileIds }: Props
     <div className="rounded-lg border border-gray-200 bg-white p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-1">Holding-Administratoren</h2>
       <p className="text-sm text-gray-500 mb-6">
-        Holding Admins koennen Unternehmen, Benutzer, Prozesse und Module innerhalb dieser Holding verwalten.
+        Holding Admins können Unternehmen, Benutzer, Prozesse und Module innerhalb dieser Holding verwalten.
       </p>
 
       {/* Current admins */}
@@ -112,7 +112,7 @@ export function HoldingAdminManager({ holdingId, users, adminProfileIds }: Props
               onChange={(e) => setSelectedUserId(e.target.value)}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="">Benutzer auswaehlen...</option>
+              <option value="">Benutzer auswählen...</option>
               {nonAdminUsers.map((user) => (
                 <option key={user.id} value={user.id}>
                   {user.first_name ?? ''} {user.last_name ?? ''} ({user.display_name})

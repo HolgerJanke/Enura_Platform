@@ -154,7 +154,7 @@ export default async function CompliancePage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Compliance</h1>
           <p className="text-gray-500 mt-1">
-            Datenschutz-Pruefpunkte, Dokumentenverwaltung und Zertifizierungs-Roadmap
+            Datenschutz-Prüfpunkte, Dokumentenverwaltung und Zertifizierungs-Roadmap
           </p>
         </div>
         <Link

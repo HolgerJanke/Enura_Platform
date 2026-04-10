@@ -57,28 +57,28 @@ const PERMISSION_DEFINITIONS: ReadonlyArray<{
   description: string
 }> = [
   // Prozesse
-  { key: 'process.create', label: 'Prozesse erstellen', category: 'Prozesse', description: 'Neue Geschaeftsprozesse definieren und konfigurieren' },
+  { key: 'process.create', label: 'Prozesse erstellen', category: 'Prozesse', description: 'Neue Geschäftsprozesse definieren und konfigurieren' },
   { key: 'process.deploy', label: 'Prozesse deployen', category: 'Prozesse', description: 'Prozesse in Produktionsumgebung bereitstellen' },
-  { key: 'process.delete', label: 'Prozesse loeschen', category: 'Prozesse', description: 'Bestehende Prozesse unwiderruflich entfernen' },
-  { key: 'process.version', label: 'Prozess-Versionierung', category: 'Prozesse', description: 'Versionsverwaltung fuer Prozesse aktivieren' },
+  { key: 'process.delete', label: 'Prozesse löschen', category: 'Prozesse', description: 'Bestehende Prozesse unwiderruflich entfernen' },
+  { key: 'process.version', label: 'Prozess-Versionierung', category: 'Prozesse', description: 'Versionsverwaltung für Prozesse aktivieren' },
   { key: 'connector.manage', label: 'Konnektoren verwalten', category: 'Prozesse', description: 'Externe Integrationen erstellen und konfigurieren' },
-  { key: 'connector.credentials', label: 'Zugangsdaten verwalten', category: 'Prozesse', description: 'API-Schluessel und OAuth-Tokens fuer Konnektoren bearbeiten' },
+  { key: 'connector.credentials', label: 'Zugangsdaten verwalten', category: 'Prozesse', description: 'API-Schlüssel und OAuth-Tokens für Konnektoren bearbeiten' },
 
   // Benutzer
   { key: 'user.invite', label: 'Benutzer einladen', category: 'Benutzer', description: 'Neue Benutzer per E-Mail zur Plattform einladen' },
   { key: 'user.deactivate', label: 'Benutzer deaktivieren', category: 'Benutzer', description: 'Benutzerzugang sperren ohne Datenverlust' },
-  { key: 'user.role_assign', label: 'Rollen zuweisen', category: 'Benutzer', description: 'Benutzerrollen und Berechtigungen aendern' },
-  { key: 'user.2fa_reset', label: '2FA zuruecksetzen', category: 'Benutzer', description: 'Zwei-Faktor-Authentifizierung fuer Benutzer zuruecksetzen' },
+  { key: 'user.role_assign', label: 'Rollen zuweisen', category: 'Benutzer', description: 'Benutzerrollen und Berechtigungen ändern' },
+  { key: 'user.2fa_reset', label: '2FA zurücksetzen', category: 'Benutzer', description: 'Zwei-Faktor-Authentifizierung für Benutzer zurücksetzen' },
   { key: 'user.impersonate', label: 'Benutzer imitieren', category: 'Benutzer', description: 'Als anderer Benutzer agieren (wird im Audit-Log protokolliert)' },
 
   // Daten
   { key: 'data.export', label: 'Daten exportieren', category: 'Daten', description: 'Unternehmensdaten als CSV/Excel exportieren' },
-  { key: 'data.delete', label: 'Daten loeschen', category: 'Daten', description: 'Datensaetze unwiderruflich entfernen' },
-  { key: 'data.bulk_import', label: 'Massenimport', category: 'Daten', description: 'Grosse Datenmengen per Upload importieren' },
-  { key: 'audit_log.read', label: 'Audit-Log einsehen', category: 'Daten', description: 'Protokoll aller Systemaktivitaeten einsehen (Plattform-Pflicht)' },
+  { key: 'data.delete', label: 'Daten löschen', category: 'Daten', description: 'Datensätze unwiderruflich entfernen' },
+  { key: 'data.bulk_import', label: 'Massenimport', category: 'Daten', description: 'Große Datenmengen per Upload importieren' },
+  { key: 'audit_log.read', label: 'Audit-Log einsehen', category: 'Daten', description: 'Protokoll aller Systemaktivitäten einsehen (Plattform-Pflicht)' },
   { key: 'audit_log.export', label: 'Audit-Log exportieren', category: 'Daten', description: 'Audit-Protokoll als Datei exportieren (Plattform-Pflicht)' },
   { key: 'data_residency.enforce', label: 'Datenresidenz erzwingen', category: 'Daten', description: 'EU/CH-Datenresidenz sicherstellen (Plattform-Pflicht)' },
-  { key: 'totp.require', label: '2FA-Pflicht', category: 'Daten', description: 'Zwei-Faktor-Authentifizierung fuer alle Benutzer erzwingen (Plattform-Pflicht)' },
+  { key: 'totp.require', label: '2FA-Pflicht', category: 'Daten', description: 'Zwei-Faktor-Authentifizierung für alle Benutzer erzwingen (Plattform-Pflicht)' },
   { key: 'rls.enforce', label: 'Row-Level-Security', category: 'Daten', description: 'Mandantentrennung auf Datenbankebene (Plattform-Pflicht)' },
 ]
 

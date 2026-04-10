@@ -26,13 +26,13 @@ export async function updateTenantBrandingAction(
   }
 
   if (!HEX_COLOR_REGEX.test(branding.primary_color)) {
-    return { error: 'Ungueltige Primaerfarbe.' }
+    return { error: 'Ungültige Primärfarbe.' }
   }
   if (!HEX_COLOR_REGEX.test(branding.secondary_color)) {
-    return { error: 'Ungueltige Sekundaerfarbe.' }
+    return { error: 'Ungültige Sekundärfarbe.' }
   }
   if (!HEX_COLOR_REGEX.test(branding.accent_color)) {
-    return { error: 'Ungueltige Akzentfarbe.' }
+    return { error: 'Ungültige Akzentfarbe.' }
   }
   if (!branding.font_family || branding.font_family.length < 1) {
     return { error: 'Bitte geben Sie eine Schriftart an.' }
@@ -99,7 +99,7 @@ export async function updateTenantStatusAction(
 
   const validStatuses: TenantStatus[] = ['active', 'suspended', 'archived']
   if (!validStatuses.includes(status)) {
-    return { error: 'Ungueltiger Status.' }
+    return { error: 'Ungültiger Status.' }
   }
 
   const serviceClient = createSupabaseServiceClient()

@@ -60,7 +60,7 @@ export function PlatformShell({ navItems, userName, children }: PlatformShellPro
           }}
           role="button"
           tabIndex={0}
-          aria-label="Seitenleiste schliessen"
+          aria-label="Seitenleiste schließen"
         />
       )}
 
@@ -147,7 +147,7 @@ export function PlatformShell({ navItems, userName, children }: PlatformShellPro
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            aria-label="Navigation oeffnen"
+            aria-label="Navigation öffnen"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

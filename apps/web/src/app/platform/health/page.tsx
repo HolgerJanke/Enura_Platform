@@ -37,7 +37,7 @@ const MOCK_SERVICES: ServiceStatus[] = [
 
 const STATUS_CONFIG: Record<string, { label: string; dotClass: string; bgClass: string }> = {
   operational: { label: 'Betriebsbereit', dotClass: 'bg-green-500', bgClass: 'bg-green-50 text-green-700' },
-  degraded: { label: 'Beeintraechtigt', dotClass: 'bg-yellow-500', bgClass: 'bg-yellow-50 text-yellow-700' },
+  degraded: { label: 'Beeinträchtigt', dotClass: 'bg-yellow-500', bgClass: 'bg-yellow-50 text-yellow-700' },
   down: { label: 'Ausgefallen', dotClass: 'bg-red-500', bgClass: 'bg-red-50 text-red-700' },
 }
 

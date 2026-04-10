@@ -320,7 +320,7 @@ export async function rollbackDeploymentAction(
     .single()
 
   if (!originalDeployment) {
-    return { success: false, error: 'Urspruengliches Deployment nicht gefunden.' }
+    return { success: false, error: 'Ursprüngliches Deployment nicht gefunden.' }
   }
 
   const origRow = originalDeployment as Record<string, unknown>

@@ -19,7 +19,7 @@ const CATEGORIES = [
 
 const ALL_ROLES = [
   { key: 'super_user', label: 'Super User' },
-  { key: 'geschaeftsfuehrung', label: 'Geschaeftsfuehrung' },
+  { key: 'geschaeftsfuehrung', label: 'Geschäftsführung' },
   { key: 'teamleiter', label: 'Teamleiter' },
   { key: 'setter', label: 'Setter' },
   { key: 'berater', label: 'Berater' },
@@ -113,7 +113,7 @@ export function NewProcessForm({
           className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
         >
           <option value="" disabled>
-            Unternehmen auswaehlen...
+            Unternehmen auswählen...
           </option>
           {companies.map((c) => (
             <option key={c.id} value={c.id}>
@@ -156,7 +156,7 @@ export function NewProcessForm({
           className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
         >
           <option value="" disabled>
-            Kategorie waehlen...
+            Kategorie wählen...
           </option>
           {CATEGORIES.map((cat) => (
             <option key={cat.value} value={cat.value}>
@@ -210,7 +210,7 @@ export function NewProcessForm({
       <div>
         <fieldset>
           <legend className="block text-sm font-medium text-gray-700 mb-2">
-            Sichtbar fuer Rollen
+            Sichtbar für Rollen
           </legend>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {ALL_ROLES.map((role) => (
@@ -269,14 +269,14 @@ export function NewProcessForm({
               Vorlage
             </label>
             {templates.length === 0 ? (
-              <p className="text-sm text-gray-500">Keine Vorlagen verfuegbar.</p>
+              <p className="text-sm text-gray-500">Keine Vorlagen verfügbar.</p>
             ) : (
               <select
                 id="templateId"
                 name="templateId"
                 className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
               >
-                <option value="">Vorlage waehlen...</option>
+                <option value="">Vorlage wählen...</option>
                 {templates.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} ({t.category})

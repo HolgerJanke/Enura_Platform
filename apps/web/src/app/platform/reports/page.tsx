@@ -25,7 +25,7 @@ export default async function PlatformReportsPage() {
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">Plattform-Berichte</h1>
       <p className="text-sm text-gray-500 mb-8">
-        Uebergreifende Berichte und KPI-Aggregation ueber alle Holdings und Companies.
+        Uebergreifende Berichte und KPI-Aggregation über alle Holdings und Companies.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
@@ -44,7 +44,7 @@ export default async function PlatformReportsPage() {
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-        <p className="text-gray-500">Detaillierte Cross-Holding-Berichte werden in einer kuenftigen Version verfuegbar sein.</p>
+        <p className="text-gray-500">Detaillierte Cross-Holding-Berichte werden in einer kuenftigen Version verfügbar sein.</p>
       </div>
     </div>
   )

@@ -40,7 +40,7 @@ export async function overrideCallScoresAction(
     !validateScore(closing) ||
     !validateScore(tone)
   ) {
-    return { error: 'Alle Bewertungen muessen zwischen 1 und 10 liegen' }
+    return { error: 'Alle Bewertungen müssen zwischen 1 und 10 liegen' }
   }
 
   if (!data.callId) {

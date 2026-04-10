@@ -54,7 +54,7 @@ export async function saveWizardStep(
       break
     case 5:
       if (!stepData.adminEmail || !stepData.adminEmail.includes('@')) {
-        return { success: false, error: 'Gueltige E-Mail-Adresse erforderlich' }
+        return { success: false, error: 'Gültige E-Mail-Adresse erforderlich' }
       }
       if (!stepData.adminFirstName || !stepData.adminLastName) {
         return { success: false, error: 'Vor- und Nachname sind erforderlich' }

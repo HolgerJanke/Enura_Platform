@@ -75,7 +75,7 @@ function computeStepDiffs(
         status: 'added',
         currentStep: null,
         newStep,
-        changes: ['Neuer Schritt hinzugefuegt'],
+        changes: ['Neuer Schritt hinzugefügt'],
       })
     } else if (currentStep && !newStep) {
       diffs.push({
@@ -93,13 +93,13 @@ function computeStepDiffs(
         changes.push(`Name: "${currentStep.name}" -> "${newStep.name}"`)
       }
       if (currentStep.description !== newStep.description) {
-        changes.push('Beschreibung geaendert')
+        changes.push('Beschreibung geändert')
       }
       if (
         JSON.stringify(currentStep.responsible_roles) !==
         JSON.stringify(newStep.responsible_roles)
       ) {
-        changes.push('Verantwortliche Rollen geaendert')
+        changes.push('Verantwortliche Rollen geändert')
       }
       if (currentStep.show_in_flowchart !== newStep.show_in_flowchart) {
         changes.push(
@@ -107,7 +107,7 @@ function computeStepDiffs(
         )
       }
       if (currentStep.liquidity_marker !== newStep.liquidity_marker) {
-        changes.push('Liquiditaets-Marker geaendert')
+        changes.push('Liquiditäts-Marker geändert')
       }
       if (currentStep.sort_order !== newStep.sort_order) {
         changes.push(
@@ -118,13 +118,13 @@ function computeStepDiffs(
         JSON.stringify(currentStep.sources) !==
         JSON.stringify(newStep.sources)
       ) {
-        changes.push('Datenquellen geaendert')
+        changes.push('Datenquellen geändert')
       }
       if (
         JSON.stringify(currentStep.interfaces) !==
         JSON.stringify(newStep.interfaces)
       ) {
-        changes.push('Schnittstellen geaendert')
+        changes.push('Schnittstellen geändert')
       }
 
       diffs.push({
@@ -171,7 +171,7 @@ export function DiffViewer({
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
         <p className="text-sm text-gray-500">
-          Kein Versions-Snapshot verfuegbar fuer diese Version.
+          Kein Versions-Snapshot verfügbar für diese Version.
         </p>
       </div>
     )
@@ -197,11 +197,11 @@ export function DiffViewer({
         )}
         {changedCount > 0 && (
           <span className="text-sm font-medium text-amber-700">
-            ~{changedCount} geaendert
+            ~{changedCount} geändert
           </span>
         )}
         {addedCount === 0 && removedCount === 0 && changedCount === 0 && (
-          <span className="text-sm text-gray-500">Keine Aenderungen</span>
+          <span className="text-sm text-gray-500">Keine Änderungen</span>
         )}
       </div>
 
@@ -237,8 +237,8 @@ function StepDiffCard({ diff }: { diff: StepDiff }) {
   const statusLabel: Record<DiffStatus, string> = {
     added: 'Neu',
     removed: 'Entfernt',
-    changed: 'Geaendert',
-    unchanged: 'Unveraendert',
+    changed: 'Geändert',
+    unchanged: 'Unverändert',
   }
 
   const statusBadgeColor: Record<DiffStatus, string> = {

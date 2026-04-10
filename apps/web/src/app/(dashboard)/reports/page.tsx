@@ -57,7 +57,7 @@ export default async function ReportsArchivePage() {
           Berichtsarchiv
         </h1>
         <p className="text-brand-text-secondary mt-1">
-          Die letzten 30 taeglich generierten Berichte.
+          Die letzten 30 täglich generierten Berichte.
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default async function ReportsArchivePage() {
                   Datum
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-text-secondary">
-                  Empfaenger
+                  Empfänger
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-text-secondary">
                   Gesendet um
@@ -88,7 +88,7 @@ export default async function ReportsArchivePage() {
                     colSpan={4}
                     className="px-4 py-8 text-center text-sm text-brand-text-secondary"
                   >
-                    Noch keine Berichte vorhanden. Berichte werden taeglich automatisch generiert.
+                    Noch keine Berichte vorhanden. Berichte werden täglich automatisch generiert.
                   </td>
                 </tr>
               )}
@@ -104,7 +104,7 @@ export default async function ReportsArchivePage() {
                       {formatDate(report.report_date)}
                     </td>
                     <td className="px-4 py-3 text-sm text-brand-text-secondary">
-                      {recipientCount} Empfaenger
+                      {recipientCount} Empfänger
                     </td>
                     <td className="px-4 py-3 text-sm text-brand-text-secondary">
                       {formatDateTime(report.sent_at)}

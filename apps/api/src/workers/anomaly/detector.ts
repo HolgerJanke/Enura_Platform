@@ -179,7 +179,7 @@ async function detectLeadIngestionStopped(
       currentValue: 0,
       baselineValue: previousCount ?? 0,
       deviationPct: -100,
-      message: `Seit ${eightHoursAgo.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })} Uhr sind keine neuen Leads eingegangen. Vorheriger Zeitraum: ${previousCount} Leads. Bitte Connector pruefen.`,
+      message: `Seit ${eightHoursAgo.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })} Uhr sind keine neuen Leads eingegangen. Vorheriger Zeitraum: ${previousCount} Leads. Bitte Connector prüfen.`,
     })
   }
 
@@ -222,7 +222,7 @@ async function detectConnectorSyncFailure(
         currentValue: -1,
         baselineValue: intervalMinutes,
         deviationPct: 100,
-        message: `Connector "${connectorName}" wurde noch nie synchronisiert. Bitte Konfiguration pruefen.`,
+        message: `Connector "${connectorName}" wurde noch nie synchronisiert. Bitte Konfiguration prüfen.`,
       })
       continue
     }

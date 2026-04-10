@@ -6,9 +6,9 @@ import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 const STATUS_LABELS: Record<string, string> = {
   received: 'Eingegangen',
   extraction_done: 'Extrahiert',
-  match_review: 'Match-Pruefung',
-  in_validation: 'In Pruefung',
-  returned_formal: 'Zurueckgesendet',
+  match_review: 'Match-Prüfung',
+  in_validation: 'In Prüfung',
+  returned_formal: 'Zurückgesendet',
   formally_approved: 'Formal genehmigt',
   pending_approval: 'Genehmigung ausstehend',
   returned_internal: 'Interne Korrektur',
@@ -84,7 +84,7 @@ export default async function EingangPage() {
             Rechnung hochladen
           </Link>
           <Link href="/finanzplanung" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Zurueck
+            ← Zurück
           </Link>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default async function EingangPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nr.</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Rechnungssteller</th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Betrag</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Faelligkeit</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Fälligkeit</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Eingegangen</th>
               </tr>

@@ -222,11 +222,11 @@ export async function inviteUser(data: {
     .single()
 
   if (!company) {
-    return { success: false, error: 'Ungueltiges Unternehmen.' }
+    return { success: false, error: 'Ungültiges Unternehmen.' }
   }
 
   if (!data.email || !data.email.includes('@')) {
-    return { success: false, error: 'Bitte geben Sie eine gueltige E-Mail-Adresse ein.' }
+    return { success: false, error: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.' }
   }
 
   // Check if user already exists
@@ -399,7 +399,7 @@ export async function resetUser2fa(
     .eq('id', profileId)
 
   if (error) {
-    return { success: false, error: `Fehler beim Zuruecksetzen der 2FA: ${error.message}` }
+    return { success: false, error: `Fehler beim Zurücksetzen der 2FA: ${error.message}` }
   }
 
   await writeAuditLog({
@@ -598,7 +598,7 @@ export async function updateUserRolesFromHolding(
     .single()
 
   if (!company || (company as Record<string, unknown>)['holding_id'] !== session.holdingId) {
-    return { success: false, error: 'Unternehmen gehoert nicht zu dieser Holding.' }
+    return { success: false, error: 'Unternehmen gehört nicht zu dieser Holding.' }
   }
 
   // Get all roles for this company to validate roleIds

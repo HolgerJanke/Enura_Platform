@@ -21,7 +21,7 @@ Das folgende Skript dient als Bewertungsgrundlage für die Dimension "Skript-Ein
 
 ## Aufgabe
 
-Analysiere das obige Transkript anhand des bereitgestellten Skripts und bewerte das Gespräch in den vier Dimensionen. Antworte ausschliesslich mit einem JSON-Objekt im folgenden Format:
+Analysiere das obige Transkript anhand des bereitgestellten Skripts und bewerte das Gespräch in den vier Dimensionen. Antworte ausschließlich mit einem JSON-Objekt im folgenden Format:
 
 ```json
 {
@@ -41,7 +41,7 @@ Analysiere das obige Transkript anhand des bereitgestellten Skripts und bewerte 
     "<Priorisierter, umsetzbarer Verbesserungsvorschlag 1>",
     "<Priorisierter, umsetzbarer Verbesserungsvorschlag 2>"
   ],
-  "summary": "<Gesamtbewertung in 2-3 Sätzen: Was war gut, wo liegt das grösste Verbesserungspotenzial?>"
+  "summary": "<Gesamtbewertung in 2-3 Sätzen: Was war gut, wo liegt das größte Verbesserungspotenzial?>"
 }
 ```
 
@@ -50,4 +50,4 @@ Wichtige Hinweise:
 - Konkrete Textstellen aus dem Transkript zitieren, um Feedback zu belegen.
 - Verbesserungsvorschläge müssen umsetzbar und praxisnah sein.
 - Wenn ein Bereich nicht bewertbar ist (z.B. keine Einwände im Gespräch), bewerte mit 5 und vermerke dies im Feedback.
-- Antworte ausschliesslich mit dem JSON-Objekt, ohne zusätzlichen Text.
+- Antworte ausschließlich mit dem JSON-Objekt, ohne zusätzlichen Text.

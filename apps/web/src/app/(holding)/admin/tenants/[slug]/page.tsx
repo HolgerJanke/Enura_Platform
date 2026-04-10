@@ -70,7 +70,7 @@ export default async function TenantDetailPage({ params }: { params: { slug: str
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500">Unternehmen nicht gefunden.</p>
-        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurueck</a>
+        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurück</a>
       </div>
     )
   }
@@ -120,7 +120,7 @@ export default async function TenantDetailPage({ params }: { params: { slug: str
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Zurueck zur Uebersicht
+          Zurück zur Übersicht
         </Link>
       </div>
 
@@ -177,7 +177,7 @@ export default async function TenantDetailPage({ params }: { params: { slug: str
       <div className="p-8 text-center">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">Fehler beim Laden</h2>
         <p className="text-gray-500 text-sm mb-4">{msg}</p>
-        <a href="/admin" className="text-blue-600 underline text-sm">Zurueck zur Uebersicht</a>
+        <a href="/admin" className="text-blue-600 underline text-sm">Zurück zur Übersicht</a>
       </div>
     )
   }

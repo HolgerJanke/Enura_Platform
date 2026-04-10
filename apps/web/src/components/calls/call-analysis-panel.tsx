@@ -29,7 +29,7 @@ type CallAnalysisPanelProps = {
   onClose: () => void
 }
 
-type FeedbackTab = 'leitfaden' | 'einwaende' | 'terminierung' | 'tonfall'
+type FeedbackTab = 'leitfaden' | 'einwände' | 'terminierung' | 'tonfall'
 
 function getScoreColor(score: number | null): string {
   if (score === null) return 'bg-gray-200'
@@ -98,7 +98,7 @@ function ScoreBar({
 
 const FEEDBACK_TABS: Array<{ key: FeedbackTab; label: string }> = [
   { key: 'leitfaden', label: 'Leitfaden' },
-  { key: 'einwaende', label: 'Einwaende' },
+  { key: 'einwände', label: 'Einwände' },
   { key: 'terminierung', label: 'Terminierung' },
   { key: 'tonfall', label: 'Tonfall' },
 ]
@@ -111,7 +111,7 @@ function getFeedbackForTab(
 
   const feedbackMap: Record<FeedbackTab, string> = {
     leitfaden: 'greeting_feedback',
-    einwaende: 'objection_feedback',
+    einwände: 'objection_feedback',
     terminierung: 'closing_feedback',
     tonfall: 'tone_feedback',
   }
@@ -168,7 +168,7 @@ export function CallAnalysisPanel({
         onKeyDown={handleKeyDown}
         role="button"
         tabIndex={0}
-        aria-label="Panel schliessen"
+        aria-label="Panel schließen"
       />
 
       {/* Slide-over panel */}
@@ -194,7 +194,7 @@ export function CallAnalysisPanel({
             type="button"
             onClick={onClose}
             className="rounded-brand p-2 text-brand-text-secondary hover:bg-gray-100 hover:text-brand-text-primary transition-colors"
-            aria-label="Panel schliessen"
+            aria-label="Panel schließen"
           >
             <svg
               className="h-5 w-5"
@@ -218,7 +218,7 @@ export function CallAnalysisPanel({
           {!analysis ? (
             <div className="rounded-brand bg-gray-50 p-6 text-center">
               <p className="text-sm text-brand-text-secondary">
-                Fuer diesen Anruf liegt noch keine Analyse vor.
+                Für diesen Anruf liegt noch keine Analyse vor.
               </p>
             </div>
           ) : (
@@ -413,9 +413,9 @@ export function CallAnalysisPanel({
                       type="button"
                       onClick={() => setShowOverrideForm(true)}
                       className="w-full rounded-brand border border-gray-300 px-4 py-2.5 text-sm font-medium text-brand-text-primary hover:bg-gray-50 transition-colors"
-                      aria-label="Bewertung ueberschreiben"
+                      aria-label="Bewertung überschreiben"
                     >
-                      Bewertung ueberschreiben
+                      Bewertung überschreiben
                     </button>
                   )}
                 </div>

@@ -52,7 +52,7 @@ export async function acceptInvitation(
     .maybeSingle()
 
   if (invError || !invitation) {
-    return { success: false, error: 'Ungueltige Einladung.' }
+    return { success: false, error: 'Ungültige Einladung.' }
   }
 
   // Check status
@@ -62,7 +62,7 @@ export async function acceptInvitation(
       error:
         invitation.status === 'accepted'
           ? 'Diese Einladung wurde bereits angenommen.'
-          : 'Diese Einladung ist nicht mehr gueltig.',
+          : 'Diese Einladung ist nicht mehr gültig.',
     }
   }
 

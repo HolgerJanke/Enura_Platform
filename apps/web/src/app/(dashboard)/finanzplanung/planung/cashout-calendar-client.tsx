@@ -120,7 +120,7 @@ export function CashoutCalendar({ invoices, onScheduleChange }: Props) {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {mode === 'daily' ? 'Taeglich' : mode === 'weekly' ? 'Woechentlich' : 'Monatlich'}
+              {mode === 'daily' ? 'Täglich' : mode === 'weekly' ? 'Wöchentlich' : 'Monatlich'}
             </button>
           ))}
         </div>
@@ -130,7 +130,7 @@ export function CashoutCalendar({ invoices, onScheduleChange }: Props) {
             onClick={() => navigate(-1)}
             className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
           >
-            ← Zurueck
+            ← Zurück
           </button>
           <button
             type="button"

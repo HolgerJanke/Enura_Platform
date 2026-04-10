@@ -110,11 +110,11 @@ export default function NewToolPage() {
           href="/admin/tools"
           className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
-          &larr; Zurueck zur Tool-Registry
+          &larr; Zurück zur Tool-Registry
         </Link>
         <h1 className="text-2xl font-semibold text-gray-900 mt-2">Neues Tool registrieren</h1>
         <p className="text-gray-500 mt-1">
-          Registrieren Sie ein externes Tool oder eine Integration fuer Ihre Holding.
+          Registrieren Sie ein externes Tool oder eine Integration für Ihre Holding.
         </p>
       </div>
 
@@ -184,9 +184,9 @@ export default function NewToolPage() {
             onChange={(e) => setCategory(e.target.value)}
             required
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Tool-Kategorie auswaehlen"
+            aria-label="Tool-Kategorie auswählen"
           >
-            <option value="">Kategorie auswaehlen...</option>
+            <option value="">Kategorie auswählen...</option>
             {CATEGORY_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
@@ -228,9 +228,9 @@ export default function NewToolPage() {
             onChange={(e) => setAuthType(e.target.value)}
             required
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Authentifizierungstyp auswaehlen"
+            aria-label="Authentifizierungstyp auswählen"
           >
-            <option value="">Auth-Typ auswaehlen...</option>
+            <option value="">Auth-Typ auswählen...</option>
             {AUTH_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}

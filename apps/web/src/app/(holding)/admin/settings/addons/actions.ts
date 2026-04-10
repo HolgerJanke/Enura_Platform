@@ -14,7 +14,7 @@ export async function toggleHoldingFinanzplanung(
 ): Promise<{ success: boolean; error?: string }> {
   const session = await getSession()
   if (!session?.isEnuraAdmin) {
-    return { success: false, error: 'Nur Enura-Admins koennen Holdings lizenzieren.' }
+    return { success: false, error: 'Nur Enura-Admins können Holdings lizenzieren.' }
   }
 
   const supabase = createSupabaseServerClient()
@@ -58,7 +58,7 @@ export async function toggleCompanyFinanzplanung(
       .maybeSingle()
 
     if (!sub?.finanzplanung_enabled) {
-      return { success: false, error: 'Finanzplanung ist fuer Ihre Holding nicht aktiviert.' }
+      return { success: false, error: 'Finanzplanung ist für Ihre Holding nicht aktiviert.' }
     }
   }
 

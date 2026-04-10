@@ -133,7 +133,7 @@ export default async function CertificationsPage() {
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Zertifizierungs-Roadmap</h1>
           <p className="text-gray-500 mt-1">
-            Uebersicht aller Zertifizierungen mit Status, Fristen und verknuepften Dokumenten
+            Übersicht aller Zertifizierungen mit Status, Fristen und verknüpften Dokumenten
           </p>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default async function CertificationsPage() {
       {certs.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
           <p className="text-sm text-gray-500">
-            Noch keine Zertifizierungen angelegt. Zertifizierungen koennen ueber die API
+            Noch keine Zertifizierungen angelegt. Zertifizierungen können über die API
             oder direkt in der Datenbank erstellt werden.
           </p>
         </div>

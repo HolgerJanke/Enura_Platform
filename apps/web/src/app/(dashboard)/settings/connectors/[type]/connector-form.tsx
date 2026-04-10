@@ -35,22 +35,22 @@ type TestResult = {
 const FIELD_DEFINITIONS: Record<string, ReadonlyArray<FieldDef>> = {
   reonic: [
     { key: 'apiBaseUrl', label: 'API Base URL', type: 'text', placeholder: 'https://api.reonic.com/v1' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Reonic API-Schluessel' },
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Reonic API-Schlüssel' },
   ],
   '3cx': [
     { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://ihre-instanz.3cx.eu/api' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr 3CX API-Schluessel' },
-    { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gespraechsaufnahmen automatisch in den EU-Speicher herunterladen' },
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr 3CX API-Schlüssel' },
+    { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gesprächsaufnahmen automatisch in den EU-Speicher herunterladen' },
   ],
   bexio: [
-    { key: 'oauth', label: 'Bexio Verbindung', type: 'oauth', helpText: 'Verbinden Sie Ihr Bexio-Konto ueber OAuth 2.0' },
+    { key: 'oauth', label: 'Bexio Verbindung', type: 'oauth', helpText: 'Verbinden Sie Ihr Bexio-Konto über OAuth 2.0' },
   ],
   google_calendar: [
-    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', helpText: 'Fuegen Sie den vollstaendigen JSON-Schluessel des Google Service Accounts ein' },
+    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', helpText: 'Fügen Sie den vollständigen JSON-Schlüssel des Google Service Accounts ein' },
     { key: 'calendarEmails', label: 'Kalender E-Mails', type: 'textarea', placeholder: 'mitarbeiter1@firma.ch\nmitarbeiter2@firma.ch', helpText: 'Eine E-Mail-Adresse pro Zeile. Diese Kalender werden synchronisiert.' },
   ],
   leadnotes: [
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Leadnotes API-Schluessel' },
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Leadnotes API-Schlüssel' },
   ],
 }
 

@@ -119,7 +119,7 @@ export default function BankUploadPage() {
       </h1>
       <p className="text-sm text-brand-text-secondary mb-6">
         Laden Sie eine Kontoauszugsdatei hoch, um Transaktionen mit geplanten
-        Liquiditaetsereignissen abzugleichen.
+        Liquiditätsereignissen abzugleichen.
       </p>
 
       {/* File format selector */}
@@ -171,7 +171,7 @@ export default function BankUploadPage() {
           accept=".xml,.csv,.txt,.sta"
           onChange={handleFileSelect}
           className="hidden"
-          aria-label="Bankdatei auswaehlen"
+          aria-label="Bankdatei auswählen"
         />
 
         {file ? (
@@ -204,7 +204,7 @@ export default function BankUploadPage() {
               }}
               className="mt-3 text-xs text-brand-text-secondary underline hover:text-brand-text-primary"
             >
-              Andere Datei waehlen
+              Andere Datei wählen
             </button>
           </div>
         ) : (
@@ -300,7 +300,7 @@ export default function BankUploadPage() {
               onClick={() => router.push(`/liquidity/${companyId}`)}
               className="flex-1 rounded-brand bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90"
             >
-              Zur Liquiditaetsplanung
+              Zur Liquiditätsplanung
             </button>
             <button
               type="button"

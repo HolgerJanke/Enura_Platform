@@ -105,7 +105,7 @@ export default async function AnomaliesPage() {
           Anomalie-Erkennung
         </h1>
         <p className="mt-1 text-sm text-brand-text-secondary">
-          Automatisch erkannte Abweichungen und Warnungen fuer Ihre KPIs und Systeme.
+          Automatisch erkannte Abweichungen und Warnungen für Ihre KPIs und Systeme.
         </p>
       </div>
 

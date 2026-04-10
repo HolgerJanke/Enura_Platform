@@ -59,7 +59,7 @@ export function HelpFeedback({ articleSlug, articleLevel }: HelpFeedbackProps) {
             d="M5 13l4 4L19 7"
           />
         </svg>
-        <span>Danke fuer Ihr Feedback!</span>
+        <span>Danke für Ihr Feedback!</span>
       </div>
     )
   }

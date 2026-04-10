@@ -70,7 +70,7 @@ export default async function ProcessBuilderPage({
     ])
 
   if (defResult.error || !defResult.data) {
-    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurück</a></div>)
   }
 
   const definition = defResult.data as ProcessDefinitionRow

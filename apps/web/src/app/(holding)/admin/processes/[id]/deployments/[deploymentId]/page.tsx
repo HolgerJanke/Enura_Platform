@@ -215,7 +215,7 @@ export default async function DeploymentApprovalPage({
 
         {reviewerName && (
           <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Geprueft von</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Geprüft von</p>
             <p className="mt-1 text-sm font-medium text-gray-900">{reviewerName}</p>
             <p className="text-xs text-gray-500 mt-0.5">
               {deployRow['reviewed_at']
@@ -258,7 +258,7 @@ export default async function DeploymentApprovalPage({
 
       {/* Diff viewer */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Aenderungen</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Änderungen</h2>
         <DiffViewer
           currentSnapshot={currentSnapshot}
           newSnapshot={newSnapshot}
@@ -279,7 +279,7 @@ export default async function DeploymentApprovalPage({
       {isPending && isRequester && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm text-amber-800">
-            Vier-Augen-Prinzip: Sie haben dieses Deployment beantragt und koennen es
+            Vier-Augen-Prinzip: Sie haben dieses Deployment beantragt und können es
             daher nicht selbst freigeben. Ein anderer Holding-Admin muss die Freigabe erteilen.
           </p>
         </div>

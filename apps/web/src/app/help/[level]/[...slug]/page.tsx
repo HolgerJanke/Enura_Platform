@@ -25,25 +25,25 @@ const ARTICLE_CONTENT: Record<string, string> = {
   'erste-schritte': `
 ## Willkommen auf der Plattform
 
-Diese Anleitung fuehrt Sie durch die ersten Schritte nach der Einrichtung Ihres Benutzerkontos.
+Diese Anleitung führt Sie durch die ersten Schritte nach der Einrichtung Ihres Benutzerkontos.
 
 ### Anmeldung
 
-1. Oeffnen Sie die Plattform-URL in Ihrem Browser.
-2. Geben Sie Ihre E-Mail-Adresse und das temporaere Passwort ein, das Sie von Ihrem Administrator erhalten haben.
+1. Öffnen Sie die Plattform-URL in Ihrem Browser.
+2. Geben Sie Ihre E-Mail-Adresse und das temporäre Passwort ein, das Sie von Ihrem Administrator erhalten haben.
 3. Klicken Sie auf **Anmelden**.
 
-### Passwort aendern
+### Passwort ändern
 
 Nach der ersten Anmeldung werden Sie aufgefordert, ein neues Passwort zu setzen.
-Ihr neues Passwort muss mindestens 12 Zeichen lang sein und Gross-/Kleinbuchstaben, Zahlen und Sonderzeichen enthalten.
+Ihr neues Passwort muss mindestens 12 Zeichen lang sein und Groß-/Kleinbuchstaben, Zahlen und Sonderzeichen enthalten.
 
 ### Zwei-Faktor-Authentifizierung (2FA)
 
-Nach dem Passwortwechsel muessen Sie die 2FA einrichten:
+Nach dem Passwortwechsel müssen Sie die 2FA einrichten:
 
 1. Scannen Sie den QR-Code mit einer Authenticator-App (z.B. Google Authenticator, Authy).
-2. Geben Sie den 6-stelligen Code ein, um die Einrichtung zu bestaetigen.
+2. Geben Sie den 6-stelligen Code ein, um die Einrichtung zu bestätigen.
 3. **Wichtig:** Bewahren Sie Ihre Wiederherstellungscodes sicher auf.
 
 ### Navigation
@@ -53,21 +53,21 @@ Nach der Einrichtung gelangen Sie zu Ihrem Dashboard. Die Navigation befindet si
   'setter-dashboard': `
 ## Setter-Dashboard
 
-Das Setter-Dashboard zeigt Ihnen alle wichtigen KPIs und Statistiken zu Ihrer Setter-Taetigkeit.
+Das Setter-Dashboard zeigt Ihnen alle wichtigen KPIs und Statistiken zu Ihrer Setter-Tätigkeit.
 
-### KPIs im Ueberblick
+### KPIs im Überblick
 
-- **Anrufe/Tag**: Anzahl der getaetigten Anrufe pro Tag
+- **Anrufe/Tag**: Anzahl der getätigten Anrufe pro Tag
 - **Erreichbarkeitsquote**: Anteil der beantworteten Anrufe
 - **Gebuchte Termine**: Anzahl der vereinbarten Beratungstermine
-- **Terminquote**: Verhaeltnis von Terminen zu Anrufen
-- **Durchschnittliche Anrufdauer**: Mittlere Dauer Ihrer Gespraeche
+- **Terminquote**: Verhältnis von Terminen zu Anrufen
+- **Durchschnittliche Anrufdauer**: Mittlere Dauer Ihrer Gespräche
 - **No-Show-Rate**: Anteil der nicht wahrgenommenen Termine
 
 ### KI-Anrufanalyse
 
 Ihre Anrufe werden automatisch analysiert und auf einer Skala von 1-10 in vier Dimensionen bewertet:
-Gespraechsfuehrung, Bedarfsermittlung, Einwandbehandlung und Terminvereinbarung.
+Gesprächsführung, Bedarfsermittlung, Einwandbehandlung und Terminvereinbarung.
 
 ### Tipps
 
@@ -76,16 +76,16 @@ Nutzen Sie die Filteroptionen, um Ihre KPIs nach Zeitraum zu filtern. Die Tagesb
   'berater-dashboard': `
 ## Berater-Dashboard
 
-Das Berater-Dashboard gibt Ihnen einen Ueberblick ueber Ihre Pipeline, Abschlussquoten und Umsaetze.
+Das Berater-Dashboard gibt Ihnen einen Überblick über Ihre Pipeline, Abschlussquoten und Umsätze.
 
-### KPIs im Ueberblick
+### KPIs im Überblick
 
 - **Termine/Woche**: Anzahl Ihrer Beratungstermine
 - **Abschlussquote**: Anteil der abgeschlossenen Offerten
 - **Offertvolumen (CHF)**: Gesamtwert Ihrer offenen Offerten
 - **Deal-Dauer**: Durchschnittliche Zeit bis zum Abschluss
-- **Aktivitaeten/Tag**: Anzahl der taeglichen Vertriebsaktivitaeten
-- **Umsatz/Berater**: Ihr persoenlicher Umsatz
+- **Aktivitäten/Tag**: Anzahl der täglichen Vertriebsaktivitäten
+- **Umsatz/Berater**: Ihr persönlicher Umsatz
 
 ### Pipeline-Ansicht
 
@@ -94,7 +94,7 @@ Die Pipeline zeigt Ihnen alle Offerten nach Status (Entwurf, Gesendet, Verhandlu
   'leads-verwalten': `
 ## Leads verwalten
 
-In der Lead-Uebersicht sehen Sie alle zugewiesenen Leads mit Status und Bearbeitungshistorie.
+In der Lead-Übersicht sehen Sie alle zugewiesenen Leads mit Status und Bearbeitungshistorie.
 
 ### Lead-Status
 
@@ -113,39 +113,39 @@ Nutzen Sie die Filterleiste, um Leads nach Status, Quelle oder Zeitraum einzugre
 
 Das 27-Phasen-Kanban-Board bildet den gesamten Projektlebenszyklus ab.
 
-### Phasen-Ueberblick
+### Phasen-Überblick
 
-Projekte durchlaufen 27 Phasen von der Auftragsbestaetigung bis zur Schlussabnahme. Jede Phase hat klare Kriterien, wann ein Projekt in die naechste Phase wechseln kann.
+Projekte durchlaufen 27 Phasen von der Auftragsbestätigung bis zur Schlussabnahme. Jede Phase hat klare Kriterien, wann ein Projekt in die nächste Phase wechseln kann.
 
 ### Warnungen
 
-Projekte, die laenger als die konfigurierte Schwelle in einer Phase verbleiben, werden automatisch hervorgehoben.
+Projekte, die länger als die konfigurierte Schwelle in einer Phase verbleiben, werden automatisch hervorgehoben.
 
 ### Drag-and-Drop
 
-Berechtigte Benutzer koennen Projekte per Drag-and-Drop zwischen Phasen verschieben.
+Berechtigte Benutzer können Projekte per Drag-and-Drop zwischen Phasen verschieben.
   `,
   'finanzen-cashflow': `
 ## Finanzen und Cashflow
 
-Das Finanzmodul zeigt Rechnungen, Zahlungseingaenge und Liquiditaetsprognosen.
+Das Finanzmodul zeigt Rechnungen, Zahlungseingänge und Liquiditätsprognosen.
 
 ### KPIs
 
 - **Monatsumsatz**: Gesamtumsatz des aktuellen Monats
 - **Offene Forderungen**: Unbezahlte Rechnungen
-- **Ueberfaellige Rechnungen**: Rechnungen nach Faelligkeit
-- **Woechentliche Zahlungen**: Eingegangene Zahlungen
-- **Liquiditaetsprognose**: 30/60/90-Tage-Vorschau
+- **Überfällige Rechnungen**: Rechnungen nach Fälligkeit
+- **Wöchentliche Zahlungen**: Eingegangene Zahlungen
+- **Liquiditätsprognose**: 30/60/90-Tage-Vorschau
 
 ### Cashflow-Upload
 
-Sie koennen Excel-Dateien mit Cashflow-Daten hochladen. Das System validiert und importiert die Daten automatisch.
+Sie können Excel-Dateien mit Cashflow-Daten hochladen. Das System validiert und importiert die Daten automatisch.
   `,
   'tagesberichte': `
 ## Tagesberichte
 
-Jeden Morgen erhalten Geschaeftsfuehrer und Teamleiter einen automatisch generierten Tagesbericht per E-Mail.
+Jeden Morgen erhalten Geschäftsführer und Teamleiter einen automatisch generierten Tagesbericht per E-Mail.
 
 ### Inhalt
 
@@ -155,12 +155,12 @@ Jeden Morgen erhalten Geschaeftsfuehrer und Teamleiter einen automatisch generie
 
 ### Konfiguration
 
-Super User koennen den Versandzeitpunkt und die Empfaenger in den Einstellungen anpassen.
+Super User können den Versandzeitpunkt und die Empfänger in den Einstellungen anpassen.
   `,
   'mandantenverwaltung': `
 ## Mandantenverwaltung
 
-Als Holding-Admin koennen Sie Mandanten (Unternehmen) anlegen und verwalten.
+Als Holding-Admin können Sie Mandanten (Unternehmen) anlegen und verwalten.
 
 ### Mandant anlegen
 
@@ -171,14 +171,14 @@ Als Holding-Admin koennen Sie Mandanten (Unternehmen) anlegen und verwalten.
 
 ### Branding
 
-Jeder Mandant erhaelt ein eigenes Farbschema, Logo und Schriftart. Das Branding wird serverseitig aufgeloest.
+Jeder Mandant erhält ein eigenes Farbschema, Logo und Schriftart. Das Branding wird serverseitig aufgelöst.
   `,
   'connector-einstellungen': `
 ## Connector-Einstellungen
 
 Connectors verbinden die Plattform mit externen Systemen.
 
-### Verfuegbare Connectors
+### Verfügbare Connectors
 
 | Connector | Sync-Intervall | Authentifizierung |
 |-----------|---------------|-------------------|
@@ -188,19 +188,19 @@ Connectors verbinden die Plattform mit externen Systemen.
 | Google Calendar | 15 Min. | Google OAuth |
 | Leadnotes | 15 Min. | REST API Key |
 
-### Status pruefen
+### Status prüfen
 
-Auf der Connector-Uebersichtsseite sehen Sie den Status jeder Verbindung. Bei Fehlern wird der Holding-Admin nach 3 fehlgeschlagenen Versuchen benachrichtigt.
+Auf der Connector-Übersichtsseite sehen Sie den Status jeder Verbindung. Bei Fehlern wird der Holding-Admin nach 3 fehlgeschlagenen Versuchen benachrichtigt.
   `,
   'rollen-berechtigungen': `
 ## Rollen und Berechtigungen
 
 Das Berechtigungssystem steuert den Zugriff auf Module und Funktionen.
 
-### Verfuegbare Rollen
+### Verfügbare Rollen
 
 - **Super User**: Voller Mandantenzugriff
-- **Geschaeftsfuehrung**: Alle Module, alle Mitarbeiter
+- **Geschäftsführung**: Alle Module, alle Mitarbeiter
 - **Teamleiter**: Team-KPIs, kein Finanzzugriff
 - **Setter/Berater**: Nur eigene Daten
 - **Innendienst**: Planung, kein Vertrieb
@@ -210,20 +210,20 @@ Das Berechtigungssystem steuert den Zugriff auf Module und Funktionen.
 
 ### Rollen zuweisen
 
-Navigieren Sie zu **Einstellungen > Benutzer**, waehlen Sie einen Benutzer und weisen Sie die gewuenschte Rolle zu.
+Navigieren Sie zu **Einstellungen > Benutzer**, wählen Sie einen Benutzer und weisen Sie die gewünschte Rolle zu.
   `,
   'plattform-admin': `
 ## Plattform-Administration
 
-Nur fuer Enura-Administratoren. Hier verwalten Sie Holdings und plattformweite Einstellungen.
+Nur für Enura-Administratoren. Hier verwalten Sie Holdings und plattformweite Einstellungen.
 
 ### Holdings verwalten
 
-Ein Holding ist die uebergeordnete Organisationseinheit, der mehrere Unternehmen zugeordnet werden koennen.
+Ein Holding ist die übergeordnete Organisationseinheit, der mehrere Unternehmen zugeordnet werden können.
 
 ### System-Monitoring
 
-Ueberwachen Sie den Zustand der Plattform: Connector-Health, Job-Queues und Systemmetriken.
+Überwachen Sie den Zustand der Plattform: Connector-Health, Job-Queues und Systemmetriken.
   `,
   'datenbank-migrationen': `
 ## Datenbank und Migrationen
@@ -232,45 +232,45 @@ Technische Dokumentation zum Datenbankschema und Migrationsprozess.
 
 ### Schema
 
-Das autoritative Schema liegt unter \`supabase/schema.sql\`. Aenderungen erfolgen ausschliesslich ueber nummerierte Migrationen.
+Das autoritative Schema liegt unter \`supabase/schema.sql\`. Änderungen erfolgen ausschließlich über nummerierte Migrationen.
 
 ### TimescaleDB
 
-Die Tabellen \`calls\`, \`cashflow_entries\`, \`calendar_events\`, \`kpi_snapshots\` und \`audit_log\` sind Hypertables. Queries muessen immer einen Zeitfilter enthalten.
+Die Tabellen \`calls\`, \`cashflow_entries\`, \`calendar_events\`, \`kpi_snapshots\` und \`audit_log\` sind Hypertables. Queries müssen immer einen Zeitfilter enthalten.
 
 ### Migrationsprozess
 
 1. Erstellen Sie eine neue Datei unter \`supabase/migrations/\`.
-2. Fuehren Sie die Migration lokal aus.
+2. Führen Sie die Migration lokal aus.
 3. Synchronisieren Sie das Prisma-Schema mit \`pnpm prisma db pull\`.
   `,
   'liquiditaetsplanung': `
-## Liquiditaetsplanung
+## Liquiditätsplanung
 
-Die Liquiditaetsplanung zeigt Budget-, Plan- und Ist-Werte fuer alle Zahlungsstroeme Ihrer Projekte.
+Die Liquiditätsplanung zeigt Budget-, Plan- und Ist-Werte für alle Zahlungsströme Ihrer Projekte.
 
 ### Drei Kategorien
 
 - **Budget**: Geplanter Betrag aus dem Prozessschritt-Template (vom Holding Admin im Process Builder festgelegt)
 - **Plan (Scheduled)**: Durch den Cash-out-Planer terminierte Zahlung — entsteht nach technischer Genehmigung einer Rechnung
-- **Ist (Actual)**: Tatsaechlicher Zahlungseingang/-ausgang (aus Bexio-Abgleich, Bank-Upload oder manueller Eingabe)
+- **Ist (Actual)**: Tatsächlicher Zahlungseingang/-ausgang (aus Bexio-Abgleich, Bank-Upload oder manueller Eingabe)
 
 ### Anzeigelogik
 
-Die Anzeige folgt einer Prioritaet: **Ist > Plan > Budget**. Wenn ein Ist-Wert vorhanden ist, wird dieser angezeigt. Plan und Budget erscheinen als Vergleichszeile.
+Die Anzeige folgt einer Priorität: **Ist > Plan > Budget**. Wenn ein Ist-Wert vorhanden ist, wird dieser angezeigt. Plan und Budget erscheinen als Vergleichszeile.
 
 ### Restwerte
 
-Wenn eine Rechnung kleiner als das Budget ist, kann der Cash-out-Planer einen Restwert anlegen. Maximal drei Restwerte pro Prozessschritt sind moeglich.
+Wenn eine Rechnung kleiner als das Budget ist, kann der Cash-out-Planer einen Restwert anlegen. Maximal drei Restwerte pro Prozessschritt sind möglich.
 
 ### Manueller Eintrag
 
-Klicken Sie auf ein Liquiditaetsereignis, um manuell Ist-Werte einzutragen (z.B. bei fehlender Bexio-Anbindung).
+Klicken Sie auf ein Liquiditätsereignis, um manuell Ist-Werte einzutragen (z.B. bei fehlender Bexio-Anbindung).
   `,
   'anomalien': `
 ## Anomalien und Warnungen
 
-Das Anomalie-Modul erkennt automatisch kritische Abweichungen in Ihren Geschaeftsprozessen.
+Das Anomalie-Modul erkennt automatisch kritische Abweichungen in Ihren Geschäftsprozessen.
 
 ### Schweregrade
 
@@ -280,7 +280,7 @@ Das Anomalie-Modul erkennt automatisch kritische Abweichungen in Ihren Geschaeft
 
 ### Behandlung
 
-Klicken Sie auf eine Anomalie, um Details zu sehen. Sie koennen Anomalien als "behandelt" markieren oder Kommentare hinzufuegen.
+Klicken Sie auf eine Anomalie, um Details zu sehen. Sie können Anomalien als "behandelt" markieren oder Kommentare hinzufügen.
   `,
   'branding': `
 ## Corporate Design / Branding
@@ -289,52 +289,52 @@ Verwalten Sie das visuelle Erscheinungsbild Ihrer Firmenumgebung.
 
 ### Markenfarben
 
-Jede Company erbt die Grundfarben von der Holding. Super User koennen einzelne Farben ueberschreiben:
-- **Primaerfarbe**: Hauptaktionsfarbe fuer Buttons und aktive Elemente
-- **Sekundaerfarbe**: Texte und Ueberschriften
+Jede Company erbt die Grundfarben von der Holding. Super User können einzelne Farben überschreiben:
+- **Primärfarbe**: Hauptaktionsfarbe für Buttons und aktive Elemente
+- **Sekundärfarbe**: Texte und Überschriften
 - **Akzentfarbe**: Hervorhebungen und Badges
-- **Hintergrund/Oberflaeche**: Seiten- und Kartenhintergrund
+- **Hintergrund/Oberfläche**: Seiten- und Kartenhintergrund
 - **Textfarben**: Haupt- und Nebentextfarbe
 
 ### Erweiterte Designwerte
 
-Schatten, Schriftgroessen, Zeilenhoehe und Rahmenbreite koennen feinjustiert werden.
+Schatten, Schriftgrößen, Zeilenhöhe und Rahmenbreite können feinjustiert werden.
 
 ### Benutzerdefiniertes CSS
 
-Laden Sie eine eigene CSS-Datei hoch fuer fortgeschrittene Anpassungen. Die Datei wird vor dem Hochladen auf Sicherheit geprueft.
+Laden Sie eine eigene CSS-Datei hoch für fortgeschrittene Anpassungen. Die Datei wird vor dem Hochladen auf Sicherheit geprüft.
 
 ### Vorschau
 
-Im Vorschau-Tab sehen Sie eine Live-Vorschau Ihrer Designaenderungen vor dem Speichern.
+Im Vorschau-Tab sehen Sie eine Live-Vorschau Ihrer Designänderungen vor dem Speichern.
   `,
   'benutzer-verwalten': `
 ## Benutzer verwalten
 
-Super User und Administratoren koennen Benutzer anlegen, Rollen zuweisen und Passwoerter zuruecksetzen.
+Super User und Administratoren können Benutzer anlegen, Rollen zuweisen und Passwörter zurücksetzen.
 
 ### Neuen Benutzer anlegen
 
 1. Navigieren Sie zu **Benutzer** in den Einstellungen.
 2. Klicken Sie auf **Neuer Benutzer**.
-3. Geben Sie Name, E-Mail und die gewuenschte Rolle ein.
-4. Der Benutzer erhaelt ein temporaeres Passwort und muss es beim ersten Login aendern.
+3. Geben Sie Name, E-Mail und die gewünschte Rolle ein.
+4. Der Benutzer erhält ein temporäres Passwort und muss es beim ersten Login ändern.
 
 ### Rollen
 
 Jede Rolle bestimmt, welche Module der Benutzer sehen kann:
 - **Setter**: Anrufe und Terminbuchungen
-- **Berater**: Pipeline und Abschluesse
+- **Berater**: Pipeline und Abschlüsse
 - **Innendienst**: Planung und IA-Status
 - **Buchhaltung**: Finanzen und Cashflow
-- **Geschaeftsfuehrung**: Alle Module (nur Lesen)
+- **Geschäftsführung**: Alle Module (nur Lesen)
 - **Teamleiter**: Setter, Berater und Leads
 - **Super User**: Voller Zugriff inkl. Einstellungen
 
 ### Finanzplanung-Rollen
 
-Falls das Finanzplanung-Modul aktiviert ist, stehen zusaetzliche Rollen zur Verfuegung:
-- **Rechnungspruefer**: Formale und inhaltliche Pruefung
+Falls das Finanzplanung-Modul aktiviert ist, stehen zusätzliche Rollen zur Verfügung:
+- **Rechnungsprüfer**: Formale und inhaltliche Prüfung
 - **Rechnungsgenehmiger**: Technische Freigabe
 - **Cash-out-Planer**: Zahlungsterminierung
 - **Finanzieller Genehmiger**: Finale Zahlungsfreigabe
@@ -344,27 +344,27 @@ Falls das Finanzplanung-Modul aktiviert ist, stehen zusaetzliche Rollen zur Verf
 
 Verbinden Sie externe Systeme mit der Plattform, um Daten automatisch zu synchronisieren.
 
-### Verfuegbare Connectoren
+### Verfügbare Connectoren
 
 | Connector | Typ | Synchronisation |
 |-----------|-----|-----------------|
 | Reonic CRM | REST API | Alle 15 Minuten |
 | 3CX Cloud | REST + Webhook | Alle 15 Minuten |
-| Bexio | OAuth 2.0 | Stuendlich |
+| Bexio | OAuth 2.0 | Stündlich |
 | Google Calendar | Google OAuth | Alle 15 Minuten |
 | Leadnotes | REST API | Alle 15 Minuten |
 
 ### Einrichtung
 
 1. Navigieren Sie zu **Integrationen** in den Einstellungen.
-2. Waehlen Sie den gewuenschten Connector.
+2. Wählen Sie den gewünschten Connector.
 3. Geben Sie die API-Zugangsdaten ein.
 4. Klicken Sie auf **Verbindung testen**.
 5. Nach erfolgreichem Test wird die automatische Synchronisation gestartet.
 
 ### Connector-Status
 
-Der Gesundheitsstatus jedes Connectors wird auf der Uebersichtsseite angezeigt. Bei Fehlern erhalten Sie eine Warnung im Dashboard.
+Der Gesundheitsstatus jedes Connectors wird auf der Übersichtsseite angezeigt. Bei Fehlern erhalten Sie eine Warnung im Dashboard.
   `,
   'leitfaden': `
 ## Leitfaden / Anrufskript
@@ -382,13 +382,13 @@ Erstellen und verwalten Sie Anrufskripte, die von der KI-Anrufanalyse als Bewert
 Die KI bewertet Setter-Anrufe anhand des hinterlegten Skripts auf vier Dimensionen:
 - Skripttreue
 - Einwandbehandlung
-- Gespraechsfuehrung
+- Gesprächsführung
 - Terminvereinbarung
 
-Jede Dimension erhaelt einen Score von 1-10.
+Jede Dimension erhält einen Score von 1-10.
   `,
   'finanzplanung-uebersicht': `
-## Finanzplanung — Uebersicht
+## Finanzplanung — Übersicht
 
 Das Finanzplanung-Modul ist ein separates Add-on, das von der Holding lizenziert und pro Unternehmen aktiviert wird. Es deckt die Cash-OUT-Seite ab: eingehende Rechnungen, deren Validierung, Genehmigung und gesteuerte Auszahlungsplanung.
 
@@ -397,62 +397,62 @@ Das Finanzplanung-Modul ist ein separates Add-on, das von der Holding lizenziert
 Das Finanzplanung-Modul besteht aus drei Bereichen:
 
 1. **Rechnungseingang**: Eingehende Rechnungen werden per E-Mail, Upload oder API empfangen und durch KI automatisch ausgelesen.
-2. **Validierungs-Workflow**: Dreistufiger Pruef- und Freigabeprozess (formale Pruefung → inhaltliche Pruefung → technische Genehmigung).
-3. **Cash-out-Planung**: Genehmigte Rechnungen terminieren, Zahlungslaeufe erstellen und Zahlungsdateien exportieren.
+2. **Validierungs-Workflow**: Dreistufiger Prüf- und Freigabeprozess (formale Prüfung → inhaltliche Prüfung → technische Genehmigung).
+3. **Cash-out-Planung**: Genehmigte Rechnungen terminieren, Zahlungsläufe erstellen und Zahlungsdateien exportieren.
 
 ### Rollen
 
-| Rolle | Zustaendigkeit |
+| Rolle | Zuständigkeit |
 |-------|----------------|
-| Rechnungspruefer | Formale und inhaltliche Pruefung (Schritt 1 + 2) |
+| Rechnungsprüfer | Formale und inhaltliche Prüfung (Schritt 1 + 2) |
 | Rechnungsgenehmiger | Technische Freigabe (Schritt 3) |
 | Cash-out-Planer | Zahlungsterminierung und Zahlungslauf-Erstellung |
-| Finanzieller Genehmiger | Finale Freigabe von Zahlungslaeufen |
+| Finanzieller Genehmiger | Finale Freigabe von Zahlungsläufen |
 
 ### Aktivierung
 
-Das Modul wird ueber **Holding Admin → Add-ons** pro Unternehmen aktiviert.
+Das Modul wird über **Holding Admin → Add-ons** pro Unternehmen aktiviert.
   `,
   'finanzplanung-eingang': `
 ## Finanzplanung — Rechnungseingang
 
 ### Rechnungen empfangen
 
-Rechnungen koennen auf drei Wegen eingehen:
+Rechnungen können auf drei Wegen eingehen:
 - **E-Mail**: Automatisches Polling eines dedizierten Rechnungseingangs-Postfachs
 - **Manueller Upload**: PDF oder Bild direkt in der Plattform hochladen
-- **API/Webhook**: Push-Eingang aus Buchhaltungssoftware (spaeter)
+- **API/Webhook**: Push-Eingang aus Buchhaltungssoftware (später)
 
 ### KI-Extraktion
 
 Sobald eine Rechnung eingeht, extrahiert die KI automatisch:
 - Rechnungssteller (Name, Adresse, USt-Nr., Kontaktdaten)
-- Empfaenger
+- Empfänger
 - Rechnungsnummer und -datum
 - Einzelne Positionen (Beschreibung, Menge, Preis)
 - Summen (Netto, USt, Brutto)
-- Zahlungsziel und Faelligkeitsdatum
+- Zahlungsziel und Fälligkeitsdatum
 
 ### Projekt-Matching
 
-Die extrahierten Daten werden automatisch einem Projekt zugeordnet. Bei niedriger Konfidenz (< 80%) erscheint die Rechnung im Status "Match-Pruefung" und muss manuell zugewiesen werden.
+Die extrahierten Daten werden automatisch einem Projekt zugeordnet. Bei niedriger Konfidenz (< 80%) erscheint die Rechnung im Status "Match-Prüfung" und muss manuell zugewiesen werden.
 
 ### Dreistufiger Validierungs-Workflow
 
-**Schritt 1 — Formale Pruefung** (Rechnungspruefer):
-- Vollstaendige Absenderangaben vorhanden?
+**Schritt 1 — Formale Prüfung** (Rechnungsprüfer):
+- Vollständige Absenderangaben vorhanden?
 - Rechnungsnummer und -datum vorhanden?
 - USt-Ausweis korrekt?
-- Entscheidung: Weiter zu Schritt 2 oder Zuruecksenden
+- Entscheidung: Weiter zu Schritt 2 oder Zurücksenden
 
-**Schritt 2 — Inhaltliche Pruefung** (Rechnungspruefer):
-- Faelligkeitsdatum pruefen oder ueberschreiben
+**Schritt 2 — Inhaltliche Prüfung** (Rechnungsprüfer):
+- Fälligkeitsdatum prüfen oder überschreiben
 - Budget-Vergleich (Rechnungswert vs. Prozessschritt-Budget)
-- Entscheidung: Weiter zu Schritt 3 oder Zuruecksenden
+- Entscheidung: Weiter zu Schritt 3 oder Zurücksenden
 
 **Schritt 3 — Technische Genehmigung** (Rechnungsgenehmiger):
-- Rechnungsdetails, Scan-Vorschau und Validator-Kommentar pruefen
-- Genehmigung ueber Plattform oder WhatsApp
+- Rechnungsdetails, Scan-Vorschau und Validator-Kommentar prüfen
+- Genehmigung über Plattform oder WhatsApp
 - Entscheidung: Genehmigen oder Ablehnen
   `,
   'finanzplanung-planung': `
@@ -465,22 +465,22 @@ Nach technischer Genehmigung erscheinen Rechnungen im Planungs-Tool des Cash-out
 ### Kalender-Ansicht
 
 Die Hauptansicht zeigt Rechnungen als Karten in Datumsspalten:
-- **Taeglich**: Detaillierte kurzfristige Planung
-- **Woechentlich**: Mittelfristige Uebersicht
-- **Monatlich**: Strategische Liquiditaetsplanung
+- **Täglich**: Detaillierte kurzfristige Planung
+- **Wöchentlich**: Mittelfristige Übersicht
+- **Monatlich**: Strategische Liquiditätsplanung
 
-Per Drag-and-Drop koennen Rechnungskarten in andere Datumsspalten verschoben werden, um das Zahlungsdatum zu aendern.
+Per Drag-and-Drop können Rechnungskarten in andere Datumsspalten verschoben werden, um das Zahlungsdatum zu ändern.
 
 ### Zahlungslauf erstellen
 
-1. Waehlen Sie genehmigte Rechnungen aus
-2. Erstellen Sie einen Zahlungslauf fuer ein bestimmtes Datum
-3. Pruefen Sie jede Position im Zahlungslauf
+1. Wählen Sie genehmigte Rechnungen aus
+2. Erstellen Sie einen Zahlungslauf für ein bestimmtes Datum
+3. Prüfen Sie jede Position im Zahlungslauf
 4. Reichen Sie den Zahlungslauf zur Genehmigung ein
 
 ### Finale Freigabe
 
-Der Finanzielle Genehmiger muss jede Position mindestens einmal oeffnen, bevor der "Finale Freigabe"-Button aktiv wird. Nach Freigabe wird die Zahlungsdatei generiert.
+Der Finanzielle Genehmiger muss jede Position mindestens einmal öffnen, bevor der "Finale Freigabe"-Button aktiv wird. Nach Freigabe wird die Zahlungsdatei generiert.
 
 ### Zahlungsdatei-Formate
 
@@ -496,11 +496,11 @@ Die Datei wird zum Download bereitgestellt und manuell im E-Banking importiert.
 
 ### Lieferanten-Stammdaten
 
-Die Lieferantentabelle wird automatisch aus eingehenden Rechnungen befuellt. Der Cash-out-Planer kann Lieferanten auch manuell anlegen und bearbeiten.
+Die Lieferantentabelle wird automatisch aus eingehenden Rechnungen befüllt. Der Cash-out-Planer kann Lieferanten auch manuell anlegen und bearbeiten.
 
 ### Felder
 
-- **Name und Adresse**: Firmenname, Strasse, PLZ, Ort, Land
+- **Name und Adresse**: Firmenname, Straße, PLZ, Ort, Land
 - **Identifikatoren**: Handelsregisternummer, USt-IdNr.
 - **Kontakt**: Ansprechpartner, Telefon, E-Mail
 - **Banking**: IBAN, BIC, Bankname
@@ -508,14 +508,14 @@ Die Lieferantentabelle wird automatisch aus eingehenden Rechnungen befuellt. Der
 
 ### Automatisches Matching
 
-Bei eingehenden Rechnungen wird der Rechnungssteller automatisch mit bestehenden Lieferanten abgeglichen — zuerst ueber USt-Nr., dann IBAN, dann normalisierter Name. Wird kein Match gefunden, wird ein neuer Lieferant angelegt.
+Bei eingehenden Rechnungen wird der Rechnungssteller automatisch mit bestehenden Lieferanten abgeglichen — zuerst über USt-Nr., dann IBAN, dann normalisierter Name. Wird kein Match gefunden, wird ein neuer Lieferant angelegt.
   `,
   'prozessvorlagen': `
 ## Prozessvorlagen hochladen
 
 ### JSON-Vorlagen
 
-Prozessvorlagen werden als JSON-Dateien hochgeladen und stehen danach beim Erstellen neuer Prozesse als Ausgangsbasis zur Verfuegung.
+Prozessvorlagen werden als JSON-Dateien hochgeladen und stehen danach beim Erstellen neuer Prozesse als Ausgangsbasis zur Verfügung.
 
 ### Format
 
@@ -551,29 +551,29 @@ Laden Sie die Beispielvorlage unter **Vorlagen verwalten → Beispielvorlage her
   'prozess-builder': `
 ## Prozess-Builder
 
-Der Prozess-Builder ermoeglicht Holding-Administratoren, Geschaeftsprozesse fuer ihre Tochtergesellschaften zu entwerfen.
+Der Prozess-Builder ermöglicht Holding-Administratoren, Geschäftsprozesse für ihre Tochtergesellschaften zu entwerfen.
 
 ### Prozess erstellen
 
 1. Navigieren Sie zu **Prozesse** im Holding-Admin-Bereich.
-2. Waehlen Sie ein Unternehmen und klicken Sie auf **Neuer Prozess**.
-3. Waehlen Sie optional eine Vorlage als Ausgangsbasis.
-4. Definieren Sie Schritte mit Verantwortlichkeiten, Zeitvorgaben und Liquiditaetsmarkern.
+2. Wählen Sie ein Unternehmen und klicken Sie auf **Neuer Prozess**.
+3. Wählen Sie optional eine Vorlage als Ausgangsbasis.
+4. Definieren Sie Schritte mit Verantwortlichkeiten, Zeitvorgaben und Liquiditätsmarkern.
 
 ### Prozessschritte
 
 Jeder Schritt kann konfiguriert werden mit:
 - **Name und Beschreibung**
-- **Verantwortliche Rollen**: Wer ist fuer diesen Schritt zustaendig?
+- **Verantwortliche Rollen**: Wer ist für diesen Schritt zuständig?
 - **Erwartete Dauer**: Sollzeit in Stunden
-- **Warnung nach X Tagen**: Automatische Warnung bei Verzoegerung
-- **Liquiditaetsmarker**: Trigger oder Event fuer die Liquiditaetsplanung
+- **Warnung nach X Tagen**: Automatische Warnung bei Verzögerung
+- **Liquiditätsmarker**: Trigger oder Event für die Liquiditätsplanung
 - **Datenquellen**: Welche externen Systeme liefern Daten?
-- **Schnittstellen**: API-Verbindungen fuer automatische Datenuebertragung
+- **Schnittstellen**: API-Verbindungen für automatische Datenübertragung
 
 ### Deployment
 
-Fertige Prozesse werden ueber den Deployment-Workflow an die Zielunternehmen verteilt. Aenderungen erfordern eine neue Version und Genehmigung.
+Fertige Prozesse werden über den Deployment-Workflow an die Zielunternehmen verteilt. Änderungen erfordern eine neue Version und Genehmigung.
   `,
   'addons': `
 ## Add-on Module verwalten
@@ -584,23 +584,23 @@ Das Finanzplanung-Modul ist ein separates Add-on, das nicht im Grundpaket enthal
 
 ### Aktivierung
 
-1. **Holding-Ebene**: Das Modul muss zuerst fuer Ihre Holding lizenziert werden. Wenden Sie sich an Ihren Enura-Ansprechpartner.
-2. **Company-Ebene**: Nach der Lizenzierung koennen Sie das Modul ueber **Add-ons** in den Holding-Einstellungen pro Unternehmen aktivieren/deaktivieren.
+1. **Holding-Ebene**: Das Modul muss zuerst für Ihre Holding lizenziert werden. Wenden Sie sich an Ihren Enura-Ansprechpartner.
+2. **Company-Ebene**: Nach der Lizenzierung können Sie das Modul über **Add-ons** in den Holding-Einstellungen pro Unternehmen aktivieren/deaktivieren.
 
 ### Toggle
 
-Verwenden Sie den Schalter neben jedem Unternehmen, um das Modul zu aktivieren oder zu deaktivieren. Die Aenderung wird sofort wirksam.
+Verwenden Sie den Schalter neben jedem Unternehmen, um das Modul zu aktivieren oder zu deaktivieren. Die Änderung wird sofort wirksam.
   `,
   'compliance': `
 ## Compliance und Zertifizierungen
 
 ### Compliance-Regeln
 
-Definieren Sie Compliance-Regeln, die automatisch gegen Ihre Geschaeftsprozesse geprueft werden. Regeln koennen manuell oder automatisch ausgewertet werden.
+Definieren Sie Compliance-Regeln, die automatisch gegen Ihre Geschäftsprozesse geprüft werden. Regeln können manuell oder automatisch ausgewertet werden.
 
-### Pruefungen
+### Prüfungen
 
-Compliance-Pruefungen werden regelmaessig durchgefuehrt und dokumentiert. Jede Pruefung erhaelt einen Status: bestanden, nicht bestanden, oder ausstehend.
+Compliance-Prüfungen werden regelmäßig durchgeführt und dokumentiert. Jede Prüfung erhält einen Status: bestanden, nicht bestanden, oder ausstehend.
 
 ### Zertifizierungen
 
@@ -608,7 +608,7 @@ Verwalten Sie Zertifizierungen (z.B. ISO 9001, ISO 14001) mit Ablaufdaten. Das S
 
 ### Dokumente
 
-Laden Sie Compliance-relevante Dokumente hoch und verknuepfen Sie diese mit Regeln und Pruefungen.
+Laden Sie Compliance-relevante Dokumente hoch und verknüpfen Sie diese mit Regeln und Prüfungen.
   `,
 }
 
@@ -621,7 +621,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   // Validate level
   if (!['company', 'holding', 'meta'].includes(level)) {
-    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurück</a></div>)
   }
 
   // Check access
@@ -636,7 +636,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // Find article metadata
   const article = HELP_ARTICLES.find((a) => a.slug === articleSlug && a.level === level)
   if (!article) {
-    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurueck</a></div>)
+    return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurück</a></div>)
   }
 
   // Get content

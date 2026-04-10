@@ -39,7 +39,7 @@ export async function fulfillCheck(checkId: string, notes?: string): Promise<{ s
     .eq('holding_id', holdingId)
 
   if (error) {
-    return { success: false, error: `Fehler beim Erfuellen: ${error.message}` }
+    return { success: false, error: `Fehler beim Erfüllen: ${error.message}` }
   }
 
   revalidatePath('/admin/compliance')
@@ -59,7 +59,7 @@ export async function waiveCheck(
   const supabase = createSupabaseServerClient()
 
   if (!reason.trim()) {
-    return { success: false, error: 'Eine Begruendung ist erforderlich.' }
+    return { success: false, error: 'Eine Begründung ist erforderlich.' }
   }
 
   const { error } = await supabase
@@ -74,7 +74,7 @@ export async function waiveCheck(
     .eq('holding_id', holdingId)
 
   if (error) {
-    return { success: false, error: `Fehler beim Zurueckstellen: ${error.message}` }
+    return { success: false, error: `Fehler beim Zurückstellen: ${error.message}` }
   }
 
   revalidatePath('/admin/compliance')

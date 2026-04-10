@@ -34,7 +34,7 @@ export function DeployForm({
     setSuccess(false)
 
     if (!selectedCompanyId) {
-      setError('Bitte waehlen Sie ein Zielunternehmen aus.')
+      setError('Bitte wählen Sie ein Zielunternehmen aus.')
       return
     }
 
@@ -71,10 +71,10 @@ export function DeployForm({
           value={selectedCompanyId}
           onChange={(e) => setSelectedCompanyId(e.target.value)}
           className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[var(--brand-primary,#1A56DB)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary,#1A56DB)]"
-          aria-label="Zielunternehmen auswaehlen"
+          aria-label="Zielunternehmen auswählen"
           disabled={isPending}
         >
-          <option value="">Unternehmen auswaehlen...</option>
+          <option value="">Unternehmen auswählen...</option>
           {companies.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name} ({c.slug})
@@ -105,7 +105,7 @@ export function DeployForm({
           onChange={(e) => setReason(e.target.value)}
           rows={3}
           className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-[var(--brand-primary,#1A56DB)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary,#1A56DB)]"
-          placeholder="Beschreiben Sie den Grund fuer dieses Deployment..."
+          placeholder="Beschreiben Sie den Grund für dieses Deployment..."
           disabled={isPending}
         />
       </div>

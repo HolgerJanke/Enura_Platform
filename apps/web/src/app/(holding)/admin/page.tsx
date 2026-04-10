@@ -199,7 +199,7 @@ export default async function HoldingAdminPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Holding-Uebersicht</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Holding-Übersicht</h1>
           <p className="text-gray-500 mt-1">
             Cross-Tenant Health Monitoring &mdash; Aggregierte Kennzahlen aller Tochtergesellschaften
           </p>

@@ -84,7 +84,7 @@ export function PaymentRunClient({ runId, status, items, canPlan, canApprove }: 
               <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">IBAN</th>
               <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Betrag</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Referenz</th>
-              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Geprueft</th>
+              <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Geprüft</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -121,7 +121,7 @@ export function PaymentRunClient({ runId, status, items, canPlan, canApprove }: 
       {/* Review progress */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span>{reviewedItems.size} / {items.length} Positionen geprueft</span>
+          <span>{reviewedItems.size} / {items.length} Positionen geprüft</span>
           <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-green-500 transition-all"
@@ -130,8 +130,8 @@ export function PaymentRunClient({ runId, status, items, canPlan, canApprove }: 
           </div>
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          Klicken Sie auf jede Zeile, um sie als geprueft zu markieren.
-          Der Freigabe-Button wird erst aktiv, wenn alle Positionen geprueft wurden.
+          Klicken Sie auf jede Zeile, um sie als geprüft zu markieren.
+          Der Freigabe-Button wird erst aktiv, wenn alle Positionen geprüft wurden.
         </p>
       </div>
 
@@ -175,7 +175,7 @@ export function PaymentRunClient({ runId, status, items, canPlan, canApprove }: 
         {status === 'approved' && (
           <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
             <p className="text-sm text-amber-800">
-              Zahlungsdatei-Export (pain.001 / CSV) wird in einem spaeteren Schritt implementiert.
+              Zahlungsdatei-Export (pain.001 / CSV) wird in einem späteren Schritt implementiert.
             </p>
           </div>
         )}

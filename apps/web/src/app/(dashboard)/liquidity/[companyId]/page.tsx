@@ -156,7 +156,7 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
   return (
     <div className="p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary mb-1">
-        Liquiditaetsplanung
+        Liquiditätsplanung
       </h1>
       <p className="text-sm text-brand-text-secondary mb-6">
         {companyName} &mdash; Stand: {formatDate(today)}

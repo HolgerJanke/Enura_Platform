@@ -138,14 +138,14 @@ export function StepList({
         disabled={isAdding}
         className="w-full rounded-md border-2 border-dashed border-gray-300 py-3 text-sm font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-600 disabled:opacity-50"
       >
-        + Schritt hinzufuegen
+        + Schritt hinzufügen
       </button>
 
       {/* Steps */}
       {steps.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
           <p className="text-gray-500 text-sm">
-            Noch keine Schritte vorhanden. Fuegen Sie den ersten Schritt hinzu.
+            Noch keine Schritte vorhanden. Fügen Sie den ersten Schritt hinzu.
           </p>
         </div>
       ) : (
@@ -187,7 +187,7 @@ export function StepList({
         disabled={isAdding}
         className="w-full rounded-md border-2 border-dashed border-gray-300 py-3 text-sm font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-600 disabled:opacity-50"
       >
-        + Schritt hinzufuegen
+        + Schritt hinzufügen
       </button>
     </div>
   )
