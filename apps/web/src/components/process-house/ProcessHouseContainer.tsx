@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ProcessHouseClientWrapper } from './ProcessHouseClientWrapper'
 
 interface ProcessRow {
@@ -36,10 +37,11 @@ export async function ProcessHouseContainer() {
     return p.visible_roles.some((r) => userRoleKeys.includes(r))
   })
 
-  // Fetch phases for all visible processes
+  // Fetch phases using service client to bypass RLS
+  const serviceDb = createSupabaseServiceClient()
   const processIds = visible.map((p) => p.id)
   const { data: phasesData } = processIds.length > 0
-    ? await supabase
+    ? await serviceDb
         .from('process_phases')
         .select('id, name, process_id, sort_order')
         .in('process_id', processIds)
