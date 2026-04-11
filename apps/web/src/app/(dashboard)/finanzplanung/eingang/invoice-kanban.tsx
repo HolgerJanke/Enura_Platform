@@ -194,6 +194,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
   const router = useRouter()
   const [localInvoices, setLocalInvoices] = useState(invoices)
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const draggedIdRef = useRef<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const wasDragging = useRef(false)
 
@@ -209,30 +210,32 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
     grouped.set(colKey, arr)
   }
 
-  const handleDragStart = useCallback((id: string) => {
+  function handleDragStart(id: string) {
+    draggedIdRef.current = id
     setDraggedId(id)
-  }, [])
+  }
 
-  const handleDrop = useCallback(async (col: Column) => {
-    if (!draggedId || !col.droppable || !col.dropDate) return
+  async function handleDrop(col: Column) {
+    const id = draggedIdRef.current
+    if (!id || !col.droppable || !col.dropDate) return
+    draggedIdRef.current = null
     setDraggedId(null)
 
     // Optimistic update — set planned_payment_date, keep due_date unchanged
     setLocalInvoices(prev => prev.map(inv =>
-      inv.id === draggedId ? { ...inv, planned_payment_date: col.dropDate } : inv,
+      inv.id === id ? { ...inv, planned_payment_date: col.dropDate } : inv,
     ))
 
-    const result = await scheduleInvoicePayment(draggedId, col.dropDate)
+    const result = await scheduleInvoicePayment(id, col.dropDate!)
     if (result.success) {
       setFeedback('Zahlungsdatum aktualisiert.')
       setTimeout(() => setFeedback(null), 2000)
     } else {
       setFeedback(result.error ?? 'Fehler beim Aktualisieren.')
-      // Revert
       setLocalInvoices(invoices)
       setTimeout(() => setFeedback(null), 3000)
     }
-  }, [draggedId, invoices])
+  }
 
   // Summary stats
   const allOpen = localInvoices.filter(i => i.status !== 'paid')
@@ -334,7 +337,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
                         e.dataTransfer.setData('text/plain', inv.id)
                         handleDragStart(inv.id)
                       }}
-                      onDragEnd={() => { setDraggedId(null); setTimeout(() => { wasDragging.current = false }, 100) }}
+                      onDragEnd={() => { setTimeout(() => { setDraggedId(null); wasDragging.current = false }, 50) }}
                       onClick={() => {
                         if (wasDragging.current) return
                         router.push(`/finanzplanung/eingang/${inv.id}`)
