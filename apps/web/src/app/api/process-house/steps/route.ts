@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const [stepsRes, phasesRes] = await Promise.all([
     supabase
       .from('process_steps')
-      .select('id, name, process_step_id, sort_order, description, responsible_roles, phase_id')
+      .select('id, name, process_step_id, sort_order, description, responsible_roles, phase_id, expected_output, criticality, rhythm')
       .eq('process_id', processId)
       .order('sort_order'),
     supabase

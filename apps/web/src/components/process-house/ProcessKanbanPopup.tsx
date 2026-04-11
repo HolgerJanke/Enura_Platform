@@ -14,6 +14,9 @@ interface ProcessStep {
   description: string
   responsible_roles: string[]
   phase_id: string | null
+  expected_output: string | null
+  criticality: string | null
+  rhythm: string | null
 }
 
 interface ProcessPhase {
@@ -156,13 +159,19 @@ export function ProcessKanbanPopup({ processId, processName, processType, onClos
                             <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Nr.</th>
                             <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Prozess</th>
                             <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Funktion</th>
+                            <th className="px-4 py-2 text-center text-xs font-semibold uppercase">Krit.</th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Rhythmus</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {phaseSteps.map((step) => (
-                            <tr key={step.id} className="hover:bg-gray-50">
+                          {phaseSteps.map((step) => {
+                            const isLink = step.expected_output?.startsWith('/')
+                            return (
+                            <tr key={step.id} className={`hover:bg-gray-50 ${isLink ? 'cursor-pointer' : ''}`} onClick={isLink ? () => { window.location.href = step.expected_output! } : undefined}>
                               <td className="px-4 py-2.5 text-sm font-mono text-blue-600">{step.process_step_id}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-900">{step.name}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-900">
+                                {isLink ? <span className="text-blue-600 hover:underline">{step.name}</span> : step.name}
+                              </td>
                               <td className="px-4 py-2.5">
                                 <div className="flex flex-wrap gap-1">
                                   {(step.responsible_roles ?? []).map((role) => (
@@ -170,8 +179,19 @@ export function ProcessKanbanPopup({ processId, processName, processType, onClos
                                   ))}
                                 </div>
                               </td>
+                              <td className="px-4 py-2.5 text-center">
+                                {step.criticality && (
+                                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${
+                                    step.criticality === 'A' ? 'bg-red-100 text-red-700' :
+                                    step.criticality === 'B' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-gray-100 text-gray-500'
+                                  }`}>{step.criticality}</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 text-sm text-gray-500">{step.rhythm ?? ''}</td>
                             </tr>
-                          ))}
+                            )
+                          })}
                         </tbody>
                       </table>
                     )}
