@@ -1863,6 +1863,8 @@ export interface ProcessStepRow {
   show_in_flowchart: boolean;
   liquidity_marker: 'trigger' | 'event' | null;
   phase_id: string | null;
+  criticality: 'A' | 'B' | 'C' | null;
+  rhythm: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
