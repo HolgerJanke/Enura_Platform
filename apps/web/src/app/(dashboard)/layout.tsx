@@ -88,20 +88,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const isSuperUser = session.roles.some(r => r.key === 'super_user')
-  const showSuperUserBar = isSuperUser && !session.isEnuraAdmin
 
   return (
     <>
-      {showSuperUserBar && (
-        <AdminBar variant="super-user" label={companyName} items={SUPER_USER_NAV} />
-      )}
       <DashboardShell
         companyName={companyName}
         navItems={navItems}
         processGroups={processGroups}
         userName={displayName}
         userRole={roleLabel}
-        hasAdminBar={showSuperUserBar}
         isHoldingAdmin={session.isHoldingAdmin}
         isSuperUser={isSuperUser}
       >

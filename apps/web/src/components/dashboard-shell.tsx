@@ -607,19 +607,30 @@ export function DashboardShell({
                 </Link>
               )}
               {isSuperUser && (
-                <Link
-                  href="/settings/users"
-                  onClick={() => setAdminModalOpen(false)}
-                  className="rounded-xl border-2 border-gray-200 bg-white p-5 hover:border-green-400 hover:shadow-md transition-all text-center"
-                >
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 mb-3">
-                    <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                <div className="rounded-xl border-2 border-gray-200 bg-white p-5">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Company Admin</h3>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Leitfaden', href: '/settings/call-script', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+                      { label: 'Integrationen', href: '/settings/connectors', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
+                      { label: 'Benutzer', href: '/settings/users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+                      { label: 'Branding', href: '/settings/branding', icon: 'M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.2-.64-1.67-.08-.1-.13-.21-.13-.33 0-.28.22-.5.5-.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9z' },
+                      { label: 'Berichte', href: '/settings/reports', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setAdminModalOpen(false)}
+                        className="flex items-center gap-3 rounded-lg border border-gray-100 px-3 py-2.5 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                      >
+                        <svg className="h-5 w-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                      </Link>
+                    ))}
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900">Company Admin</h3>
-                  <p className="text-xs text-gray-500 mt-1">Benutzer, Leitfaden, Berichte, Branding</p>
-                </Link>
+                </div>
               )}
             </div>
             <button
