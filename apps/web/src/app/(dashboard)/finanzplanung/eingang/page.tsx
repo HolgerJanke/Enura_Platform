@@ -1,50 +1,10 @@
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
+import { requireFinanzplanung, hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
+import { InvoiceKanban } from './invoice-kanban'
 
-const STATUS_LABELS: Record<string, string> = {
-  received: 'Eingegangen',
-  extraction_done: 'Extrahiert',
-  match_review: 'Match-Prüfung',
-  in_validation: 'In Prüfung',
-  returned_formal: 'Zurückgesendet',
-  formally_approved: 'Formal genehmigt',
-  pending_approval: 'Genehmigung ausstehend',
-  returned_internal: 'Interne Korrektur',
-  returned_sender: 'An Absender',
-  approved: 'Genehmigt',
-  scheduled: 'Geplant',
-  in_payment_run: 'Im Zahlungslauf',
-  paid: 'Bezahlt',
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  received: 'bg-blue-100 text-blue-700',
-  extraction_done: 'bg-blue-100 text-blue-700',
-  match_review: 'bg-amber-100 text-amber-700',
-  in_validation: 'bg-yellow-100 text-yellow-700',
-  returned_formal: 'bg-red-100 text-red-700',
-  formally_approved: 'bg-indigo-100 text-indigo-700',
-  pending_approval: 'bg-amber-100 text-amber-700',
-  returned_internal: 'bg-orange-100 text-orange-700',
-  returned_sender: 'bg-red-100 text-red-700',
-  approved: 'bg-green-100 text-green-700',
-  scheduled: 'bg-teal-100 text-teal-700',
-  in_payment_run: 'bg-cyan-100 text-cyan-700',
-  paid: 'bg-gray-100 text-gray-500',
-}
-
-interface InvoiceRow {
-  id: string
-  invoice_number: string | null
-  sender_name: string | null
-  gross_amount: number | null
-  currency: string
-  due_date: string | null
-  status: string
-  created_at: string
-}
+export const dynamic = 'force-dynamic'
 
 export default async function EingangPage() {
   const hasAccess = await requireFinanzplanung()
@@ -60,14 +20,25 @@ export default async function EingangPage() {
   const session = await getSession()
   const supabase = createSupabaseServerClient()
 
+  // Check if user can reschedule invoices (drag-and-drop)
+  const canDrag = await hasFinanzplanungPermission('module:finanzplanung:plan_cashout')
+
+  // Fetch all invoices ordered by due_date
   const { data: invoices } = await supabase
     .from('invoices_incoming')
-    .select('id, invoice_number, sender_name, gross_amount, currency, due_date, status, created_at')
+    .select('id, invoice_number, sender_name, gross_amount, currency, due_date, status')
     .eq('company_id', session!.companyId ?? '')
-    .order('created_at', { ascending: false })
-    .limit(100)
+    .order('due_date', { ascending: true, nullsFirst: false })
 
-  const rows = (invoices ?? []) as InvoiceRow[]
+  const rows = (invoices ?? []) as Array<{
+    id: string
+    invoice_number: string | null
+    sender_name: string | null
+    gross_amount: number | null
+    currency: string
+    due_date: string | null
+    status: string
+  }>
 
   return (
     <div className="p-6">
@@ -89,7 +60,7 @@ export default async function EingangPage() {
         </div>
       </div>
       <p className="text-sm text-gray-500 mb-6">
-        Alle eingehenden Rechnungen mit Validierungsstatus.
+        Rechnungen nach Fälligkeitswoche — per Drag-and-Drop verschieben, um das Zahlungsdatum zu ändern.
       </p>
 
       {rows.length === 0 ? (
@@ -106,52 +77,7 @@ export default async function EingangPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Nr.</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Rechnungssteller</th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Betrag</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Fälligkeit</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Eingegangen</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {rows.map((inv) => (
-                <tr key={inv.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-mono">
-                    <Link href={`/finanzplanung/eingang/${inv.id}`} className="text-blue-600 hover:underline">
-                      {inv.invoice_number ?? inv.id.slice(0, 8)}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {inv.sender_name ?? 'Unbekannt'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900 text-right font-mono">
-                    {inv.gross_amount != null
-                      ? `${inv.currency} ${Number(inv.gross_amount).toLocaleString('de-CH', { minimumFractionDigits: 2 })}`
-                      : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {inv.due_date
-                      ? new Date(inv.due_date).toLocaleDateString('de-CH')
-                      : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                      {STATUS_LABELS[inv.status] ?? inv.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(inv.created_at).toLocaleDateString('de-CH')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <InvoiceKanban invoices={rows} canDrag={canDrag} />
       )}
     </div>
   )
