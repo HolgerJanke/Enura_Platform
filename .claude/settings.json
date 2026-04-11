@@ -10,7 +10,8 @@
       "Bash(kill 54837)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://www.enura-group.com/finanzplanung\")",
       "Bash(curl -s \"https://www.enura-group.com/finanzplanung\")",
-      "Bash(curl -s -I \"https://www.enura-group.com/finanzplanung\")"
+      "Bash(curl -s -I \"https://www.enura-group.com/finanzplanung\")",
+      "Bash(curl -s -I \"https://www.enura-group.com/\")"
     ],
     "additionalDirectories": [
       "/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web/src/app/(dashboard)/projects"
