@@ -6,13 +6,6 @@ import { AdminBar } from '@/components/AdminBar'
 const HOLDING_NAV_ITEMS = [
   { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
   { label: 'Unternehmen', href: '/admin', icon: 'building' },
-  { label: 'Finanzen', href: '/admin/finance', icon: 'banknote' },
-  { label: 'Secrets', href: '/admin/secrets', icon: 'key' },
-  { label: 'Tools', href: '/admin/tools', icon: 'wrench' },
-  { label: 'Analytics', href: '/admin/analytics', icon: 'bar-chart' },
-  { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
-  { label: 'Zertifizierungen', href: '/admin/compliance/certifications', icon: 'award' },
-  { label: 'Berechtigungen', href: '/admin/settings/permissions', icon: 'lock' },
   { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
 
