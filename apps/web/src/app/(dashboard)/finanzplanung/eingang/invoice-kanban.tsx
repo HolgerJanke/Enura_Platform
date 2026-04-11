@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import Link from 'next/link'
+import { useState, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { scheduleInvoicePayment } from '../actions'
 
 // ---------------------------------------------------------------------------
@@ -188,9 +188,11 @@ function assignColumn(inv: InvoiceCard, columns: Column[]): string {
 // ---------------------------------------------------------------------------
 
 export function InvoiceKanban({ invoices, canDrag }: Props) {
+  const router = useRouter()
   const [localInvoices, setLocalInvoices] = useState(invoices)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const wasDragging = useRef(false)
 
   const columns = buildColumns()
 
@@ -311,23 +313,23 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
                   <p className="text-[10px] text-gray-300 text-center py-6">—</p>
                 ) : (
                   colInvoices.map((inv) => (
-                    <Link
+                    <div
                       key={inv.id}
-                      href={`/finanzplanung/eingang/${inv.id}`}
                       draggable={canDrag && inv.status !== 'paid'}
                       onDragStart={(e) => {
                         if (!canDrag) { e.preventDefault(); return }
-                        e.stopPropagation()
+                        wasDragging.current = true
+                        e.dataTransfer.effectAllowed = 'move'
                         handleDragStart(inv.id)
                       }}
-                      onDragEnd={() => setDraggedId(null)}
-                      className={`block rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm hover:shadow transition-shadow ${
+                      onDragEnd={() => { setDraggedId(null); setTimeout(() => { wasDragging.current = false }, 100) }}
+                      onClick={() => {
+                        if (wasDragging.current) return
+                        router.push(`/finanzplanung/eingang/${inv.id}`)
+                      }}
+                      className={`rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm hover:shadow transition-shadow cursor-pointer ${
                         canDrag && inv.status !== 'paid' ? 'cursor-grab active:cursor-grabbing' : ''
                       } ${draggedId === inv.id ? 'opacity-40' : ''}`}
-                      onClick={(e) => {
-                        // Don't navigate while dragging
-                        if (draggedId) e.preventDefault()
-                      }}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STATUS_COLORS[inv.status] ?? 'bg-gray-100 text-gray-500'}`}>
@@ -350,7 +352,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
                           Fällig: {new Date(inv.due_date).toLocaleDateString('de-CH')}
                         </p>
                       )}
-                    </Link>
+                    </div>
                   ))
                 )}
               </div>
