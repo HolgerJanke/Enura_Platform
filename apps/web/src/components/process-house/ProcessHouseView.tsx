@@ -41,7 +41,7 @@ const CONTENT_W = W - 2 * PILLAR_W - 20
 const ROOF_Y = 20
 const ROOF_H = 120
 const ARROW_Y = ROOF_Y + ROOF_H + 15
-const ARROW_H = 70
+const ARROW_H = 85
 const ARROW_GAP = 8
 const FOUND_Y_OFFSET = 20
 const FOUND_H = 90
@@ -164,43 +164,29 @@ export function ProcessHouseView({
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
                 />
-                {/* Process title */}
-                <text
-                  x={CONTENT_X + CONTENT_W / 2}
-                  y={y + (proc.phases.length > 0 ? 22 : ARROW_H / 2)}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill={COLORS.arrowText}
-                  fontSize={14}
-                  fontWeight={700}
-                >
-                  P{i + 1} — {proc.menuLabel}
-                </text>
-                {/* Phase labels */}
-                {proc.phases.length > 0 && (
-                  <text
-                    x={CONTENT_X + CONTENT_W / 2}
-                    y={y + 45}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fill="rgba(255,255,255,0.85)"
-                    fontSize={10}
-                  >
-                    {proc.phases.map((ph, pi) => {
-                      const label = `P${i + 1}.${pi + 1} ${ph.name}`
-                      return (
-                        <tspan
-                          key={ph.id}
-                          onClick={(e) => { e.stopPropagation(); onPhaseClick?.(proc.id, ph.id) }}
-                          className="cursor-pointer hover:underline"
-                          style={{ textDecoration: 'none' }}
-                        >
-                          {pi > 0 ? '  |  ' : ''}{label}
-                        </tspan>
-                      )
-                    })}
-                  </text>
-                )}
+                {/* Process content via foreignObject for proper text wrapping */}
+                <foreignObject x={CONTENT_X + 20} y={y + 4} width={CONTENT_W - 40} height={ARROW_H - 8}>
+                  <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <p style={{ color: 'white', fontSize: '15px', fontWeight: 700, margin: 0, textAlign: 'center' }}>
+                      P{i + 1} — {proc.menuLabel}
+                    </p>
+                    {proc.phases.length > 0 && (
+                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', margin: '4px 0 0', textAlign: 'center', lineHeight: '1.4', flexWrap: 'wrap' }}>
+                        {proc.phases.map((ph, pi) => (
+                          <span
+                            key={ph.id}
+                            onClick={(e) => { e.stopPropagation(); onPhaseClick?.(proc.id, ph.id) }}
+                            style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline' }}
+                            onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none' }}
+                          >
+                            {pi > 0 ? ' | ' : ''}P{i + 1}.{pi + 1} {ph.name}
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                  </div>
+                </foreignObject>
               </g>
             )
           })

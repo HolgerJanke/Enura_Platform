@@ -1,21 +1,15 @@
 import { getSession } from '@/lib/session'
 import { ProcessHouseContainer } from '@/components/process-house/ProcessHouseContainer'
-import { getCompanyContext } from '@/lib/tenant'
 import { getDataAccess } from '@/lib/data-access'
 import { formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
 import type { ConnectorRow } from '@enura/types'
 
 export default async function DashboardPage() {
   const session = await getSession()
-  const { companyName } = getCompanyContext()
 
   if (!session?.companyId) return null
 
-  const displayName =
-    session.profile.display_name ?? session.profile.first_name ?? 'Benutzer'
-
   const db = getDataAccess()
-  const today = new Date().toISOString().split('T')[0]!
 
   // Fetch tenant daily summary snapshot and connectors in parallel
   const [snapshot, connectors] = await Promise.all([
@@ -50,13 +44,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary mb-2">
-        Willkommen, {displayName}
-      </h1>
-      <p className="text-brand-text-secondary mb-8">
-        {companyName} &mdash; Übersicht vom {formatDate(today)}
-      </p>
-
       {/* Process House */}
       <div className="bg-brand-surface rounded-brand p-6 border border-gray-200 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-secondary mb-4">

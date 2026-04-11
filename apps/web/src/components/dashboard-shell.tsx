@@ -55,7 +55,7 @@ export function DashboardShell({
 
         {/* Center: User Name + Role */}
         <div className="hidden md:flex flex-col items-center">
-          <span className="text-sm font-medium text-brand-text-primary">{userName}</span>
+          <span className="text-sm font-medium text-brand-text-primary">Willkommen, {userName}</span>
           <span className="text-[10px] text-brand-text-secondary">{userRole}</span>
         </div>
 
