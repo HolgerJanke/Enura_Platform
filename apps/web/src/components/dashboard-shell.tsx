@@ -592,19 +592,32 @@ export function DashboardShell({
             <p className="text-sm text-gray-500 mb-6">Wählen Sie den Verwaltungsbereich:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {isHoldingAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setAdminModalOpen(false)}
-                  className="rounded-xl border-2 border-gray-200 bg-white p-5 hover:border-blue-400 hover:shadow-md transition-all text-center"
-                >
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 mb-3">
-                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                <div className="rounded-xl border-2 border-gray-200 bg-white p-5">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Holding Admin</h3>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Unternehmen', href: '/admin', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+                      { label: 'Benutzer', href: '/admin/users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+                      { label: 'Prozesse', href: '/admin/processes', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+                      { label: 'Prozesshaus', href: '/admin/processes/house', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+                      { label: 'Branding', href: '/admin/settings/branding', icon: 'M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.2-.64-1.67-.08-.1-.13-.21-.13-.33 0-.28.22-.5.5-.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9z' },
+                      { label: 'Rollen', href: '/admin/settings/roles', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+                      { label: 'Add-ons', href: '/admin/settings/addons', icon: 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z' },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setAdminModalOpen(false)}
+                        className="flex items-center gap-3 rounded-lg border border-gray-100 px-3 py-2.5 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                      >
+                        <svg className="h-5 w-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                      </Link>
+                    ))}
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900">Holding Admin</h3>
-                  <p className="text-xs text-gray-500 mt-1">Unternehmen, Prozesse, Benutzer, Module</p>
-                </Link>
+                </div>
               )}
               {isSuperUser && (
                 <div className="rounded-xl border-2 border-gray-200 bg-white p-5">
