@@ -92,6 +92,9 @@ export default async function FinanzplanungPage() {
 
   return (
     <div className="p-6">
+      <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        ← Zurück zum Prozesshaus
+      </Link>
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">Finanzplanung</h1>
       <p className="text-sm text-gray-500 mb-8">
         Rechnungsverarbeitung, Validierung und Zahlungsplanung.

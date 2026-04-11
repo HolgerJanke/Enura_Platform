@@ -76,16 +76,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     criticalAnomalyCount = count ?? 0
   }
 
-  // Check if Finanzplanung module is active for this company
-  const hasFinanzplanung = await checkFinanzplanungActive(session)
-  const hasFpRead = hasFinanzplanung && (session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:read'))
-
-  // Add Finanzplanung nav items if module is active
-  if (hasFpRead) {
-    staticNavItems.push(
-      { label: 'Finanzplanung', href: '/finanzplanung', icon: 'Banknote', permission: 'module:finanzplanung:read' },
-    )
-  }
+  // Finanzplanung is now accessed via Process House (M2), not sidebar
 
   const isSuperUser = session.roles.some(r => r.key === 'super_user')
 
