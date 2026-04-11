@@ -40,19 +40,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ? 'Enura Group'
     : rawCompanyName
 
-  const staticNavItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', permission: null as string | null },
-    ...(session.isEnuraAdmin ? [{ label: 'Plattform', href: '/platform', icon: 'Globe', permission: null as string | null }] : []),
-    { label: 'Hilfe', href: '/help', icon: 'HelpCircle', permission: null as string | null },
-  ].filter((item) => {
-    if (!item.permission) return true
-    if (session.isHoldingAdmin) return true
-    return session.permissions.includes(item.permission)
-  })
-
-  // Process navigation is now via Process House on dashboard
-  const navItems = staticNavItems
-
   const displayName = session.profile.display_name ?? session.profile.first_name ?? 'Benutzer'
   const roleLabel = session.roles[0]?.label ?? ''
 
@@ -78,7 +65,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <>
       <DashboardShell
         companyName={companyName}
-        navItems={navItems}
         userName={displayName}
         userRole={roleLabel}
         isHoldingAdmin={session.isHoldingAdmin}
