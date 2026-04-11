@@ -31,6 +31,7 @@ interface Props {
   processId: string
   processName: string
   processType: 'M' | 'P' | 'S'
+  filterPhaseId?: string | null
   onClose: () => void
 }
 
@@ -41,7 +42,7 @@ const TYPE_COLORS: Record<string, string> = { M: 'bg-teal-100 text-teal-700', P:
 // Component
 // ---------------------------------------------------------------------------
 
-export function ProcessKanbanPopup({ processId, processName, processType, onClose }: Props) {
+export function ProcessKanbanPopup({ processId, processName, processType, filterPhaseId, onClose }: Props) {
   const [steps, setSteps] = useState<ProcessStep[]>([])
   const [phases, setPhases] = useState<ProcessPhase[]>([])
   const [loading, setLoading] = useState(true)
@@ -107,9 +108,14 @@ export function ProcessKanbanPopup({ processId, processName, processType, onClos
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div className="flex items-center gap-3">
             <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${TYPE_COLORS[processType]}`}>{processType}</span>
-            <h2 className="text-lg font-bold text-gray-900">{processName}</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              {processName}
+              {filterPhaseId && phases.find(p => p.id === filterPhaseId) && (
+                <span className="text-gray-400 font-normal"> — {phases.find(p => p.id === filterPhaseId)!.name}</span>
+              )}
+            </h2>
             <span className="text-xs text-gray-400">{TYPE_LABELS[processType]}</span>
-            <span className="text-xs text-gray-400">· {steps.length} Schritte</span>
+            <span className="text-xs text-gray-400">· {filterPhaseId ? (stepsByPhase.get(filterPhaseId) ?? []).length : steps.length} Schritte</span>
           </div>
           <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600" aria-label="Schließen">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -125,9 +131,9 @@ export function ProcessKanbanPopup({ processId, processName, processType, onClos
           ) : hasPhases ? (
             /* Phase-grouped view */
             <div className="space-y-4">
-              {phases.map((phase, phaseIdx) => {
+              {(filterPhaseId ? phases.filter(p => p.id === filterPhaseId) : phases).map((phase, phaseIdx) => {
                 const phaseSteps = stepsByPhase.get(phase.id) ?? []
-                const isExpanded = expandedPhases.has(phase.id)
+                const isExpanded = filterPhaseId ? true : expandedPhases.has(phase.id)
 
                 return (
                   <div key={phase.id} className="rounded-lg border border-gray-200 overflow-hidden">

@@ -12,9 +12,20 @@ interface Props {
 
 export function ProcessHouseClientWrapper({ management, primary, support }: Props) {
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null)
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null)
 
   const allProcesses = [...management, ...primary, ...support]
   const selected = allProcesses.find((p) => p.id === selectedProcessId)
+
+  function handleProcessClick(processId: string) {
+    setSelectedProcessId(processId)
+    setSelectedPhaseId(null) // Show all phases
+  }
+
+  function handlePhaseClick(processId: string, phaseId: string) {
+    setSelectedProcessId(processId)
+    setSelectedPhaseId(phaseId) // Show only this phase
+  }
 
   return (
     <>
@@ -22,8 +33,8 @@ export function ProcessHouseClientWrapper({ management, primary, support }: Prop
         managementProcesses={management}
         primaryProcesses={primary}
         supportProcesses={support}
-        onProcessClick={(id) => setSelectedProcessId(id)}
-        onPhaseClick={(processId) => setSelectedProcessId(processId)}
+        onProcessClick={handleProcessClick}
+        onPhaseClick={handlePhaseClick}
       />
       {selectedProcessId && selected && (
         <ProcessKanbanPopup
@@ -33,7 +44,8 @@ export function ProcessHouseClientWrapper({ management, primary, support }: Prop
             management.some((m) => m.id === selectedProcessId) ? 'M' :
             primary.some((p) => p.id === selectedProcessId) ? 'P' : 'S'
           }
-          onClose={() => setSelectedProcessId(null)}
+          filterPhaseId={selectedPhaseId}
+          onClose={() => { setSelectedProcessId(null); setSelectedPhaseId(null) }}
         />
       )}
     </>
