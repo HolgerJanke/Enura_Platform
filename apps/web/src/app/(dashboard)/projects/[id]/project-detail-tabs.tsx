@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useTransition } from 'react'
+import { uploadProjectDocument, deleteProjectDocument } from './actions'
 
 interface Props {
   project: Record<string, unknown>
@@ -228,27 +229,7 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
       )}
 
       {activeTab === 'dokumente' && (
-        <div>
-          {documents.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-              <svg className="mx-auto mb-4 h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p className="text-sm text-gray-500 mb-1">Noch keine Dokumente vorhanden.</p>
-              <p className="text-xs text-gray-400">Dokument-Upload wird in einem späteren Schritt aktiviert.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {documents.map((doc) => (
-                <div key={doc['id'] as string} className="rounded-lg border border-gray-200 bg-white p-4">
-                  <p className="text-sm font-medium text-gray-900 truncate">{doc['title'] as string}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{doc['document_type'] as string}</p>
-                  <p className="text-xs text-gray-400 mt-1">{fmtDate(doc['created_at'] as string)}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <DocumentsTab projectId={project['id'] as string} documents={documents} />
       )}
 
       {activeTab === 'prozesse' && (
@@ -273,6 +254,151 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
               </div>
             ))
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Documents Tab with upload
+// ---------------------------------------------------------------------------
+
+const DOC_TYPES = [
+  { value: 'photo', label: 'Foto' },
+  { value: 'drawing', label: 'Zeichnung / Plan' },
+  { value: 'contract', label: 'Vertrag' },
+  { value: 'offer', label: 'Angebot' },
+  { value: 'invoice_customer', label: 'Kundenrechnung' },
+  { value: 'invoice_supplier', label: 'Lieferantenrechnung' },
+  { value: 'email', label: 'E-Mail' },
+  { value: 'voice_note', label: 'Sprachnotiz' },
+  { value: 'video', label: 'Video' },
+  { value: 'report', label: 'Bericht' },
+  { value: 'other', label: 'Sonstiges' },
+]
+
+function DocumentsTab({ projectId, documents }: { projectId: string; documents: Array<Record<string, unknown>> }) {
+  const [showUpload, setShowUpload] = useState(false)
+  const [title, setTitle] = useState('')
+  const [docType, setDocType] = useState('photo')
+  const [file, setFile] = useState<File | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  function handleUpload() {
+    if (!file || !title) return
+    const formData = new FormData()
+    formData.append('projectId', projectId)
+    formData.append('documentType', docType)
+    formData.append('title', title)
+    formData.append('file', file)
+
+    startTransition(async () => {
+      setFeedback(null)
+      const result = await uploadProjectDocument(formData)
+      if (result.success) {
+        setFeedback({ type: 'success', message: 'Dokument erfolgreich hochgeladen.' })
+        setTitle('')
+        setFile(null)
+        setShowUpload(false)
+        if (fileRef.current) fileRef.current.value = ''
+      } else {
+        setFeedback({ type: 'error', message: result.error ?? 'Fehler beim Upload.' })
+      }
+    })
+  }
+
+  function handleDelete(docId: string, docTitle: string) {
+    if (!confirm(`"${docTitle}" löschen?`)) return
+    startTransition(async () => {
+      await deleteProjectDocument(docId, projectId)
+      setFeedback({ type: 'success', message: 'Dokument gelöscht.' })
+    })
+  }
+
+  function formatSize(bytes: number | null): string {
+    if (!bytes) return ''
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  return (
+    <div>
+      {feedback && (
+        <div className={`mb-4 rounded-lg p-3 text-sm ${feedback.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          {feedback.message}
+        </div>
+      )}
+
+      {/* Upload form */}
+      {showUpload ? (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-5 mb-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Dokument hochladen</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Titel *</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="z.B. Dachfoto Nord" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Typ</label>
+              <select value={docType} onChange={(e) => setDocType(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Datei * (max. 20 MB)</label>
+              <input ref={fileRef} type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="w-full text-sm" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" disabled={isPending || !file || !title} onClick={handleUpload} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+              {isPending ? 'Wird hochgeladen...' : 'Hochladen'}
+            </button>
+            <button type="button" onClick={() => setShowUpload(false)} className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setShowUpload(true)} className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 mb-6">
+          + Dokument hochladen
+        </button>
+      )}
+
+      {/* Document list */}
+      {documents.length === 0 && !showUpload ? (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
+          <svg className="mx-auto mb-4 h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p className="text-sm text-gray-500 mb-1">Noch keine Dokumente vorhanden.</p>
+          <p className="text-xs text-gray-400">Klicken Sie oben auf &quot;+ Dokument hochladen&quot;.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {documents.map((doc) => (
+            <div key={doc['id'] as string} className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">{String(doc['title'] ?? '')}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {DOC_TYPES.find(t => t.value === doc['document_type'])?.label ?? String(doc['document_type'] ?? '')}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {doc['filename'] ? <p className="text-[10px] text-gray-400 truncate">{String(doc['filename'])}</p> : null}
+                    {doc['file_size'] ? <p className="text-[10px] text-gray-400">{formatSize(doc['file_size'] as number)}</p> : null}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{fmtDate(doc['created_at'] as string)}</p>
+                </div>
+                <button type="button" onClick={() => handleDelete(doc['id'] as string, String(doc['title'] ?? ''))} className="text-xs text-red-500 hover:text-red-700 ml-2 shrink-0">
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
