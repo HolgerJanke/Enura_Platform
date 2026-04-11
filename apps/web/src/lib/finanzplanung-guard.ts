@@ -28,10 +28,12 @@ export async function requireFinanzplanung(): Promise<boolean> {
   const session = await getSession()
   if (!session) return false
 
+  // Holding/Enura admins bypass all checks
+  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
+
   const isActive = await checkFinanzplanungActive(session)
   if (!isActive) return false
 
-  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
   if (!session.permissions.includes('module:finanzplanung:read')) return false
 
   return true
