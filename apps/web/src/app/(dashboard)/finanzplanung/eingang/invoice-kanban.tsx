@@ -311,7 +311,15 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
               </div>
 
               {/* Cards */}
-              <div className="p-2 space-y-2 min-h-[120px] max-h-[60vh] overflow-y-auto">
+              <div
+                className="p-2 space-y-2 min-h-[120px] max-h-[60vh] overflow-y-auto"
+                onDragOver={(e) => { if (col.droppable) e.preventDefault() }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  e.currentTarget.parentElement?.classList.remove('ring-2', 'ring-blue-400')
+                  if (col.droppable) void handleDrop(col)
+                }}
+              >
                 {colInvoices.length === 0 ? (
                   <p className="text-[10px] text-gray-300 text-center py-6">—</p>
                 ) : (
@@ -323,6 +331,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
                         if (!canDrag) { e.preventDefault(); return }
                         wasDragging.current = true
                         e.dataTransfer.effectAllowed = 'move'
+                        e.dataTransfer.setData('text/plain', inv.id)
                         handleDragStart(inv.id)
                       }}
                       onDragEnd={() => { setDraggedId(null); setTimeout(() => { wasDragging.current = false }, 100) }}
