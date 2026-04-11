@@ -22,6 +22,7 @@ type DashboardShellProps = {
   userRole: string
   hasAdminBar?: boolean
   isHoldingAdmin?: boolean
+  isSuperUser?: boolean
   children: React.ReactNode
 }
 
@@ -57,11 +58,13 @@ export function DashboardShell({
   userRole,
   hasAdminBar = false,
   isHoldingAdmin = false,
+  isSuperUser = false,
   children,
 }: DashboardShellProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [moreDrawerOpen, setMoreDrawerOpen] = useState(false)
+  const [adminModalOpen, setAdminModalOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     () => new Set(processGroups.map((g) => g.key)),
   )
@@ -296,16 +299,17 @@ export function DashboardShell({
             <p className="truncate text-sm font-medium text-brand-text-primary">{userName}</p>
             <p className="truncate text-xs text-brand-text-secondary">{roleLabel}</p>
           </div>
-          {isHoldingAdmin && (
-            <Link
-              href="/admin"
+          {(isHoldingAdmin || isSuperUser) && (
+            <button
+              type="button"
+              onClick={() => setAdminModalOpen(true)}
               className="flex w-full items-center gap-2 rounded-brand px-3 py-2 mb-1 text-sm font-medium text-brand-text-secondary transition-colors hover:bg-gray-100 hover:text-brand-text-primary"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span>Admin Konsole</span>
-            </Link>
+            </button>
           )}
           <form action={signOutAction}>
             <button
@@ -570,6 +574,63 @@ export function DashboardShell({
             </div>
           </div>
         </>
+      )}
+
+      {/* Admin Konsole Modal */}
+      {adminModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setAdminModalOpen(false)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Escape') setAdminModalOpen(false) }}
+            aria-label="Schließen"
+          />
+          <div className="relative z-10 w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Admin Konsole</h2>
+            <p className="text-sm text-gray-500 mb-6">Wählen Sie den Verwaltungsbereich:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {isHoldingAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setAdminModalOpen(false)}
+                  className="rounded-xl border-2 border-gray-200 bg-white p-5 hover:border-blue-400 hover:shadow-md transition-all text-center"
+                >
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 mb-3">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900">Holding Admin</h3>
+                  <p className="text-xs text-gray-500 mt-1">Unternehmen, Prozesse, Benutzer, Module</p>
+                </Link>
+              )}
+              {isSuperUser && (
+                <Link
+                  href="/settings/users"
+                  onClick={() => setAdminModalOpen(false)}
+                  className="rounded-xl border-2 border-gray-200 bg-white p-5 hover:border-green-400 hover:shadow-md transition-all text-center"
+                >
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 mb-3">
+                    <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900">Company Admin</h3>
+                  <p className="text-xs text-gray-500 mt-1">Benutzer, Leitfaden, Berichte, Branding</p>
+                </Link>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setAdminModalOpen(false)}
+              className="mt-4 w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-500 hover:bg-gray-50"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

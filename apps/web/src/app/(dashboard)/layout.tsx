@@ -103,6 +103,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         userRole={roleLabel}
         hasAdminBar={showSuperUserBar}
         isHoldingAdmin={session.isHoldingAdmin}
+        isSuperUser={isSuperUser}
       >
         {criticalAnomalyCount > 0 && (
         <div className="border-b border-red-300 bg-red-600 px-4 py-2.5 text-white">
