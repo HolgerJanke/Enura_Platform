@@ -70,7 +70,11 @@ export function ProcessHouseView({
   const foundY = ARROW_Y + totalArrowH + FOUND_Y_OFFSET
   const sCount = Math.max(supportProcesses.length, 1)
   const foundW = (CONTENT_W - (sCount - 1) * FOUND_GAP) / sCount
-  const totalH = Math.max(H, foundY + FOUND_H + 40)
+  const hasSupport = supportProcesses.length > 0
+  const contentBottomY = hasSupport ? foundY + FOUND_H : ARROW_Y + totalArrowH
+  const pillarTopY = ROOF_Y + ROOF_H - 10
+  const pillarH = contentBottomY - pillarTopY + 10
+  const totalH = contentBottomY + 40
 
   return (
     <div className="overflow-x-auto">
@@ -81,14 +85,14 @@ export function ProcessHouseView({
         aria-label="Prozesshaus-Visualisierung"
       >
         {/* Left Customer Pillar */}
-        <rect x={0} y={ROOF_Y + ROOF_H - 10} width={PILLAR_W} height={totalH - ROOF_Y - ROOF_H - 30} rx={4} style={{ fill: COLORS.pillarFill }} />
-        <text x={PILLAR_W / 2} y={ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(-90, ${PILLAR_W / 2}, ${ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2})`}>
+        <rect x={0} y={pillarTopY} width={PILLAR_W} height={pillarH} rx={4} style={{ fill: COLORS.pillarFill }} />
+        <text x={PILLAR_W / 2} y={pillarTopY + pillarH / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(-90, ${PILLAR_W / 2}, ${pillarTopY + pillarH / 2})`}>
           Kunde
         </text>
 
         {/* Right Customer Pillar */}
-        <rect x={W - PILLAR_W} y={ROOF_Y + ROOF_H - 10} width={PILLAR_W} height={totalH - ROOF_Y - ROOF_H - 30} rx={4} style={{ fill: COLORS.pillarFill }} />
-        <text x={W - PILLAR_W / 2} y={ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(90, ${W - PILLAR_W / 2}, ${ROOF_Y + ROOF_H + (totalH - ROOF_Y - ROOF_H - 30) / 2})`}>
+        <rect x={W - PILLAR_W} y={pillarTopY} width={PILLAR_W} height={pillarH} rx={4} style={{ fill: COLORS.pillarFill }} />
+        <text x={W - PILLAR_W / 2} y={pillarTopY + pillarH / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(90, ${W - PILLAR_W / 2}, ${pillarTopY + pillarH / 2})`}>
           Kunde
         </text>
 
