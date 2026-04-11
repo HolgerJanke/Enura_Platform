@@ -41,12 +41,17 @@ export default async function ProcessHouseEditorPage({
   // Fetch all processes for selected company
   let processes: ProcessRow[] = []
   if (selectedCompanyId) {
-    const { data } = await supabase
+    const { data, error: queryError } = await supabase
       .from('process_definitions')
       .select('id, name, menu_label, process_type, house_sort_order, status')
+      .eq('holding_id', session.holdingId ?? '')
       .eq('company_id', selectedCompanyId)
       .order('house_sort_order')
 
+    if (queryError) {
+      console.error('[process-house] Query error:', queryError.message)
+    }
+    console.log('[process-house] Company:', selectedCompanyId, 'Results:', (data ?? []).length)
     processes = (data ?? []) as ProcessRow[]
   }
 
