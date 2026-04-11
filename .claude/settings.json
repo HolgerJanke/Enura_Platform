@@ -7,7 +7,10 @@
       "Bash(grep -i \"document\\\\|attachment\\\\|file\" \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/supabase/migrations/\"*.sql)",
       "Bash(find \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec grep -l \"supabase.*bucket\\\\|storage.*bucket\" {} \\\\;)",
       "Bash(curl -s http://localhost:3000/finanzplanung/eingang)",
-      "Bash(kill 54837)"
+      "Bash(kill 54837)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://www.enura-group.com/finanzplanung\")",
+      "Bash(curl -s \"https://www.enura-group.com/finanzplanung\")",
+      "Bash(curl -s -I \"https://www.enura-group.com/finanzplanung\")"
     ],
     "additionalDirectories": [
       "/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web/src/app/(dashboard)/projects"
