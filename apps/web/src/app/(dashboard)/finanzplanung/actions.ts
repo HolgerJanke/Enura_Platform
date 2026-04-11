@@ -2,6 +2,7 @@
 
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 
 // ---------------------------------------------------------------------------
@@ -328,10 +329,11 @@ export async function scheduleInvoicePayment(
   const session = await getSession()
   if (!session) return { success: false, error: 'Nicht authentifiziert.' }
 
-  const hasPlan = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:plan_cashout')
+  const hasPlan = session.isHoldingAdmin || session.isEnuraAdmin || session.permissions.includes('module:finanzplanung:plan_cashout')
   if (!hasPlan) return { success: false, error: 'Keine Berechtigung.' }
 
-  const supabase = createSupabaseServerClient()
+  // Use service client to bypass RLS (permission already checked above)
+  const supabase = createSupabaseServiceClient()
 
   // Update planned_payment_date (due_date stays as the supplier's original term)
   const { error } = await supabase

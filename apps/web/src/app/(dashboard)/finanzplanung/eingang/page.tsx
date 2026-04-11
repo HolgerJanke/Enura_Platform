@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireFinanzplanung, hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 import { InvoiceKanban } from './invoice-kanban'
 
@@ -18,7 +18,7 @@ export default async function EingangPage() {
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Check if user can reschedule invoices (drag-and-drop)
   const canDrag = await hasFinanzplanungPermission('module:finanzplanung:plan_cashout')
