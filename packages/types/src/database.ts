@@ -1776,6 +1776,7 @@ export interface ProcessKpiDefinitionRow {
   holding_id: string;
   company_id: string | null;
   process_id: string;
+  phase_id: string | null;
   name: string;
   description: string | null;
   unit: string;
@@ -1795,6 +1796,7 @@ export interface ProcessKpiDefinitionInsert {
   holding_id: string;
   company_id?: string | null;
   process_id: string;
+  phase_id?: string | null;
   name: string;
   description?: string | null;
   unit?: string;
@@ -1860,6 +1862,7 @@ export interface ProcessStepRow {
   warning_days: number | null;
   show_in_flowchart: boolean;
   liquidity_marker: 'trigger' | 'event' | null;
+  phase_id: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -1879,6 +1882,7 @@ export interface ProcessStepInsert {
   warning_days?: number | null;
   show_in_flowchart?: boolean;
   liquidity_marker?: string | null;
+  phase_id?: string | null;
   sort_order?: number;
 }
 
@@ -1892,7 +1896,42 @@ export interface ProcessStepUpdate {
   warning_days?: number | null;
   show_in_flowchart?: boolean;
   liquidity_marker?: string | null;
+  phase_id?: string | null;
   sort_order?: number;
+}
+
+// =============================================================================
+// TABLE: process_phases
+// =============================================================================
+
+export interface ProcessPhaseRow {
+  id: string;
+  holding_id: string;
+  company_id: string | null;
+  process_id: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  color: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessPhaseInsert {
+  holding_id: string;
+  company_id?: string | null;
+  process_id: string;
+  name: string;
+  description?: string | null;
+  sort_order?: number;
+  color?: string | null;
+}
+
+export interface ProcessPhaseUpdate {
+  name?: string;
+  description?: string | null;
+  sort_order?: number;
+  color?: string | null;
 }
 
 // =============================================================================
@@ -3346,6 +3385,7 @@ export interface Database {
       company_banking_config: { Row: CompanyBankingConfigRow; Insert: Record<string, unknown>; Update: Record<string, unknown>; Relationships: [] };
       process_kpi_definitions: { Row: ProcessKpiDefinitionRow; Insert: ProcessKpiDefinitionInsert; Update: ProcessKpiDefinitionUpdate; Relationships: [] };
       process_kpi_values: { Row: ProcessKpiValueRow; Insert: ProcessKpiValueInsert; Update: Record<string, unknown>; Relationships: [] };
+      process_phases: { Row: ProcessPhaseRow; Insert: ProcessPhaseInsert; Update: ProcessPhaseUpdate; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

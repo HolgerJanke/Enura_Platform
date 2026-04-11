@@ -665,3 +665,39 @@ export async function finaliseProcessAction(processId: string): Promise<ActionRe
   revalidateProcess(processId)
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Phase CRUD
+// ---------------------------------------------------------------------------
+
+export async function createPhaseAction(input: {
+  processId: string; holdingId: string; companyId: string | null; name: string; description?: string; color?: string
+}): Promise<ActionResult> {
+  await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+  const { data: existing } = await supabase.from('process_phases').select('sort_order').eq('process_id', input.processId).order('sort_order', { ascending: false }).limit(1)
+  const nextOrder = existing?.[0] ? ((existing[0] as Record<string, unknown>)['sort_order'] as number) + 1 : 0
+  const { data, error } = await supabase.from('process_phases').insert({
+    holding_id: input.holdingId, company_id: input.companyId, process_id: input.processId,
+    name: input.name, description: input.description ?? null, color: input.color ?? null, sort_order: nextOrder,
+  }).select('*').single()
+  if (error) return { success: false, error: `Phase: ${error.message}` }
+  revalidateProcess(input.processId)
+  return { success: true, data: data as Record<string, unknown> }
+}
+
+export async function deletePhaseAction(phaseId: string): Promise<ActionResult> {
+  await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+  const { error } = await supabase.from('process_phases').delete().eq('id', phaseId)
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
+export async function assignStepToPhaseAction(stepId: string, phaseId: string | null): Promise<ActionResult> {
+  await requireHoldingSession()
+  const supabase = createSupabaseServerClient()
+  const { error } = await supabase.from('process_steps').update({ phase_id: phaseId }).eq('id', stepId)
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
