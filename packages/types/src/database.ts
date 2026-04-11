@@ -1029,9 +1029,49 @@ export interface ProjectRow {
   phase_entered_at: string;
   installation_date: string | null;
   completion_date: string | null;
+  description: string | null;
+  project_value: number | null;
+  system_size_kwp: number | null;
+  project_start_date: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// =============================================================================
+// TABLE: project_documents
+// =============================================================================
+
+export type ProjectDocumentType = 'voice_note' | 'email' | 'drawing' | 'photo' | 'video' | 'invoice_customer' | 'invoice_supplier' | 'contract' | 'offer' | 'report' | 'other'
+
+export interface ProjectDocumentRow {
+  id: string;
+  holding_id: string;
+  company_id: string;
+  project_id: string;
+  document_type: ProjectDocumentType;
+  title: string;
+  description: string | null;
+  storage_path: string;
+  filename: string | null;
+  mime_type: string | null;
+  file_size: number | null;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+export interface ProjectDocumentInsert {
+  holding_id: string;
+  company_id: string;
+  project_id: string;
+  document_type: ProjectDocumentType;
+  title: string;
+  description?: string | null;
+  storage_path: string;
+  filename?: string | null;
+  mime_type?: string | null;
+  file_size?: number | null;
+  uploaded_by?: string | null;
 }
 
 export interface ProjectInsert {

@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsx -e ':*)"
+      "Bash(npx tsx -e ':*)",
+      "Bash(grep -n \"CREATE TABLE project_process_instances\\\\|CREATE TABLE liquidity_event_instances\\\\|CREATE TABLE invoices_incoming\\\\|CREATE TABLE offers\\\\|CREATE TABLE leads\" \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/supabase/migrations/\"*.sql)",
+      "Bash(grep -n \"invoices_incoming\" \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/supabase/migrations/\"*.sql)",
+      "Bash(grep -i \"document\\\\|attachment\\\\|file\" \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/supabase/migrations/\"*.sql)",
+      "Bash(find \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec grep -l \"supabase.*bucket\\\\|storage.*bucket\" {} \\\\;)"
+    ],
+    "additionalDirectories": [
+      "/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web/src/app/(dashboard)/projects"
     ]
   }
 }
