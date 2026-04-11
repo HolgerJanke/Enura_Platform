@@ -31,6 +31,7 @@ export async function requireFinanzplanung(): Promise<boolean> {
   const isActive = await checkFinanzplanungActive(session)
   if (!isActive) return false
 
+  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
   if (!session.permissions.includes('module:finanzplanung:read')) return false
 
   return true
