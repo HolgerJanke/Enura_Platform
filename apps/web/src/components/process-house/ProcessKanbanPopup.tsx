@@ -159,15 +159,16 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
                         <p className="text-[10px] text-gray-300 text-center py-4">—</p>
                       ) : (
                         cards.map((proj) => (
-                          <div
+                          <a
                             key={proj.id}
-                            className="rounded-md border border-gray-200 bg-white px-2.5 py-2 shadow-sm hover:shadow transition-shadow"
+                            href={`/projects/${proj.id}`}
+                            className="block rounded-md border border-gray-200 bg-white px-2.5 py-2 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
                           >
-                            <p className="text-xs font-medium text-gray-900 truncate">{proj.customer_name}</p>
+                            <p className="text-xs font-medium text-blue-700 truncate">{proj.customer_name}</p>
                             {proj.address_city && (
                               <p className="text-[10px] text-gray-400 truncate">{proj.address_city}</p>
                             )}
-                          </div>
+                          </a>
                         ))
                       )}
                     </div>
