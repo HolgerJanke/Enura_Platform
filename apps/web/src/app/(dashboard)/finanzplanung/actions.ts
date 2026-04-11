@@ -333,11 +333,11 @@ export async function scheduleInvoicePayment(
 
   const supabase = createSupabaseServerClient()
 
+  // Update due_date (don't change status — only update the date for rescheduling)
   const { error } = await supabase
     .from('invoices_incoming')
-    .update({ status: 'scheduled', due_date: scheduledDate })
+    .update({ due_date: scheduledDate })
     .eq('id', invoiceId)
-    .eq('status', 'approved')
 
   if (error) return { success: false, error: error.message }
 
@@ -352,5 +352,6 @@ export async function scheduleInvoicePayment(
     .eq('invoice_id', invoiceId)
 
   revalidatePath('/finanzplanung/planung')
+  revalidatePath('/finanzplanung/eingang')
   return { success: true }
 }
