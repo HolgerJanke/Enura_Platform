@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ProcessHouseEditorClient } from './house-editor-client'
 
 interface ProcessRow {
@@ -24,7 +24,7 @@ export default async function ProcessHouseEditorPage({
     return <div className="p-8 text-center"><p className="text-gray-500">Kein Zugriff.</p></div>
   }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const params = await searchParams
 
   // Fetch companies
@@ -44,7 +44,6 @@ export default async function ProcessHouseEditorPage({
     const { data, error: queryError } = await supabase
       .from('process_definitions')
       .select('id, name, menu_label, process_type, house_sort_order, status')
-      .eq('holding_id', session.holdingId ?? '')
       .eq('company_id', selectedCompanyId)
       .order('house_sort_order')
 
