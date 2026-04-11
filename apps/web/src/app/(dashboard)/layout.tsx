@@ -2,11 +2,7 @@ import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { buildProcessNavGroups } from '@/lib/process-nav'
-import { checkFinanzplanungActive } from '@/lib/finanzplanung-guard'
 import { DashboardShell } from '@/components/dashboard-shell'
-import { AdminBar } from '@/components/AdminBar'
-import type { MainProcessGroup } from '@/lib/process-nav'
 
 const SUPER_USER_NAV = [
   { label: 'Prozesse', href: '/settings/call-script' },
@@ -54,9 +50,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     return session.permissions.includes(item.permission)
   })
 
-  // Build grouped process navigation
-  const processGroups: MainProcessGroup[] = await buildProcessNavGroups(session)
-
+  // Process navigation is now via Process House on dashboard
   const navItems = staticNavItems
 
   const displayName = session.profile.display_name ?? session.profile.first_name ?? 'Benutzer'
@@ -85,7 +79,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <DashboardShell
         companyName={companyName}
         navItems={navItems}
-        processGroups={processGroups}
         userName={displayName}
         userRole={roleLabel}
         isHoldingAdmin={session.isHoldingAdmin}
