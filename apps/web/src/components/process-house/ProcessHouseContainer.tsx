@@ -55,6 +55,23 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     phasesByProcess.set(ph.process_id, arr)
   }
 
+  // Fetch first step with expected_output per process (for direct-link processes like M2, S1, S2)
+  const { data: stepsData } = processIds.length > 0
+    ? await serviceDb
+        .from('process_steps')
+        .select('process_id, expected_output, sort_order')
+        .in('process_id', processIds)
+        .not('expected_output', 'is', null)
+        .order('sort_order')
+    : { data: [] }
+
+  const linkedPageByProcess = new Map<string, string>()
+  for (const step of (stepsData ?? []) as Array<{ process_id: string; expected_output: string | null; sort_order: number }>) {
+    if (step.expected_output?.startsWith('/') && !linkedPageByProcess.has(step.process_id)) {
+      linkedPageByProcess.set(step.process_id, step.expected_output)
+    }
+  }
+
   const toItem = (p: ProcessRow) => ({
     id: p.id,
     name: p.name,
@@ -62,6 +79,7 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     houseSortOrder: p.house_sort_order,
     status: p.status,
     phases: phasesByProcess.get(p.id) ?? [],
+    linkedPage: linkedPageByProcess.get(p.id) ?? null,
   })
 
   const management = visible.filter((p) => p.process_type === 'M').map(toItem)

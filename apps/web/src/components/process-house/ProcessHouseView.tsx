@@ -19,6 +19,7 @@ export interface ProcessHouseItem {
   houseSortOrder: number
   status: string
   phases: ProcessPhaseItem[]
+  linkedPage: string | null
 }
 
 interface ProcessHouseViewProps {

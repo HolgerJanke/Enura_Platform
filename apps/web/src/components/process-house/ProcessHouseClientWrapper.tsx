@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ProcessHouseView, type ProcessHouseItem } from './ProcessHouseView'
 import { ProcessKanbanPopup } from './ProcessKanbanPopup'
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ProcessHouseClientWrapper({ management, primary, support, openProcess, openPhase }: Props) {
+  const router = useRouter()
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(openProcess ?? null)
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(openPhase ?? null)
 
@@ -20,6 +22,11 @@ export function ProcessHouseClientWrapper({ management, primary, support, openPr
   const selected = allProcesses.find((p) => p.id === selectedProcessId)
 
   function handleProcessClick(processId: string) {
+    const process = allProcesses.find((p) => p.id === processId)
+    if (process?.linkedPage) {
+      router.push(process.linkedPage)
+      return
+    }
     setSelectedProcessId(processId)
     setSelectedPhaseId(null) // Show all phases
   }
