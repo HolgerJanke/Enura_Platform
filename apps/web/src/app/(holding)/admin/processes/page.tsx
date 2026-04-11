@@ -45,10 +45,19 @@ export default async function ProcessListPage({
       .order('house_sort_order')
 
     const companyName = company ? (company as Record<string, unknown>)['name'] as string : 'Unbekannt'
-    const procs = (processes ?? []) as Array<{
+
+    // Sort by process_type (M → P → S → null) then by house_sort_order
+    const typeOrder: Record<string, number> = { M: 0, P: 1, S: 2 }
+    const procs = ((processes ?? []) as Array<{
       id: string; name: string; menu_label: string; category: string;
-      process_type: string | null; status: string; version: string; deployed_at: string | null
-    }>
+      process_type: string | null; status: string; version: string; deployed_at: string | null;
+      house_sort_order: number
+    }>).sort((a, b) => {
+      const ta = typeOrder[a.process_type ?? ''] ?? 3
+      const tb = typeOrder[b.process_type ?? ''] ?? 3
+      if (ta !== tb) return ta - tb
+      return (a.house_sort_order ?? 0) - (b.house_sort_order ?? 0)
+    })
 
     return (
       <div className="p-6">
