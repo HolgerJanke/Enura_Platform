@@ -27,6 +27,14 @@ interface ProcessPhase {
   color: string | null
 }
 
+interface ProjectCard {
+  id: string
+  title: string
+  customer_name: string
+  address_city: string | null
+  status: string
+}
+
 interface Props {
   processId: string
   processName: string
@@ -37,6 +45,7 @@ interface Props {
 
 const TYPE_LABELS: Record<string, string> = { M: 'Management', P: 'Kernprozess', S: 'Stützprozess' }
 const TYPE_COLORS: Record<string, string> = { M: 'bg-teal-100 text-teal-700', P: 'bg-green-100 text-green-700', S: 'bg-sky-100 text-sky-700' }
+const CRIT_COLORS: Record<string, string> = { A: 'bg-red-100 text-red-700', B: 'bg-amber-100 text-amber-700', C: 'bg-gray-100 text-gray-500' }
 
 // ---------------------------------------------------------------------------
 // Component
@@ -45,8 +54,8 @@ const TYPE_COLORS: Record<string, string> = { M: 'bg-teal-100 text-teal-700', P:
 export function ProcessKanbanPopup({ processId, processName, processType, filterPhaseId, onClose }: Props) {
   const [steps, setSteps] = useState<ProcessStep[]>([])
   const [phases, setPhases] = useState<ProcessPhase[]>([])
+  const [projectsByStep, setProjectsByStep] = useState<Record<string, ProjectCard[]>>({})
   const [loading, setLoading] = useState(true)
-  const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set())
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
@@ -69,8 +78,7 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
           const data = await res.json()
           setSteps(data.steps ?? [])
           setPhases(data.phases ?? [])
-          // Expand all phases by default
-          setExpandedPhases(new Set((data.phases ?? []).map((p: ProcessPhase) => p.id)))
+          setProjectsByStep(data.projectsByStep ?? {})
         }
       } catch { /* empty */ }
       setLoading(false)
@@ -78,178 +86,95 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
     fetchData()
   }, [processId])
 
-  function togglePhase(phaseId: string) {
-    setExpandedPhases((prev) => {
-      const next = new Set(prev)
-      if (next.has(phaseId)) next.delete(phaseId)
-      else next.add(phaseId)
-      return next
-    })
-  }
+  // Filter steps by phase if filterPhaseId is set
+  const displaySteps = filterPhaseId
+    ? steps.filter(s => s.phase_id === filterPhaseId)
+    : steps
 
-  // Group steps by phase
-  const stepsByPhase = new Map<string | null, ProcessStep[]>()
-  for (const step of steps) {
-    const key = step.phase_id
-    const arr = stepsByPhase.get(key) ?? []
-    arr.push(step)
-    stepsByPhase.set(key, arr)
-  }
+  const filteredPhaseName = filterPhaseId
+    ? phases.find(p => p.id === filterPhaseId)?.name
+    : null
 
-  const unphased = stepsByPhase.get(null) ?? []
-  const hasPhases = phases.length > 0
+  const totalProjects = Object.values(projectsByStep).reduce((sum, arr) => sum + arr.length, 0)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Escape') onClose() }} aria-label="Schließen" />
 
-      <div className="relative z-10 w-full max-w-5xl max-h-[85vh] flex flex-col rounded-xl bg-white shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-[95vw] max-h-[90vh] flex flex-col rounded-xl bg-white shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${TYPE_COLORS[processType]}`}>{processType}</span>
-            <h2 className="text-lg font-bold text-gray-900">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold shrink-0 ${TYPE_COLORS[processType]}`}>{processType}</span>
+            <h2 className="text-base font-bold text-gray-900 truncate">
               {processName}
-              {filterPhaseId && phases.find(p => p.id === filterPhaseId) && (
-                <span className="text-gray-400 font-normal"> — {phases.find(p => p.id === filterPhaseId)!.name}</span>
-              )}
+              {filteredPhaseName && <span className="text-gray-400 font-normal"> — {filteredPhaseName}</span>}
             </h2>
-            <span className="text-xs text-gray-400">{TYPE_LABELS[processType]}</span>
-            <span className="text-xs text-gray-400">· {filterPhaseId ? (stepsByPhase.get(filterPhaseId) ?? []).length : steps.length} Schritte</span>
+            <span className="text-xs text-gray-400 shrink-0">{TYPE_LABELS[processType]}</span>
+            <span className="text-xs text-gray-400 shrink-0">· {displaySteps.length} Schritte · {totalProjects} Projekte</span>
           </div>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600" aria-label="Schließen">
+          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 shrink-0" aria-label="Schließen">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Kanban body */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto p-4">
           {loading ? (
             <div className="flex items-center justify-center py-12"><p className="text-sm text-gray-500">Wird geladen...</p></div>
-          ) : steps.length === 0 ? (
+          ) : displaySteps.length === 0 ? (
             <div className="flex items-center justify-center py-12"><p className="text-sm text-gray-500">Keine Schritte definiert.</p></div>
-          ) : hasPhases ? (
-            /* Phase-grouped view */
-            <div className="space-y-4">
-              {(filterPhaseId ? phases.filter(p => p.id === filterPhaseId) : phases).map((phase, phaseIdx) => {
-                const phaseSteps = stepsByPhase.get(phase.id) ?? []
-                const isExpanded = filterPhaseId ? true : expandedPhases.has(phase.id)
+          ) : (
+            <div className="flex gap-3" style={{ minWidth: `${displaySteps.length * 220}px` }}>
+              {displaySteps.map((step) => {
+                const cards = projectsByStep[step.id] ?? []
+                const isLink = step.expected_output?.startsWith('/')
 
                 return (
-                  <div key={phase.id} className="rounded-lg border border-gray-200 overflow-hidden">
-                    {/* Phase header */}
-                    <button
-                      type="button"
-                      onClick={() => togglePhase(phase.id)}
-                      className="flex w-full items-center justify-between px-5 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  <div key={step.id} className="w-52 shrink-0 flex flex-col rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+                    {/* Column header */}
+                    <div
+                      className={`border-b border-gray-200 bg-white px-3 py-2.5 ${isLink ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                      onClick={isLink ? () => { window.location.href = step.expected_output! } : undefined}
                     >
-                      <div className="flex items-center gap-3">
-                        {phase.color && (
-                          <div className="h-3 w-3 rounded-full" style={{ backgroundColor: phase.color }} />
-                        )}
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                          Phase {phaseIdx + 1}: {phase.name}
+                      <div className="flex items-center justify-between gap-1">
+                        <span className={`text-xs font-semibold truncate ${isLink ? 'text-blue-600' : 'text-gray-900'}`}>
+                          {step.name}
                         </span>
-                        <span className="text-xs text-gray-400">{phaseSteps.length} Schritte</span>
+                        {step.criticality && (
+                          <span className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold shrink-0 ${CRIT_COLORS[step.criticality] ?? ''}`}>
+                            {step.criticality}
+                          </span>
+                        )}
                       </div>
-                      <svg className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[10px] text-gray-400 font-mono">{step.process_step_id}</span>
+                        <span className="text-[10px] text-gray-400">{cards.length} Projekte</span>
+                      </div>
+                    </div>
 
-                    {/* Phase steps table */}
-                    {isExpanded && (
-                      <table className="min-w-full divide-y divide-gray-100">
-                        <thead>
-                          <tr className="bg-gray-800 text-white">
-                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Nr.</th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Prozess</th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Funktion</th>
-                            <th className="px-4 py-2 text-center text-xs font-semibold uppercase">Krit.</th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Rhythmus</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {phaseSteps.map((step) => {
-                            const isLink = step.expected_output?.startsWith('/')
-                            return (
-                            <tr key={step.id} className={`hover:bg-gray-50 ${isLink ? 'cursor-pointer' : ''}`} onClick={isLink ? () => { window.location.href = step.expected_output! } : undefined}>
-                              <td className="px-4 py-2.5 text-sm font-mono text-blue-600">{step.process_step_id}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-900">
-                                {isLink ? <span className="text-blue-600 hover:underline">{step.name}</span> : step.name}
-                              </td>
-                              <td className="px-4 py-2.5">
-                                <div className="flex flex-wrap gap-1">
-                                  {(step.responsible_roles ?? []).map((role) => (
-                                    <span key={role} className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">{role}</span>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="px-4 py-2.5 text-center">
-                                {step.criticality && (
-                                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold ${
-                                    step.criticality === 'A' ? 'bg-red-100 text-red-700' :
-                                    step.criticality === 'B' ? 'bg-amber-100 text-amber-700' :
-                                    'bg-gray-100 text-gray-500'
-                                  }`}>{step.criticality}</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-2.5 text-sm text-gray-500">{step.rhythm ?? ''}</td>
-                            </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    )}
+                    {/* Project cards */}
+                    <div className="flex-1 p-2 space-y-1.5 overflow-y-auto max-h-[50vh]">
+                      {cards.length === 0 ? (
+                        <p className="text-[10px] text-gray-300 text-center py-4">—</p>
+                      ) : (
+                        cards.map((proj) => (
+                          <div
+                            key={proj.id}
+                            className="rounded-md border border-gray-200 bg-white px-2.5 py-2 shadow-sm hover:shadow transition-shadow"
+                          >
+                            <p className="text-xs font-medium text-gray-900 truncate">{proj.customer_name}</p>
+                            {proj.address_city && (
+                              <p className="text-[10px] text-gray-400 truncate">{proj.address_city}</p>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )
               })}
-
-              {/* Unphased steps */}
-              {unphased.length > 0 && (
-                <div className="rounded-lg border border-dashed border-gray-300">
-                  <div className="px-5 py-3 bg-gray-50">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Nicht zugeordnet</span>
-                  </div>
-                  <table className="min-w-full divide-y divide-gray-100">
-                    <tbody className="divide-y divide-gray-100">
-                      {unphased.map((step) => (
-                        <tr key={step.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-2.5 text-sm font-mono text-gray-500 w-20">{step.process_step_id}</td>
-                          <td className="px-4 py-2.5 text-sm text-gray-900">{step.name}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
-          ) : (
-            /* Flat view (no phases) */
-            <table className="min-w-full divide-y divide-gray-200 rounded-lg border border-gray-200 overflow-hidden">
-              <thead className="bg-gray-800 text-white">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Nr.</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Prozess</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Funktion</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {steps.map((step) => (
-                  <tr key={step.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2.5 text-sm font-mono text-blue-600">{step.process_step_id}</td>
-                    <td className="px-4 py-2.5 text-sm text-gray-900">{step.name}</td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex flex-wrap gap-1">
-                        {(step.responsible_roles ?? []).map((role) => (
-                          <span key={role} className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">{role}</span>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           )}
         </div>
       </div>
