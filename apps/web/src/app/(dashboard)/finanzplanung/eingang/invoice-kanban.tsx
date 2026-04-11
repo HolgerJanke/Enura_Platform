@@ -15,6 +15,7 @@ export interface InvoiceCard {
   gross_amount: number | null
   currency: string
   due_date: string | null
+  planned_payment_date: string | null
   status: string
 }
 
@@ -164,20 +165,22 @@ function buildColumns(): Column[] {
 function assignColumn(inv: InvoiceCard, columns: Column[]): string {
   if (inv.status === 'paid') return 'paid'
 
-  if (!inv.due_date) return 'later'
+  // Use planned_payment_date if set, otherwise fall back to due_date
+  const effectiveDate = inv.planned_payment_date ?? inv.due_date
+  if (!effectiveDate) return 'later'
 
-  const dueDate = new Date(inv.due_date)
-  dueDate.setHours(0, 0, 0, 0)
+  const payDate = new Date(effectiveDate)
+  payDate.setHours(0, 0, 0, 0)
   const thisMonday = startOfWeek(new Date())
 
-  // Overdue: due before this week's Monday
-  if (dueDate < thisMonday) return 'overdue'
+  // Overdue: payment date before this week's Monday
+  if (payDate < thisMonday) return 'overdue'
 
   // Check each week column
   for (let i = 0; i < 4; i++) {
     const weekStart = addDays(thisMonday, i * 7)
     const weekEnd = addDays(weekStart, 7)
-    if (dueDate >= weekStart && dueDate < weekEnd) return `week-${i}`
+    if (payDate >= weekStart && payDate < weekEnd) return `week-${i}`
   }
 
   return 'later'
@@ -214,9 +217,9 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
     if (!draggedId || !col.droppable || !col.dropDate) return
     setDraggedId(null)
 
-    // Optimistic update
+    // Optimistic update — set planned_payment_date, keep due_date unchanged
     setLocalInvoices(prev => prev.map(inv =>
-      inv.id === draggedId ? { ...inv, due_date: col.dropDate } : inv,
+      inv.id === draggedId ? { ...inv, planned_payment_date: col.dropDate } : inv,
     ))
 
     const result = await scheduleInvoicePayment(draggedId, col.dropDate)
@@ -350,6 +353,11 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
                       {inv.due_date && (
                         <p className="text-[10px] text-gray-400 mt-0.5">
                           Fällig: {new Date(inv.due_date).toLocaleDateString('de-CH')}
+                        </p>
+                      )}
+                      {inv.planned_payment_date && inv.planned_payment_date !== inv.due_date && (
+                        <p className="text-[10px] text-blue-500 mt-0.5">
+                          Zahlung: {new Date(inv.planned_payment_date).toLocaleDateString('de-CH')}
                         </p>
                       )}
                     </div>

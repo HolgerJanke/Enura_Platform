@@ -23,10 +23,10 @@ export default async function EingangPage() {
   // Check if user can reschedule invoices (drag-and-drop)
   const canDrag = await hasFinanzplanungPermission('module:finanzplanung:plan_cashout')
 
-  // Fetch all invoices ordered by due_date
+  // Fetch all invoices ordered by planned payment date (fallback to due_date)
   const { data: invoices } = await supabase
     .from('invoices_incoming')
-    .select('id, invoice_number, sender_name, gross_amount, currency, due_date, status')
+    .select('id, invoice_number, sender_name, gross_amount, currency, due_date, planned_payment_date, status')
     .eq('company_id', session!.companyId ?? '')
     .order('due_date', { ascending: true, nullsFirst: false })
 
@@ -37,6 +37,7 @@ export default async function EingangPage() {
     gross_amount: number | null
     currency: string
     due_date: string | null
+    planned_payment_date: string | null
     status: string
   }>
 
