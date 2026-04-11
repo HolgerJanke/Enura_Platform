@@ -6,19 +6,13 @@ import { AdminBar } from '@/components/AdminBar'
 const HOLDING_NAV_ITEMS = [
   { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
   { label: 'Unternehmen', href: '/admin', icon: 'building' },
-  { label: 'Benutzer', href: '/admin/users', icon: 'users' },
   { label: 'Finanzen', href: '/admin/finance', icon: 'banknote' },
   { label: 'Secrets', href: '/admin/secrets', icon: 'key' },
   { label: 'Tools', href: '/admin/tools', icon: 'wrench' },
-  { label: 'Prozesse', href: '/admin/processes', icon: 'workflow' },
-  { label: 'Prozesshaus', href: '/admin/processes/house', icon: 'building' },
   { label: 'Analytics', href: '/admin/analytics', icon: 'bar-chart' },
   { label: 'Compliance', href: '/admin/compliance', icon: 'shield-check' },
   { label: 'Zertifizierungen', href: '/admin/compliance/certifications', icon: 'award' },
-  { label: 'Branding', href: '/admin/settings/branding', icon: 'palette' },
   { label: 'Berechtigungen', href: '/admin/settings/permissions', icon: 'lock' },
-  { label: 'Rollen', href: '/admin/settings/roles', icon: 'shield-check' },
-  { label: 'Add-ons', href: '/admin/settings/addons', icon: 'puzzle' },
   { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
 
