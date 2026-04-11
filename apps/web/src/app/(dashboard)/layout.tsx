@@ -46,19 +46,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const staticNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', permission: null as string | null },
-    { label: 'Setter', href: '/setter', icon: 'Phone', permission: 'module:setter:read' },
-    { label: 'Berater', href: '/berater', icon: 'Briefcase', permission: 'module:berater:read' },
-    { label: 'Leads', href: '/leads', icon: 'Users', permission: 'module:leads:read' },
-    { label: 'Innendienst', href: '/innendienst', icon: 'ClipboardList', permission: 'module:innendienst:read' },
-    { label: 'Projekte', href: '/projects', icon: 'Building', permission: 'module:bau:read' },
-    { label: 'Finanzen', href: '/finance', icon: 'Banknote', permission: 'module:finance:read' },
-    { label: 'Liquidität', href: '/liquidity', icon: 'TrendingUp', permission: 'module:finance:read' },
-    { label: 'Anomalien', href: '/anomalies', icon: 'AlertTriangle', permission: 'module:admin:read' },
-    { label: 'Berichte', href: '/reports', icon: 'FileText', permission: 'module:reports:read' },
     ...(session.isEnuraAdmin ? [{ label: 'Plattform', href: '/platform', icon: 'Globe', permission: null as string | null }] : []),
-    { label: 'Leitfaden', href: '/settings/call-script', icon: 'BookOpen', permission: 'module:admin:write' },
-    { label: 'Bericht-Einst.', href: '/settings/reports', icon: 'Sliders', permission: 'module:admin:write' },
-    { label: 'Benutzer', href: '/settings/users', icon: 'Settings', permission: 'module:admin:read' },
     { label: 'Hilfe', href: '/help', icon: 'HelpCircle', permission: null as string | null },
   ].filter((item) => {
     if (!item.permission) return true
