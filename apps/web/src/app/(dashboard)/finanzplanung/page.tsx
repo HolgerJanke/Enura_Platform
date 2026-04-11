@@ -3,6 +3,8 @@ import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 
+export const dynamic = 'force-dynamic'
+
 export default async function FinanzplanungPage() {
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
