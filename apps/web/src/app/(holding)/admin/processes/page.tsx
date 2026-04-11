@@ -19,10 +19,109 @@ interface CompanyProcessInfo {
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function ProcessListPage() {
+export default async function ProcessListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ company?: string }>
+}) {
   await requireHoldingAdmin()
 
   const supabase = createSupabaseServerClient()
+  const params = await searchParams
+  const selectedCompanyId = params.company ?? null
+
+  // If a company is selected, show its processes
+  if (selectedCompanyId) {
+    const { data: company } = await supabase
+      .from('companies')
+      .select('id, name')
+      .eq('id', selectedCompanyId)
+      .single()
+
+    const { data: processes } = await supabase
+      .from('process_definitions')
+      .select('id, name, menu_label, category, process_type, status, version, deployed_at, house_sort_order')
+      .eq('company_id', selectedCompanyId)
+      .order('house_sort_order')
+
+    const companyName = company ? (company as Record<string, unknown>)['name'] as string : 'Unbekannt'
+    const procs = (processes ?? []) as Array<{
+      id: string; name: string; menu_label: string; category: string;
+      process_type: string | null; status: string; version: string; deployed_at: string | null
+    }>
+
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <Link href="/admin/processes" className="text-sm text-gray-500 hover:text-gray-700">← Zurück</Link>
+            <h1 className="text-2xl font-semibold text-gray-900">Prozesse — {companyName}</h1>
+          </div>
+          <Link
+            href={`/admin/processes/new?company=${selectedCompanyId}`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
+          >
+            + Neuer Prozess
+          </Link>
+        </div>
+
+        {procs.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+            <p className="text-sm text-gray-500">Keine Prozesse vorhanden.</p>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Typ</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Kategorie</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Version</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Aktion</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {procs.map((proc) => (
+                  <tr key={proc.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      {proc.process_type ? (
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${
+                          proc.process_type === 'M' ? 'bg-teal-100 text-teal-700' :
+                          proc.process_type === 'P' ? 'bg-green-100 text-green-700' :
+                          'bg-sky-100 text-sky-700'
+                        }`}>{proc.process_type}</span>
+                      ) : <span className="text-xs text-gray-400">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      <Link href={`/admin/processes/${proc.id}`} className="text-blue-600 hover:underline">
+                        {proc.menu_label}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{proc.category}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                        proc.status === 'deployed' ? 'bg-green-100 text-green-700' :
+                        proc.status === 'draft' ? 'bg-gray-100 text-gray-500' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>{proc.status}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">v{proc.version}</td>
+                    <td className="px-4 py-3">
+                      <Link href={`/admin/processes/${proc.id}`} className="text-sm text-blue-600 hover:underline">
+                        Bearbeiten
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const { data: companies, error: companiesError } = await supabase
     .from('companies')
