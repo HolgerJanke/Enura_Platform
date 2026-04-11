@@ -20,8 +20,8 @@ export default async function EingangPage() {
   const session = await getSession()
   const supabase = createSupabaseServiceClient()
 
-  // Check if user can reschedule invoices (drag-and-drop)
-  const canDrag = await hasFinanzplanungPermission('module:finanzplanung:plan_cashout')
+  // Anyone with access to this page can drag (requireFinanzplanung already gates access)
+  const canDrag = true
 
   // Fetch all invoices ordered by planned payment date (fallback to due_date)
   const { data: invoices } = await supabase
