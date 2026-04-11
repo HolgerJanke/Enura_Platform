@@ -153,29 +153,32 @@ export function ProcessHouseView({
             return (
               <g
                 key={proc.id}
-                onClick={() => onProcessClick?.(proc.id)}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className="cursor-pointer"
               >
                 <polygon
                   points={arrowPoints}
                   style={{ fill: COLORS.arrowFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
+                  className="cursor-pointer"
+                  onClick={() => onProcessClick?.(proc.id)}
                 />
                 {/* Process content via foreignObject for proper text wrapping */}
                 <foreignObject x={CONTENT_X + 20} y={y + 4} width={CONTENT_W - 40} height={ARROW_H - 8}>
                   <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                    <p style={{ color: 'white', fontSize: '15px', fontWeight: 700, margin: 0, textAlign: 'center' }}>
+                    <p
+                      onClick={() => onProcessClick?.(proc.id)}
+                      style={{ color: 'white', fontSize: '15px', fontWeight: 700, margin: 0, textAlign: 'center', cursor: 'pointer' }}
+                    >
                       P{i + 1} — {proc.menuLabel}
                     </p>
                     {proc.phases.length > 0 && (
-                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', margin: '4px 0 0', textAlign: 'center', lineHeight: '1.4', flexWrap: 'wrap' }}>
+                      <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', margin: '4px 0 0', textAlign: 'center', lineHeight: '1.4' }}>
                         {proc.phases.map((ph, pi) => (
                           <span
                             key={ph.id}
-                            onClick={(e) => { e.stopPropagation(); onPhaseClick?.(proc.id, ph.id) }}
+                            onClick={() => onPhaseClick?.(proc.id, ph.id)}
                             style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
                             onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline' }}
                             onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none' }}
