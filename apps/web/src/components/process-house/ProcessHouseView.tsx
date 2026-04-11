@@ -6,12 +6,19 @@ import { useState } from 'react'
 // Types
 // ---------------------------------------------------------------------------
 
+export interface ProcessPhaseItem {
+  id: string
+  name: string
+  sortOrder: number
+}
+
 export interface ProcessHouseItem {
   id: string
   name: string
   menuLabel: string
   houseSortOrder: number
   status: string
+  phases: ProcessPhaseItem[]
 }
 
 interface ProcessHouseViewProps {
@@ -19,6 +26,7 @@ interface ProcessHouseViewProps {
   primaryProcesses: ProcessHouseItem[]
   supportProcesses: ProcessHouseItem[]
   onProcessClick?: (processId: string) => void
+  onPhaseClick?: (processId: string, phaseId: string) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -33,7 +41,7 @@ const CONTENT_W = W - 2 * PILLAR_W - 20
 const ROOF_Y = 20
 const ROOF_H = 120
 const ARROW_Y = ROOF_Y + ROOF_H + 15
-const ARROW_H = 50
+const ARROW_H = 70
 const ARROW_GAP = 8
 const FOUND_Y_OFFSET = 20
 const FOUND_H = 90
@@ -62,6 +70,7 @@ export function ProcessHouseView({
   primaryProcesses,
   supportProcesses,
   onProcessClick,
+  onPhaseClick,
 }: ProcessHouseViewProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
@@ -155,9 +164,10 @@ export function ProcessHouseView({
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
                 />
+                {/* Process title */}
                 <text
                   x={CONTENT_X + CONTENT_W / 2}
-                  y={y + ARROW_H / 2}
+                  y={y + (proc.phases.length > 0 ? 22 : ARROW_H / 2)}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={COLORS.arrowText}
@@ -166,6 +176,31 @@ export function ProcessHouseView({
                 >
                   P{i + 1} — {proc.menuLabel}
                 </text>
+                {/* Phase labels */}
+                {proc.phases.length > 0 && (
+                  <text
+                    x={CONTENT_X + CONTENT_W / 2}
+                    y={y + 45}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="rgba(255,255,255,0.85)"
+                    fontSize={10}
+                  >
+                    {proc.phases.map((ph, pi) => {
+                      const label = `P${i + 1}.${pi + 1} ${ph.name}`
+                      return (
+                        <tspan
+                          key={ph.id}
+                          onClick={(e) => { e.stopPropagation(); onPhaseClick?.(proc.id, ph.id) }}
+                          className="cursor-pointer hover:underline"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          {pi > 0 ? '  |  ' : ''}{label}
+                        </tspan>
+                      )
+                    })}
+                  </text>
+                )}
               </g>
             )
           })

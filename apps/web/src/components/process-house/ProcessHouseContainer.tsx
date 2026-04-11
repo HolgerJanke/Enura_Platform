@@ -36,12 +36,30 @@ export async function ProcessHouseContainer() {
     return p.visible_roles.some((r) => userRoleKeys.includes(r))
   })
 
+  // Fetch phases for all visible processes
+  const processIds = visible.map((p) => p.id)
+  const { data: phasesData } = processIds.length > 0
+    ? await supabase
+        .from('process_phases')
+        .select('id, name, process_id, sort_order')
+        .in('process_id', processIds)
+        .order('sort_order')
+    : { data: [] }
+
+  const phasesByProcess = new Map<string, Array<{ id: string; name: string; sortOrder: number }>>()
+  for (const ph of (phasesData ?? []) as Array<{ id: string; name: string; process_id: string; sort_order: number }>) {
+    const arr = phasesByProcess.get(ph.process_id) ?? []
+    arr.push({ id: ph.id, name: ph.name, sortOrder: ph.sort_order })
+    phasesByProcess.set(ph.process_id, arr)
+  }
+
   const toItem = (p: ProcessRow) => ({
     id: p.id,
     name: p.name,
     menuLabel: p.menu_label,
     houseSortOrder: p.house_sort_order,
     status: p.status,
+    phases: phasesByProcess.get(p.id) ?? [],
   })
 
   const management = visible.filter((p) => p.process_type === 'M').map(toItem)

@@ -23,6 +23,7 @@ export function ProcessHouseClientWrapper({ management, primary, support }: Prop
         primaryProcesses={primary}
         supportProcesses={support}
         onProcessClick={(id) => setSelectedProcessId(id)}
+        onPhaseClick={(processId) => setSelectedProcessId(processId)}
       />
       {selectedProcessId && selected && (
         <ProcessKanbanPopup
