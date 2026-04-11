@@ -9,7 +9,7 @@ import type { QuickLink } from './data'
 const QUICK_LINKS_BY_ROLE: Record<string, QuickLink[]> = {
   setter: [
     { title: 'Meine Anrufe', href: '/help/company/setter-dashboard', description: 'KPIs und Anrufstatistiken', icon: 'Phone' },
-    { title: 'Termine buchen', href: '/help/company/setter-dashboard', description: 'Termine anlegen und verwalten', icon: 'Calendar' },
+    { title: 'Prozesshaus', href: '/help/company/prozesshaus', description: 'Navigation und Aufbau', icon: 'LayoutDashboard' },
   ],
   berater: [
     { title: 'Pipeline-Übersicht', href: '/help/company/berater-dashboard', description: 'Offerten und Abschlüsse', icon: 'Briefcase' },
@@ -20,26 +20,33 @@ const QUICK_LINKS_BY_ROLE: Record<string, QuickLink[]> = {
     { title: 'Berichte', href: '/help/company/tagesberichte', description: 'Tagesberichte und Coaching', icon: 'ClipboardList' },
   ],
   geschaeftsfuehrung: [
-    { title: 'Dashboard-Übersicht', href: '/help/company/erste-schritte', description: 'Alle Module im Überblick', icon: 'LayoutDashboard' },
+    { title: 'Prozesshaus', href: '/help/company/prozesshaus', description: 'Alle Prozesse im Überblick', icon: 'LayoutDashboard' },
     { title: 'Finanzen', href: '/help/company/finanzen-cashflow', description: 'Cashflow und Liquidität', icon: 'Banknote' },
   ],
   innendienst: [
     { title: 'Planung', href: '/help/company/projekte-kanban', description: 'Projektplanung und IA-Status', icon: 'ClipboardList' },
+    { title: 'Projektdetails', href: '/help/company/projekt-details', description: 'Dokumente und Zeitachse', icon: 'Briefcase' },
   ],
   bau: [
-    { title: 'Kanban-Board', href: '/help/company/projekte-kanban', description: '27-Phasen-Kanban', icon: 'Building' },
+    { title: 'Kanban-Board', href: '/help/company/projekte-kanban', description: 'Projekte im Kanban verwalten', icon: 'Building' },
+    { title: 'Projektdetails', href: '/help/company/projekt-details', description: 'Dokumente und Zeitachse', icon: 'Briefcase' },
+  ],
+  buchhaltung: [
+    { title: 'Finanzen', href: '/help/company/finanzen-cashflow', description: 'Rechnungen und Cashflow', icon: 'Banknote' },
+    { title: 'Finanzplanung', href: '/help/company/finanzplanung-uebersicht', description: 'Rechnungseingang und Zahlungen', icon: 'ClipboardList' },
   ],
   leadkontrolle: [
     { title: 'Lead-Verwaltung', href: '/help/company/leads-verwalten', description: 'Leads filtern und bearbeiten', icon: 'Users' },
   ],
   super_user: [
-    { title: 'Benutzer verwalten', href: '/help/holding/rollen-berechtigungen', description: 'Rollen und Rechte zuweisen', icon: 'Settings' },
-    { title: 'Connectors', href: '/help/holding/connector-einstellungen', description: 'API-Verbindungen prüfen', icon: 'Settings' },
+    { title: 'Benutzer verwalten', href: '/help/company/benutzer-verwalten', description: 'Benutzer und Rollen zuweisen', icon: 'Settings' },
+    { title: 'Integrationen', href: '/help/company/integrationen', description: 'Connectoren prüfen', icon: 'Settings' },
   ],
 }
 
 const DEFAULT_QUICK_LINKS: QuickLink[] = [
-  { title: 'Erste Schritte', href: '/help/company/erste-schritte', description: 'Anmeldung und Einrichtung', icon: 'LayoutDashboard' },
+  { title: 'Prozesshaus', href: '/help/company/prozesshaus', description: 'Navigation und Aufbau', icon: 'LayoutDashboard' },
+  { title: 'Erste Schritte', href: '/help/company/erste-schritte', description: 'Anmeldung und Einrichtung', icon: 'Settings' },
 ]
 
 export default async function HelpCentrePage() {
@@ -73,7 +80,7 @@ export default async function HelpCentrePage() {
         Hilfe-Center
       </h1>
       <p className="mb-8 text-sm text-brand-text-secondary">
-        Finden Sie Anleitungen und Antworten auf haeufige Fragen.
+        Finden Sie Anleitungen und Antworten auf häufige Fragen.
       </p>
 
       <HelpCentreClient

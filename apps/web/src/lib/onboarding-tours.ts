@@ -6,12 +6,12 @@ import type { TourStep } from '@/components/help/GuidedTour'
 
 export const SETTER_TOUR: TourStep[] = [
   {
-    id: 'setter-nav',
-    targetId: 'nav-setter',
-    position: 'right',
-    title: 'Setter-Dashboard',
+    id: 'setter-processhouse',
+    targetId: 'process-house-svg',
+    position: 'bottom',
+    title: 'Prozesshaus',
     content:
-      'Hier finden Sie Ihre persönlichen Anruf-Statistiken, Terminquoten und KI-gestützte Gesprächsanalysen. Klicken Sie auf diesen Menüpunkt, um Ihr Dashboard zu öffnen.',
+      'Das Prozesshaus ist Ihre zentrale Navigation. Klicken Sie auf einen Prozess, um die zugehörigen Projekte und KPIs zu sehen. Ihr Setter-Dashboard finden Sie unter dem Stützprozess S1.',
     actionLabel: 'Weiter',
   },
   {
@@ -36,12 +36,12 @@ export const SETTER_TOUR: TourStep[] = [
 
 export const BERATER_TOUR: TourStep[] = [
   {
-    id: 'berater-nav',
-    targetId: 'nav-berater',
-    position: 'right',
-    title: 'Berater-Dashboard',
+    id: 'berater-processhouse',
+    targetId: 'process-house-svg',
+    position: 'bottom',
+    title: 'Prozesshaus',
     content:
-      'Ihr Berater-Bereich zeigt Pipeline-Übersicht, Abschlussquoten und Umsatz pro Berater. Alle Daten werden automatisch aus dem CRM synchronisiert.',
+      'Das Prozesshaus ist Ihre zentrale Navigation. Ihr Berater-Dashboard finden Sie unter dem Stützprozess S1. Klicken Sie auf den Kernprozess P1 (Vertrieb), um Ihre Projekte zu sehen.',
     actionLabel: 'Weiter',
   },
   {
@@ -66,12 +66,12 @@ export const BERATER_TOUR: TourStep[] = [
 
 export const INNENDIENST_TOUR: TourStep[] = [
   {
-    id: 'innendienst-nav',
-    targetId: 'nav-innendienst',
-    position: 'right',
-    title: 'Innendienst-Bereich',
+    id: 'innendienst-processhouse',
+    targetId: 'process-house-svg',
+    position: 'bottom',
+    title: 'Prozesshaus',
     content:
-      'Hier verwalten Sie offene Planungsaufträge, blockierte Projekte und den IA-Status. Die Übersicht wird automatisch mit dem CRM synchronisiert.',
+      'Das Prozesshaus zeigt alle Geschäftsprozesse. Klicken Sie auf den Kernprozess P2 (Projektmanagement), um die Projekte in der Planungswarteschlange zu sehen.',
     actionLabel: 'Weiter',
   },
   {
@@ -96,12 +96,12 @@ export const INNENDIENST_TOUR: TourStep[] = [
 
 export const BUCHHALTUNG_TOUR: TourStep[] = [
   {
-    id: 'buch-nav',
-    targetId: 'nav-finance',
-    position: 'right',
-    title: 'Finanzen',
+    id: 'buch-processhouse',
+    targetId: 'process-house-svg',
+    position: 'bottom',
+    title: 'Prozesshaus',
     content:
-      'Im Finanz-Dashboard sehen Sie Rechnungsstatus, Cashflow und offene Forderungen. Die Daten werden stündlich mit Bexio synchronisiert.',
+      'Das Prozesshaus ist Ihre zentrale Navigation. Ihre Finanzübersicht finden Sie unter dem Stützprozess S2. Die Finanzplanung (M2) erreichen Sie über die Management-Prozesse im Dach.',
     actionLabel: 'Weiter',
   },
   {
@@ -126,6 +126,15 @@ export const BUCHHALTUNG_TOUR: TourStep[] = [
 
 export const HOLDING_ADMIN_TOUR: TourStep[] = [
   {
+    id: 'holding-header',
+    targetId: 'admin-console-button',
+    position: 'bottom',
+    title: 'Admin-Konsole',
+    content:
+      'Über das Zahnrad-Symbol in der Kopfleiste öffnen Sie die Admin-Konsole. Hier finden Sie alle Verwaltungsfunktionen: Unternehmen, Benutzer, Prozesse, Branding und mehr.',
+    actionLabel: 'Weiter',
+  },
+  {
     id: 'holding-tenants',
     targetId: 'admin-tenants-tab',
     position: 'bottom',
@@ -135,21 +144,12 @@ export const HOLDING_ADMIN_TOUR: TourStep[] = [
     actionLabel: 'Weiter',
   },
   {
-    id: 'holding-health',
-    targetId: 'connector-health-panel',
+    id: 'holding-processhouse',
+    targetId: 'process-house-svg',
     position: 'bottom',
-    title: 'Connector-Gesundheit',
+    title: 'Prozesshaus',
     content:
-      'Diese Ansicht zeigt den Synchronisations-Status aller Connectoren über alle Mandanten hinweg. Rote Einträge erfordern sofortige Aufmerksamkeit.',
-    actionLabel: 'Weiter',
-  },
-  {
-    id: 'holding-impersonate',
-    targetId: 'impersonate-button',
-    position: 'left',
-    title: 'Mandant impersonieren',
-    content:
-      'Mit dieser Funktion können Sie sich als Super User eines Mandanten einloggen, um Support zu leisten. Jede Impersonierung wird im Audit-Log protokolliert.',
+      'Das Prozesshaus zeigt die Geschäftsprozesse des aktuellen Unternehmens. Über die Admin-Konsole können Sie Prozesse erstellen, bearbeiten und im Prozesshaus anordnen.',
     actionLabel: 'Verstanden',
   },
 ]
@@ -160,12 +160,12 @@ export const HOLDING_ADMIN_TOUR: TourStep[] = [
 
 export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
   {
-    id: 'pb-sidebar',
-    targetId: 'process-sidebar',
+    id: 'pb-list',
+    targetId: 'process-list',
     position: 'right',
-    title: 'Prozess-Navigation',
+    title: 'Prozess-Liste',
     content:
-      'In der Seitenleiste sehen Sie alle definierten Prozesse, gruppiert nach Kategorie. Wählen Sie einen Prozess aus, um dessen Schritte zu bearbeiten.',
+      'Hier sehen Sie alle definierten Prozesse mit Typ (M/P/S), Status und Anzahl der Schritte. Wählen Sie einen Prozess aus, um dessen Schritte zu bearbeiten.',
     actionLabel: 'Weiter',
   },
   {
@@ -174,7 +174,7 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'bottom',
     title: 'Prozess-Canvas',
     content:
-      'Der Canvas zeigt den gesamten Prozessablauf als Kette von Schrittkarten. Jede Karte repräsentiert eine Phase mit Informationsquellen und Schnittstellen.',
+      'Der Canvas zeigt den gesamten Prozessablauf als Kette von Schrittkarten. Jede Karte repräsentiert einen Schritt mit Informationsquellen und Schnittstellen.',
     actionLabel: 'Weiter',
   },
   {

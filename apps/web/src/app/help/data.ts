@@ -17,13 +17,16 @@ export type QuickLink = {
 }
 
 export const HELP_ARTICLES: HelpArticle[] = [
-  { title: 'Erste Schritte mit dem Dashboard', slug: 'erste-schritte', level: 'company', excerpt: 'Anmeldung, Passwort und 2FA einrichten.', tags: ['login','passwort','2fa'], readingTimeMinutes: 3 },
+  // -- Company-level articles --
+  { title: 'Erste Schritte mit der Plattform', slug: 'erste-schritte', level: 'company', excerpt: 'Anmeldung, Passwort und 2FA einrichten.', tags: ['login','passwort','2fa'], readingTimeMinutes: 3 },
+  { title: 'Prozesshaus — Navigation und Aufbau', slug: 'prozesshaus', level: 'company', excerpt: 'Das Prozesshaus als zentrale Navigation: Management-, Kern- und Stützprozesse.', tags: ['prozesshaus','navigation','dashboard','prozess'], readingTimeMinutes: 5 },
   { title: 'Setter-Dashboard verstehen', slug: 'setter-dashboard', level: 'company', excerpt: 'KPIs und Anrufstatistiken.', tags: ['setter','kpi'], readingTimeMinutes: 5 },
   { title: 'Berater-Dashboard verstehen', slug: 'berater-dashboard', level: 'company', excerpt: 'Pipeline und Abschlussquote.', tags: ['berater','pipeline'], readingTimeMinutes: 5 },
   { title: 'Leads verwalten', slug: 'leads-verwalten', level: 'company', excerpt: 'Leads einsehen und bearbeiten.', tags: ['leads','filter'], readingTimeMinutes: 4 },
-  { title: 'Projekte und Kanban-Board', slug: 'projekte-kanban', level: 'company', excerpt: '27-Phasen-Kanban verwalten.', tags: ['projekte','kanban'], readingTimeMinutes: 6 },
+  { title: 'Projekte und Kanban-Board', slug: 'projekte-kanban', level: 'company', excerpt: 'Projekte im Kanban-Board verwalten und Phasen nachverfolgen.', tags: ['projekte','kanban','phasen'], readingTimeMinutes: 6 },
+  { title: 'Projektdetails und Dokumente', slug: 'projekt-details', level: 'company', excerpt: 'Projektübersicht, Zeitachse, Finanzen und Dokument-Upload.', tags: ['projekt','dokument','upload','zeitachse','finanzen'], readingTimeMinutes: 5 },
   { title: 'Finanzen und Cashflow', slug: 'finanzen-cashflow', level: 'company', excerpt: 'Rechnungen und Liquidität.', tags: ['finanzen','cashflow'], readingTimeMinutes: 5 },
-  { title: 'Liquiditätsplanung', slug: 'liquiditaetsplanung', level: 'company', excerpt: 'Budget, Plan und Ist-Werte in der Liquiditätsuebersicht.', tags: ['liquiditaet','budget','plan'], readingTimeMinutes: 6 },
+  { title: 'Liquiditätsplanung', slug: 'liquiditaetsplanung', level: 'company', excerpt: 'Budget, Plan und Ist-Werte in der Liquiditätsübersicht.', tags: ['liquiditaet','budget','plan'], readingTimeMinutes: 6 },
   { title: 'Tagesberichte', slug: 'tagesberichte', level: 'company', excerpt: 'KI-generierte Tagesberichte.', tags: ['berichte','ki'], readingTimeMinutes: 3 },
   { title: 'Anomalien und Warnungen', slug: 'anomalien', level: 'company', excerpt: 'Kritische Abweichungen erkennen und behandeln.', tags: ['anomalien','warnung'], readingTimeMinutes: 4 },
   { title: 'Corporate Design / Branding', slug: 'branding', level: 'company', excerpt: 'Markenfarben, Schriftart und benutzerdefiniertes CSS.', tags: ['branding','design','farben'], readingTimeMinutes: 5 },
@@ -35,12 +38,18 @@ export const HELP_ARTICLES: HelpArticle[] = [
   { title: 'Finanzplanung — Zahlungsplanung', slug: 'finanzplanung-planung', level: 'company', excerpt: 'Cash-out terminieren, Zahlungsläufe erstellen und freigeben.', tags: ['zahlung','planung','cashout'], readingTimeMinutes: 7 },
   { title: 'Finanzplanung — Lieferanten', slug: 'finanzplanung-lieferanten', level: 'company', excerpt: 'Lieferanten-Stammdaten verwalten und Banking-Daten pflegen.', tags: ['lieferant','iban','stammdaten'], readingTimeMinutes: 4 },
   { title: 'Prozessvorlagen hochladen', slug: 'prozessvorlagen', level: 'company', excerpt: 'JSON-Vorlagen für Prozesse hochladen und verwalten.', tags: ['prozess','vorlage','template','json'], readingTimeMinutes: 4 },
+  // -- Holding-level articles --
   { title: 'Mandantenverwaltung', slug: 'mandantenverwaltung', level: 'holding', excerpt: 'Mandanten anlegen und verwalten.', tags: ['mandant','branding'], readingTimeMinutes: 7 },
   { title: 'Connector-Einstellungen', slug: 'connector-einstellungen', level: 'holding', excerpt: 'API-Verbindungen konfigurieren.', tags: ['connector','api'], readingTimeMinutes: 8 },
-  { title: 'Rollen und Berechtigungen', slug: 'rollen-berechtigungen', level: 'holding', excerpt: 'Berechtigungssystem und Rollen.', tags: ['rollen','rechte'], readingTimeMinutes: 6 },
+  { title: 'Rollen und Berechtigungen', slug: 'rollen-berechtigungen', level: 'holding', excerpt: 'Rollen definieren und Berechtigungsmatrix verwalten.', tags: ['rollen','rechte','berechtigungen','matrix'], readingTimeMinutes: 6 },
   { title: 'Prozess-Builder', slug: 'prozess-builder', level: 'holding', excerpt: 'Geschäftsprozesse entwerfen, Schritte definieren und deployen.', tags: ['prozess','builder','workflow'], readingTimeMinutes: 8 },
+  { title: 'Prozesshaus konfigurieren', slug: 'prozesshaus-admin', level: 'holding', excerpt: 'Prozesse im Prozesshaus anordnen (M/P/S), Phasen und Sichtbarkeit konfigurieren.', tags: ['prozesshaus','konfiguration','phasen','sortierung'], readingTimeMinutes: 5 },
   { title: 'Add-on Module verwalten', slug: 'addons', level: 'holding', excerpt: 'Finanzplanung und andere Add-ons pro Unternehmen aktivieren.', tags: ['addon','modul','lizenz'], readingTimeMinutes: 4 },
   { title: 'Compliance und Zertifizierungen', slug: 'compliance', level: 'holding', excerpt: 'Compliance-Regeln, Prüfungen und Zertifizierungen verwalten.', tags: ['compliance','zertifizierung','audit'], readingTimeMinutes: 6 },
+  { title: 'Holding-Finanzen', slug: 'holding-finanzen', level: 'holding', excerpt: 'Finanzübersicht über alle Tochtergesellschaften.', tags: ['finanzen','holding','übersicht'], readingTimeMinutes: 5 },
+  { title: 'Secret-Verwaltung', slug: 'secret-verwaltung', level: 'holding', excerpt: 'API-Keys und Secrets sicher verwalten und rotieren.', tags: ['secret','api-key','sicherheit'], readingTimeMinutes: 4 },
+  { title: 'Holding-Analytics', slug: 'holding-analytics', level: 'holding', excerpt: 'Übergreifende Auswertungen und Kennzahlen über alle Unternehmen.', tags: ['analytics','auswertung','kennzahlen'], readingTimeMinutes: 5 },
+  // -- Meta-level articles --
   { title: 'Plattform-Administration', slug: 'plattform-admin', level: 'meta', excerpt: 'Holdings und Systemeinstellungen.', tags: ['plattform','admin'], readingTimeMinutes: 10 },
   { title: 'Datenbank und Migrationen', slug: 'datenbank-migrationen', level: 'meta', excerpt: 'Schema und Migrationen.', tags: ['datenbank','migration'], readingTimeMinutes: 12 },
 ]
@@ -51,37 +60,46 @@ export const HELP_ARTICLES: HelpArticle[] = [
  * to the most relevant help article instead of the generic help centre.
  */
 export const PATH_TO_ARTICLE: Record<string, { level: string; slug: string }> = {
-  '/dashboard': { level: 'company', slug: 'erste-schritte' },
+  // Company / Dashboard
+  '/dashboard': { level: 'company', slug: 'prozesshaus' },
   '/setter': { level: 'company', slug: 'setter-dashboard' },
   '/berater': { level: 'company', slug: 'berater-dashboard' },
   '/leads': { level: 'company', slug: 'leads-verwalten' },
-  '/projects': { level: 'company', slug: 'projekte-kanban' },
+  '/projects': { level: 'company', slug: 'projekt-details' },
   '/finance': { level: 'company', slug: 'finanzen-cashflow' },
   '/liquidity': { level: 'company', slug: 'liquiditaetsplanung' },
   '/anomalies': { level: 'company', slug: 'anomalien' },
   '/reports': { level: 'company', slug: 'tagesberichte' },
+  '/innendienst': { level: 'company', slug: 'projekte-kanban' },
+  // Company settings
   '/settings/branding': { level: 'company', slug: 'branding' },
   '/settings/users': { level: 'company', slug: 'benutzer-verwalten' },
   '/settings/connectors': { level: 'company', slug: 'integrationen' },
   '/settings/call-script': { level: 'company', slug: 'leitfaden' },
   '/settings/reports': { level: 'company', slug: 'tagesberichte' },
-  '/innendienst': { level: 'company', slug: 'projekte-kanban' },
+  // Finanzplanung
   '/finanzplanung': { level: 'company', slug: 'finanzplanung-uebersicht' },
   '/finanzplanung/eingang': { level: 'company', slug: 'finanzplanung-eingang' },
   '/finanzplanung/planung': { level: 'company', slug: 'finanzplanung-planung' },
   '/finanzplanung/genehmigung': { level: 'company', slug: 'finanzplanung-planung' },
   '/finanzplanung/lieferanten': { level: 'company', slug: 'finanzplanung-lieferanten' },
   '/finanzplanung/upload': { level: 'company', slug: 'finanzplanung-eingang' },
+  // Holding admin
   '/admin': { level: 'holding', slug: 'mandantenverwaltung' },
   '/admin/users': { level: 'holding', slug: 'rollen-berechtigungen' },
+  '/admin/finance': { level: 'holding', slug: 'holding-finanzen' },
+  '/admin/secrets': { level: 'holding', slug: 'secret-verwaltung' },
   '/admin/processes': { level: 'holding', slug: 'prozess-builder' },
+  '/admin/processes/house': { level: 'holding', slug: 'prozesshaus-admin' },
   '/admin/processes/templates': { level: 'company', slug: 'prozessvorlagen' },
   '/admin/tools': { level: 'holding', slug: 'connector-einstellungen' },
+  '/admin/analytics': { level: 'holding', slug: 'holding-analytics' },
+  '/admin/compliance': { level: 'holding', slug: 'compliance' },
   '/admin/settings/branding': { level: 'holding', slug: 'mandantenverwaltung' },
   '/admin/settings/permissions': { level: 'holding', slug: 'rollen-berechtigungen' },
+  '/admin/settings/roles': { level: 'holding', slug: 'rollen-berechtigungen' },
   '/admin/settings/addons': { level: 'holding', slug: 'addons' },
-  '/admin/compliance': { level: 'holding', slug: 'compliance' },
-  '/admin/analytics': { level: 'holding', slug: 'mandantenverwaltung' },
+  // Platform (Enura admin)
   '/platform': { level: 'meta', slug: 'plattform-admin' },
 }
 
