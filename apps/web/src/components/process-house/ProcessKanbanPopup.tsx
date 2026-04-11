@@ -161,7 +161,7 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
                         cards.map((proj) => (
                           <a
                             key={proj.id}
-                            href={`/projects/${proj.id}`}
+                            href={`/projects/${proj.id}?from=${processId}&name=${encodeURIComponent(processName)}${filterPhaseId ? `&phase=${filterPhaseId}` : ''}`}
                             className="block rounded-md border border-gray-200 bg-white px-2.5 py-2 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
                           >
                             <p className="text-xs font-medium text-blue-700 truncate">{proj.customer_name}</p>

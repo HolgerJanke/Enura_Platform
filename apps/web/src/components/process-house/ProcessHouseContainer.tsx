@@ -13,7 +13,7 @@ interface ProcessRow {
   visible_roles: string[]
 }
 
-export async function ProcessHouseContainer() {
+export async function ProcessHouseContainer({ openProcess, openPhase }: { openProcess?: string; openPhase?: string } = {}) {
   const session = await getSession()
   if (!session?.companyId) return null
 
@@ -82,6 +82,8 @@ export async function ProcessHouseContainer() {
       management={management}
       primary={primary}
       support={support}
+      openProcess={openProcess}
+      openPhase={openPhase}
     />
   )
 }

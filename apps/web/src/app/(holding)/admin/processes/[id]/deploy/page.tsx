@@ -86,8 +86,8 @@ export default async function DeployPage({
       <nav className="mb-4 text-sm text-gray-500" aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5">
           <li>
-            <Link href="/admin" className="hover:text-gray-700">
-              Admin
+            <Link href="/admin/processes" className="hover:text-gray-700">
+              Prozesse
             </Link>
           </li>
           <li aria-hidden="true">/</li>

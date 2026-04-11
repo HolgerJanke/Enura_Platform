@@ -3,8 +3,9 @@ import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ProjectDetailTabs } from './project-detail-tabs'
 
-export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProjectDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params
+  const sp = await searchParams
   const session = await getSession()
   if (!session?.companyId) {
     return <div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p></div>
@@ -52,9 +53,18 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       {/* Back link */}
-      <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-        ← Zurück zum Prozesshaus
-      </Link>
+      {sp['from'] ? (
+        <Link
+          href={`/dashboard?openProcess=${sp['from']}${sp['phase'] ? `&phase=${sp['phase']}` : ''}`}
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+        >
+          ← Zurück zu {typeof sp['name'] === 'string' ? sp['name'] : 'Prozess'}
+        </Link>
+      ) : (
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+          ← Zurück zum Prozesshaus
+        </Link>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">

@@ -8,11 +8,13 @@ interface Props {
   management: ProcessHouseItem[]
   primary: ProcessHouseItem[]
   support: ProcessHouseItem[]
+  openProcess?: string
+  openPhase?: string
 }
 
-export function ProcessHouseClientWrapper({ management, primary, support }: Props) {
-  const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null)
-  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null)
+export function ProcessHouseClientWrapper({ management, primary, support, openProcess, openPhase }: Props) {
+  const [selectedProcessId, setSelectedProcessId] = useState<string | null>(openProcess ?? null)
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(openPhase ?? null)
 
   const allProcesses = [...management, ...primary, ...support]
   const selected = allProcesses.find((p) => p.id === selectedProcessId)

@@ -37,8 +37,8 @@ export default async function ProcessTemplatesPage() {
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500">Kein Zugriff.</p>
-        <Link href="/dashboard" className="text-blue-600 underline text-sm mt-2 inline-block">
-          Zum Dashboard
+        <Link href="/admin/processes" className="text-blue-600 underline text-sm mt-2 inline-block">
+          Zurück zu Prozesse
         </Link>
       </div>
     )

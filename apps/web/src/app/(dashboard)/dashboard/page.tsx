@@ -4,7 +4,10 @@ import { getDataAccess } from '@/lib/data-access'
 import { formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
 import type { ConnectorRow } from '@enura/types'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams
+  const openProcess = typeof sp['openProcess'] === 'string' ? sp['openProcess'] : undefined
+  const openPhase = typeof sp['phase'] === 'string' ? sp['phase'] : undefined
   const session = await getSession()
 
   if (!session?.companyId) return null
@@ -49,7 +52,7 @@ export default async function DashboardPage() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-secondary mb-4">
           Prozesshaus
         </h2>
-        <ProcessHouseContainer />
+        <ProcessHouseContainer openProcess={openProcess} openPhase={openPhase} />
       </div>
 
       {/* Connector health */}
