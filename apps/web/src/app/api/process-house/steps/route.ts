@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   // Fetch base currency from company_currency_settings
   // Need to get company_id from the process definition
-  let baseCurrency = 'CHF'
+  let baseCurrency = 'EUR'
   const { data: processDef } = await supabase
     .from('process_definitions')
     .select('company_id')
