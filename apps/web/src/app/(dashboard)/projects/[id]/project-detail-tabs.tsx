@@ -16,6 +16,7 @@ interface Props {
 }
 
 type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'dokumente' | 'prozesse'
+type SelectedEvent = { evt: Record<string, unknown>; invoice: Record<string, unknown> | null } | null
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'uebersicht', label: 'Übersicht' },
@@ -37,6 +38,15 @@ function fmtCHF(n: number | null | undefined): string {
 
 export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('uebersicht')
+  const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
+
+  function handleEventClick(evt: Record<string, unknown>) {
+    const invoiceId = evt['invoice_id'] as string | null
+    const invoice = invoiceId
+      ? incomingInvoices.find(inv => inv['id'] === invoiceId) ?? null
+      : null
+    setSelectedEvent({ evt, invoice })
+  }
 
   return (
     <div>
@@ -178,8 +188,12 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {liqEvents.map((evt, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 text-gray-900">{evt['step_name'] as string}</td>
+                    <tr
+                      key={i}
+                      className="hover:bg-blue-50 cursor-pointer transition-colors"
+                      onClick={() => handleEventClick(evt)}
+                    >
+                      <td className="px-4 py-2 text-blue-700 font-medium">{evt['step_name'] as string}</td>
                       <td className="px-4 py-2">
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${evt['direction'] === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                           {evt['direction'] === 'income' ? 'Einnahme' : 'Ausgabe'}
@@ -254,6 +268,83 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
               </div>
             ))
           )}
+        </div>
+      )}
+      {/* Event detail popup */}
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedEvent(null)} />
+          <div className="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+              <h3 className="text-sm font-bold text-gray-900">{String(selectedEvent.evt['step_name'] ?? '')}</h3>
+              <button type="button" onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Event details */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">Richtung</p>
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium mt-0.5 ${selectedEvent.evt['direction'] === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {selectedEvent.evt['direction'] === 'income' ? 'Einnahme' : 'Ausgabe'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Budget</p>
+                  <p className="font-mono font-medium">{fmtCHF(selectedEvent.evt['budget_amount'] as number)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Ist-Betrag</p>
+                  <p className="font-mono font-medium">{selectedEvent.evt['actual_amount'] ? fmtCHF(selectedEvent.evt['actual_amount'] as number) : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Fälligkeitsdatum</p>
+                  <p>{fmtDate(selectedEvent.evt['budget_date'] as string | null)}</p>
+                </div>
+              </div>
+
+              {/* Linked invoice */}
+              {selectedEvent.invoice ? (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <h4 className="text-xs font-semibold text-blue-800 mb-2">Verknüpfte Rechnung</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-xs text-blue-600">Rechnungsnr.</p>
+                      <p className="font-medium text-blue-900">{String(selectedEvent.invoice['invoice_number'] ?? '—')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-blue-600">Lieferant</p>
+                      <p className="font-medium text-blue-900">{String(selectedEvent.invoice['sender_name'] ?? '—')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-blue-600">Bruttobetrag</p>
+                      <p className="font-mono font-medium text-blue-900">
+                        {String(selectedEvent.invoice['currency'] ?? 'CHF')} {Number(selectedEvent.invoice['gross_amount'] ?? 0).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-blue-600">Status</p>
+                      <p className="font-medium text-blue-900">{String(selectedEvent.invoice['status'] ?? '—')}</p>
+                    </div>
+                  </div>
+                  {selectedEvent.invoice['raw_storage_path'] ? (
+                    <a
+                      href={`/finanzplanung/eingang/${String(selectedEvent.invoice['id'])}`}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      Rechnung & Scan ansehen
+                    </a>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-xs text-gray-500">Keine Rechnung verknüpft.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
