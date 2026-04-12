@@ -83,7 +83,9 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
               <div><span className="text-gray-500">Kunde:</span> <span className="font-medium">{project['customer_name'] as string}</span></div>
               <div><span className="text-gray-500">Status:</span> <span className="font-medium">{project['status'] as string}</span></div>
               <div><span className="text-gray-500">Projektwert:</span> <span className="font-medium">{fmtCHF(project['project_value'] as number | null)}</span></div>
-              <div><span className="text-gray-500">Anlagengröße:</span> <span className="font-medium">{project['system_size_kwp'] ? `${project['system_size_kwp']} kWp` : '—'}</span></div>
+              <div><span className="text-gray-500">PV-Anlage:</span> <span className="font-medium">{project['system_size_kwp'] ? `${project['system_size_kwp']} kWp` : '—'}</span></div>
+              <div><span className="text-gray-500">Wechselrichter:</span> <span className="font-medium">{project['inverter_size_kw'] ? `${project['inverter_size_kw']} kW` : '—'}</span></div>
+              <div><span className="text-gray-500">Wärmepumpe:</span> <span className="font-medium">{project['heatpump_size_kw'] ? `${project['heatpump_size_kw']} kW` : '—'}</span></div>
               <div><span className="text-gray-500">Projektstart:</span> <span className="font-medium">{fmtDate(project['project_start_date'] as string | null)}</span></div>
               <div><span className="text-gray-500">Installationsdatum:</span> <span className="font-medium">{fmtDate(project['installation_date'] as string | null)}</span></div>
               <div><span className="text-gray-500">Abschlussdatum:</span> <span className="font-medium">{fmtDate(project['completion_date'] as string | null)}</span></div>
