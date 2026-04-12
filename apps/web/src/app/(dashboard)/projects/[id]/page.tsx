@@ -98,7 +98,7 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
           </span>
           {(p['project_value'] as number | null) && (
             <span className="text-lg font-bold text-gray-900">
-              CHF {Number(p['project_value']).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
+              CHF {Number(p['project_value']).toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </span>
           )}
         </div>
