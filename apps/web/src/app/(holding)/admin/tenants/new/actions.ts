@@ -70,9 +70,18 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
 
   const serviceClient = createSupabaseServiceClient()
 
+  // Get the holding_id for this admin
+  const { data: adminRow } = await serviceClient
+    .from('holding_admins')
+    .select('holding_id')
+    .eq('id', session.profile.id)
+    .maybeSingle()
+
+  const holdingId = adminRow?.holding_id ?? '00000000-0000-0000-0000-000000000010'
+
   // 1. Check slug uniqueness
   const { data: existing } = await serviceClient
-    .from('tenants')
+    .from('companies')
     .select('id')
     .eq('slug', data.slug)
     .maybeSingle()
@@ -81,40 +90,42 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
     return { error: 'Dieser Slug ist bereits vergeben.' }
   }
 
-  // 2. Create tenant
-  const { data: tenant, error: tenantError } = await serviceClient
-    .from('tenants')
+  // 2. Create company
+  const { data: company, error: companyError } = await serviceClient
+    .from('companies')
     .insert({
       name: data.name,
       slug: data.slug,
+      holding_id: holdingId,
       created_by: session.profile.id,
     })
     .select()
     .single()
 
-  if (tenantError || !tenant) {
-    console.error('[admin] Failed to create tenant:', tenantError)
+  if (companyError || !company) {
+    console.error('[admin] Failed to create company:', companyError)
     return { error: 'Unternehmen konnte nicht erstellt werden.' }
   }
 
-  // 3. Upsert branding (the DB trigger may auto-create a default row)
+  // 3. Upsert branding
   const { error: brandingError } = await serviceClient
-    .from('tenant_brandings')
+    .from('company_branding')
     .upsert(
       {
-        tenant_id: tenant.id,
+        company_id: company.id,
+        holding_id: holdingId,
         primary_color: data.branding.primary,
         secondary_color: data.branding.secondary,
         accent_color: data.branding.accent,
         font_family: data.branding.font,
         border_radius: data.branding.radius,
       },
-      { onConflict: 'tenant_id' },
+      { onConflict: 'company_id' },
     )
 
   if (brandingError) {
     console.error('[admin] Failed to set branding:', brandingError)
-    // Non-fatal -- tenant is created, branding can be fixed later
+    // Non-fatal — branding can be fixed later
   }
 
   // 4. Create super user auth account
@@ -123,7 +134,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
     email: data.superUser.email,
     password: tempPassword,
     email_confirm: true,
-    user_metadata: { tenant_id: tenant.id },
+    user_metadata: { company_id: company.id },
   })
 
   if (authError || !authUser.user) {
@@ -134,7 +145,8 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
   // 5. Create profile
   const { error: profileError } = await serviceClient.from('profiles').insert({
     id: authUser.user.id,
-    tenant_id: tenant.id,
+    company_id: company.id,
+    holding_id: holdingId,
     first_name: data.superUser.firstName,
     last_name: data.superUser.lastName,
     must_reset_password: true,
@@ -143,58 +155,58 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
 
   if (profileError) {
     console.error('[admin] Failed to create profile:', profileError)
-    // Attempt cleanup of auth user
     await serviceClient.auth.admin.deleteUser(authUser.user.id)
     return { error: 'Profil konnte nicht erstellt werden.' }
   }
 
-  // 6. Assign super_user role
-  const { data: superRole } = await serviceClient
-    .from('roles')
-    .select('id')
-    .eq('tenant_id', tenant.id)
-    .eq('key', 'super_user')
-    .single()
+  // 6. Seed default system roles for this company
+  const defaultRoles = [
+    { key: 'super_user', label: 'Super User', description: 'Vollzugriff auf alle Mandantenfunktionen' },
+    { key: 'geschaeftsfuehrung', label: 'Geschäftsführung', description: 'Alle Module und Berichte' },
+    { key: 'teamleiter', label: 'Teamleiter', description: 'Team-KPIs und Verwaltung' },
+    { key: 'setter', label: 'Setter', description: 'Eigene Anrufe und Termine' },
+    { key: 'berater', label: 'Berater', description: 'Eigene Pipeline und Termine' },
+    { key: 'innendienst', label: 'Innendienst', description: 'Planung und Projektstatus' },
+    { key: 'bau', label: 'Bau / Montage', description: 'Installationen und Materialien' },
+    { key: 'buchhaltung', label: 'Buchhaltung', description: 'Rechnungen und Cashflow' },
+    { key: 'leadkontrolle', label: 'Leadkontrolle', description: 'Lead-Qualität und -Status' },
+  ]
 
+  const { data: createdRoles } = await serviceClient
+    .from('roles')
+    .insert(
+      defaultRoles.map((r) => ({
+        key: r.key,
+        label: r.label,
+        description: r.description,
+        company_id: company.id,
+        holding_id: holdingId,
+        is_system: true,
+      })),
+    )
+    .select()
+
+  // 7. Assign super_user role to the new user
+  const superRole = createdRoles?.find((r) => r.key === 'super_user')
   if (superRole) {
     await serviceClient.from('profile_roles').insert({
       profile_id: authUser.user.id,
       role_id: superRole.id,
     })
-  } else {
-    // If the trigger didn't create default roles, create the super_user role manually
-    const { data: newRole } = await serviceClient
-      .from('roles')
-      .insert({
-        tenant_id: tenant.id,
-        key: 'super_user',
-        label: 'Super User',
-        description: 'Vollzugriff auf alle Mandantenfunktionen',
-        is_system: true,
-      })
-      .select()
-      .single()
-
-    if (newRole) {
-      await serviceClient.from('profile_roles').insert({
-        profile_id: authUser.user.id,
-        role_id: newRole.id,
-      })
-    }
   }
 
-  // 7. Log temp password in development (replace with email sending in production)
+  // 8. Log temp password in development
   if (process.env.NODE_ENV === 'development') {
     console.log(`[DEV] Super user invite: ${data.superUser.email} / ${tempPassword}`)
   }
 
-  // 8. Audit log
+  // 9. Audit log
   await writeAuditLog({
-    tenantId: tenant.id,
+    tenantId: company.id,
     actorId: session.profile.id,
-    action: 'tenant.created',
-    tableName: 'tenants',
-    recordId: tenant.id,
+    action: 'company.created',
+    tableName: 'companies',
+    recordId: company.id,
     newValues: { name: data.name, slug: data.slug, superUserEmail: data.superUser.email },
   })
 
