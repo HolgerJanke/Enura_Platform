@@ -36,13 +36,34 @@ export async function GET(request: NextRequest) {
   if (projectIds.length > 0) {
     const { data: projectData } = await supabase
       .from('projects')
-      .select('id, title, customer_name, address_city, status, phase_id, created_at')
+      .select('id, title, customer_name, address_city, status, phase_id, created_at, project_value')
       .in('id', projectIds)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(100)
 
     projects = (projectData ?? []) as Array<Record<string, unknown>>
+  }
+
+  // Fetch base currency from company_currency_settings
+  // Need to get company_id from the process definition
+  let baseCurrency = 'CHF'
+  const { data: processDef } = await supabase
+    .from('process_definitions')
+    .select('company_id')
+    .eq('id', processId)
+    .single()
+
+  if (processDef) {
+    const companyId = (processDef as Record<string, unknown>)['company_id'] as string
+    const { data: currencyData } = await supabase
+      .from('company_currency_settings')
+      .select('base_currency')
+      .eq('company_id', companyId)
+      .single()
+    if (currencyData) {
+      baseCurrency = (currencyData as Record<string, unknown>)['base_currency'] as string
+    }
   }
 
   // Distribute projects across steps (simple round-robin based on project age)
@@ -73,5 +94,6 @@ export async function GET(request: NextRequest) {
     steps: stepsRes.data ?? [],
     phases: phasesRes.data ?? [],
     projectsByStep: Object.fromEntries(projectsByStep),
+    baseCurrency,
   })
 }

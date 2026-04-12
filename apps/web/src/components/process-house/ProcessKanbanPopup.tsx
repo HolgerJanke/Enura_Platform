@@ -33,6 +33,7 @@ interface ProjectCard {
   customer_name: string
   address_city: string | null
   status: string
+  project_value: number | null
 }
 
 interface Props {
@@ -55,6 +56,7 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
   const [steps, setSteps] = useState<ProcessStep[]>([])
   const [phases, setPhases] = useState<ProcessPhase[]>([])
   const [projectsByStep, setProjectsByStep] = useState<Record<string, ProjectCard[]>>({})
+  const [currency, setCurrency] = useState('CHF')
   const [loading, setLoading] = useState(true)
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
@@ -79,6 +81,7 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
           setSteps(data.steps ?? [])
           setPhases(data.phases ?? [])
           setProjectsByStep(data.projectsByStep ?? {})
+          if (data.baseCurrency) setCurrency(data.baseCurrency)
         }
       } catch { /* empty */ }
       setLoading(false)
@@ -129,6 +132,7 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
               {displaySteps.map((step) => {
                 const cards = projectsByStep[step.id] ?? []
                 const isLink = step.expected_output?.startsWith('/')
+                const columnTotal = cards.reduce((sum, p) => sum + Number(p.project_value ?? 0), 0)
 
                 return (
                   <div key={step.id} className="w-52 shrink-0 flex flex-col rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
@@ -151,6 +155,11 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
                         <span className="text-[10px] text-gray-400 font-mono">{step.process_step_id}</span>
                         <span className="text-[10px] text-gray-400">{cards.length} Projekte</span>
                       </div>
+                      {columnTotal > 0 && (
+                        <p className="text-[10px] font-semibold text-green-700 mt-1">
+                          {currency} {columnTotal.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </p>
+                      )}
                     </div>
 
                     {/* Project cards */}
