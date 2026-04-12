@@ -78,6 +78,14 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
             {p['address_street'] ? `, ${p['address_street'] as string}` : ''}
             {p['address_zip'] ? ` ${p['address_zip'] as string}` : ''}
           </p>
+          {p['current_step_name'] ? (
+            <p className="mt-1.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-0.5 text-xs font-semibold text-blue-700">
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                {String(p['current_step_name'])}
+              </span>
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
