@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/session'
 import { ProcessHouseContainer } from '@/components/process-house/ProcessHouseContainer'
+import { ProjectSearch } from '@/components/project-search'
 import { getDataAccess } from '@/lib/data-access'
 import { formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
 import type { ConnectorRow } from '@enura/types'
@@ -49,9 +50,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <div className="p-4 sm:p-6">
       {/* Process House */}
       <div className="bg-brand-surface rounded-brand p-6 border border-gray-200 mb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-secondary mb-4">
-          Prozesshaus
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-secondary">
+            Prozesshaus
+          </h2>
+          <ProjectSearch companyId={session.companyId} />
+        </div>
         <ProcessHouseContainer openProcess={openProcess} openPhase={openPhase} />
       </div>
 
