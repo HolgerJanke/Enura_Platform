@@ -13,15 +13,19 @@ interface Props {
   incomingInvoices: Array<Record<string, unknown>>
   outgoingInvoices: Array<Record<string, unknown>>
   documents: Array<Record<string, unknown>>
+  calls: Array<Record<string, unknown>>
+  calendarEvents: Array<Record<string, unknown>>
 }
 
-type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'dokumente' | 'prozesse'
+type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'setter' | 'berater' | 'dokumente' | 'prozesse'
 type SelectedEvent = { evt: Record<string, unknown>; invoice: Record<string, unknown> | null } | null
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'uebersicht', label: 'Übersicht' },
   { id: 'zeitachse', label: 'Zeitachse' },
   { id: 'finanzen', label: 'Finanzen' },
+  { id: 'setter', label: 'Setter' },
+  { id: 'berater', label: 'Berater' },
   { id: 'dokumente', label: 'Dokumente' },
   { id: 'prozesse', label: 'Prozesse' },
 ]
@@ -36,7 +40,7 @@ function fmtCHF(n: number | null | undefined): string {
   return `CHF ${Number(n).toLocaleString('de-CH', { minimumFractionDigits: 2 })}`
 }
 
-export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents }: Props) {
+export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents, calls, calendarEvents }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('uebersicht')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
 
@@ -250,6 +254,198 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Setter tab */}
+      {activeTab === 'setter' && (
+        <div>
+          {lead ? (
+            <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
+              Setter: <span className="font-medium">{String(lead['setter_id'] ? 'Zugeordnet' : 'Nicht zugeordnet')}</span>
+              {lead['phone'] ? <span className="ml-3">Kunden-Tel: <span className="font-mono">{String(lead['phone'])}</span></span> : null}
+            </div>
+          ) : null}
+          {calls.length === 0 && calendarEvents.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+              <p className="text-sm text-gray-500">Keine Setter-Kommunikation zu diesem Projekt.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Calls */}
+              {calls.length > 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Anrufe ({calls.length})</h3>
+                  <table className="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Richtung</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Dauer</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Nummer</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {calls.map((call, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-gray-900">{fmtDate(call['started_at'] as string)}</td>
+                          <td className="px-4 py-2">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['direction'] === 'inbound' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {call['direction'] === 'inbound' ? 'Eingehend' : 'Ausgehend'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['status'] === 'answered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {call['status'] === 'answered' ? 'Beantwortet' : call['status'] === 'missed' ? 'Verpasst' : String(call['status'])}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-right font-mono text-gray-500">
+                            {call['duration_seconds'] ? `${Math.floor(Number(call['duration_seconds']) / 60)}:${String(Number(call['duration_seconds']) % 60).padStart(2, '0')}` : '—'}
+                          </td>
+                          <td className="px-4 py-2 text-gray-500 font-mono text-xs">
+                            {String(call['direction'] === 'inbound' ? call['caller_number'] ?? '' : call['callee_number'] ?? '')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Calendar events */}
+              {calendarEvents.length > 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Termine ({calendarEvents.length})</h3>
+                  <table className="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Titel</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ort</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {calendarEvents.map((evt, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-gray-900">{fmtDate(evt['starts_at'] as string)}</td>
+                          <td className="px-4 py-2 text-gray-900">{String(evt['title'] ?? '—')}</td>
+                          <td className="px-4 py-2 text-gray-500">{String(evt['location'] ?? '—')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Berater tab */}
+      {activeTab === 'berater' && (
+        <div>
+          {project['berater_id'] ? (
+            <div className="mb-4 rounded-lg bg-indigo-50 border border-indigo-200 p-3 text-sm text-indigo-800">
+              Berater zugeordnet
+            </div>
+          ) : null}
+          <div className="space-y-6">
+            {/* Berater calls */}
+            {calls.length > 0 && (
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Anrufe ({calls.length})</h3>
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Richtung</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Dauer</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {calls.map((call, i) => (
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-gray-900">{fmtDate(call['started_at'] as string)}</td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['direction'] === 'inbound' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                            {call['direction'] === 'inbound' ? 'Eingehend' : 'Ausgehend'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['status'] === 'answered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {call['status'] === 'answered' ? 'Beantwortet' : call['status'] === 'missed' ? 'Verpasst' : String(call['status'])}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-right font-mono text-gray-500">
+                          {call['duration_seconds'] ? `${Math.floor(Number(call['duration_seconds']) / 60)}:${String(Number(call['duration_seconds']) % 60).padStart(2, '0')}` : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Berater calendar events */}
+            {calendarEvents.length > 0 && (
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Termine ({calendarEvents.length})</h3>
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Titel</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ort</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {calendarEvents.map((evt, i) => (
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-gray-900">{fmtDate(evt['starts_at'] as string)}</td>
+                        <td className="px-4 py-2 text-gray-900">{String(evt['title'] ?? '—')}</td>
+                        <td className="px-4 py-2 text-gray-500">{String(evt['location'] ?? '—')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Offers */}
+            {offer ? (
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Angebote</h3>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-500">Titel</p>
+                      <p className="font-medium">{String(offer['title'] ?? '—')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Betrag</p>
+                      <p className="font-mono font-medium">{fmtCHF(offer['amount_chf'] as number)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Status</p>
+                      <p className="font-medium">{String(offer['status'] ?? '—')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Gesendet</p>
+                      <p>{fmtDate(offer['sent_at'] as string | null)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {calls.length === 0 && calendarEvents.length === 0 && !offer && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                <p className="text-sm text-gray-500">Keine Berater-Kommunikation zu diesem Projekt.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

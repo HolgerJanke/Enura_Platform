@@ -32,7 +32,7 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
   const p = project as Record<string, unknown>
 
   // Fetch related data in parallel
-  const [leadRes, offerRes, phaseHistoryRes, processInstancesRes, liqEventsRes, incomingInvoicesRes, outgoingInvoicesRes, documentsRes] = await Promise.all([
+  const [leadRes, offerRes, phaseHistoryRes, processInstancesRes, liqEventsRes, incomingInvoicesRes, outgoingInvoicesRes, documentsRes, callsRes, calendarRes] = await Promise.all([
     p['lead_id'] ? db.from('leads').select('*').eq('id', p['lead_id'] as string).single() : Promise.resolve({ data: null }),
     p['offer_id'] ? db.from('offers').select('*').eq('id', p['offer_id'] as string).single() : Promise.resolve({ data: null }),
     db.from('project_phase_history').select('*').eq('project_id', id).order('created_at', { ascending: false }),
@@ -41,6 +41,8 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
     db.from('invoices_incoming').select('id, invoice_number, sender_name, gross_amount, currency, status, due_date, created_at, raw_storage_path, raw_filename').eq('project_id', id).order('created_at', { ascending: false }),
     db.from('invoices').select('id, invoice_number, amount_chf, status, issued_at, paid_at').eq('project_id', id).order('issued_at', { ascending: false }),
     db.from('project_documents').select('*').eq('project_id', id).order('created_at', { ascending: false }),
+    db.from('calls').select('id, started_at, duration_seconds, direction, status, team_member_id, caller_number, callee_number').eq('project_id', id).order('started_at', { ascending: false }).limit(50),
+    db.from('calendar_events').select('id, title, description, location, starts_at, ends_at, team_member_id, event_type').eq('project_id', id).order('starts_at', { ascending: false }).limit(50),
   ])
 
   // Compute financial summary
@@ -125,6 +127,8 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
         incomingInvoices={(incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>}
         outgoingInvoices={(outgoingInvoicesRes.data ?? []) as Array<Record<string, unknown>>}
         documents={(documentsRes.data ?? []) as Array<Record<string, unknown>>}
+        calls={(callsRes.data ?? []) as Array<Record<string, unknown>>}
+        calendarEvents={(calendarRes.data ?? []) as Array<Record<string, unknown>>}
       />
     </div>
   )
