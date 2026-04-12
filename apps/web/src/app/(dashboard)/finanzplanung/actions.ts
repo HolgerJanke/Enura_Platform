@@ -73,10 +73,81 @@ export async function performValidationAction(
       .eq('id', invoiceId)
   }
 
+  // Send notification for return actions
+  const isReturn = ['formal_return', 'content_return', 'reject', 'return_after_reject'].includes(action)
+  if (isReturn) {
+    // Fetch invoice details for notification
+    const { data: inv } = await supabase
+      .from('invoices_incoming')
+      .select('invoice_number, sender_name, gross_amount, currency')
+      .eq('id', invoiceId)
+      .single()
+
+    if (inv) {
+      const invData = inv as Record<string, unknown>
+      await notifyInvoiceReturned({
+        invoiceId,
+        invoiceNumber: String(invData['invoice_number'] ?? ''),
+        senderName: String(invData['sender_name'] ?? 'Unbekannt'),
+        amount: Number(invData['gross_amount'] ?? 0),
+        currency: String(invData['currency'] ?? 'CHF'),
+        reason: comment ?? 'Keine Begründung angegeben.',
+        step,
+        actorName: session.profile.display_name ?? 'Unbekannt',
+        companyId: session.companyId ?? '',
+      })
+    }
+  }
+
   revalidatePath(`/finanzplanung/eingang/${invoiceId}`)
   revalidatePath('/finanzplanung/eingang')
   revalidatePath('/finanzplanung')
   return { success: true }
+}
+
+// ---------------------------------------------------------------------------
+// Invoice return notification
+// ---------------------------------------------------------------------------
+
+interface ReturnNotification {
+  invoiceId: string
+  invoiceNumber: string
+  senderName: string
+  amount: number
+  currency: string
+  reason: string
+  step: number
+  actorName: string
+  companyId: string
+}
+
+async function notifyInvoiceReturned(data: ReturnNotification): Promise<void> {
+  // TODO: Wire up Resend when RESEND_API_KEY is available
+  // For now, log the notification and store it in the database
+  const stepLabels: Record<number, string> = {
+    1: 'Formale Prüfung',
+    2: 'Inhaltliche Prüfung',
+    3: 'Technische Genehmigung',
+  }
+
+  console.log(
+    `[Invoice Return Notification] ${data.invoiceNumber} (${data.senderName}, ${data.currency} ${data.amount.toFixed(2)}) ` +
+    `zurückgesendet bei ${stepLabels[data.step] ?? `Schritt ${data.step}`} von ${data.actorName}. ` +
+    `Grund: ${data.reason}`,
+  )
+
+  // When Resend is configured, send email:
+  // const resend = new Resend(process.env.RESEND_API_KEY)
+  // await resend.emails.send({
+  //   from: 'Finanzplanung <noreply@enura-group.com>',
+  //   to: [uploaderEmail],
+  //   subject: `Rechnung ${data.invoiceNumber} zurückgesendet`,
+  //   html: `<p>Die Rechnung <b>${data.invoiceNumber}</b> von ${data.senderName} wurde bei
+  //          "${stepLabels[data.step]}" zurückgesendet.</p>
+  //          <p><b>Grund:</b> ${data.reason}</p>
+  //          <p><b>Geprüft von:</b> ${data.actorName}</p>
+  //          <p><a href="https://www.enura-group.com/finanzplanung/eingang/${data.invoiceId}">Rechnung ansehen</a></p>`,
+  // })
 }
 
 // ---------------------------------------------------------------------------

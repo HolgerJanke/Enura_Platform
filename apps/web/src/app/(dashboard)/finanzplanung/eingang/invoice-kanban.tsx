@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { scheduleInvoicePayment } from '../actions'
 
@@ -124,7 +124,16 @@ function buildColumns(): Column[] {
     dropDate: null,
   })
 
-  // 2. Überfällig
+  // 2. Zurückgesendet
+  columns.push({
+    key: 'returned',
+    label: 'Zurückgesendet',
+    headerClass: 'bg-orange-100 text-orange-700',
+    droppable: false,
+    dropDate: null,
+  })
+
+  // 3. Überfällig
   columns.push({
     key: 'overdue',
     label: 'Überfällig',
@@ -162,8 +171,9 @@ function buildColumns(): Column[] {
   return columns
 }
 
-function assignColumn(inv: InvoiceCard, columns: Column[]): string {
+function assignColumn(inv: InvoiceCard): string {
   if (inv.status === 'paid') return 'paid'
+  if (inv.status.includes('returned')) return 'returned'
 
   // Use planned_payment_date if set, otherwise fall back to due_date
   const effectiveDate = inv.planned_payment_date ?? inv.due_date
@@ -196,6 +206,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const draggedIdRef = useRef<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'all' | 'returned'>('all')
   const wasDragging = useRef(false)
 
   const columns = buildColumns()
@@ -204,7 +215,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
   const grouped = new Map<string, InvoiceCard[]>()
   for (const col of columns) grouped.set(col.key, [])
   for (const inv of localInvoices) {
-    const colKey = assignColumn(inv, columns)
+    const colKey = assignColumn(inv)
     const arr = grouped.get(colKey) ?? []
     arr.push(inv)
     grouped.set(colKey, arr)
@@ -244,11 +255,12 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
   const totalOverdue = overdueInvoices.reduce((s, i) => s + Number(i.gross_amount ?? 0), 0)
   const thisWeekInvoices = grouped.get('week-0') ?? []
   const totalThisWeek = thisWeekInvoices.reduce((s, i) => s + Number(i.gross_amount ?? 0), 0)
+  const returnedInvoices = grouped.get('returned') ?? []
 
   return (
     <div>
       {/* Summary bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500">Offen gesamt</p>
           <p className="text-lg font-bold text-gray-900">{formatCHF(totalOpen)}</p>
@@ -264,12 +276,35 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
           <p className="text-lg font-bold text-red-700">{formatCHF(totalOverdue)}</p>
           <p className="text-xs text-red-400 mt-0.5">{overdueInvoices.length} Rechnungen</p>
         </div>
+        {returnedInvoices.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilter(filter === 'returned' ? 'all' : 'returned')}
+            className={`rounded-lg border p-4 text-left transition-colors ${
+              filter === 'returned' ? 'border-orange-400 bg-orange-100 ring-2 ring-orange-300' : 'border-orange-200 bg-orange-50'
+            }`}
+          >
+            <p className="text-xs text-orange-600">Zurückgesendet</p>
+            <p className="text-lg font-bold text-orange-700">{returnedInvoices.length}</p>
+            <p className="text-xs text-orange-400 mt-0.5">{filter === 'returned' ? 'Filter aktiv' : 'Klicken zum Filtern'}</p>
+          </button>
+        )}
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500">Bezahlt</p>
           <p className="text-lg font-bold text-gray-900">{(grouped.get('paid') ?? []).length}</p>
           <p className="text-xs text-gray-400 mt-0.5">Rechnungen</p>
         </div>
       </div>
+
+      {/* Filter indicator */}
+      {filter === 'returned' && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-orange-50 border border-orange-200 p-3">
+          <p className="text-sm text-orange-700 flex-1">Filter: Nur zurückgesendete Rechnungen</p>
+          <button type="button" onClick={() => setFilter('all')} className="text-xs text-orange-600 hover:text-orange-800 font-medium">
+            Filter aufheben ×
+          </button>
+        </div>
+      )}
 
       {/* Feedback */}
       {feedback && (
@@ -278,7 +313,7 @@ export function InvoiceKanban({ invoices, canDrag }: Props) {
 
       {/* Kanban columns */}
       <div className="flex gap-3 overflow-x-auto pb-4">
-        {columns.map((col) => {
+        {columns.filter(col => filter === 'all' || col.key === 'returned').map((col) => {
           const colInvoices = grouped.get(col.key) ?? []
           const colTotal = colInvoices.reduce((s, i) => s + Number(i.gross_amount ?? 0), 0)
 
