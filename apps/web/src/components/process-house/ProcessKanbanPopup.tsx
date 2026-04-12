@@ -34,6 +34,13 @@ interface ProjectCard {
   address_city: string | null
   status: string
   project_value: number | null
+  system_size_kwp: number | null
+  inverter_size_kw: number | null
+  heatpump_size_kw: number | null
+  current_step_name: string | null
+  berater_name: string | null
+  created_at: string
+  phase_entered_at: string | null
 }
 
 interface Props {
@@ -167,18 +174,51 @@ export function ProcessKanbanPopup({ processId, processName, processType, filter
                       {cards.length === 0 ? (
                         <p className="text-[10px] text-gray-300 text-center py-4">—</p>
                       ) : (
-                        cards.map((proj) => (
-                          <a
-                            key={proj.id}
-                            href={`/projects/${proj.id}?from=${processId}&name=${encodeURIComponent(processName)}${filterPhaseId ? `&phase=${filterPhaseId}` : ''}`}
-                            className="block rounded-md border border-gray-200 bg-white px-2.5 py-2 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
-                          >
-                            <p className="text-xs font-medium text-blue-700 truncate">{proj.customer_name}</p>
-                            {proj.address_city && (
-                              <p className="text-[10px] text-gray-400 truncate">{proj.address_city}</p>
-                            )}
-                          </a>
-                        ))
+                        cards.map((proj) => {
+                          const ageDays = Math.floor((Date.now() - new Date(proj.created_at).getTime()) / (1000 * 60 * 60 * 24))
+                          const stagnationDays = proj.phase_entered_at
+                            ? Math.floor((Date.now() - new Date(proj.phase_entered_at).getTime()) / (1000 * 60 * 60 * 24))
+                            : ageDays
+                          const statusColor = stagnationDays > 30 ? 'bg-red-500' : stagnationDays > 14 ? 'bg-amber-400' : 'bg-green-500'
+
+                          return (
+                            <a
+                              key={proj.id}
+                              href={`/projects/${proj.id}?from=${processId}&name=${encodeURIComponent(processName)}${filterPhaseId ? `&phase=${filterPhaseId}` : ''}`}
+                              className="block rounded-md border border-gray-200 bg-white px-2.5 py-2 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                            >
+                              {/* Row 1: Customer + system sizes */}
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="text-xs font-medium text-blue-700 truncate">{proj.customer_name}</p>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {proj.system_size_kwp ? <span className="text-[9px] font-mono text-gray-500">{Number(proj.system_size_kwp)}kWp</span> : null}
+                                  {proj.inverter_size_kw ? <span className="text-[9px] font-mono text-gray-400">{Number(proj.inverter_size_kw)}kW</span> : null}
+                                  {proj.heatpump_size_kw ? <span className="text-[9px] font-mono text-teal-500">WP{Number(proj.heatpump_size_kw)}</span> : null}
+                                </div>
+                              </div>
+                              {/* Row 2: City */}
+                              {proj.address_city ? <p className="text-[10px] text-gray-400 truncate">{proj.address_city}</p> : null}
+                              {/* Row 3: Value + step */}
+                              <div className="flex items-center justify-between mt-0.5">
+                                {proj.project_value ? (
+                                  <span className="text-[10px] font-mono font-medium text-gray-600">
+                                    {currency} {Number(proj.project_value).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
+                                  </span>
+                                ) : <span />}
+                              </div>
+                              {/* Row 4: Status dot + berater + age */}
+                              <div className="flex items-center justify-between mt-0.5">
+                                <div className="flex items-center gap-1 min-w-0">
+                                  <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${statusColor}`} />
+                                  {proj.berater_name ? (
+                                    <span className="text-[9px] text-gray-400 truncate">{proj.berater_name}</span>
+                                  ) : null}
+                                </div>
+                                <span className="text-[9px] text-gray-400 shrink-0">{ageDays}d</span>
+                              </div>
+                            </a>
+                          )
+                        })
                       )}
                     </div>
                   </div>

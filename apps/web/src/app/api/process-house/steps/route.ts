@@ -36,13 +36,32 @@ export async function GET(request: NextRequest) {
   if (projectIds.length > 0) {
     const { data: projectData } = await supabase
       .from('projects')
-      .select('id, title, customer_name, address_city, status, phase_id, created_at, project_value')
+      .select('id, title, customer_name, address_city, status, phase_id, created_at, project_value, system_size_kwp, inverter_size_kw, heatpump_size_kw, current_step_name, berater_id, phase_entered_at')
       .in('id', projectIds)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(100)
 
     projects = (projectData ?? []) as Array<Record<string, unknown>>
+  }
+
+  // Fetch berater names for projects
+  const beraterIds = [...new Set(projects.map(p => p['berater_id'] as string).filter(Boolean))]
+  const beraterNames = new Map<string, string>()
+  if (beraterIds.length > 0) {
+    const { data: teamMembers } = await supabase
+      .from('team_members')
+      .select('id, display_name')
+      .in('id', beraterIds)
+    for (const tm of (teamMembers ?? []) as Array<{ id: string; display_name: string }>) {
+      beraterNames.set(tm.id, tm.display_name)
+    }
+  }
+
+  // Enrich projects with berater_name
+  for (const proj of projects) {
+    const bid = proj['berater_id'] as string | null
+    proj['berater_name'] = bid ? (beraterNames.get(bid) ?? null) : null
   }
 
   // Fetch base currency from company_currency_settings
