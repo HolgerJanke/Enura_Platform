@@ -75,16 +75,24 @@ export async function GET(request: NextRequest) {
     projectsByStep.set(step['id'] as string, [])
   }
 
-  // Assign each project to a step based on its relative age (older = further along)
-  if (stepCount > 0) {
+  // Assign each project to a step based on its relative age across the full range
+  if (stepCount > 0 && projects.length > 0) {
+    // Find the age range of all projects
+    const ages = projects.map(p => {
+      const created = new Date(p['created_at'] as string)
+      return (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)
+    })
+    const minAge = Math.min(...ages)
+    const maxAge = Math.max(...ages)
+    const ageSpan = maxAge - minAge || 1 // avoid division by zero
+
     for (let i = 0; i < projects.length; i++) {
       const proj = projects[i]!
-      // Distribute based on creation date — older projects further along
       const created = new Date(proj['created_at'] as string)
-      const ageMs = Date.now() - created.getTime()
-      const ageDays = ageMs / (1000 * 60 * 60 * 24)
-      // Map age to step index (0-90 days spread across steps)
-      const stepIdx = Math.min(stepCount - 1, Math.floor((ageDays / 90) * stepCount))
+      const ageDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)
+      // Normalize age to 0..1 range, then map to step index
+      const normalized = (ageDays - minAge) / ageSpan
+      const stepIdx = Math.min(stepCount - 1, Math.floor(normalized * stepCount))
       const stepId = steps[stepIdx]!['id'] as string
       projectsByStep.get(stepId)?.push(proj)
     }
