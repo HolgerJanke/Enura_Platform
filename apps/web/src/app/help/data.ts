@@ -62,6 +62,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
 export const PATH_TO_ARTICLE: Record<string, { level: string; slug: string }> = {
   // Company / Dashboard
   '/dashboard': { level: 'company', slug: 'prozesshaus' },
+  '/analytics': { level: 'company', slug: 'prozesshaus' },
   '/setter': { level: 'company', slug: 'setter-dashboard' },
   '/berater': { level: 'company', slug: 'berater-dashboard' },
   '/leads': { level: 'company', slug: 'leads-verwalten' },
