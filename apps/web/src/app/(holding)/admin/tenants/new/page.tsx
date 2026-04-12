@@ -56,12 +56,20 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-function StepIndicator({ current, total }: { current: Step; total: number }) {
+function StepIndicator({
+  current,
+  total,
+  onStepClick,
+}: {
+  current: Step
+  total: number
+  onStepClick: (step: Step) => void
+}) {
   const steps = [
     'Unternehmensdaten',
     'Branding',
     'Super User',
-    'Bestaetigung',
+    'Bestätigung',
   ]
 
   return (
@@ -81,27 +89,38 @@ function StepIndicator({ current, total }: { current: Step; total: number }) {
                 />
               )}
               <div className="flex items-center gap-2">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : isCompleted
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {isCompleted ? (
+                {isCompleted ? (
+                  <button
+                    type="button"
+                    onClick={() => onStepClick(stepNum)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors cursor-pointer"
+                    aria-label={`Zurück zu Schritt ${stepNum}: ${label}`}
+                  >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                  ) : (
-                    stepNum
-                  )}
-                </div>
+                  </button>
+                ) : (
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {stepNum}
+                  </div>
+                )}
                 <span
                   className={`text-sm ${
-                    isActive ? 'font-medium text-gray-900' : 'text-gray-500'
+                    isActive
+                      ? 'font-medium text-gray-900'
+                      : isCompleted
+                        ? 'text-blue-600 cursor-pointer hover:underline'
+                        : 'text-gray-500'
                   }`}
+                  onClick={() => isCompleted && onStepClick(stepNum)}
+                  role={isCompleted ? 'button' : undefined}
                 >
                   {label}
                 </span>
@@ -177,7 +196,7 @@ export default function NewTenantPage() {
         Erstellen Sie ein neues Unternehmen in der Enura-Plattform.
       </p>
 
-      <StepIndicator current={step} total={4} />
+      <StepIndicator current={step} total={4} onStepClick={setStep} />
 
       {error && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
