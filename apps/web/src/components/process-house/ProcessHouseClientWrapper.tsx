@@ -32,6 +32,11 @@ export function ProcessHouseClientWrapper({ management, primary, support, openPr
   }
 
   function handlePhaseClick(processId: string, phaseId: string) {
+    const process = allProcesses.find((p) => p.id === processId)
+    if (process?.linkedPage) {
+      router.push(process.linkedPage)
+      return
+    }
     setSelectedProcessId(processId)
     setSelectedPhaseId(phaseId) // Show only this phase
   }
