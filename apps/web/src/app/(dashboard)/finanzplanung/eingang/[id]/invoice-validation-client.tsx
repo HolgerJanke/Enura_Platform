@@ -50,8 +50,8 @@ export function InvoiceValidationClient({ invoiceId, currentStep, status, canVal
       <div className="flex items-center gap-2 mb-6">
         {STEP_LABELS.map((label, i) => {
           const stepNum = i + 1
-          const isActive = stepNum === currentStep
-          const isDone = stepNum < currentStep
+          const isActive = !isTerminal && stepNum === currentStep
+          const isDone = isTerminal || stepNum < currentStep
           return (
             <div key={stepNum} className="flex items-center gap-1.5">
               <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
