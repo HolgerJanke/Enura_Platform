@@ -177,10 +177,6 @@ export default async function PlanungPage() {
               due_date: inv.due_date ?? new Date().toISOString().split('T')[0]!,
               scheduled_date: null,
             }))}
-            onScheduleChange={async () => {
-              // Server action for schedule change would go here
-              // For now this is client-side only
-            }}
           />
         </div>
       )}

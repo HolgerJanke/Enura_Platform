@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { scheduleInvoicePayment } from '../actions'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,7 +21,6 @@ type ViewMode = 'daily' | 'weekly' | 'monthly'
 
 interface Props {
   invoices: InvoiceCard[]
-  onScheduleChange: (invoiceId: string, newDate: string) => Promise<void>
 }
 
 // ---------------------------------------------------------------------------
@@ -56,7 +56,7 @@ function formatCHF(amount: number, currency: string): string {
 // Component
 // ---------------------------------------------------------------------------
 
-export function CashoutCalendar({ invoices, onScheduleChange }: Props) {
+export function CashoutCalendar({ invoices }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('daily')
   const [baseDate, setBaseDate] = useState(() => new Date())
   const [draggedId, setDraggedId] = useState<string | null>(null)
@@ -94,8 +94,8 @@ export function CashoutCalendar({ invoices, onScheduleChange }: Props) {
     ))
 
     // Persist to server
-    await onScheduleChange(draggedId, targetDate)
-  }, [draggedId, onScheduleChange])
+    await scheduleInvoicePayment(draggedId, targetDate)
+  }, [draggedId])
 
   const navigate = useCallback((direction: -1 | 1) => {
     setBaseDate(prev => {
