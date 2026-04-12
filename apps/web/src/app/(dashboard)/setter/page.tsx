@@ -1,8 +1,12 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { requirePermission, checkPermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import {
   formatPercent,
   formatDuration,
@@ -12,11 +16,26 @@ import {
 } from '@enura/types'
 import type { SetterDailyMetrics } from '@enura/types'
 import { RecentCallsTable } from '@/components/calls/recent-calls-table'
+import { TeamMemberFilter } from '@/components/team-member-filter'
 
-export default async function SetterPage() {
+export default async function SetterPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requirePermission('module:setter:read')
   const session = await getSession()
   if (!session?.companyId) return null
+
+  const sp = await searchParams
+  const selectedMember = typeof sp['member'] === 'string' ? sp['member'] : ''
+
+  // Fetch setter team members
+  const serviceDb = createSupabaseServiceClient()
+  const { data: setterProfiles } = await serviceDb
+    .from('profiles')
+    .select('id, display_name')
+    .eq('company_id', session.companyId)
+    .eq('is_active', true)
+    .order('display_name')
+
+  const setters = (setterProfiles ?? []) as Array<{ id: string; display_name: string }>
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
@@ -34,7 +53,7 @@ export default async function SetterPage() {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const { data: recentCalls } = await supabase
+  let callsQuery = supabase
     .from('calls')
     .select(
       'id, started_at, duration_seconds, direction, status, team_member_id, recording_url',
@@ -43,6 +62,12 @@ export default async function SetterPage() {
     .gte('started_at', thirtyDaysAgo.toISOString())
     .order('started_at', { ascending: false })
     .limit(20)
+
+  if (selectedMember) {
+    callsQuery = callsQuery.eq('team_member_id', selectedMember)
+  }
+
+  const { data: recentCalls } = await callsQuery
 
   // Fetch analyses for those calls
   const callIds = (recentCalls ?? []).map(
@@ -86,9 +111,14 @@ export default async function SetterPage() {
       <Link href="/analytics" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
         ← Zurück zu Analytics
       </Link>
-      <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary mb-2">
-        Setter Performance
-      </h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary">
+          Setter Performance
+        </h1>
+        <Suspense fallback={null}>
+          <TeamMemberFilter members={setters} label="Setter" />
+        </Suspense>
+      </div>
       <p className="text-brand-text-secondary mb-6">{formatDate(today)}</p>
 
       {/* Primary KPIs */}
