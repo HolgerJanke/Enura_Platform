@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { signOutAction } from '@/app/actions'
+import { getHelpArticleForPath } from '@/app/help/data'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,6 +32,9 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [adminModalOpen, setAdminModalOpen] = useState(false)
+  const pathname = usePathname()
+  const helpArticle = getHelpArticleForPath(pathname)
+  const helpHref = helpArticle ? `/help/${helpArticle.level}/${helpArticle.slug}` : '/help'
 
   return (
     <div className="min-h-screen bg-brand-background">
@@ -66,9 +71,9 @@ export function DashboardShell({
             {userName.split(' ')[0]}
           </span>
 
-          {/* Help */}
+          {/* Help — context-aware link */}
           <Link
-            href="/help"
+            href={helpHref}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-secondary hover:bg-gray-100 hover:text-brand-text-primary transition-colors"
             aria-label="Hilfe"
             title="Hilfe"
