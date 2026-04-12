@@ -184,28 +184,39 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Abweichung</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum (Budget)</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum (Ist)</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Kum. Cashflow</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {liqEvents.map((evt, i) => (
-                    <tr
-                      key={i}
-                      className="hover:bg-blue-50 cursor-pointer transition-colors"
-                      onClick={() => handleEventClick(evt)}
-                    >
-                      <td className="px-4 py-2 text-blue-700 font-medium">{evt['step_name'] as string}</td>
-                      <td className="px-4 py-2">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${evt['direction'] === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {evt['direction'] === 'income' ? 'Einnahme' : 'Ausgabe'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right font-mono">{fmtCHF(evt['budget_amount'] as number)}</td>
-                      <td className="px-4 py-2 text-right font-mono">{evt['actual_amount'] ? fmtCHF(evt['actual_amount'] as number) : '—'}</td>
-                      <td className="px-4 py-2 text-right font-mono">{evt['amount_deviation'] ? fmtCHF(evt['amount_deviation'] as number) : '—'}</td>
-                      <td className="px-4 py-2 text-gray-500">{fmtDate(evt['budget_date'] as string | null)}</td>
-                      <td className="px-4 py-2 text-gray-500">{evt['actual_date'] ? fmtDate(evt['actual_date'] as string) : '—'}</td>
-                    </tr>
-                  ))}
+                  {(() => {
+                    let cumulative = 0
+                    return liqEvents.map((evt, i) => {
+                      const amount = Number(evt['budget_amount'] ?? 0)
+                      cumulative += evt['direction'] === 'income' ? amount : -amount
+                      return (
+                        <tr
+                          key={i}
+                          className="hover:bg-blue-50 cursor-pointer transition-colors"
+                          onClick={() => handleEventClick(evt)}
+                        >
+                          <td className="px-4 py-2 text-blue-700 font-medium">{evt['step_name'] as string}</td>
+                          <td className="px-4 py-2">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${evt['direction'] === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {evt['direction'] === 'income' ? 'Einnahme' : 'Ausgabe'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-right font-mono">{fmtCHF(evt['budget_amount'] as number)}</td>
+                          <td className="px-4 py-2 text-right font-mono">{evt['actual_amount'] ? fmtCHF(evt['actual_amount'] as number) : '—'}</td>
+                          <td className="px-4 py-2 text-right font-mono">{evt['amount_deviation'] ? fmtCHF(evt['amount_deviation'] as number) : '—'}</td>
+                          <td className="px-4 py-2 text-gray-500">{fmtDate(evt['budget_date'] as string | null)}</td>
+                          <td className="px-4 py-2 text-gray-500">{evt['actual_date'] ? fmtDate(evt['actual_date'] as string) : '—'}</td>
+                          <td className={`px-4 py-2 text-right font-mono font-semibold ${cumulative >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                            {fmtCHF(cumulative)}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  })()}
                 </tbody>
               </table>
             )}
