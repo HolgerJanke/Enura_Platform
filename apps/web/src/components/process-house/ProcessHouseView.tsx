@@ -36,9 +36,9 @@ interface ProcessHouseViewProps {
 
 const W = 900            // total SVG width
 const H = 600            // total SVG height
-const PILLAR_W = 50      // customer pillar width
-const CONTENT_X = PILLAR_W + 10
-const CONTENT_W = W - 2 * PILLAR_W - 20
+const PILLAR_W = 0       // customer pillars removed
+const CONTENT_X = 10
+const CONTENT_W = W - 20
 const ROOF_Y = 20
 const ROOF_H = 120
 const ARROW_Y = ROOF_Y + ROOF_H + 15
@@ -94,18 +94,6 @@ export function ProcessHouseView({
         role="img"
         aria-label="Prozesshaus-Visualisierung"
       >
-        {/* Left Customer Pillar */}
-        <rect x={0} y={pillarTopY} width={PILLAR_W} height={pillarH} rx={4} style={{ fill: COLORS.pillarFill }} />
-        <text x={PILLAR_W / 2} y={pillarTopY + pillarH / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(-90, ${PILLAR_W / 2}, ${pillarTopY + pillarH / 2})`}>
-          Kunde
-        </text>
-
-        {/* Right Customer Pillar */}
-        <rect x={W - PILLAR_W} y={pillarTopY} width={PILLAR_W} height={pillarH} rx={4} style={{ fill: COLORS.pillarFill }} />
-        <text x={W - PILLAR_W / 2} y={pillarTopY + pillarH / 2} textAnchor="middle" dominantBaseline="central" fill={COLORS.pillarText} fontSize={14} fontWeight={700} transform={`rotate(90, ${W - PILLAR_W / 2}, ${pillarTopY + pillarH / 2})`}>
-          Kunde
-        </text>
-
         {/* Roof — Management processes (triangle) */}
         <polygon
           points={`${W / 2},${ROOF_Y} ${CONTENT_X},${ROOF_Y + ROOF_H} ${CONTENT_X + CONTENT_W},${ROOF_Y + ROOF_H}`}
