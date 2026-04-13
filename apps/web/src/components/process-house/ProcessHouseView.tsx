@@ -133,20 +133,23 @@ export function ProcessHouseView({
           </text>
         )}
 
-        {/* Primary processes — horizontal arrows */}
+        {/* Primary processes — rectangles */}
         {primaryProcesses.length > 0 ? (
           primaryProcesses.map((proc, i) => {
             const y = ARROW_Y + i * (ARROW_H + ARROW_GAP)
             const isHovered = hoveredId === proc.id
-            const arrowPoints = `${CONTENT_X},${y + ARROW_H / 2} ${CONTENT_X + 15},${y} ${CONTENT_X + CONTENT_W - 15},${y} ${CONTENT_X + CONTENT_W},${y + ARROW_H / 2} ${CONTENT_X + CONTENT_W - 15},${y + ARROW_H} ${CONTENT_X + 15},${y + ARROW_H}`
             return (
               <g
                 key={proc.id}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
-                <polygon
-                  points={arrowPoints}
+                <rect
+                  x={CONTENT_X}
+                  y={y}
+                  width={CONTENT_W}
+                  height={ARROW_H}
+                  rx={8}
                   style={{ fill: COLORS.arrowFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
