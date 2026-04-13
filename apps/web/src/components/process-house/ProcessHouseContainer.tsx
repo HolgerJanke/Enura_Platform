@@ -59,7 +59,7 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
   const { data: stepsData } = processIds.length > 0
     ? await serviceDb
         .from('process_steps')
-        .select('id, name, process_id, expected_output, sort_order')
+        .select('id, name, process_id, expected_output, sort_order, phase_id')
         .in('process_id', processIds)
         .order('sort_order')
     : { data: [] }
