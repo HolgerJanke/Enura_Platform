@@ -38,6 +38,7 @@ interface Props {
 }
 
 type ViewMode = 'progress' | 'cashflow'
+type TimeRange = '3m' | '6m' | '12m' | 'all' | 'custom'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,6 +71,9 @@ const EXPENSE_COLORS = ['#065f46', '#047857', '#059669', '#10b981', '#34d399', '
 export function GanttClient({ projects, events, currency }: Props) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<ViewMode>('progress')
+  const [timeRange, setTimeRange] = useState<TimeRange>('6m')
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
   const [hoveredEvent, setHoveredEvent] = useState<LiqEvent | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
@@ -81,17 +85,31 @@ export function GanttClient({ projects, events, currency }: Props) {
     eventsByProject.set(e.project_id, arr)
   }
 
-  // Calculate time range
+  // Calculate time range from slicer
   const allDates = events.map(e => displayDate(e)).filter(Boolean).map(d => new Date(d!))
   if (allDates.length === 0) {
     return <p className="text-sm text-gray-500 text-center py-12">Keine Zahlungsereignisse vorhanden.</p>
   }
 
-  const minDate = new Date(Math.min(...allDates.map(d => d.getTime())))
-  const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())))
-  // Add 2 weeks padding
-  minDate.setDate(minDate.getDate() - 14)
-  maxDate.setDate(maxDate.getDate() + 14)
+  const now = new Date()
+  let minDate: Date
+  let maxDate: Date
+
+  if (timeRange === 'custom' && customFrom && customTo) {
+    minDate = new Date(customFrom)
+    maxDate = new Date(customTo)
+  } else if (timeRange === 'all') {
+    minDate = new Date(Math.min(...allDates.map(d => d.getTime())))
+    maxDate = new Date(Math.max(...allDates.map(d => d.getTime())))
+    minDate.setDate(minDate.getDate() - 14)
+    maxDate.setDate(maxDate.getDate() + 14)
+  } else {
+    const months = timeRange === '3m' ? 3 : timeRange === '12m' ? 12 : 6
+    minDate = new Date(now)
+    minDate.setMonth(minDate.getMonth() - 1)
+    maxDate = new Date(now)
+    maxDate.setMonth(maxDate.getMonth() + months - 1)
+  }
   const totalDays = daysBetween(minDate, maxDate)
   const dayWidth = 4 // pixels per day
   const chartWidth = totalDays * dayWidth
@@ -118,20 +136,65 @@ export function GanttClient({ projects, events, currency }: Props) {
 
   return (
     <div>
-      {/* View switch */}
-      <div className="flex items-center gap-2 mb-4">
-        {(['progress', 'cashflow'] as const).map((mode) => (
+      {/* Controls */}
+      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
+        {/* View switch */}
+        <div className="flex items-center gap-2">
+          {(['progress', 'cashflow'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              className={`rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
+                viewMode === mode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {mode === 'progress' ? 'Fortschritt' : 'Cashflow'}
+            </button>
+          ))}
+        </div>
+
+        {/* Time range slicer */}
+        <div className="flex items-center gap-2">
+          {([['3m', '3 Monate'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle']] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTimeRange(key as TimeRange)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                timeRange === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
           <button
-            key={mode}
             type="button"
-            onClick={() => setViewMode(mode)}
-            className={`rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
-              viewMode === mode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            onClick={() => setTimeRange('custom')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              timeRange === 'custom' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {mode === 'progress' ? 'Fortschritt' : 'Cashflow'}
+            Zeitraum
           </button>
-        ))}
+          {timeRange === 'custom' && (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                className="rounded border border-gray-300 px-2 py-1 text-xs"
+              />
+              <span className="text-xs text-gray-400">—</span>
+              <input
+                type="date"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                className="rounded border border-gray-300 px-2 py-1 text-xs"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Gantt chart */}
