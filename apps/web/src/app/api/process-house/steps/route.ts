@@ -117,10 +117,48 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Calculate phase KPIs: In/Out counts + portfolio value per phase
+  const phaseKpis: Record<string, { inCount: number; outCount: number; portfolioValue: number }> = {}
+  const phasesList = (phasesRes.data ?? []) as Array<Record<string, unknown>>
+
+  for (const phase of phasesList) {
+    const phaseId = phase['id'] as string
+    // Find steps in this phase, sorted by sort_order
+    const phaseSteps = steps
+      .filter(s => s['phase_id'] === phaseId)
+      .sort((a, b) => Number(a['sort_order'] ?? 0) - Number(b['sort_order'] ?? 0))
+
+    if (phaseSteps.length === 0) {
+      phaseKpis[phaseId] = { inCount: 0, outCount: 0, portfolioValue: 0 }
+      continue
+    }
+
+    const firstStepId = phaseSteps[0]!['id'] as string
+    const lastStepId = phaseSteps[phaseSteps.length - 1]!['id'] as string
+    const firstStepProjects = projectsByStep.get(firstStepId) ?? []
+    const lastStepProjects = projectsByStep.get(lastStepId) ?? []
+
+    const inCount = firstStepProjects.length
+    const outCount = lastStepProjects.length
+
+    // Portfolio value: sum of project_value for relevant projects
+    // For all phases: sum all projects in the phase
+    let portfolioValue = 0
+    for (const step of phaseSteps) {
+      const stepProjects = projectsByStep.get(step['id'] as string) ?? []
+      for (const proj of stepProjects) {
+        portfolioValue += Number(proj['project_value'] ?? 0)
+      }
+    }
+
+    phaseKpis[phaseId] = { inCount, outCount, portfolioValue }
+  }
+
   return NextResponse.json({
     steps: stepsRes.data ?? [],
     phases: phasesRes.data ?? [],
     projectsByStep: Object.fromEntries(projectsByStep),
     baseCurrency,
+    phaseKpis,
   })
 }

@@ -11,6 +11,9 @@ export interface ProcessPhaseItem {
   name: string
   sortOrder: number
   link: string | null
+  inCount?: number
+  outCount?: number
+  portfolioValue?: number
 }
 
 export interface ProcessHouseItem {
@@ -27,6 +30,7 @@ interface ProcessHouseViewProps {
   managementProcesses: ProcessHouseItem[]
   primaryProcesses: ProcessHouseItem[]
   supportProcesses: ProcessHouseItem[]
+  currency?: string
   onProcessClick?: (processId: string) => void
   onPhaseClick?: (processId: string, phaseId: string) => void
 }
@@ -39,6 +43,7 @@ export function ProcessHouseView({
   managementProcesses,
   primaryProcesses,
   supportProcesses,
+  currency = 'CHF',
   onProcessClick,
   onPhaseClick,
 }: ProcessHouseViewProps) {
@@ -95,31 +100,46 @@ export function ProcessHouseView({
                   <p className="text-xs font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
                 </button>
 
-                {/* Phases listed vertically */}
-                <div className="px-3 py-2 space-y-0.5">
+                {/* Phases with KPIs */}
+                <div className="px-3 py-2 space-y-1">
                   {proc.phases.length > 0 ? (
                     proc.phases.map((ph, pi) => (
-                      <button
-                        key={ph.id}
-                        type="button"
-                        onClick={() => onPhaseClick?.(proc.id, ph.id)}
-                        className="w-full text-left flex items-start gap-1.5 py-1 rounded px-1.5 -mx-1.5 hover:bg-white/10 transition-colors group"
-                      >
-                        <span className="text-[10px] font-mono text-white/50 shrink-0 mt-px">
-                          P{i + 1}.{pi + 1}
-                        </span>
-                        <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
-                          {ph.name}
-                        </span>
-                      </button>
+                      <div key={ph.id} className="rounded px-1.5 -mx-1.5 hover:bg-white/10 transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => onPhaseClick?.(proc.id, ph.id)}
+                          className="w-full text-left flex items-start gap-1.5 py-1 group"
+                        >
+                          <span className="text-[10px] font-mono text-white/50 shrink-0 mt-px">
+                            P{i + 1}.{pi + 1}
+                          </span>
+                          <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
+                            {ph.name}
+                          </span>
+                        </button>
+                        {/* Phase KPIs: In/Out + Portfolio Value */}
+                        {(ph.inCount != null || ph.outCount != null) && (
+                          <div className="flex items-center gap-2 pl-6 pb-1 text-[9px]">
+                            <span className="text-white/50">
+                              In: <span className="text-white/80 font-medium">{ph.inCount ?? 0}</span>
+                            </span>
+                            <span className="text-white/50">
+                              Out: <span className="text-white/80 font-medium">{ph.outCount ?? 0}</span>
+                            </span>
+                            {(ph.portfolioValue ?? 0) > 0 && (
+                              <span className="text-white/50">
+                                | <span className="text-white/80 font-mono font-medium">
+                                  {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     ))
                   ) : (
                     <p className="text-[10px] text-white/40 py-1">Keine Phasen</p>
                   )}
-                  {/* KPI placeholder */}
-                  <div className="pt-1.5 border-t border-white/10 mt-1.5">
-                    <p className="text-[9px] text-white/25 italic">KPIs</p>
-                  </div>
                 </div>
               </div>
             )

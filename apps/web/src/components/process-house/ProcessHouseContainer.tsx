@@ -96,8 +96,76 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     }
   }
 
+  // For P-type processes: fetch project counts per step to compute phase KPIs
+  const pProcessIds = visible.filter(p => p.process_type === 'P').map(p => p.id)
+  let projectCountsByStep = new Map<string, { count: number; value: number }>()
+
+  if (pProcessIds.length > 0) {
+    // Fetch active project instances for P-processes
+    const { data: instanceData } = await serviceDb
+      .from('project_process_instances')
+      .select('project_id, process_id')
+      .in('process_id', pProcessIds)
+      .eq('status', 'active')
+
+    const instanceProjectIds = [...new Set((instanceData ?? []).map((r: Record<string, unknown>) => r['project_id'] as string))]
+
+    if (instanceProjectIds.length > 0) {
+      const { data: projData } = await serviceDb
+        .from('projects')
+        .select('id, current_step_id, project_value')
+        .in('id', instanceProjectIds)
+        .eq('status', 'active')
+
+      for (const proj of (projData ?? []) as Array<Record<string, unknown>>) {
+        const stepId = proj['current_step_id'] as string | null
+        if (!stepId) continue
+        const existing = projectCountsByStep.get(stepId) ?? { count: 0, value: 0 }
+        existing.count += 1
+        existing.value += Number(proj['project_value'] ?? 0)
+        projectCountsByStep.set(stepId, existing)
+      }
+    }
+  }
+
+  // Build toItem with phase KPIs for P-processes
+  const toItemWithKpis = (p: ProcessRow) => {
+    const item = toItem(p)
+    if (p.process_type !== 'P') return item
+
+    // Enrich phases with In/Out counts and portfolio values
+    const enrichedPhases = item.phases.map(phase => {
+      const phaseId = phase.id
+      // Find steps in this phase sorted by sort_order
+      const phaseStepIds = (stepsData ?? [])
+        .filter((s: Record<string, unknown>) => (s as { process_id: string; phase_id: string | null })['phase_id'] === phaseId && (s as { process_id: string })['process_id'] === p.id)
+        .sort((a: Record<string, unknown>, b: Record<string, unknown>) => Number(a['sort_order'] ?? 0) - Number(b['sort_order'] ?? 0))
+        .map((s: Record<string, unknown>) => s['id'] as string)
+
+      if (phaseStepIds.length === 0) return phase
+
+      const firstStepData = projectCountsByStep.get(phaseStepIds[0]!) ?? { count: 0, value: 0 }
+      const lastStepData = projectCountsByStep.get(phaseStepIds[phaseStepIds.length - 1]!) ?? { count: 0, value: 0 }
+
+      // Portfolio value = sum of all projects in all steps of this phase
+      let portfolioValue = 0
+      for (const sid of phaseStepIds) {
+        portfolioValue += (projectCountsByStep.get(sid) ?? { count: 0, value: 0 }).value
+      }
+
+      return {
+        ...phase,
+        inCount: firstStepData.count,
+        outCount: lastStepData.count,
+        portfolioValue,
+      }
+    })
+
+    return { ...item, phases: enrichedPhases }
+  }
+
   const management = visible.filter((p) => p.process_type === 'M').map(toItem)
-  const primary = visible.filter((p) => p.process_type === 'P').map(toItem)
+  const primary = visible.filter((p) => p.process_type === 'P').map(toItemWithKpis)
   const support = visible.filter((p) => p.process_type === 'S').map(toItem)
 
   if (management.length === 0 && primary.length === 0 && support.length === 0) {
@@ -109,11 +177,20 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     )
   }
 
+  // Fetch currency
+  const { data: currData } = await serviceDb
+    .from('company_currency_settings')
+    .select('base_currency')
+    .eq('company_id', session.companyId)
+    .single()
+  const companyCurrency = (currData as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
+
   return (
     <ProcessHouseClientWrapper
       management={management}
       primary={primary}
       support={support}
+      currency={companyCurrency}
       openProcess={openProcess}
       openPhase={openPhase}
     />

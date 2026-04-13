@@ -9,11 +9,12 @@ interface Props {
   management: ProcessHouseItem[]
   primary: ProcessHouseItem[]
   support: ProcessHouseItem[]
+  currency?: string
   openProcess?: string
   openPhase?: string
 }
 
-export function ProcessHouseClientWrapper({ management, primary, support, openProcess, openPhase }: Props) {
+export function ProcessHouseClientWrapper({ management, primary, support, currency, openProcess, openPhase }: Props) {
   const router = useRouter()
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(openProcess ?? null)
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(openPhase ?? null)
@@ -54,6 +55,7 @@ export function ProcessHouseClientWrapper({ management, primary, support, openPr
         managementProcesses={management}
         primaryProcesses={primary}
         supportProcesses={support}
+        currency={currency}
         onProcessClick={handleProcessClick}
         onPhaseClick={handlePhaseClick}
       />
