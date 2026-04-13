@@ -359,6 +359,26 @@ export function GanttClient({ projects, events, currency }: Props) {
                 }
               }
 
+              // Debug: log segments for projects with "Keller" in name
+              if (proj.customer_name.includes('Keller')) {
+                console.log(`[Gantt Debug] ${proj.customer_name}:`, {
+                  eventsCount: sorted.length,
+                  points: points.map((p, i) => ({
+                    step: sorted[i]?.step_name,
+                    dir: sorted[i]?.direction,
+                    amt: displayAmount(sorted[i]!),
+                    date: displayDate(sorted[i]!),
+                    x: p.x,
+                    positive: p.positive,
+                  })),
+                  segments: segments.map(s => ({ x: s.x, w: s.w, positive: s.positive })),
+                  chartWidth,
+                  dayWidth,
+                  minDate: minDate.toISOString().split('T')[0],
+                  maxDate: maxDate.toISOString().split('T')[0],
+                })
+              }
+
               return (
                 <div key={proj.id} className="flex">
                   {nameCell}
