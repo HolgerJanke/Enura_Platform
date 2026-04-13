@@ -103,17 +103,35 @@ export function GanttClient({ projects, events, currency }: Props) {
     maxDate = new Date(Math.max(...allDates.map(d => d.getTime())))
     minDate.setDate(minDate.getDate() - 14)
     maxDate.setDate(maxDate.getDate() + 14)
-  } else {
-    const months = timeRange === '1m' ? 1 : timeRange === '3m' ? 3 : timeRange === '12m' ? 12 : 6
+  } else if (timeRange === '1m') {
+    // Last 2 weeks + next 4 weeks
+    minDate = new Date(now)
+    minDate.setDate(minDate.getDate() - 14)
+    maxDate = new Date(now)
+    maxDate.setDate(maxDate.getDate() + 28)
+  } else if (timeRange === '3m') {
+    // Last 1 month + next 3 months
     minDate = new Date(now)
     minDate.setMonth(minDate.getMonth() - 1)
     maxDate = new Date(now)
-    maxDate.setMonth(maxDate.getMonth() + months - 1)
+    maxDate.setMonth(maxDate.getMonth() + 3)
+  } else if (timeRange === '6m') {
+    // Last 1 month + next 6 months
+    minDate = new Date(now)
+    minDate.setMonth(minDate.getMonth() - 1)
+    maxDate = new Date(now)
+    maxDate.setMonth(maxDate.getMonth() + 6)
+  } else {
+    // 12m: Last 2 months + next 12 months
+    minDate = new Date(now)
+    minDate.setMonth(minDate.getMonth() - 2)
+    maxDate = new Date(now)
+    maxDate.setMonth(maxDate.getMonth() + 12)
   }
   const totalDays = Math.max(daysBetween(minDate, maxDate), 1)
-  // Dynamic dayWidth: wider when fewer days, minimum screen-filling
-  // < 30 days → daily granularity (~30px/day), 30-90 → ~10px, 90-180 → ~6px, 180+ → ~3px
-  const dayWidth = totalDays <= 30 ? 30 : totalDays <= 90 ? 10 : totalDays <= 180 ? 6 : 3
+  // Fill screen: assume ~800px available width for the timeline area
+  const screenFillWidth = 800
+  const dayWidth = Math.max(Math.round(screenFillWidth / totalDays), totalDays <= 42 ? 20 : 3)
   const chartWidth = totalDays * dayWidth
 
   const today = new Date()
