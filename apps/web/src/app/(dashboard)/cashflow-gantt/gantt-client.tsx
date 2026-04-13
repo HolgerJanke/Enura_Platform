@@ -329,33 +329,36 @@ export function GanttClient({ projects, events, currency }: Props) {
             )
 
             if (viewMode === 'cashflow') {
-              // Cashflow view — use budget_date for position + sort (matches project card)
-              // and displayAmount (actual > scheduled > budget) for cumulative values
+              // Cashflow view — identical logic to project card "Kum. Cashflow" column
+              // Sort by displayDate (Ist > Plan > Budget), amount = displayAmount
               let cumulative = 0
               const sorted = [...projEvents]
-                .filter(e => e.budget_date != null)
-                .sort((a, b) => (a.budget_date ?? '').localeCompare(b.budget_date ?? ''))
+                .filter(e => displayDate(e) != null)
+                .sort((a, b) => (displayDate(a) ?? '').localeCompare(displayDate(b) ?? ''))
 
+              // Build segments: each spans from this event's date to the next event's date
               const segments: Array<{ x: number; w: number; positive: boolean }> = []
               for (let ei = 0; ei < sorted.length; ei++) {
                 const evt = sorted[ei]!
-                const budgetDate = new Date(evt.budget_date!)
-                const x = Math.max(daysBetween(minDate, budgetDate) * dayWidth, 0)
+                const d = displayDate(evt)!
+                const x = daysBetween(minDate, new Date(d)) * dayWidth
                 const amt = displayAmount(evt)
                 cumulative += evt.direction === 'income' ? amt : -amt
 
-                // Next segment position based on next event's budget_date
-                const nextBd = ei < sorted.length - 1 ? sorted[ei + 1]!.budget_date : null
-                const nextX = nextBd
-                  ? Math.min(daysBetween(minDate, new Date(nextBd)) * dayWidth, chartWidth)
-                  : Math.min(x + dayWidth * 7, chartWidth)
-                const w = Math.max(nextX - x, 3)
+                // Segment extends to next event's displayDate
+                const nextD = ei < sorted.length - 1 ? displayDate(sorted[ei + 1]!) : null
+                const nextX = nextD
+                  ? daysBetween(minDate, new Date(nextD)) * dayWidth
+                  : x + dayWidth * 7
+                const segW = Math.max(nextX - x, 3)
 
-                // Only render segments that overlap the visible area
-                if (x + w > 0 && x < chartWidth) {
+                // Clip to visible area
+                const clippedX = Math.max(x, 0)
+                const clippedEnd = Math.min(x + segW, chartWidth)
+                if (clippedEnd > 0 && clippedX < chartWidth) {
                   segments.push({
-                    x: Math.max(x, 0),
-                    w: Math.min(w, chartWidth - Math.max(x, 0)),
+                    x: clippedX,
+                    w: Math.max(clippedEnd - clippedX, 2),
                     positive: cumulative >= 0,
                   })
                 }
