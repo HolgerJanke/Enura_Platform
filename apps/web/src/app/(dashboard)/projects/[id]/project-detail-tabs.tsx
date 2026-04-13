@@ -197,7 +197,8 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
                   {(() => {
                     let cumulative = 0
                     return liqEvents.map((evt, i) => {
-                      const amount = Number(evt['budget_amount'] ?? 0)
+                      // Use best available amount: actual > scheduled > budget
+                      const amount = Number(evt['actual_amount'] ?? evt['scheduled_amount'] ?? evt['budget_amount'] ?? 0)
                       cumulative += evt['direction'] === 'income' ? amount : -amount
                       return (
                         <tr
