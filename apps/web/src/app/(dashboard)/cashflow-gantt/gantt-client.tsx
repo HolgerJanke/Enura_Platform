@@ -252,29 +252,17 @@ export function GanttClient({ projects, events, currency }: Props) {
         </div>
       </div>
 
-      {/* Gantt chart */}
-      <div className="flex rounded-lg border border-gray-200 bg-white overflow-hidden max-h-[70vh]">
-        {/* Fixed left column — project names */}
-        <div className="shrink-0 border-r border-gray-200 bg-gray-50 w-48 overflow-y-auto">
-          <div className="h-8 border-b border-gray-200 px-3 flex items-center sticky top-0 bg-gray-50 z-20">
-            <span className="text-[10px] font-medium text-gray-500 uppercase">Projekt</span>
-          </div>
-          {projects.map((proj) => (
-            <div
-              key={proj.id}
-              className="h-7 px-3 flex items-center border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => router.push(`/projects/${proj.id}?ref=/cashflow-gantt`)}
-            >
-              <span className="text-[11px] text-gray-900 truncate">{proj.customer_name}</span>
+      {/* Gantt chart — single scroll container */}
+      <div className="rounded-lg border border-gray-200 bg-white overflow-auto max-h-[70vh]">
+        <div style={{ width: chartWidth + 192, minWidth: '100%' }} className="relative">
+          {/* Header row */}
+          <div className="flex sticky top-0 z-20">
+            {/* Project column header */}
+            <div className="shrink-0 w-48 h-8 border-b border-r border-gray-200 bg-gray-50 px-3 flex items-center sticky left-0 z-30">
+              <span className="text-[10px] font-medium text-gray-500 uppercase">Projekt</span>
             </div>
-          ))}
-        </div>
-
-        {/* Scrollable timeline */}
-        <div className="flex-1 overflow-auto">
-          <div style={{ width: chartWidth, minWidth: '100%' }} className="relative">
-            {/* Time headers — sticky */}
-            <div className="h-8 border-b border-gray-200 relative sticky top-0 bg-white z-20">
+            {/* Time headers */}
+            <div className="h-8 border-b border-gray-200 relative bg-white flex-1">
               {timeLabels.map((t, i) => (
                 <span
                   key={i}
@@ -289,54 +277,64 @@ export function GanttClient({ projects, events, currency }: Props) {
                 <div key={`g${i}`} className="absolute top-0 bottom-0 w-px bg-gray-100" style={{ left: t.x }} />
               ))}
             </div>
+          </div>
 
-            {/* Today line */}
-            {todayOffset > 0 && todayOffset < chartWidth && (
+          {/* Today line */}
+          {todayOffset > 0 && todayOffset < chartWidth && (
+            <div
+              className="absolute top-8 bottom-0 w-px bg-red-400 z-10"
+              style={{ left: todayOffset + 192 }}
+            >
+              <span className="absolute -top-0 -translate-x-1/2 bg-red-500 text-white text-[8px] px-1 rounded">Heute</span>
+            </div>
+          )}
+
+          {/* Project rows */}
+          {projects.map((proj, rowIdx) => {
+            const projEvents = eventsByProject.get(proj.id) ?? []
+
+            // Sticky project name for this row
+            const nameCell = (
               <div
-                className="absolute top-0 bottom-0 w-px bg-red-400 z-10"
-                style={{ left: todayOffset }}
+                className="shrink-0 w-48 h-7 border-b border-r border-gray-100 bg-gray-50 px-3 flex items-center sticky left-0 z-10 cursor-pointer hover:bg-gray-100"
+                onClick={() => router.push(`/projects/${proj.id}?ref=/cashflow-gantt`)}
               >
-                <span className="absolute -top-0 -translate-x-1/2 bg-red-500 text-white text-[8px] px-1 rounded">Heute</span>
+                <span className="text-[11px] text-gray-900 truncate">{proj.customer_name}</span>
               </div>
-            )}
+            )
 
-            {/* Project rows */}
-            {projects.map((proj, rowIdx) => {
-              const projEvents = eventsByProject.get(proj.id) ?? []
+            if (viewMode === 'cashflow') {
+              // Cashflow view
+              let cumulative = 0
+              const sorted = [...projEvents]
+                .filter(e => e.budget_date != null)
+                .sort((a, b) => (a.budget_date ?? '').localeCompare(b.budget_date ?? ''))
 
-              if (viewMode === 'cashflow') {
-                // Cashflow view: continuous bar that changes color at each event
-                // Sort by budget_date (process-defined order) to match project card
-                let cumulative = 0
-                const sorted = [...projEvents]
-                  .filter(e => e.budget_date != null)
-                  .sort((a, b) => (a.budget_date ?? '').localeCompare(b.budget_date ?? ''))
+              const segments: Array<{ x: number; w: number; positive: boolean }> = []
+              for (let ei = 0; ei < sorted.length; ei++) {
+                const evt = sorted[ei]!
+                const d = displayDate(evt)!
+                const evtDate = new Date(d)
+                if (evtDate > maxDate) break
+                const x = Math.max(daysBetween(minDate, evtDate) * dayWidth, 0)
+                const amt = displayAmount(evt)
+                cumulative += evt.direction === 'income' ? amt : -amt
 
-                // Build segments between consecutive events
-                const segments: Array<{ x: number; w: number; positive: boolean }> = []
-                for (let ei = 0; ei < sorted.length; ei++) {
-                  const evt = sorted[ei]!
-                  const d = displayDate(evt)!
-                  const evtDate = new Date(d)
-                  if (evtDate > maxDate) break
-                  const x = Math.max(daysBetween(minDate, evtDate) * dayWidth, 0)
-                  const amt = displayAmount(evt)
-                  cumulative += evt.direction === 'income' ? amt : -amt
+                const nextD = ei < sorted.length - 1 ? displayDate(sorted[ei + 1]!) : null
+                const nextX = nextD
+                  ? Math.min(daysBetween(minDate, new Date(nextD)) * dayWidth, chartWidth)
+                  : Math.min(x + dayWidth * 14, chartWidth)
+                const w = Math.max(nextX - x, 3)
 
-                  // Width extends to next event or end of chart
-                  const nextD = ei < sorted.length - 1 ? displayDate(sorted[ei + 1]!) : null
-                  const nextX = nextD
-                    ? Math.min(daysBetween(minDate, new Date(nextD)) * dayWidth, chartWidth)
-                    : Math.min(x + dayWidth * 14, chartWidth)
-                  const w = Math.max(nextX - x, 3)
-
-                  if (evtDate >= minDate) {
-                    segments.push({ x, w, positive: cumulative >= 0 })
-                  }
+                if (evtDate >= minDate) {
+                  segments.push({ x, w, positive: cumulative >= 0 })
                 }
+              }
 
-                return (
-                  <div key={proj.id} className="h-7 border-b border-gray-50 relative">
+              return (
+                <div key={proj.id} className="flex">
+                  {nameCell}
+                  <div className="h-7 border-b border-gray-50 relative flex-1">
                     {segments.map((seg, si) => (
                       <div
                         key={si}
@@ -345,13 +343,16 @@ export function GanttClient({ projects, events, currency }: Props) {
                       />
                     ))}
                   </div>
-                )
-              }
+                </div>
+              )
+            }
 
-              // Progress view: individual event blocks
-              const blockSize = Math.max(Math.min(dayWidth, 16), 10)
-              return (
-                <div key={proj.id} className="h-7 border-b border-gray-50 relative">
+            // Progress view: individual event blocks
+            const blockSize = Math.max(Math.min(dayWidth, 16), 10)
+            return (
+              <div key={proj.id} className="flex">
+                {nameCell}
+                <div className="h-7 border-b border-gray-50 relative flex-1">
                   {projEvents.map((evt, evtIdx) => {
                     const d = displayDate(evt)
                     if (!d) return null
@@ -394,9 +395,9 @@ export function GanttClient({ projects, events, currency }: Props) {
                     )
                   })}
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
