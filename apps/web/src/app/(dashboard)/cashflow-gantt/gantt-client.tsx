@@ -340,7 +340,6 @@ export function GanttClient({ projects, events, currency }: Props) {
               for (let ei = 0; ei < sorted.length; ei++) {
                 const evt = sorted[ei]!
                 const budgetDate = new Date(evt.budget_date!)
-                if (budgetDate > maxDate) break
                 const x = Math.max(daysBetween(minDate, budgetDate) * dayWidth, 0)
                 const amt = displayAmount(evt)
                 cumulative += evt.direction === 'income' ? amt : -amt
@@ -349,11 +348,16 @@ export function GanttClient({ projects, events, currency }: Props) {
                 const nextBd = ei < sorted.length - 1 ? sorted[ei + 1]!.budget_date : null
                 const nextX = nextBd
                   ? Math.min(daysBetween(minDate, new Date(nextBd)) * dayWidth, chartWidth)
-                  : Math.min(x + dayWidth * 14, chartWidth)
+                  : Math.min(x + dayWidth * 7, chartWidth)
                 const w = Math.max(nextX - x, 3)
 
-                if (budgetDate >= minDate) {
-                  segments.push({ x, w, positive: cumulative >= 0 })
+                // Only render segments that overlap the visible area
+                if (x + w > 0 && x < chartWidth) {
+                  segments.push({
+                    x: Math.max(x, 0),
+                    w: Math.min(w, chartWidth - Math.max(x, 0)),
+                    positive: cumulative >= 0,
+                  })
                 }
               }
 
