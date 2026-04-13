@@ -44,11 +44,17 @@ export function ProcessHouseView({
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   return (
-    <div className="space-y-3">
-      {/* Management processes — dark bar across the top */}
+    <div>
+      {/* Roof — Triangle with M-processes */}
       {managementProcesses.length > 0 && (
-        <div className="rounded-lg p-4" style={{ background: 'var(--brand-secondary, #1A1A1A)' }}>
-          <div className="flex flex-wrap items-center justify-center gap-4">
+        <div className="relative mb-0">
+          <svg viewBox="0 0 800 90" className="w-full" preserveAspectRatio="none">
+            <polygon
+              points="400,0 0,90 800,90"
+              style={{ fill: 'var(--brand-secondary, #1A1A1A)' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-end pb-3 gap-0.5">
             {managementProcesses.map((proc, i) => (
               <button
                 key={proc.id}
@@ -56,7 +62,7 @@ export function ProcessHouseView({
                 onClick={() => onProcessClick?.(proc.id)}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className={`text-sm font-semibold text-white transition-opacity ${hoveredId === proc.id ? 'opacity-80 underline' : ''}`}
+                className={`text-xs font-semibold text-white transition-opacity ${hoveredId === proc.id ? 'opacity-80 underline' : ''}`}
               >
                 M{i + 1} — {proc.menuLabel}
               </button>
@@ -65,15 +71,15 @@ export function ProcessHouseView({
         </div>
       )}
 
-      {/* Primary processes — vertical columns side by side */}
+      {/* Primary processes — vertical columns (sandwich middle) */}
       {primaryProcesses.length > 0 && (
-        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
+        <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
           {primaryProcesses.map((proc, i) => {
             const isHovered = hoveredId === proc.id
             return (
               <div
                 key={proc.id}
-                className="rounded-lg overflow-hidden"
+                className={`overflow-hidden ${i > 0 ? 'border-l border-white/20' : ''}`}
                 style={{ background: 'var(--brand-primary, #1A56DB)' }}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
@@ -82,36 +88,36 @@ export function ProcessHouseView({
                 <button
                   type="button"
                   onClick={() => onProcessClick?.(proc.id)}
-                  className={`w-full px-4 py-3 text-left transition-opacity ${isHovered ? 'opacity-80' : ''}`}
+                  className={`w-full px-3 py-2.5 text-left transition-opacity ${isHovered ? 'opacity-80' : ''}`}
                   style={{ background: 'rgba(0,0,0,0.15)' }}
                 >
-                  <p className="text-sm font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
+                  <p className="text-xs font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
                 </button>
 
                 {/* Phases listed vertically */}
-                <div className="px-4 py-2 space-y-1">
+                <div className="px-3 py-2 space-y-0.5">
                   {proc.phases.length > 0 ? (
                     proc.phases.map((ph, pi) => (
                       <button
                         key={ph.id}
                         type="button"
                         onClick={() => onPhaseClick?.(proc.id, ph.id)}
-                        className="w-full text-left flex items-start gap-2 py-1.5 rounded px-2 -mx-2 hover:bg-white/10 transition-colors group"
+                        className="w-full text-left flex items-start gap-1.5 py-1 rounded px-1.5 -mx-1.5 hover:bg-white/10 transition-colors group"
                       >
-                        <span className="text-[11px] font-mono text-white/60 shrink-0 mt-px">
+                        <span className="text-[10px] font-mono text-white/50 shrink-0 mt-px">
                           P{i + 1}.{pi + 1}
                         </span>
-                        <span className="text-[12px] text-white/90 group-hover:text-white group-hover:underline leading-tight">
+                        <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
                           {ph.name}
                         </span>
                       </button>
                     ))
                   ) : (
-                    <p className="text-[11px] text-white/50 py-2">Keine Phasen</p>
+                    <p className="text-[10px] text-white/40 py-1">Keine Phasen</p>
                   )}
-                  {/* Placeholder space for future KPIs */}
-                  <div className="pt-2 border-t border-white/10 mt-2">
-                    <p className="text-[10px] text-white/30 italic">KPIs</p>
+                  {/* KPI placeholder */}
+                  <div className="pt-1.5 border-t border-white/10 mt-1.5">
+                    <p className="text-[9px] text-white/25 italic">KPIs</p>
                   </div>
                 </div>
               </div>
@@ -122,7 +128,7 @@ export function ProcessHouseView({
 
       {/* Support processes — foundation row */}
       {supportProcesses.length > 0 && (
-        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
+        <div className="grid gap-0 mt-0" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
           {supportProcesses.map((proc, i) => {
             const isHovered = hoveredId === proc.id
             return (
@@ -132,11 +138,11 @@ export function ProcessHouseView({
                 onClick={() => onProcessClick?.(proc.id)}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className={`rounded-lg px-4 py-4 text-center transition-opacity ${isHovered ? 'opacity-80' : ''}`}
+                className={`px-3 py-3 text-center transition-opacity ${isHovered ? 'opacity-80' : ''} ${i > 0 ? 'border-l border-white/20' : ''}`}
                 style={{ background: 'var(--brand-accent, #F3A917)' }}
               >
-                <p className="text-sm font-bold text-white">S{i + 1}</p>
-                <p className="text-xs text-white/85 mt-0.5">{proc.menuLabel}</p>
+                <p className="text-xs font-bold text-white">S{i + 1}</p>
+                <p className="text-[11px] text-white/85 mt-0.5">{proc.menuLabel}</p>
               </button>
             )
           })}
