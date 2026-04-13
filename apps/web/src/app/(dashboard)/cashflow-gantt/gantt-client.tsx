@@ -335,7 +335,8 @@ export function GanttClient({ projects, events, currency }: Props) {
             )
 
             if (viewMode === 'cashflow') {
-              // Cashflow view
+              // Cashflow view — use budget_date for position + sort (matches project card)
+              // and displayAmount (actual > scheduled > budget) for cumulative values
               let cumulative = 0
               const sorted = [...projEvents]
                 .filter(e => e.budget_date != null)
@@ -344,20 +345,20 @@ export function GanttClient({ projects, events, currency }: Props) {
               const segments: Array<{ x: number; w: number; positive: boolean }> = []
               for (let ei = 0; ei < sorted.length; ei++) {
                 const evt = sorted[ei]!
-                const d = displayDate(evt)!
-                const evtDate = new Date(d)
-                if (evtDate > maxDate) break
-                const x = Math.max(daysBetween(minDate, evtDate) * dayWidth, 0)
+                const budgetDate = new Date(evt.budget_date!)
+                if (budgetDate > maxDate) break
+                const x = Math.max(daysBetween(minDate, budgetDate) * dayWidth, 0)
                 const amt = displayAmount(evt)
                 cumulative += evt.direction === 'income' ? amt : -amt
 
-                const nextD = ei < sorted.length - 1 ? displayDate(sorted[ei + 1]!) : null
-                const nextX = nextD
-                  ? Math.min(daysBetween(minDate, new Date(nextD)) * dayWidth, chartWidth)
+                // Next segment position based on next event's budget_date
+                const nextBd = ei < sorted.length - 1 ? sorted[ei + 1]!.budget_date : null
+                const nextX = nextBd
+                  ? Math.min(daysBetween(minDate, new Date(nextBd)) * dayWidth, chartWidth)
                   : Math.min(x + dayWidth * 14, chartWidth)
                 const w = Math.max(nextX - x, 3)
 
-                if (evtDate >= minDate) {
+                if (budgetDate >= minDate) {
                   segments.push({ x, w, positive: cumulative >= 0 })
                 }
               }
