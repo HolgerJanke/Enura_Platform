@@ -194,10 +194,6 @@ export function ProcessHouseView({
           supportProcesses.map((proc, i) => {
             const x = CONTENT_X + i * (foundW + FOUND_GAP)
             const isHovered = hoveredId === proc.id
-            // Pentagon (house shape): rect + triangle roof
-            const houseRoofH = 20
-            const bodyY = foundY + houseRoofH
-            const bodyH = FOUND_H - houseRoofH
             return (
               <g
                 key={proc.id}
@@ -206,17 +202,12 @@ export function ProcessHouseView({
                 onMouseLeave={() => setHoveredId(null)}
                 className="cursor-pointer"
               >
-                {/* Small roof */}
-                <polygon
-                  points={`${x + foundW / 2},${foundY} ${x},${bodyY} ${x + foundW},${bodyY}`}
-                  style={{ fill: COLORS.foundFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
-                />
-                {/* Body */}
                 <rect
                   x={x}
-                  y={bodyY}
+                  y={foundY}
                   width={foundW}
-                  height={bodyH}
+                  height={FOUND_H}
+                  rx={8}
                   style={{ fill: COLORS.foundFill, opacity: isHovered ? 0.85 : 1, transition: 'opacity 0.15s' }}
                   stroke={isHovered ? COLORS.hoverStroke : 'none'}
                   strokeWidth={isHovered ? 2 : 0}
@@ -224,7 +215,7 @@ export function ProcessHouseView({
                 {/* Label */}
                 <text
                   x={x + foundW / 2}
-                  y={bodyY + 15}
+                  y={foundY + FOUND_H / 2 - 10}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={COLORS.foundText}
@@ -235,7 +226,7 @@ export function ProcessHouseView({
                 </text>
                 <text
                   x={x + foundW / 2}
-                  y={bodyY + 38}
+                  y={foundY + FOUND_H / 2 + 12}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={COLORS.foundText}
