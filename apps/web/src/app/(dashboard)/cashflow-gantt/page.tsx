@@ -21,11 +21,11 @@ export default async function CashflowGanttPage() {
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
     db.from('liquidity_event_instances')
-      .select('id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id')
+      .select('id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id', { count: 'exact' })
       .eq('company_id', session.companyId)
       .eq('marker_type', 'event')
       .order('budget_date')
-      .limit(5000),
+      .range(0, 4999),
     db.from('company_currency_settings')
       .select('base_currency')
       .eq('company_id', session.companyId)
