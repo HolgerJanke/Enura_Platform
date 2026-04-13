@@ -337,13 +337,17 @@ export function GanttClient({ projects, events, currency }: Props) {
                 .sort((a, b) => (displayDate(a) ?? '').localeCompare(displayDate(b) ?? ''))
 
               // Step 1: Calculate cumulative cashflow at each event point
-              const points: Array<{ x: number; positive: boolean }> = []
+              const points: Array<{ x: number; positive: boolean; debug?: string }> = []
               for (const evt of sorted) {
                 const d = displayDate(evt)!
                 const x = daysBetween(minDate, new Date(d)) * dayWidth
                 const amt = displayAmount(evt)
                 cumulative += evt.direction === 'income' ? amt : -amt
-                points.push({ x, positive: cumulative >= 0 })
+                points.push({ x, positive: cumulative >= 0, debug: `${evt.step_name} ${evt.direction} ${amt} cum=${cumulative} date=${d}` })
+              }
+              if (proj.customer_name.includes('Keller')) {
+                console.log('Werner Keller points:', points.map(p => p.debug))
+                console.log('Werner Keller segments:', points.map(p => ({ x: p.x, positive: p.positive })))
               }
 
               // Step 2: Build non-overlapping segments between consecutive points
