@@ -72,8 +72,11 @@ export function GanttClient({ projects, events, currency }: Props) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<ViewMode>('progress')
   const [timeRange, setTimeRange] = useState<TimeRange>('6m')
-  const [customFrom, setCustomFrom] = useState('')
-  const [customTo, setCustomTo] = useState('')
+  const defaultFrom = new Date(); defaultFrom.setMonth(defaultFrom.getMonth() - 3)
+  const defaultTo = new Date(); defaultTo.setMonth(defaultTo.getMonth() + 6)
+  const [customFrom, setCustomFrom] = useState(defaultFrom.toISOString().split('T')[0]!)
+  const [customTo, setCustomTo] = useState(defaultTo.toISOString().split('T')[0]!)
+  const [projectFilter, setProjectFilter] = useState('')
   const [hoveredEvent, setHoveredEvent] = useState<LiqEvent | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
@@ -193,8 +196,8 @@ export function GanttClient({ projects, events, currency }: Props) {
     <div>
       {/* Controls */}
       <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        {/* View switch */}
-        <div className="flex items-center gap-2">
+        {/* View switch + project filter */}
+        <div className="flex items-center gap-3">
           {(['progress', 'cashflow'] as const).map((mode) => (
             <button
               key={mode}
@@ -207,6 +210,22 @@ export function GanttClient({ projects, events, currency }: Props) {
               {mode === 'progress' ? 'Fortschritt' : 'Cashflow'}
             </button>
           ))}
+          {/* Project filter */}
+          <div className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1">
+            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value)}
+              placeholder="Projekt filtern..."
+              className="w-32 text-xs text-gray-900 placeholder-gray-400 outline-none bg-transparent"
+            />
+            {projectFilter && (
+              <button type="button" onClick={() => setProjectFilter('')} className="text-gray-400 hover:text-gray-600 text-xs">×</button>
+            )}
+          </div>
         </div>
 
         {/* Time range slicer */}
@@ -290,7 +309,19 @@ export function GanttClient({ projects, events, currency }: Props) {
           )}
 
           {/* Project rows */}
-          {projects.map((proj, rowIdx) => {
+          {projects.filter(p => {
+            // Text filter
+            if (projectFilter && !p.customer_name.toLowerCase().includes(projectFilter.toLowerCase())
+              && !p.title.toLowerCase().includes(projectFilter.toLowerCase())) return false
+            // Only show projects with events in visible range
+            const evts = eventsByProject.get(p.id) ?? []
+            return evts.some(e => {
+              const d = displayDate(e)
+              if (!d) return false
+              const date = new Date(d)
+              return date >= minDate && date <= maxDate
+            })
+          }).map((proj, rowIdx) => {
             const projEvents = eventsByProject.get(proj.id) ?? []
 
             // Sticky project name for this row
