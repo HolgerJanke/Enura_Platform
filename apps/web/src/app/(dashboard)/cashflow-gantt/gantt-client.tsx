@@ -129,10 +129,11 @@ export function GanttClient({ projects, events, currency }: Props) {
     maxDate.setMonth(maxDate.getMonth() + 12)
   }
   const totalDays = Math.max(daysBetween(minDate, maxDate), 1)
-  // Fill screen: assume ~800px available width for the timeline area
-  const screenFillWidth = 800
-  const dayWidth = Math.max(Math.round(screenFillWidth / totalDays), totalDays <= 42 ? 20 : 3)
-  const chartWidth = totalDays * dayWidth
+  // Fill screen width: chart should always span the available area
+  // Use CSS 100% for the container, calculate dayWidth to fill ~900px
+  const targetWidth = 900
+  const dayWidth = Math.max(Math.round(targetWidth / totalDays), 2)
+  const chartWidth = Math.max(totalDays * dayWidth, targetWidth)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -304,35 +305,33 @@ export function GanttClient({ projects, events, currency }: Props) {
               const projEvents = eventsByProject.get(proj.id) ?? []
 
               if (viewMode === 'cashflow') {
-                // Cashflow view: horizontal bar showing cumulative
+                // Cashflow view: continuous bar that changes color at each event
                 let cumulative = 0
+                const sorted = [...projEvents]
+                  .filter(e => displayDate(e) != null)
+                  .sort((a, b) => (displayDate(a) ?? '').localeCompare(displayDate(b) ?? ''))
+
+                // Build segments between consecutive events
                 const segments: Array<{ x: number; w: number; positive: boolean }> = []
-                const sorted = [...projEvents].sort((a, b) => {
-                  const da = displayDate(a) ?? '9999'
-                  const db = displayDate(b) ?? '9999'
-                  return da.localeCompare(db)
-                })
-
-                let prevX = 0
-                for (const evt of sorted) {
-                  const d = displayDate(evt)
-                  if (!d) continue
-                  const x = daysBetween(minDate, new Date(d)) * dayWidth
+                for (let ei = 0; ei < sorted.length; ei++) {
+                  const evt = sorted[ei]!
+                  const d = displayDate(evt)!
+                  const evtDate = new Date(d)
+                  if (evtDate > maxDate) break
+                  const x = Math.max(daysBetween(minDate, evtDate) * dayWidth, 0)
                   const amt = displayAmount(evt)
-                  const signed = evt.direction === 'income' ? amt : -amt
+                  cumulative += evt.direction === 'income' ? amt : -amt
 
-                  if (prevX < x && segments.length > 0) {
-                    segments[segments.length - 1]!.w = x - segments[segments.length - 1]!.x
+                  // Width extends to next event or end of chart
+                  const nextD = ei < sorted.length - 1 ? displayDate(sorted[ei + 1]!) : null
+                  const nextX = nextD
+                    ? Math.min(daysBetween(minDate, new Date(nextD)) * dayWidth, chartWidth)
+                    : Math.min(x + dayWidth * 14, chartWidth)
+                  const w = Math.max(nextX - x, 3)
+
+                  if (evtDate >= minDate) {
+                    segments.push({ x, w, positive: cumulative >= 0 })
                   }
-
-                  cumulative += signed
-                  segments.push({ x, w: 8, positive: cumulative >= 0 })
-                  prevX = x
-                }
-                // Extend last segment
-                if (segments.length > 0) {
-                  const last = segments[segments.length - 1]!
-                  last.w = Math.max(last.w, 20)
                 }
 
                 return (
@@ -349,12 +348,15 @@ export function GanttClient({ projects, events, currency }: Props) {
               }
 
               // Progress view: individual event blocks
+              const blockSize = Math.max(Math.min(dayWidth, 16), 10)
               return (
                 <div key={proj.id} className="h-7 border-b border-gray-50 relative">
                   {projEvents.map((evt, evtIdx) => {
                     const d = displayDate(evt)
                     if (!d) return null
-                    const x = daysBetween(minDate, new Date(d)) * dayWidth
+                    const evtDate = new Date(d)
+                    if (evtDate < minDate || evtDate > maxDate) return null
+                    const x = daysBetween(minDate, evtDate) * dayWidth
                     const isIncome = evt.direction === 'income'
                     const hasActual = evt.actual_date != null
                     const colors = isIncome ? INCOME_COLORS : EXPENSE_COLORS
@@ -366,8 +368,8 @@ export function GanttClient({ projects, events, currency }: Props) {
                         key={evt.id}
                         className="absolute top-1 flex items-center justify-center rounded-sm cursor-pointer transition-transform hover:scale-110 hover:z-20"
                         style={{
-                          left: x - 10,
-                          width: 20,
+                          left: x,
+                          width: blockSize,
                           height: 20,
                           background: hasActual ? bg : 'transparent',
                           border: hasActual ? 'none' : `2px solid ${bg}`,
