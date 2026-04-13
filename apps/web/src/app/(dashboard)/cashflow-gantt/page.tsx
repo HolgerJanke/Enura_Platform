@@ -14,18 +14,12 @@ export default async function CashflowGanttPage() {
   const db = createSupabaseServiceClient()
 
   // Fetch active projects with their liquidity events
-  const [projectsRes, eventsRes, currencyRes] = await Promise.all([
+  const [projectsRes, currencyRes] = await Promise.all([
     db.from('projects')
       .select('id, title, customer_name, address_city, project_value, status')
       .eq('company_id', session.companyId)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
-    db.from('liquidity_event_instances')
-      .select('id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id', { count: 'exact' })
-      .eq('company_id', session.companyId)
-      .eq('marker_type', 'event')
-      .order('budget_date')
-      .range(0, 4999),
     db.from('company_currency_settings')
       .select('base_currency')
       .eq('company_id', session.companyId)
@@ -37,14 +31,32 @@ export default async function CashflowGanttPage() {
     project_value: number | null; status: string
   }>
 
-  const events = (eventsRes.data ?? []) as Array<{
+  // Fetch events in batches to bypass Supabase 1000-row limit
+  const allEvents: Array<{
     id: string; project_id: string; step_name: string; direction: string
     budget_amount: number | null; budget_date: string | null
     scheduled_amount: number | null; scheduled_date: string | null
     actual_amount: number | null; actual_date: string | null
     marker_type: string; invoice_id: string | null
-  }>
+  }> = []
 
+  let offset = 0
+  const batchSize = 1000
+  while (true) {
+    const { data: batch } = await db
+      .from('liquidity_event_instances')
+      .select('id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id')
+      .eq('company_id', session.companyId)
+      .eq('marker_type', 'event')
+      .order('budget_date')
+      .range(offset, offset + batchSize - 1)
+    const rows = (batch ?? []) as typeof allEvents
+    allEvents.push(...rows)
+    if (rows.length < batchSize) break
+    offset += batchSize
+  }
+
+  const events = allEvents
   const currency = (currencyRes.data as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
 
   // Filter projects that have events
