@@ -336,31 +336,26 @@ export function GanttClient({ projects, events, currency }: Props) {
                 .filter(e => displayDate(e) != null)
                 .sort((a, b) => (displayDate(a) ?? '').localeCompare(displayDate(b) ?? ''))
 
-              // Build segments: each spans from this event's date to the next event's date
-              const segments: Array<{ x: number; w: number; positive: boolean }> = []
-              for (let ei = 0; ei < sorted.length; ei++) {
-                const evt = sorted[ei]!
+              // Step 1: Calculate cumulative cashflow at each event point
+              const points: Array<{ x: number; positive: boolean }> = []
+              for (const evt of sorted) {
                 const d = displayDate(evt)!
                 const x = daysBetween(minDate, new Date(d)) * dayWidth
                 const amt = displayAmount(evt)
                 cumulative += evt.direction === 'income' ? amt : -amt
+                points.push({ x, positive: cumulative >= 0 })
+              }
 
-                // Segment extends to next event's displayDate
-                const nextD = ei < sorted.length - 1 ? displayDate(sorted[ei + 1]!) : null
-                const nextX = nextD
-                  ? daysBetween(minDate, new Date(nextD)) * dayWidth
-                  : x + dayWidth * 7
-                const segW = Math.max(nextX - x, 3)
-
-                // Clip to visible area
-                const clippedX = Math.max(x, 0)
-                const clippedEnd = Math.min(x + segW, chartWidth)
-                if (clippedEnd > 0 && clippedX < chartWidth) {
-                  segments.push({
-                    x: clippedX,
-                    w: Math.max(clippedEnd - clippedX, 2),
-                    positive: cumulative >= 0,
-                  })
+              // Step 2: Build non-overlapping segments between consecutive points
+              const segments: Array<{ x: number; w: number; positive: boolean }> = []
+              for (let pi = 0; pi < points.length; pi++) {
+                const startX = points[pi]!.x
+                const endX = pi < points.length - 1 ? points[pi + 1]!.x : startX + dayWidth * 7
+                // Only render if segment overlaps visible area [0, chartWidth]
+                const visStart = Math.max(startX, 0)
+                const visEnd = Math.min(endX, chartWidth)
+                if (visEnd > visStart) {
+                  segments.push({ x: visStart, w: visEnd - visStart, positive: points[pi]!.positive })
                 }
               }
 
