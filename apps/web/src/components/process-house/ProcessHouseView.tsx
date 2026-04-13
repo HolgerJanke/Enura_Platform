@@ -45,10 +45,10 @@ export function ProcessHouseView({
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   return (
-    <div>
+    <div className="space-y-2">
       {/* Roof — Triangle with M-processes */}
       {managementProcesses.length > 0 && (
-        <div className="relative mb-0">
+        <div className="relative">
           <svg viewBox="0 0 800 90" className="w-full" preserveAspectRatio="none">
             <polygon
               points="400,0 0,90 800,90"
@@ -74,7 +74,7 @@ export function ProcessHouseView({
 
       {/* Primary processes — vertical columns (sandwich middle) */}
       {primaryProcesses.length > 0 && (
-        <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
+        <div className="grid gap-0 rounded-lg overflow-hidden" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
           {primaryProcesses.map((proc, i) => {
             const isHovered = hoveredId === proc.id
             return (
@@ -129,7 +129,7 @@ export function ProcessHouseView({
 
       {/* Support processes — foundation columns with phases */}
       {supportProcesses.length > 0 && (
-        <div className="grid gap-0 mt-0" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
+        <div className="grid gap-0 rounded-lg overflow-hidden" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
           {supportProcesses.map((proc, i) => {
             const isHovered = hoveredId === proc.id
             return (
