@@ -24,7 +24,8 @@ export default async function CashflowGanttPage() {
       .select('id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id')
       .eq('company_id', session.companyId)
       .eq('marker_type', 'event')
-      .order('budget_date'),
+      .order('budget_date')
+      .limit(5000),
     db.from('company_currency_settings')
       .select('base_currency')
       .eq('company_id', session.companyId)
