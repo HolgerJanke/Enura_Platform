@@ -306,10 +306,11 @@ export function GanttClient({ projects, events, currency }: Props) {
 
               if (viewMode === 'cashflow') {
                 // Cashflow view: continuous bar that changes color at each event
+                // Sort by budget_date (process-defined order) to match project card
                 let cumulative = 0
                 const sorted = [...projEvents]
-                  .filter(e => displayDate(e) != null)
-                  .sort((a, b) => (displayDate(a) ?? '').localeCompare(displayDate(b) ?? ''))
+                  .filter(e => e.budget_date != null)
+                  .sort((a, b) => (a.budget_date ?? '').localeCompare(b.budget_date ?? ''))
 
                 // Build segments between consecutive events
                 const segments: Array<{ x: number; w: number; positive: boolean }> = []
