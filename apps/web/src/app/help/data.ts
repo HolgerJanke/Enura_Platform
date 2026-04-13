@@ -70,6 +70,7 @@ export const PATH_TO_ARTICLE: Record<string, { level: string; slug: string }> = 
   '/finance': { level: 'company', slug: 'finanzen-cashflow' },
   '/liquidity': { level: 'company', slug: 'liquiditaetsplanung' },
   '/anomalies': { level: 'company', slug: 'anomalien' },
+  '/cashflow-gantt': { level: 'company', slug: 'liquiditaetsplanung' },
   '/reports': { level: 'company', slug: 'tagesberichte' },
   '/innendienst': { level: 'company', slug: 'projekte-kanban' },
   // Company settings
