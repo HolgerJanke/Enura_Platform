@@ -14,6 +14,8 @@ export interface ProcessPhaseItem {
   inCount?: number
   outCount?: number
   portfolioValue?: number
+  inTrend?: 'up' | 'down' | 'same'
+  outTrend?: 'up' | 'down' | 'same'
 }
 
 export interface ProcessHouseItem {
@@ -117,14 +119,16 @@ export function ProcessHouseView({
                             {ph.name}
                           </span>
                         </button>
-                        {/* Phase KPIs: In/Out + Portfolio Value */}
+                        {/* Phase KPIs: In/Out with trend arrows + Portfolio Value */}
                         {(ph.inCount != null || ph.outCount != null) && (
                           <div className="flex items-center gap-2 pl-6 pb-1 text-[9px]">
                             <span className="text-white/50">
-                              In: <span className="text-white/80 font-medium">{ph.inCount ?? 0}</span>
+                              In: {ph.inTrend === 'up' ? <span className="text-green-300">↑</span> : ph.inTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
+                              {' '}<span className="text-white/80 font-medium">{ph.inCount ?? 0}</span>
                             </span>
                             <span className="text-white/50">
-                              Out: <span className="text-white/80 font-medium">{ph.outCount ?? 0}</span>
+                              Out: {ph.outTrend === 'up' ? <span className="text-green-300">↑</span> : ph.outTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
+                              {' '}<span className="text-white/80 font-medium">{ph.outCount ?? 0}</span>
                             </span>
                             {(ph.portfolioValue ?? 0) > 0 && (
                               <span className="text-white/50">

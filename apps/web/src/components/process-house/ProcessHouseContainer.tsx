@@ -128,6 +128,29 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     }
   }
 
+  // Fetch last month's snapshot for trend comparison
+  const lastMonthDate = new Date()
+  lastMonthDate.setDate(lastMonthDate.getDate() - 30)
+  const lastMonthStr = lastMonthDate.toISOString().split('T')[0]!
+
+  const allStepIds = [...projectCountsByStep.keys()]
+  let lastMonthByStep = new Map<string, { count: number; value: number }>()
+
+  if (allStepIds.length > 0) {
+    const { data: snapshotData } = await serviceDb
+      .from('step_kpi_snapshots')
+      .select('step_id, project_count, portfolio_value')
+      .in('step_id', allStepIds)
+      .eq('snapshot_date', lastMonthStr)
+
+    for (const row of (snapshotData ?? []) as Array<Record<string, unknown>>) {
+      lastMonthByStep.set(row['step_id'] as string, {
+        count: Number(row['project_count'] ?? 0),
+        value: Number(row['portfolio_value'] ?? 0),
+      })
+    }
+  }
+
   // Build toItem with phase KPIs for P-processes
   const toItemWithKpis = (p: ProcessRow) => {
     const item = toItem(p)
@@ -153,11 +176,19 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
         portfolioValue += (projectCountsByStep.get(sid) ?? { count: 0, value: 0 }).value
       }
 
+      // Last month data for trends
+      const lastMonthFirstStep = lastMonthByStep.get(phaseStepIds[0]!) ?? { count: 0, value: 0 }
+      const lastMonthLastStep = lastMonthByStep.get(phaseStepIds[phaseStepIds.length - 1]!) ?? { count: 0, value: 0 }
+      const inTrend = firstStepData.count > lastMonthFirstStep.count ? 'up' : firstStepData.count < lastMonthFirstStep.count ? 'down' : 'same'
+      const outTrend = lastStepData.count > lastMonthLastStep.count ? 'up' : lastStepData.count < lastMonthLastStep.count ? 'down' : 'same'
+
       return {
         ...phase,
         inCount: firstStepData.count,
         outCount: lastStepData.count,
         portfolioValue,
+        inTrend: inTrend as 'up' | 'down' | 'same',
+        outTrend: outTrend as 'up' | 'down' | 'same',
       }
     })
 
