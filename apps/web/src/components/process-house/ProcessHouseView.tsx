@@ -92,9 +92,12 @@ export function ProcessHouseView({
       {/* Primary processes — white card columns with colored headers */}
       {primaryProcesses.length > 0 && (
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
-          {primaryProcesses.map((proc, i) => (
+          {primaryProcesses.map((proc, i) => {
+            const totalProjects = proc.phases.reduce((s, ph) => s + (ph.inCount ?? 0) + (ph.outCount ?? 0), 0)
+            const totalValue = proc.phases.reduce((s, ph) => s + (ph.portfolioValue ?? 0), 0)
+            return (
             <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden bg-white shadow-sm">
-              {/* Colored header */}
+              {/* Colored header with totals */}
               <button
                 type="button"
                 onClick={() => onProcessClick?.(proc.id)}
@@ -103,7 +106,13 @@ export function ProcessHouseView({
                 className={`w-full px-4 py-2.5 text-left transition-opacity ${hoveredId === proc.id ? 'opacity-90' : ''}`}
                 style={{ background: 'var(--brand-primary, #1A56DB)' }}
               >
-                <p className="text-sm font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
+                  <div className="flex items-center gap-3 text-[11px] text-white/90">
+                    {totalProjects > 0 && <span>{totalProjects} Projekte</span>}
+                    {totalValue > 0 && <span className="font-mono">{currency} {totalValue.toLocaleString('de-CH', { maximumFractionDigits: 0 })}</span>}
+                  </div>
+                </div>
               </button>
 
               {/* Phases on white background */}
@@ -148,7 +157,8 @@ export function ProcessHouseView({
                 )}
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
