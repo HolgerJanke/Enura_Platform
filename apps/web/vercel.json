@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/step-kpi-snapshot",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
