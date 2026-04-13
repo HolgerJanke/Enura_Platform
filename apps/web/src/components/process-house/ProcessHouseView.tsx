@@ -126,24 +126,49 @@ export function ProcessHouseView({
         </div>
       )}
 
-      {/* Support processes — foundation row */}
+      {/* Support processes — foundation columns with phases */}
       {supportProcesses.length > 0 && (
         <div className="grid gap-0 mt-0" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
           {supportProcesses.map((proc, i) => {
             const isHovered = hoveredId === proc.id
             return (
-              <button
+              <div
                 key={proc.id}
-                type="button"
-                onClick={() => onProcessClick?.(proc.id)}
+                className={`overflow-hidden ${i > 0 ? 'border-l border-white/20' : ''}`}
+                style={{ background: 'var(--brand-accent, #F3A917)' }}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className={`px-3 py-3 text-center transition-opacity ${isHovered ? 'opacity-80' : ''} ${i > 0 ? 'border-l border-white/20' : ''}`}
-                style={{ background: 'var(--brand-accent, #F3A917)' }}
               >
-                <p className="text-xs font-bold text-white">S{i + 1}</p>
-                <p className="text-[11px] text-white/85 mt-0.5">{proc.menuLabel}</p>
-              </button>
+                {/* Header */}
+                <button
+                  type="button"
+                  onClick={() => onProcessClick?.(proc.id)}
+                  className={`w-full px-3 py-2.5 text-left transition-opacity ${isHovered ? 'opacity-80' : ''}`}
+                  style={{ background: 'rgba(0,0,0,0.12)' }}
+                >
+                  <p className="text-xs font-bold text-white">S{i + 1} — {proc.menuLabel}</p>
+                </button>
+                {/* Phases */}
+                {proc.phases.length > 0 && (
+                  <div className="px-3 py-2 space-y-0.5">
+                    {proc.phases.map((ph, pi) => (
+                      <button
+                        key={ph.id}
+                        type="button"
+                        onClick={() => onPhaseClick?.(proc.id, ph.id)}
+                        className="w-full text-left flex items-start gap-1.5 py-1 rounded px-1.5 -mx-1.5 hover:bg-white/10 transition-colors group"
+                      >
+                        <span className="text-[10px] font-mono text-white/50 shrink-0 mt-px">
+                          S{i + 1}.{pi + 1}
+                        </span>
+                        <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
+                          {ph.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )
           })}
         </div>
