@@ -96,7 +96,7 @@ export function ProcessHouseView({
             const totalProjects = proc.phases.reduce((s, ph) => s + (ph.inCount ?? 0) + (ph.outCount ?? 0), 0)
             const totalValue = proc.phases.reduce((s, ph) => s + (ph.portfolioValue ?? 0), 0)
             return (
-            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden bg-white shadow-sm">
+            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ background: 'color-mix(in srgb, var(--brand-primary, #1A56DB) 8%, white)' }}>
               {/* Colored header with totals */}
               <button
                 type="button"
@@ -123,9 +123,8 @@ export function ProcessHouseView({
                       key={ph.id}
                       type="button"
                       onClick={() => onPhaseClick?.(proc.id, ph.id)}
-                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+                      className="w-full text-left px-4 py-2 hover:bg-white/60 transition-colors group"
                     >
-                      {/* Phase name */}
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-gray-400 shrink-0">
                           P{i + 1}.{pi + 1}
@@ -133,23 +132,19 @@ export function ProcessHouseView({
                         <span className="text-[13px] text-gray-900 font-medium group-hover:text-blue-700 group-hover:underline leading-tight">
                           {ph.name}
                         </span>
+                        {/* KPIs inline */}
+                        {(ph.inCount != null || ph.outCount != null) && (
+                          <span className="flex items-center gap-2 ml-auto text-[11px] shrink-0">
+                            <span className="text-gray-400">In:</span><TrendArrow trend={ph.inTrend} value={ph.inCount ?? 0} />
+                            <span className="text-gray-400">Out:</span><TrendArrow trend={ph.outTrend} value={ph.outCount ?? 0} />
+                            {(ph.portfolioValue ?? 0) > 0 && (
+                              <span className="text-gray-500 font-mono">
+                                {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
+                              </span>
+                            )}
+                          </span>
+                        )}
                       </div>
-                      {/* KPIs as second line */}
-                      {(ph.inCount != null || ph.outCount != null) && (
-                        <div className="flex items-center gap-3 mt-1 pl-7 text-[11px]">
-                          <span className="text-gray-500">
-                            In: <TrendArrow trend={ph.inTrend} value={ph.inCount ?? 0} />
-                          </span>
-                          <span className="text-gray-500">
-                            Out: <TrendArrow trend={ph.outTrend} value={ph.outCount ?? 0} />
-                          </span>
-                          {(ph.portfolioValue ?? 0) > 0 && (
-                            <span className="text-gray-500 font-mono">
-                              {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </button>
                   ))
                 ) : (
@@ -166,7 +161,7 @@ export function ProcessHouseView({
       {supportProcesses.length > 0 && (
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
           {supportProcesses.map((proc, i) => (
-            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden bg-white shadow-sm">
+            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ background: 'color-mix(in srgb, var(--brand-accent, #F3A917) 8%, white)' }}>
               {/* Colored header */}
               <button
                 type="button"
