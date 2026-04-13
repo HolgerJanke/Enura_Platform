@@ -14,7 +14,9 @@
       "Bash(curl -s -I \"https://www.enura-group.com/\")",
       "Read(//dev/**)",
       "Bash(curl -s \"https://www.enura-group.com/finanzplanung/eingang\" -H \"Cookie: $\\(cat /dev/null\\)\")",
-      "Bash(curl -s \"https://www.enura-group.com/finanzplanung/eingang\")"
+      "Bash(curl -s \"https://www.enura-group.com/finanzplanung/eingang\")",
+      "Bash(curl -s \"https://www.enura-group.com/analytics\")",
+      "Bash(npx next:*)"
     ],
     "additionalDirectories": [
       "/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web/src/app/(dashboard)/projects"
