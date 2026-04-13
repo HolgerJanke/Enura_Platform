@@ -38,6 +38,16 @@ interface ProcessHouseViewProps {
 }
 
 // ---------------------------------------------------------------------------
+// Trend arrow component
+// ---------------------------------------------------------------------------
+
+function TrendArrow({ trend, value }: { trend?: 'up' | 'down' | 'same'; value: number }) {
+  if (trend === 'up') return <span className="text-green-600 font-semibold">↑{value}</span>
+  if (trend === 'down') return <span className="text-red-600 font-semibold">↓{value}</span>
+  return <span className="text-gray-400 font-medium">→{value}</span>
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -79,123 +89,110 @@ export function ProcessHouseView({
         </div>
       )}
 
-      {/* Primary processes — vertical columns (sandwich middle) */}
+      {/* Primary processes — white card columns with colored headers */}
       {primaryProcesses.length > 0 && (
-        <div className="grid gap-0 rounded-lg overflow-hidden" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
-          {primaryProcesses.map((proc, i) => {
-            const isHovered = hoveredId === proc.id
-            return (
-              <div
-                key={proc.id}
-                className={`overflow-hidden ${i > 0 ? 'border-l border-white/20' : ''}`}
-                style={{ background: 'var(--brand-primary, #1A56DB)' }}
+        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${primaryProcesses.length}, 1fr)` }}>
+          {primaryProcesses.map((proc, i) => (
+            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden bg-white shadow-sm">
+              {/* Colored header */}
+              <button
+                type="button"
+                onClick={() => onProcessClick?.(proc.id)}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
+                className={`w-full px-4 py-2.5 text-left transition-opacity ${hoveredId === proc.id ? 'opacity-90' : ''}`}
+                style={{ background: 'var(--brand-primary, #1A56DB)' }}
               >
-                {/* Process title header */}
-                <button
-                  type="button"
-                  onClick={() => onProcessClick?.(proc.id)}
-                  className={`w-full px-3 py-2.5 text-left transition-opacity ${isHovered ? 'opacity-80' : ''}`}
-                  style={{ background: 'rgba(0,0,0,0.15)' }}
-                >
-                  <p className="text-xs font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
-                </button>
+                <p className="text-sm font-bold text-white">P{i + 1} — {proc.menuLabel}</p>
+              </button>
 
-                {/* Phases with KPIs */}
-                <div className="px-3 py-2 space-y-1">
-                  {proc.phases.length > 0 ? (
-                    proc.phases.map((ph, pi) => (
-                      <div key={ph.id} className="rounded px-1.5 -mx-1.5 hover:bg-white/10 transition-colors">
-                        <button
-                          type="button"
-                          onClick={() => onPhaseClick?.(proc.id, ph.id)}
-                          className="w-full text-left py-1 group"
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-mono text-white/50 shrink-0">
-                              P{i + 1}.{pi + 1}
-                            </span>
-                            <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
-                              {ph.name}
-                            </span>
-                            {/* KPIs inline after title */}
-                            {(ph.inCount != null || ph.outCount != null) && (
-                              <span className="flex items-center gap-1.5 ml-auto text-[8px] shrink-0">
-                                <span className="text-white/40">
-                                  {ph.inTrend === 'up' ? <span className="text-green-300">↑</span> : ph.inTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
-                                  <span className="text-white/70 font-medium">{ph.inCount ?? 0}</span>
-                                </span>
-                                <span className="text-white/40">
-                                  {ph.outTrend === 'up' ? <span className="text-green-300">↑</span> : ph.outTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
-                                  <span className="text-white/70 font-medium">{ph.outCount ?? 0}</span>
-                                </span>
-                                {(ph.portfolioValue ?? 0) > 0 && (
-                                  <span className="text-white/60 font-mono">
-                                    {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </button>
+              {/* Phases on white background */}
+              <div className="divide-y divide-gray-100">
+                {proc.phases.length > 0 ? (
+                  proc.phases.map((ph, pi) => (
+                    <button
+                      key={ph.id}
+                      type="button"
+                      onClick={() => onPhaseClick?.(proc.id, ph.id)}
+                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+                    >
+                      {/* Phase name */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-gray-400 shrink-0">
+                          P{i + 1}.{pi + 1}
+                        </span>
+                        <span className="text-[13px] text-gray-900 font-medium group-hover:text-blue-700 group-hover:underline leading-tight">
+                          {ph.name}
+                        </span>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-[10px] text-white/40 py-1">Keine Phasen</p>
-                  )}
-                </div>
+                      {/* KPIs as second line */}
+                      {(ph.inCount != null || ph.outCount != null) && (
+                        <div className="flex items-center gap-3 mt-1 pl-7 text-[11px]">
+                          <span className="text-gray-500">
+                            In: <TrendArrow trend={ph.inTrend} value={ph.inCount ?? 0} />
+                          </span>
+                          <span className="text-gray-500">
+                            Out: <TrendArrow trend={ph.outTrend} value={ph.outCount ?? 0} />
+                          </span>
+                          {(ph.portfolioValue ?? 0) > 0 && (
+                            <span className="text-gray-500 font-mono">
+                              {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400 px-4 py-3">Keine Phasen</p>
+                )}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Support processes — foundation columns with phases */}
+      {/* Support processes — white card columns with accent headers */}
       {supportProcesses.length > 0 && (
-        <div className="grid gap-0 rounded-lg overflow-hidden" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
-          {supportProcesses.map((proc, i) => {
-            const isHovered = hoveredId === proc.id
-            return (
-              <div
-                key={proc.id}
-                className={`overflow-hidden ${i > 0 ? 'border-l border-white/20' : ''}`}
-                style={{ background: 'var(--brand-accent, #F3A917)' }}
+        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
+          {supportProcesses.map((proc, i) => (
+            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden bg-white shadow-sm">
+              {/* Colored header */}
+              <button
+                type="button"
+                onClick={() => onProcessClick?.(proc.id)}
                 onMouseEnter={() => setHoveredId(proc.id)}
                 onMouseLeave={() => setHoveredId(null)}
+                className={`w-full px-4 py-2.5 text-left transition-opacity ${hoveredId === proc.id ? 'opacity-90' : ''}`}
+                style={{ background: 'var(--brand-accent, #F3A917)' }}
               >
-                {/* Header */}
-                <button
-                  type="button"
-                  onClick={() => onProcessClick?.(proc.id)}
-                  className={`w-full px-3 py-2.5 text-left transition-opacity ${isHovered ? 'opacity-80' : ''}`}
-                  style={{ background: 'rgba(0,0,0,0.12)' }}
-                >
-                  <p className="text-xs font-bold text-white">S{i + 1} — {proc.menuLabel}</p>
-                </button>
-                {/* Phases */}
-                {proc.phases.length > 0 && (
-                  <div className="px-3 py-2 space-y-0.5">
-                    {proc.phases.map((ph, pi) => (
-                      <button
-                        key={ph.id}
-                        type="button"
-                        onClick={() => onPhaseClick?.(proc.id, ph.id)}
-                        className="w-full text-left flex items-start gap-1.5 py-1 rounded px-1.5 -mx-1.5 hover:bg-white/10 transition-colors group"
-                      >
-                        <span className="text-[10px] font-mono text-white/50 shrink-0 mt-px">
+                <p className="text-sm font-bold text-white">S{i + 1} — {proc.menuLabel}</p>
+              </button>
+
+              {/* Steps on white background */}
+              {proc.phases.length > 0 && (
+                <div className="divide-y divide-gray-100">
+                  {proc.phases.map((ph, pi) => (
+                    <button
+                      key={ph.id}
+                      type="button"
+                      onClick={() => onPhaseClick?.(proc.id, ph.id)}
+                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-gray-400 shrink-0">
                           S{i + 1}.{pi + 1}
                         </span>
-                        <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
+                        <span className="text-[13px] text-gray-900 font-medium group-hover:text-blue-700 group-hover:underline leading-tight">
                           {ph.name}
                         </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
