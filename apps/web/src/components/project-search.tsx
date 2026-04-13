@@ -63,7 +63,7 @@ export function ProjectSearch({ companyId }: Props) {
   function handleSelect(id: string) {
     setOpen(false)
     setQuery('')
-    router.push(`/projects/${id}`)
+    router.push(`/projects/${id}?ref=/dashboard`)
   }
 
   return (

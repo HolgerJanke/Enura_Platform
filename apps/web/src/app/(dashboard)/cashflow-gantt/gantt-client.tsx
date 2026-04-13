@@ -263,7 +263,7 @@ export function GanttClient({ projects, events, currency }: Props) {
             <div
               key={proj.id}
               className="h-7 px-3 flex items-center border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => router.push(`/projects/${proj.id}`)}
+              onClick={() => router.push(`/projects/${proj.id}?ref=/cashflow-gantt`)}
             >
               <span className="text-[11px] text-gray-900 truncate">{proj.customer_name}</span>
             </div>
@@ -385,7 +385,7 @@ export function GanttClient({ projects, events, currency }: Props) {
                           if (evt.invoice_id) {
                             router.push(`/finanzplanung/eingang/${evt.invoice_id}`)
                           } else {
-                            router.push(`/projects/${proj.id}`)
+                            router.push(`/projects/${proj.id}?ref=/cashflow-gantt`)
                           }
                         }}
                       >
