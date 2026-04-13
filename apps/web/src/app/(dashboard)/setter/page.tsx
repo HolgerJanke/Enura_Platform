@@ -108,8 +108,8 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="p-4 sm:p-6">
-      <Link href="/analytics" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-        ← Zurück zu Analytics
+      <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        ← Zurück zum Prozesshaus
       </Link>
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary">

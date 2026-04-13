@@ -27,8 +27,8 @@ export default async function FinancePage() {
 
   return (
     <div className="p-4 sm:p-6">
-      <Link href="/controlling" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-        ← Zurück zu Finanzen & Controlling
+      <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        ← Zurück zum Prozesshaus
       </Link>
       <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary mb-2">
         Finanzen &amp; Cashflow
