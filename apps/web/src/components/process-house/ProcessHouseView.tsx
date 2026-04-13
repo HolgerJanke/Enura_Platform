@@ -110,35 +110,35 @@ export function ProcessHouseView({
                         <button
                           type="button"
                           onClick={() => onPhaseClick?.(proc.id, ph.id)}
-                          className="w-full text-left flex items-start gap-1.5 py-1 group"
+                          className="w-full text-left py-1 group"
                         >
-                          <span className="text-[10px] font-mono text-white/50 shrink-0 mt-px">
-                            P{i + 1}.{pi + 1}
-                          </span>
-                          <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
-                            {ph.name}
-                          </span>
-                        </button>
-                        {/* Phase KPIs: In/Out with trend arrows + Portfolio Value */}
-                        {(ph.inCount != null || ph.outCount != null) && (
-                          <div className="flex items-center gap-2 pl-6 pb-1 text-[9px]">
-                            <span className="text-white/50">
-                              In: {ph.inTrend === 'up' ? <span className="text-green-300">↑</span> : ph.inTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
-                              {' '}<span className="text-white/80 font-medium">{ph.inCount ?? 0}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-mono text-white/50 shrink-0">
+                              P{i + 1}.{pi + 1}
                             </span>
-                            <span className="text-white/50">
-                              Out: {ph.outTrend === 'up' ? <span className="text-green-300">↑</span> : ph.outTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
-                              {' '}<span className="text-white/80 font-medium">{ph.outCount ?? 0}</span>
+                            <span className="text-[11px] text-white/85 group-hover:text-white group-hover:underline leading-tight">
+                              {ph.name}
                             </span>
-                            {(ph.portfolioValue ?? 0) > 0 && (
-                              <span className="text-white/50">
-                                | <span className="text-white/80 font-mono font-medium">
-                                  {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
+                            {/* KPIs inline after title */}
+                            {(ph.inCount != null || ph.outCount != null) && (
+                              <span className="flex items-center gap-1.5 ml-auto text-[8px] shrink-0">
+                                <span className="text-white/40">
+                                  {ph.inTrend === 'up' ? <span className="text-green-300">↑</span> : ph.inTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
+                                  <span className="text-white/70 font-medium">{ph.inCount ?? 0}</span>
                                 </span>
+                                <span className="text-white/40">
+                                  {ph.outTrend === 'up' ? <span className="text-green-300">↑</span> : ph.outTrend === 'down' ? <span className="text-red-300">↓</span> : <span className="text-white/30">→</span>}
+                                  <span className="text-white/70 font-medium">{ph.outCount ?? 0}</span>
+                                </span>
+                                {(ph.portfolioValue ?? 0) > 0 && (
+                                  <span className="text-white/60 font-mono">
+                                    {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
+                                  </span>
+                                )}
                               </span>
                             )}
                           </div>
-                        )}
+                        </button>
                       </div>
                     ))
                   ) : (
