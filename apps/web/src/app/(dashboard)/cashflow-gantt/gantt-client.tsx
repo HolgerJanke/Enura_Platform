@@ -198,10 +198,10 @@ export function GanttClient({ projects, events, currency }: Props) {
       </div>
 
       {/* Gantt chart */}
-      <div className="flex rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="flex rounded-lg border border-gray-200 bg-white overflow-hidden max-h-[70vh]">
         {/* Fixed left column — project names */}
-        <div className="shrink-0 border-r border-gray-200 bg-gray-50 w-48">
-          <div className="h-8 border-b border-gray-200 px-3 flex items-center">
+        <div className="shrink-0 border-r border-gray-200 bg-gray-50 w-48 overflow-y-auto">
+          <div className="h-8 border-b border-gray-200 px-3 flex items-center sticky top-0 bg-gray-50 z-20">
             <span className="text-[10px] font-medium text-gray-500 uppercase">Projekt</span>
           </div>
           {projects.map((proj) => (
@@ -216,10 +216,10 @@ export function GanttClient({ projects, events, currency }: Props) {
         </div>
 
         {/* Scrollable timeline */}
-        <div className="flex-1 overflow-x-auto">
+        <div className="flex-1 overflow-auto">
           <div style={{ width: chartWidth, minWidth: '100%' }} className="relative">
-            {/* Month headers */}
-            <div className="h-8 border-b border-gray-200 relative">
+            {/* Month headers — sticky */}
+            <div className="h-8 border-b border-gray-200 relative sticky top-0 bg-white z-20">
               {monthLabels.map((m, i) => (
                 <span
                   key={i}
