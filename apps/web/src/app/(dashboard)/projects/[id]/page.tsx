@@ -37,7 +37,7 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
     p['offer_id'] ? db.from('offers').select('*').eq('id', p['offer_id'] as string).single() : Promise.resolve({ data: null }),
     db.from('project_phase_history').select('*').eq('project_id', id).order('created_at', { ascending: false }),
     db.from('project_process_instances').select('id, process_id, process_version, started_at, completed_at, status').eq('project_id', id),
-    db.from('liquidity_event_instances').select('id, step_name, process_step_id, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, amount_deviation, marker_type, invoice_id').eq('project_id', id).order('budget_date'),
+    db.from('liquidity_event_instances').select('id, step_name, process_step_id, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, amount_deviation, marker_type, invoice_id').eq('project_id', id).eq('marker_type', 'event').order('budget_date'),
     db.from('invoices_incoming').select('id, invoice_number, sender_name, gross_amount, currency, status, due_date, created_at, raw_storage_path, raw_filename').eq('project_id', id).order('created_at', { ascending: false }),
     db.from('invoices').select('id, invoice_number, amount_chf, status, issued_at, paid_at').eq('project_id', id).order('issued_at', { ascending: false }),
     db.from('project_documents').select('*').eq('project_id', id).order('created_at', { ascending: false }),
