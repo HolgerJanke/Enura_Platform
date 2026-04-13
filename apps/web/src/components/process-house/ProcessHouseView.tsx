@@ -96,7 +96,7 @@ export function ProcessHouseView({
             const totalProjects = proc.phases.reduce((s, ph) => s + (ph.inCount ?? 0) + (ph.outCount ?? 0), 0)
             const totalValue = proc.phases.reduce((s, ph) => s + (ph.portfolioValue ?? 0), 0)
             return (
-            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ background: 'color-mix(in srgb, var(--brand-primary, #1A56DB) 8%, white)' }}>
+            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ background: 'color-mix(in srgb, var(--brand-primary, #1A56DB) 20%, white)' }}>
               {/* Colored header with totals */}
               <button
                 type="button"
@@ -161,7 +161,7 @@ export function ProcessHouseView({
       {supportProcesses.length > 0 && (
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${supportProcesses.length}, 1fr)` }}>
           {supportProcesses.map((proc, i) => (
-            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ background: 'color-mix(in srgb, var(--brand-accent, #F3A917) 8%, white)' }}>
+            <div key={proc.id} className="rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ background: 'color-mix(in srgb, var(--brand-accent, #F3A917) 20%, white)' }}>
               {/* Colored header */}
               <button
                 type="button"
