@@ -10,6 +10,7 @@ export interface ProcessPhaseItem {
   id: string
   name: string
   sortOrder: number
+  link: string | null
 }
 
 export interface ProcessHouseItem {

@@ -48,39 +48,53 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
         .order('sort_order')
     : { data: [] }
 
-  const phasesByProcess = new Map<string, Array<{ id: string; name: string; sortOrder: number }>>()
+  const phasesByProcess = new Map<string, Array<{ id: string; name: string; sortOrder: number; link: string | null }>>()
   for (const ph of (phasesData ?? []) as Array<{ id: string; name: string; process_id: string; sort_order: number }>) {
     const arr = phasesByProcess.get(ph.process_id) ?? []
-    arr.push({ id: ph.id, name: ph.name, sortOrder: ph.sort_order })
+    arr.push({ id: ph.id, name: ph.name, sortOrder: ph.sort_order, link: null })
     phasesByProcess.set(ph.process_id, arr)
   }
 
-  // Fetch first step with expected_output per process (for direct-link processes like M2, S1, S2)
+  // Fetch ALL steps with expected_output (for direct links and S-process sub-items)
   const { data: stepsData } = processIds.length > 0
     ? await serviceDb
         .from('process_steps')
-        .select('process_id, expected_output, sort_order')
+        .select('id, name, process_id, expected_output, sort_order')
         .in('process_id', processIds)
-        .not('expected_output', 'is', null)
         .order('sort_order')
     : { data: [] }
 
   const linkedPageByProcess = new Map<string, string>()
-  for (const step of (stepsData ?? []) as Array<{ process_id: string; expected_output: string | null; sort_order: number }>) {
+  const stepsByProcess = new Map<string, Array<{ id: string; name: string; sortOrder: number; link: string | null }>>()
+
+  for (const step of (stepsData ?? []) as Array<{ id: string; name: string; process_id: string; expected_output: string | null; sort_order: number }>) {
+    // First step with a link becomes the process linkedPage
     if (step.expected_output?.startsWith('/') && !linkedPageByProcess.has(step.process_id)) {
       linkedPageByProcess.set(step.process_id, step.expected_output)
     }
+    // Collect all steps per process
+    const arr = stepsByProcess.get(step.process_id) ?? []
+    arr.push({ id: step.id, name: step.name, sortOrder: step.sort_order, link: step.expected_output })
+    stepsByProcess.set(step.process_id, arr)
   }
 
-  const toItem = (p: ProcessRow) => ({
-    id: p.id,
-    name: p.name,
-    menuLabel: p.menu_label,
-    houseSortOrder: p.house_sort_order,
-    status: p.status,
-    phases: phasesByProcess.get(p.id) ?? [],
-    linkedPage: linkedPageByProcess.get(p.id) ?? null,
-  })
+  const toItem = (p: ProcessRow) => {
+    // For S-type processes: use steps as sub-items (with links) instead of phases
+    const isSupport = p.process_type === 'S'
+    const phases = isSupport
+      ? (stepsByProcess.get(p.id) ?? [])
+      : (phasesByProcess.get(p.id) ?? [])
+
+    return {
+      id: p.id,
+      name: p.name,
+      menuLabel: p.menu_label,
+      houseSortOrder: p.house_sort_order,
+      status: p.status,
+      phases,
+      linkedPage: isSupport ? null : (linkedPageByProcess.get(p.id) ?? null),
+    }
+  }
 
   const management = visible.filter((p) => p.process_type === 'M').map(toItem)
   const primary = visible.filter((p) => p.process_type === 'P').map(toItem)

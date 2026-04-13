@@ -33,8 +33,15 @@ export function ProcessHouseClientWrapper({ management, primary, support, openPr
 
   function handlePhaseClick(processId: string, phaseId: string) {
     const process = allProcesses.find((p) => p.id === processId)
+    // Check if the process itself has a linked page
     if (process?.linkedPage) {
       router.push(process.linkedPage)
+      return
+    }
+    // Check if the specific phase/step has a direct link
+    const phase = process?.phases.find((ph) => ph.id === phaseId)
+    if (phase?.link) {
+      router.push(phase.link)
       return
     }
     setSelectedProcessId(processId)
