@@ -38,7 +38,7 @@ interface Props {
 }
 
 type ViewMode = 'progress' | 'cashflow'
-type TimeRange = '3m' | '6m' | '12m' | 'all' | 'custom'
+type TimeRange = '1m' | '3m' | '6m' | '12m' | 'all' | 'custom'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -104,30 +104,66 @@ export function GanttClient({ projects, events, currency }: Props) {
     minDate.setDate(minDate.getDate() - 14)
     maxDate.setDate(maxDate.getDate() + 14)
   } else {
-    const months = timeRange === '3m' ? 3 : timeRange === '12m' ? 12 : 6
+    const months = timeRange === '1m' ? 1 : timeRange === '3m' ? 3 : timeRange === '12m' ? 12 : 6
     minDate = new Date(now)
     minDate.setMonth(minDate.getMonth() - 1)
     maxDate = new Date(now)
     maxDate.setMonth(maxDate.getMonth() + months - 1)
   }
-  const totalDays = daysBetween(minDate, maxDate)
-  const dayWidth = 4 // pixels per day
+  const totalDays = Math.max(daysBetween(minDate, maxDate), 1)
+  // Dynamic dayWidth: wider when fewer days, minimum screen-filling
+  // < 30 days → daily granularity (~30px/day), 30-90 → ~10px, 90-180 → ~6px, 180+ → ~3px
+  const dayWidth = totalDays <= 30 ? 30 : totalDays <= 90 ? 10 : totalDays <= 180 ? 6 : 3
   const chartWidth = totalDays * dayWidth
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayOffset = daysBetween(minDate, today) * dayWidth
 
-  // Generate month labels
-  const monthLabels: Array<{ label: string; x: number }> = []
-  const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1)
-  while (cursor <= maxDate) {
-    const x = daysBetween(minDate, cursor) * dayWidth
-    monthLabels.push({
-      label: cursor.toLocaleDateString('de-CH', { month: 'short', year: '2-digit' }),
-      x: Math.max(x, 0),
-    })
-    cursor.setMonth(cursor.getMonth() + 1)
+  // Generate time labels based on granularity
+  type TimeLabel = { label: string; x: number; minor?: boolean }
+  const timeLabels: TimeLabel[] = []
+
+  if (totalDays <= 30) {
+    // Daily labels
+    const dayCursor = new Date(minDate)
+    while (dayCursor <= maxDate) {
+      const x = daysBetween(minDate, dayCursor) * dayWidth
+      const isMonday = dayCursor.getDay() === 1
+      timeLabels.push({
+        label: dayCursor.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' }),
+        x: Math.max(x, 0),
+        minor: !isMonday,
+      })
+      dayCursor.setDate(dayCursor.getDate() + 1)
+    }
+  } else if (totalDays <= 90) {
+    // Weekly labels
+    const weekCursor = new Date(minDate)
+    // Align to Monday
+    const dow = weekCursor.getDay()
+    weekCursor.setDate(weekCursor.getDate() - (dow === 0 ? 6 : dow - 1))
+    while (weekCursor <= maxDate) {
+      const x = daysBetween(minDate, weekCursor) * dayWidth
+      if (x >= 0) {
+        timeLabels.push({
+          label: weekCursor.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' }),
+          x,
+        })
+      }
+      weekCursor.setDate(weekCursor.getDate() + 7)
+    }
+  } else {
+    // Monthly labels
+    const monthCursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1)
+    while (monthCursor <= maxDate) {
+      const x = daysBetween(minDate, monthCursor) * dayWidth
+      timeLabels.push({
+        label: monthCursor.toLocaleDateString('de-CH', { month: 'short', year: '2-digit' }),
+        x: Math.max(x, 0),
+      })
+      monthCursor.setMonth(monthCursor.getMonth() + 1)
+    }
   }
 
   const ROW_H = 28
@@ -156,7 +192,7 @@ export function GanttClient({ projects, events, currency }: Props) {
 
         {/* Time range slicer */}
         <div className="flex items-center gap-2">
-          {([['3m', '3 Monate'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle']] as const).map(([key, label]) => (
+          {([['1m', '1 Monat'], ['3m', '3 Monate'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle']] as const).map(([key, label]) => (
             <button
               key={key}
               type="button"
@@ -218,16 +254,20 @@ export function GanttClient({ projects, events, currency }: Props) {
         {/* Scrollable timeline */}
         <div className="flex-1 overflow-auto">
           <div style={{ width: chartWidth, minWidth: '100%' }} className="relative">
-            {/* Month headers — sticky */}
+            {/* Time headers — sticky */}
             <div className="h-8 border-b border-gray-200 relative sticky top-0 bg-white z-20">
-              {monthLabels.map((m, i) => (
+              {timeLabels.map((t, i) => (
                 <span
                   key={i}
-                  className="absolute text-[10px] text-gray-400 font-medium top-2"
-                  style={{ left: m.x + 4 }}
+                  className={`absolute text-[10px] top-2 ${t.minor ? 'text-gray-300' : 'text-gray-400 font-medium'}`}
+                  style={{ left: t.x + 4 }}
                 >
-                  {m.label}
+                  {t.minor ? '' : t.label}
                 </span>
+              ))}
+              {/* Vertical grid lines */}
+              {timeLabels.filter(t => !t.minor).map((t, i) => (
+                <div key={`g${i}`} className="absolute top-0 bottom-0 w-px bg-gray-100" style={{ left: t.x }} />
               ))}
             </div>
 
