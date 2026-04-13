@@ -107,11 +107,9 @@ export function GanttClient({ projects, events, currency }: Props) {
     minDate.setDate(minDate.getDate() - 14)
     maxDate.setDate(maxDate.getDate() + 14)
   } else if (timeRange === '1m') {
-    // Last 2 weeks + next 4 weeks
-    minDate = new Date(now)
-    minDate.setDate(minDate.getDate() - 14)
-    maxDate = new Date(now)
-    maxDate.setDate(maxDate.getDate() + 28)
+    // Current month: 1st of this month to end of next month
+    minDate = new Date(now.getFullYear(), now.getMonth(), 1)
+    maxDate = new Date(now.getFullYear(), now.getMonth() + 2, 0)
   } else if (timeRange === '3m') {
     // Last 1 month + next 3 months
     minDate = new Date(now)
@@ -313,14 +311,10 @@ export function GanttClient({ projects, events, currency }: Props) {
             // Text filter
             if (projectFilter && !p.customer_name.toLowerCase().includes(projectFilter.toLowerCase())
               && !p.title.toLowerCase().includes(projectFilter.toLowerCase())) return false
-            // Only show projects with events in visible range
+            // Show projects with ANY events (not filtered by visible range —
+            // projects may span across ranges, cashflow accumulates from the start)
             const evts = eventsByProject.get(p.id) ?? []
-            return evts.some(e => {
-              const d = displayDate(e)
-              if (!d) return false
-              const date = new Date(d)
-              return date >= minDate && date <= maxDate
-            })
+            return evts.length > 0
           }).map((proj, rowIdx) => {
             const projEvents = eventsByProject.get(proj.id) ?? []
 
