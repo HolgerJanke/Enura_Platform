@@ -1,29 +1,82 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
-import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { getDataAccess } from '@/lib/data-access'
-import {
-  formatCHF,
-  formatNumber,
-  formatDate,
-  KPI_SNAPSHOT_TYPES,
-} from '@enura/types'
-import type { FinanceMonthlyMetrics } from '@enura/types'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { FinanceCashflowChart } from './finance-chart'
 
 export default async function FinancePage() {
-  await requirePermission('module:finance:read')
   const session = await getSession()
   if (!session?.companyId) return null
 
-  const db = getDataAccess()
-  const today = new Date().toISOString().split('T')[0]!
+  const db = createSupabaseServiceClient()
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]!
 
-  const snapshot = await db.kpis.findLatest(
-    session.companyId,
-    KPI_SNAPSHOT_TYPES.FINANCE_MONTHLY,
-  )
+  // Fetch real data in parallel
+  const [invoicesRes, liqEventsRes, currencyRes] = await Promise.all([
+    db.from('invoices_incoming')
+      .select('id, gross_amount, currency, status, due_date')
+      .eq('company_id', session.companyId),
+    db.from('liquidity_event_instances')
+      .select('id, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type')
+      .eq('company_id', session.companyId)
+      .eq('marker_type', 'event')
+      .order('budget_date')
+      .range(0, 4999),
+    db.from('company_currency_settings')
+      .select('base_currency')
+      .eq('company_id', session.companyId)
+      .single(),
+  ])
 
-  const metrics = snapshot?.metrics as FinanceMonthlyMetrics | undefined
+  const invoices = (invoicesRes.data ?? []) as Array<Record<string, unknown>>
+  const liqEvents = (liqEventsRes.data ?? []) as Array<Record<string, unknown>>
+  const currency = (currencyRes.data as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
+
+  // Calculate KPIs from real data
+  const paidInvoices = invoices.filter(i => i['status'] === 'paid')
+  const openInvoices = invoices.filter(i => !['paid', 'returned_formal', 'returned_sender'].includes(i['status'] as string))
+  const overdueInvoices = openInvoices.filter(i => {
+    const due = i['due_date'] as string | null
+    return due && new Date(due) < today
+  })
+
+  const totalRevenue = paidInvoices.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+  const openReceivables = openInvoices.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+  const overdueAmount = overdueInvoices.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+  const paymentsReceived = paidInvoices.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+
+  // Liquidity forecast from liquidity_event_instances
+  function forecastDays(days: number): number {
+    const cutoff = new Date(today)
+    cutoff.setDate(cutoff.getDate() + days)
+    let cumulative = 0
+    for (const evt of liqEvents) {
+      const d = (evt['actual_date'] ?? evt['scheduled_date'] ?? evt['budget_date']) as string | null
+      if (!d) continue
+      const evtDate = new Date(d)
+      if (evtDate > cutoff) break
+      const amt = Number(evt['actual_amount'] ?? evt['scheduled_amount'] ?? evt['budget_amount'] ?? 0)
+      cumulative += (evt['direction'] === 'income' ? amt : -amt)
+    }
+    return cumulative
+  }
+
+  const forecast30 = forecastDays(30)
+  const forecast60 = forecastDays(60)
+  const forecast90 = forecastDays(90)
+
+  // Prepare chart data: monthly income vs expense
+  const chartEvents = liqEvents.map(evt => ({
+    date: ((evt['actual_date'] ?? evt['scheduled_date'] ?? evt['budget_date']) as string) ?? '',
+    amount: Number(evt['actual_amount'] ?? evt['scheduled_amount'] ?? evt['budget_amount'] ?? 0),
+    direction: evt['direction'] as string,
+  })).filter(e => e.date)
+
+  function fmtCHF(n: number): string {
+    return `${currency} ${n.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  }
 
   return (
     <div className="p-4 sm:p-6">
@@ -33,109 +86,64 @@ export default async function FinancePage() {
       <h1 className="text-xl sm:text-2xl font-semibold text-brand-text-primary mb-2">
         Finanzen &amp; Cashflow
       </h1>
-      <p className="text-brand-text-secondary mb-6">{formatDate(today)}</p>
+      <p className="text-brand-text-secondary mb-6">{today.toLocaleDateString('de-CH')}</p>
 
-      {/* Primary financial KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Monatsumsatz</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatCHF(metrics?.revenue_total_chf ?? 0)}
-          </p>
+          <p className="text-xs text-brand-text-secondary">Erhaltene Zahlungen</p>
+          <p className="text-xl font-bold text-brand-text-primary mt-1">{fmtCHF(paymentsReceived)}</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{paidInvoices.length} Rechnungen</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">
-            Offene Forderungen
-          </p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatCHF(metrics?.open_receivables_chf ?? 0)}
-          </p>
+          <p className="text-xs text-brand-text-secondary">Offene Forderungen</p>
+          <p className="text-xl font-bold text-brand-text-primary mt-1">{fmtCHF(openReceivables)}</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{openInvoices.length} Rechnungen</p>
+        </div>
+        <div className={`rounded-brand p-4 border ${overdueInvoices.length > 0 ? 'bg-red-50 border-red-200' : 'bg-brand-surface border-gray-200'}`}>
+          <p className={`text-xs ${overdueInvoices.length > 0 ? 'text-red-600' : 'text-brand-text-secondary'}`}>Überfällig</p>
+          <p className={`text-xl font-bold mt-1 ${overdueInvoices.length > 0 ? 'text-red-700' : 'text-brand-text-primary'}`}>{fmtCHF(overdueAmount)}</p>
+          <p className={`text-xs mt-0.5 ${overdueInvoices.length > 0 ? 'text-red-500' : 'text-brand-text-secondary'}`}>{overdueInvoices.length} Rechnungen</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">
-            Überfällige Rechnungen
-          </p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatNumber(metrics?.overdue_count ?? 0)}
-          </p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">
-            {formatCHF(metrics?.overdue_amount_chf ?? 0)}
-          </p>
-        </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">
-            Erhaltene Zahlungen
-          </p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
-            {formatCHF(metrics?.payments_received_chf ?? 0)}
-          </p>
+          <p className="text-xs text-brand-text-secondary">Gesamtumsatz</p>
+          <p className="text-xl font-bold text-brand-text-primary mt-1">{fmtCHF(totalRevenue)}</p>
         </div>
       </div>
 
-      {/* Liquidity forecast */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
-          <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Liquiditätsprognose
-          </h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="py-2 text-left text-brand-text-secondary font-medium">
-                  Zeitraum
-                </th>
-                <th className="py-2 text-right text-brand-text-secondary font-medium">
-                  Prognose
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="py-2 text-brand-text-primary">30 Tage</td>
-                <td className="py-2 text-right font-medium text-brand-text-primary">
-                  {formatCHF(metrics?.forecast_30d_chf ?? 0)}
-                </td>
-              </tr>
-              <tr className="border-b border-gray-100">
-                <td className="py-2 text-brand-text-primary">60 Tage</td>
-                <td className="py-2 text-right font-medium text-brand-text-primary">
-                  {formatCHF(metrics?.forecast_60d_chf ?? 0)}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-2 text-brand-text-primary">90 Tage</td>
-                <td className="py-2 text-right font-medium text-brand-text-primary">
-                  {formatCHF(metrics?.forecast_90d_chf ?? 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
-          <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Cashflow-Diagramm
-          </h2>
-          <p className="text-sm text-brand-text-secondary">
-            Cashflow-Verlauf wird mit dem Chart-Modul integriert.
-          </p>
+      {/* Liquidity forecast — single row */}
+      <div className="bg-brand-surface rounded-brand p-4 border border-gray-200 mb-6">
+        <div className="flex items-center gap-6 flex-wrap">
+          <h2 className="text-sm font-semibold text-brand-text-primary">Liquiditätsprognose</h2>
+          <div className="flex items-center gap-6 text-sm">
+            <span className="text-brand-text-secondary">
+              30 Tage: <span className={`font-bold ${forecast30 >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(forecast30)}</span>
+            </span>
+            <span className="text-brand-text-secondary">
+              60 Tage: <span className={`font-bold ${forecast60 >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(forecast60)}</span>
+            </span>
+            <span className="text-brand-text-secondary">
+              90 Tage: <span className={`font-bold ${forecast90 >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(forecast90)}</span>
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Liquidity warning */}
-      {metrics &&
-        metrics.forecast_30d_chf < 0 && (
-          <div className="rounded-brand bg-red-50 border border-red-200 p-4">
-            <p className="text-sm font-medium text-red-800">
-              Liquiditätswarnung
-            </p>
-            <p className="text-sm text-red-700 mt-1">
-              Die 30-Tage-Liquiditätsprognose ist negativ (
-              {formatCHF(metrics.forecast_30d_chf)}). Bitte prüfen Sie offene
-              Forderungen und geplante Ausgaben.
-            </p>
-          </div>
-        )}
+      {forecast30 < 0 && (
+        <div className="rounded-brand bg-red-50 border border-red-200 p-4 mb-6">
+          <p className="text-sm font-medium text-red-800">Liquiditätswarnung</p>
+          <p className="text-sm text-red-700 mt-1">
+            Die 30-Tage-Liquiditätsprognose ist negativ ({fmtCHF(forecast30)}). Bitte prüfen Sie offene Forderungen und geplante Ausgaben.
+          </p>
+        </div>
+      )}
+
+      {/* Cashflow chart */}
+      <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
+        <h2 className="text-lg font-semibold text-brand-text-primary mb-4">Cashflow-Diagramm</h2>
+        <FinanceCashflowChart events={chartEvents} currency={currency} />
+      </div>
     </div>
   )
 }
