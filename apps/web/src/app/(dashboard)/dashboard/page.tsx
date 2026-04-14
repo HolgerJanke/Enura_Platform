@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getSession } from '@/lib/session'
 import { ProcessHouseContainer } from '@/components/process-house/ProcessHouseContainer'
 import { ProjectSearch } from '@/components/project-search'

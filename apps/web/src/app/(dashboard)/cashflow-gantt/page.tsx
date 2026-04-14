@@ -31,32 +31,26 @@ export default async function CashflowGanttPage() {
     project_value: number | null; status: string
   }>
 
-  // Fetch events in batches to bypass Supabase 1000-row limit
-  const allEvents: Array<{
+  // Fetch events in 2 parallel batches to bypass Supabase 1000-row limit
+  type EventRow = {
     id: string; project_id: string; step_name: string; direction: string
     budget_amount: number | null; budget_date: string | null
     scheduled_amount: number | null; scheduled_date: string | null
     actual_amount: number | null; actual_date: string | null
     marker_type: string; invoice_id: string | null
-  }> = []
-
-  let offset = 0
-  const batchSize = 1000
-  while (true) {
-    const { data: batch } = await db
-      .from('liquidity_event_instances')
-      .select('id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id')
-      .eq('company_id', session.companyId)
-      .eq('marker_type', 'event')
-      .order('budget_date')
-      .range(offset, offset + batchSize - 1)
-    const rows = (batch ?? []) as typeof allEvents
-    allEvents.push(...rows)
-    if (rows.length < batchSize) break
-    offset += batchSize
   }
+  const selectCols = 'id, project_id, step_name, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type, invoice_id'
 
-  const events = allEvents
+  const [batch1, batch2] = await Promise.all([
+    db.from('liquidity_event_instances').select(selectCols)
+      .eq('company_id', session.companyId).eq('marker_type', 'event')
+      .order('budget_date').range(0, 999),
+    db.from('liquidity_event_instances').select(selectCols)
+      .eq('company_id', session.companyId).eq('marker_type', 'event')
+      .order('budget_date').range(1000, 1999),
+  ])
+
+  const events = [...(batch1.data ?? []), ...(batch2.data ?? [])] as EventRow[]
   const currency = (currencyRes.data as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
 
   // Filter projects that have events

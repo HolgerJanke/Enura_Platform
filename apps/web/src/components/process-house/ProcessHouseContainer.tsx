@@ -37,16 +37,27 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     return p.visible_roles.some((r) => userRoleKeys.includes(r))
   })
 
-  // Fetch phases using service client to bypass RLS
+  // Fetch phases + steps + currency in parallel (all independent queries)
   const serviceDb = createSupabaseServiceClient()
   const processIds = visible.map((p) => p.id)
-  const { data: phasesData } = processIds.length > 0
-    ? await serviceDb
-        .from('process_phases')
-        .select('id, name, process_id, sort_order')
-        .in('process_id', processIds)
-        .order('sort_order')
-    : { data: [] }
+  const pProcessIds = visible.filter(p => p.process_type === 'P').map(p => p.id)
+
+  const [phasesRes, stepsRes, currRes, instancesRes, snapshotRes] = await Promise.all([
+    processIds.length > 0
+      ? serviceDb.from('process_phases').select('id, name, process_id, sort_order').in('process_id', processIds).order('sort_order')
+      : Promise.resolve({ data: [] }),
+    processIds.length > 0
+      ? serviceDb.from('process_steps').select('id, name, process_id, expected_output, sort_order, phase_id').in('process_id', processIds).order('sort_order')
+      : Promise.resolve({ data: [] }),
+    serviceDb.from('company_currency_settings').select('base_currency').eq('company_id', session.companyId).single(),
+    pProcessIds.length > 0
+      ? serviceDb.from('project_process_instances').select('project_id, process_id').in('process_id', pProcessIds).eq('status', 'active')
+      : Promise.resolve({ data: [] }),
+    serviceDb.from('step_kpi_snapshots').select('step_id, project_count, portfolio_value, snapshot_date').eq('company_id', session.companyId),
+  ])
+
+  const phasesData = phasesRes.data
+  const stepsData = stepsRes.data
 
   const phasesByProcess = new Map<string, Array<{ id: string; name: string; sortOrder: number; link: string | null }>>()
   for (const ph of (phasesData ?? []) as Array<{ id: string; name: string; process_id: string; sort_order: number }>) {
@@ -54,15 +65,6 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     arr.push({ id: ph.id, name: ph.name, sortOrder: ph.sort_order, link: null })
     phasesByProcess.set(ph.process_id, arr)
   }
-
-  // Fetch ALL steps with expected_output (for direct links and S-process sub-items)
-  const { data: stepsData } = processIds.length > 0
-    ? await serviceDb
-        .from('process_steps')
-        .select('id, name, process_id, expected_output, sort_order, phase_id')
-        .in('process_id', processIds)
-        .order('sort_order')
-    : { data: [] }
 
   const linkedPageByProcess = new Map<string, string>()
   const stepsByProcess = new Map<string, Array<{ id: string; name: string; sortOrder: number; link: string | null }>>()
@@ -96,54 +98,35 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     }
   }
 
-  // For P-type processes: fetch project counts per step to compute phase KPIs
-  const pProcessIds = visible.filter(p => p.process_type === 'P').map(p => p.id)
-  let projectCountsByStep = new Map<string, { count: number; value: number }>()
+  // Use pre-fetched instance data to compute project counts per step
+  const projectCountsByStep = new Map<string, { count: number; value: number }>()
 
-  if (pProcessIds.length > 0) {
-    // Fetch active project instances for P-processes
-    const { data: instanceData } = await serviceDb
-      .from('project_process_instances')
-      .select('project_id, process_id')
-      .in('process_id', pProcessIds)
+  const instanceProjectIds = [...new Set((instancesRes.data ?? []).map((r: Record<string, unknown>) => r['project_id'] as string))]
+  if (instanceProjectIds.length > 0) {
+    const { data: projData } = await serviceDb
+      .from('projects')
+      .select('id, current_step_id, project_value')
+      .in('id', instanceProjectIds)
       .eq('status', 'active')
 
-    const instanceProjectIds = [...new Set((instanceData ?? []).map((r: Record<string, unknown>) => r['project_id'] as string))]
-
-    if (instanceProjectIds.length > 0) {
-      const { data: projData } = await serviceDb
-        .from('projects')
-        .select('id, current_step_id, project_value')
-        .in('id', instanceProjectIds)
-        .eq('status', 'active')
-
-      for (const proj of (projData ?? []) as Array<Record<string, unknown>>) {
-        const stepId = proj['current_step_id'] as string | null
-        if (!stepId) continue
-        const existing = projectCountsByStep.get(stepId) ?? { count: 0, value: 0 }
-        existing.count += 1
-        existing.value += Number(proj['project_value'] ?? 0)
-        projectCountsByStep.set(stepId, existing)
-      }
+    for (const proj of (projData ?? []) as Array<Record<string, unknown>>) {
+      const stepId = proj['current_step_id'] as string | null
+      if (!stepId) continue
+      const existing = projectCountsByStep.get(stepId) ?? { count: 0, value: 0 }
+      existing.count += 1
+      existing.value += Number(proj['project_value'] ?? 0)
+      projectCountsByStep.set(stepId, existing)
     }
   }
 
-  // Fetch last month's snapshot for trend comparison
+  // Use pre-fetched snapshot data for trend comparison
   const lastMonthDate = new Date()
   lastMonthDate.setDate(lastMonthDate.getDate() - 30)
   const lastMonthStr = lastMonthDate.toISOString().split('T')[0]!
 
-  const allStepIds = [...projectCountsByStep.keys()]
-  let lastMonthByStep = new Map<string, { count: number; value: number }>()
-
-  if (allStepIds.length > 0) {
-    const { data: snapshotData } = await serviceDb
-      .from('step_kpi_snapshots')
-      .select('step_id, project_count, portfolio_value')
-      .in('step_id', allStepIds)
-      .eq('snapshot_date', lastMonthStr)
-
-    for (const row of (snapshotData ?? []) as Array<Record<string, unknown>>) {
+  const lastMonthByStep = new Map<string, { count: number; value: number }>()
+  for (const row of ((snapshotRes.data ?? []) as Array<Record<string, unknown>>)) {
+    if ((row['snapshot_date'] as string) === lastMonthStr) {
       lastMonthByStep.set(row['step_id'] as string, {
         count: Number(row['project_count'] ?? 0),
         value: Number(row['portfolio_value'] ?? 0),
@@ -208,13 +191,8 @@ export async function ProcessHouseContainer({ openProcess, openPhase }: { openPr
     )
   }
 
-  // Fetch currency
-  const { data: currData } = await serviceDb
-    .from('company_currency_settings')
-    .select('base_currency')
-    .eq('company_id', session.companyId)
-    .single()
-  const companyCurrency = (currData as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
+  // Use pre-fetched currency
+  const companyCurrency = (currRes.data as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
 
   return (
     <ProcessHouseClientWrapper

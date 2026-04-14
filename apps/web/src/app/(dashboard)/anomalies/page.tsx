@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
