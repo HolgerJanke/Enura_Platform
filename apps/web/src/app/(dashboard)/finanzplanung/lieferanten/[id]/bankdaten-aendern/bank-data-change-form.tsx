@@ -22,12 +22,107 @@ const COUNTRY_NAMES: Record<string, string> = {
   LU: 'Luxemburg', LI: 'Liechtenstein', GB: 'Grossbritannien',
 }
 
+// Bank lookup: bankCode → { bic, name }
+// CH: IID (5 digits), DE: BLZ (8 digits), AT: BLZ (5 digits)
+const BANK_DIRECTORY: Record<string, Record<string, { bic: string; name: string }>> = {
+  CH: {
+    '00230': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00240': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00251': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00253': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00254': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00259': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00762': { bic: 'UBSWCHZH80A', name: 'UBS Switzerland AG' },
+    '00234': { bic: 'CRESCHZZ80A', name: 'Credit Suisse (Schweiz) AG' },
+    '04835': { bic: 'CRESCHZZ80A', name: 'Credit Suisse (Schweiz) AG' },
+    '00483': { bic: 'CRESCHZZ80A', name: 'Credit Suisse (Schweiz) AG' },
+    '00768': { bic: 'PABORCHBXXX', name: 'Basler Kantonalbank' },
+    '00769': { bic: 'KBBECH22XXX', name: 'Berner Kantonalbank' },
+    '00770': { bic: 'ZHBKCHZZ80A', name: 'Zuercher Kantonalbank' },
+    '00771': { bic: 'LUKBCH2260A', name: 'Luzerner Kantonalbank' },
+    '00773': { bic: 'SGKBCH2230A', name: 'St.Galler Kantonalbank' },
+    '00774': { bic: 'GRKBCH2270A', name: 'Graubuendner Kantonalbank' },
+    '00776': { bic: 'TBKACH22XXX', name: 'Thurgauer Kantonalbank' },
+    '00778': { bic: 'BCVSCH2LXXX', name: 'Banque Cantonale Vaudoise' },
+    '00779': { bic: 'BCGECHGGXXX', name: 'Banque Cantonale de Geneve' },
+    '09000': { bic: 'POFICHBEXXX', name: 'PostFinance AG' },
+    '00784': { bic: 'RAABORCHXXX', name: 'Raiffeisen Schweiz' },
+    '80808': { bic: 'RAABORCHXXX', name: 'Raiffeisen Schweiz' },
+    '80000': { bic: 'RAABORCHXXX', name: 'Raiffeisen Schweiz' },
+    '00588': { bic: 'MAABORCHXXX', name: 'Migros Bank AG' },
+    '08401': { bic: 'MAABORCHXXX', name: 'Migros Bank AG' },
+    '00835': { bic: 'JUBAICH22XXX', name: 'Bank Julius Baer' },
+    '08212': { bic: 'VABORCHZXXX', name: 'Valiant Bank AG' },
+    '00263': { bic: 'BABORCHZXXX', name: 'Bank Cler AG' },
+  },
+  DE: {
+    '10000000': { bic: 'MARKDEF1100', name: 'Deutsche Bundesbank' },
+    '10010010': { bic: 'PBNKDEFF', name: 'Postbank Ndl der Deutsche Bank' },
+    '10020000': { bic: 'COBADEFFXXX', name: 'Commerzbank' },
+    '10070000': { bic: 'DEUTDEBBXXX', name: 'Deutsche Bank Berlin' },
+    '10070024': { bic: 'DEUTDEDBBER', name: 'Deutsche Bank Privat- und Geschaeftskunden' },
+    '10090000': { bic: 'BEVODEBB', name: 'Berliner Volksbank' },
+    '20030000': { bic: 'HYVEDEMM300', name: 'UniCredit Bank - HypoVereinsbank' },
+    '20050000': { bic: 'HASPDEHHXXX', name: 'Hamburger Sparkasse' },
+    '25050000': { bic: 'NOLADEHA', name: 'Nord/LB Hannover' },
+    '30020900': { bic: 'CMCIDEDD', name: 'Targobank' },
+    '37040044': { bic: 'COBADEFFXXX', name: 'Commerzbank Koeln' },
+    '50010060': { bic: 'PBNKDEFF', name: 'Postbank Ndl der Deutsche Bank' },
+    '50010517': { bic: 'INGDDEFFXXX', name: 'ING-DiBa' },
+    '50020200': { bic: 'BHFBDEFF500', name: 'BHF-Bank Frankfurt' },
+    '50030000': { bic: 'COBADEFFXXX', name: 'Commerzbank Frankfurt' },
+    '50050201': { bic: 'HELADEF1822', name: 'Frankfurter Sparkasse' },
+    '50070010': { bic: 'DEUTDEFFXXX', name: 'Deutsche Bank Frankfurt' },
+    '50070024': { bic: 'DEUTDEDBFRA', name: 'Deutsche Bank Privat- und Geschaeftskunden' },
+    '50090500': { bic: 'GENODE51KS1', name: 'Sparda-Bank Hessen' },
+    '60020030': { bic: 'HYVEDEMM473', name: 'UniCredit Bank - HypoVereinsbank Stuttgart' },
+    '60050101': { bic: 'SOLADEST600', name: 'Landesbank Baden-Wuerttemberg' },
+    '60070070': { bic: 'DEUTDESS', name: 'Deutsche Bank Stuttgart' },
+    '70010080': { bic: 'PBNKDEFF', name: 'Postbank Ndl der Deutsche Bank Muenchen' },
+    '70020270': { bic: 'HYVEDEMM', name: 'UniCredit Bank - HypoVereinsbank Muenchen' },
+    '70050000': { bic: 'BYLADEMMXXX', name: 'Bayerische Landesbank' },
+    '70070010': { bic: 'DEUTDEMM', name: 'Deutsche Bank Muenchen' },
+    '70070024': { bic: 'DEUTDEDBMUC', name: 'Deutsche Bank Privat- und Geschaeftskunden Muenchen' },
+    '70090100': { bic: 'GENODEF1M01', name: 'Muenchner Bank' },
+    '76010085': { bic: 'PBNKDEFF', name: 'Postbank Ndl der Deutsche Bank Nuernberg' },
+  },
+  AT: {
+    '20111': { bic: 'GIBAATWWXXX', name: 'Erste Group Bank AG' },
+    '12000': { bic: 'BKAUATWW', name: 'UniCredit Bank Austria AG' },
+    '19430': { bic: 'BAWAATWW', name: 'BAWAG P.S.K.' },
+    '32000': { bic: 'RLNWATWW', name: 'Raiffeisen Niederösterreich-Wien' },
+    '36000': { bic: 'RZTIAT22', name: 'Raiffeisen Bank International' },
+    '15000': { bic: 'OBKLAT2L', name: 'Oberbank AG' },
+    '20404': { bic: 'SPAEAT2S', name: 'Sparkasse Salzburg' },
+    '57000': { bic: 'VABORCHWXXX', name: 'Volksbank Wien' },
+    '60000': { bic: 'BAWAATWW', name: 'PSK / BAWAG' },
+  },
+}
+
+// Fuzzy lookup: try exact match first, then prefix match for Raiffeisen (CH) etc.
+function lookupBank(country: string, bankCode: string): { bic: string; name: string } | null {
+  const dir = BANK_DIRECTORY[country]
+  if (!dir) return null
+
+  // Exact match
+  if (dir[bankCode]) return dir[bankCode]
+
+  // CH Raiffeisen: codes 80000-89999
+  if (country === 'CH') {
+    const num = parseInt(bankCode, 10)
+    if (num >= 80000 && num <= 89999) return { bic: 'RAIFCH22XXX', name: 'Raiffeisen Schweiz' }
+  }
+
+  return null
+}
+
 interface IbanValidationResult {
   valid: boolean
   error?: string
   country?: string
   countryName?: string
   bankCode?: string
+  bankInfo?: { bic: string; name: string } | null
   formattedIban?: string
 }
 
@@ -83,6 +178,9 @@ function validateIban(input: string): IbanValidationResult {
   else if (country === 'DE') bankCode = cleaned.slice(4, 12)
   else if (country === 'AT') bankCode = cleaned.slice(4, 9)
 
+  // Look up bank info
+  const bankInfo = bankCode ? lookupBank(country, bankCode) : null
+
   // Format with spaces every 4 chars
   const formattedIban = cleaned.replace(/(.{4})/g, '$1 ').trim()
 
@@ -91,6 +189,7 @@ function validateIban(input: string): IbanValidationResult {
     country,
     countryName: COUNTRY_NAMES[country],
     bankCode,
+    bankInfo,
     formattedIban,
   }
 }
@@ -113,7 +212,13 @@ export function BankDataChangeForm({ supplierId }: Props) {
     setIban(value)
     const cleaned = value.replace(/\s/g, '')
     if (cleaned.length >= 5) {
-      setIbanValidation(validateIban(cleaned))
+      const validation = validateIban(cleaned)
+      setIbanValidation(validation)
+      // Auto-fill BIC and bank name when bank is recognized
+      if (validation.valid && validation.bankInfo) {
+        setBic(validation.bankInfo.bic)
+        setBankName(validation.bankInfo.name)
+      }
     } else {
       setIbanValidation(null)
     }
@@ -196,9 +301,13 @@ export function BankDataChangeForm({ supplierId }: Props) {
                   <p className="text-green-700 mt-0.5">
                     {ibanValidation.countryName && `Land: ${ibanValidation.countryName}`}
                     {ibanValidation.bankCode && ` · Bankcode: ${ibanValidation.bankCode}`}
+                    {ibanValidation.bankInfo && ` · ${ibanValidation.bankInfo.name}`}
                   </p>
                   {ibanValidation.formattedIban && (
                     <p className="font-mono mt-0.5">{ibanValidation.formattedIban}</p>
+                  )}
+                  {ibanValidation.bankInfo && (
+                    <p className="text-green-600 mt-0.5">BIC und Bankname automatisch ausgefuellt</p>
                   )}
                 </div>
               </div>
