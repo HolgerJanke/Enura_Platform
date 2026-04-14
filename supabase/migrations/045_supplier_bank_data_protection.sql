@@ -8,7 +8,7 @@ BEGIN;
 -- 1. New permissions
 -- =========================================================================
 
-INSERT INTO public.permissions (id, key, label_de, description)
+INSERT INTO public.permissions (id, key, label, description)
 VALUES
   (gen_random_uuid(), 'module:finanzplanung:review_bank_data',
    'Bankdaten pruefen',
