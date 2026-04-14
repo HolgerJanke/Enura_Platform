@@ -54,6 +54,8 @@ interface PeriodBucket {
   actualNet: number
   cumulativePlan: number
   cumulativeActual: number
+  cumulativeCombined: number
+  isPast: boolean
 }
 
 interface Props {
@@ -159,6 +161,8 @@ export function LiquidityClient({
           actualNet: 0,
           cumulativePlan: 0,
           cumulativeActual: 0,
+          cumulativeCombined: 0,
+          isPast: false,
         })
         orderedKeys.push(key)
       }
@@ -180,6 +184,8 @@ export function LiquidityClient({
     let cumPlan = openingBalance
     let cumActual = openingBalance
 
+    const todayKey = new Date().toISOString().split('T')[0]!
+
     return orderedKeys.map((key) => {
       const b = bucketMap.get(key)!
       b.planNet = b.planIncome - b.planExpense
@@ -188,6 +194,9 @@ export function LiquidityClient({
       cumActual += b.actualNet
       b.cumulativePlan = cumPlan
       b.cumulativeActual = cumActual
+      // Combined: use Ist for past periods, Plan for future
+      b.isPast = key <= todayKey
+      b.cumulativeCombined = b.isPast ? cumActual : cumPlan
       return b
     })
   }, [filteredEvents, groupBy, openingBalance])
@@ -350,19 +359,19 @@ export function LiquidityClient({
               />
               <Line
                 type="monotone"
-                dataKey="cumulativePlan"
-                name="Kumuliert (Plan)"
-                stroke="var(--brand-primary)"
-                strokeDasharray="5 5"
-                strokeWidth={2}
+                dataKey="cumulativeCombined"
+                name="Kumuliert (Ist → Plan)"
+                stroke="#059669"
+                strokeWidth={2.5}
                 dot={false}
               />
               <Line
                 type="monotone"
-                dataKey="cumulativeActual"
-                name="Kumuliert (Ist)"
-                stroke="var(--brand-accent)"
-                strokeWidth={2}
+                dataKey="cumulativePlan"
+                name="Kumuliert (nur Plan)"
+                stroke="#9ca3af"
+                strokeDasharray="5 5"
+                strokeWidth={1.5}
                 dot={false}
               />
             </ComposedChart>
