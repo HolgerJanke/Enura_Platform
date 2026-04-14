@@ -226,6 +226,24 @@ export function GanttClient({ projects, events, currency }: Props) {
           </div>
         </div>
 
+        {/* Legend */}
+        <div className="flex items-center gap-3 text-[10px] text-gray-500">
+          {viewMode === 'progress' ? (
+            <>
+              <div className="flex items-center gap-1"><div className="h-2.5 w-2.5 rounded-sm bg-blue-600" /> Einnahme (Ist)</div>
+              <div className="flex items-center gap-1"><div className="h-2.5 w-2.5 rounded-sm border-2 border-blue-600" /> Einnahme (Plan)</div>
+              <div className="flex items-center gap-1"><div className="h-2.5 w-2.5 rounded-sm bg-emerald-600" /> Ausgabe (Ist)</div>
+              <div className="flex items-center gap-1"><div className="h-2.5 w-2.5 rounded-sm border-2 border-emerald-600" /> Ausgabe (Plan)</div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1"><div className="h-2.5 w-4 rounded-sm bg-green-400" /> Cashflow positiv</div>
+              <div className="flex items-center gap-1"><div className="h-2.5 w-4 rounded-sm bg-red-400" /> Cashflow negativ</div>
+            </>
+          )}
+          <div className="flex items-center gap-1"><div className="h-3 w-px bg-red-500" /> Heute</div>
+        </div>
+
         {/* Time range slicer */}
         <div className="flex items-center gap-2">
           {([['1m', '1 Monat'], ['3m', '3 Monate'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle']] as const).map(([key, label]) => (
@@ -477,24 +495,7 @@ export function GanttClient({ projects, events, currency }: Props) {
         </div>
       )}
 
-      {/* Legend */}
-      <div className="flex items-center gap-6 mt-4 text-[10px] text-gray-500">
-        <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-blue-600" /> Einnahme (realisiert)
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm border-2 border-blue-600" /> Einnahme (geplant)
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-emerald-600" /> Ausgabe (realisiert)
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm border-2 border-emerald-600" /> Ausgabe (geplant)
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="h-3 w-px bg-red-400" /> Heute
-        </div>
-      </div>
+      {/* empty — legend moved to header */}
     </div>
   )
 }
