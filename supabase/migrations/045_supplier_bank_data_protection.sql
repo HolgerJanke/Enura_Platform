@@ -114,13 +114,14 @@ CREATE TABLE IF NOT EXISTS public.supplier_bank_change_requests (
   -- Urgency
   is_urgent               BOOLEAN NOT NULL DEFAULT FALSE,
   urgent_justification    TEXT,
-  -- 4-eyes constraints
+  -- 4-eyes constraints (only enforced when values are set)
   CONSTRAINT chk_four_eyes_reviewer
-    CHECK (reviewed_by IS DISTINCT FROM requested_by),
+    CHECK (reviewed_by IS NULL OR reviewed_by IS DISTINCT FROM requested_by),
   CONSTRAINT chk_four_eyes_approver
     CHECK (
-      approved_by IS DISTINCT FROM requested_by
-      AND approved_by IS DISTINCT FROM reviewed_by
+      approved_by IS NULL
+      OR (approved_by IS DISTINCT FROM requested_by
+          AND approved_by IS DISTINCT FROM reviewed_by)
     )
 );
 
