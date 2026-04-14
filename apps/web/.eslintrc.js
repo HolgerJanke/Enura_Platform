@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: ['next/core-web-vitals'],
+  extends: [],
   rules: {
     '@typescript-eslint/no-explicit-any': 'error',
   },
