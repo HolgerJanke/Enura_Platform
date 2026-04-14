@@ -324,30 +324,28 @@ export function LiquidityClient({
                 dataKey="planIncome"
                 name="Einnahmen (Plan)"
                 stackId="plan"
-                fill="var(--brand-primary)"
-                fillOpacity={0.3}
+                fill="#93c5fd"
                 radius={[2, 2, 0, 0]}
               />
               <Bar
                 dataKey="planExpense"
                 name="Ausgaben (Plan)"
                 stackId="plan"
-                fill="#f59e0b"
-                fillOpacity={0.3}
+                fill="#fcd34d"
                 radius={[2, 2, 0, 0]}
               />
               <Bar
                 dataKey="actualIncome"
                 name="Einnahmen (Ist)"
                 stackId="actual"
-                fill="var(--brand-primary)"
+                fill="#2563eb"
                 radius={[2, 2, 0, 0]}
               />
               <Bar
                 dataKey="actualExpense"
                 name="Ausgaben (Ist)"
                 stackId="actual"
-                fill="#f59e0b"
+                fill="#d97706"
                 radius={[2, 2, 0, 0]}
               />
               <Line
