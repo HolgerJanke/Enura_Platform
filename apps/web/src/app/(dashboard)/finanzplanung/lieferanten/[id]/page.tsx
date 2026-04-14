@@ -41,7 +41,7 @@ export default async function SupplierDetailPage({ params }: PageProps) {
     )
   }
 
-  const supplier = supplierRaw as Record<string, unknown>
+  const supplier = supplierRaw as Record<string, string | number | boolean | null>
 
   // Fetch bank data versions
   const { data: bankDataRaw } = await supabase
@@ -126,9 +126,8 @@ export default async function SupplierDetailPage({ params }: PageProps) {
             <div className="flex justify-between">
               <dt className="text-gray-500">Adresse</dt>
               <dd className="text-right text-gray-900">
-                {supplier['address_line_1'] ?? '—'}
-                {supplier['address_line_2'] ? <br /> : null}
-                {supplier['address_line_2'] as string}
+                {String(supplier['address_line_1'] ?? '—')}
+                {supplier['address_line_2'] ? <><br />{String(supplier['address_line_2'])}</> : null}
               </dd>
             </div>
             <div className="flex justify-between">
