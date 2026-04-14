@@ -3126,6 +3126,8 @@ export interface SupplierRow {
   bank_name: string | null;
   preferred_payment_days: number;
   is_active: boolean;
+  bank_data_verified: boolean;
+  active_bank_data_id: string | null;
   created_from_invoice: string | null;
   created_by: string | null;
   created_at: string;
@@ -3172,6 +3174,97 @@ export interface SupplierUpdate {
   bank_name?: string | null;
   preferred_payment_days?: number;
   is_active?: boolean;
+}
+
+// =============================================================================
+// TABLE: supplier_bank_data
+// =============================================================================
+
+export interface SupplierBankDataRow {
+  id: string;
+  supplier_id: string;
+  holding_id: string;
+  company_id: string;
+  version: number;
+  iban: string;
+  bic: string | null;
+  bank_name: string | null;
+  is_active: boolean;
+  activated_at: string | null;
+  deactivated_at: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+// =============================================================================
+// TABLE: supplier_bank_change_requests
+// =============================================================================
+
+export type BankChangeRequestStatus =
+  | 'pending_review'
+  | 'reviewed'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled';
+
+export type BankChangeSource =
+  | 'internal'
+  | 'supplier_request'
+  | 'invoice_mismatch';
+
+export interface SupplierBankChangeRequestRow {
+  id: string;
+  supplier_id: string;
+  holding_id: string;
+  company_id: string;
+  proposed_iban: string;
+  proposed_bic: string | null;
+  proposed_bank_name: string | null;
+  reason: string;
+  source: BankChangeSource;
+  evidence_storage_path: string | null;
+  status: BankChangeRequestStatus;
+  requested_by: string;
+  requested_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_comment: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  approval_comment: string | null;
+  rejected_by: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  resulting_bank_data_id: string | null;
+  is_urgent: boolean;
+  urgent_justification: string | null;
+}
+
+// =============================================================================
+// TABLE: supplier_bank_change_log
+// =============================================================================
+
+export type BankChangeLogAction =
+  | 'created'
+  | 'reviewed'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled'
+  | 'activated'
+  | 'evidence_uploaded';
+
+export interface SupplierBankChangeLogRow {
+  id: string;
+  request_id: string | null;
+  holding_id: string;
+  company_id: string;
+  action: BankChangeLogAction;
+  actor_id: string;
+  old_status: string | null;
+  new_status: string | null;
+  comment: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
 }
 
 // =============================================================================

@@ -24,6 +24,7 @@ export default async function FinanzplanungPage() {
   let pendingApprovals = 0
   let scheduledPayments = 0
   let overdueCount = 0
+  let pendingBankDataChanges = 0
 
   if (session?.companyId) {
     const [invoicesRes, approvalsRes, scheduledRes, overdueRes] = await Promise.all([
@@ -54,6 +55,14 @@ export default async function FinanzplanungPage() {
     pendingApprovals = approvalsRes.count ?? 0
     scheduledPayments = scheduledRes.count ?? 0
     overdueCount = overdueRes.count ?? 0
+
+    const bankDataRes = await supabase
+      .from('supplier_bank_change_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', session.companyId)
+      .in('status', ['pending_review', 'reviewed'])
+
+    pendingBankDataChanges = bankDataRes.count ?? 0
   }
 
   const cards = [
@@ -91,6 +100,7 @@ export default async function FinanzplanungPage() {
   const hasPlanCashout = session?.permissions.includes('module:finanzplanung:plan_cashout') || session?.isHoldingAdmin
   const hasApprovePayment = session?.permissions.includes('module:finanzplanung:approve_payment') || session?.isHoldingAdmin
   const hasManageSuppliers = session?.permissions.includes('module:finanzplanung:manage_suppliers') || session?.isHoldingAdmin
+  const hasBankDataReview = session?.permissions.includes('module:finanzplanung:review_bank_data') || session?.permissions.includes('module:finanzplanung:approve_bank_data') || session?.isHoldingAdmin
 
   return (
     <div className="p-6">
@@ -198,7 +208,33 @@ export default async function FinanzplanungPage() {
               </div>
               <h3 className="text-sm font-semibold text-gray-900">Genehmigungen</h3>
             </div>
-            <p className="text-xs text-gray-500">Zahlungsläufe prüfen und freigeben</p>
+            <p className="text-xs text-gray-500">Zahlungslaeufe pruefen und freigeben</p>
+          </Link>
+        )}
+
+        {hasBankDataReview && (
+          <Link
+            href="/finanzplanung/bankdaten-genehmigung"
+            className={`rounded-lg border p-5 hover:shadow-sm transition-shadow ${
+              pendingBankDataChanges > 0
+                ? 'border-yellow-300 bg-yellow-50'
+                : 'border-gray-200 bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100">
+                <svg className="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900">Bankdaten-Genehmigung</h3>
+              {pendingBankDataChanges > 0 && (
+                <span className="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-yellow-500 px-1.5 text-xs font-bold text-white">
+                  {pendingBankDataChanges}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500">Lieferanten-Bankdaten pruefen und genehmigen (4-Augen-Prinzip)</p>
           </Link>
         )}
       </div>
