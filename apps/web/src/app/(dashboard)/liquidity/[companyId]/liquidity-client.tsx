@@ -118,7 +118,7 @@ export function LiquidityClient({
   minThreshold,
 }: Props) {
   const [periodDays, setPeriodDays] = useState<PeriodDays>(90)
-  const [groupBy, setGroupBy] = useState<GroupBy>('monthly')
+  const [groupBy, setGroupBy] = useState<GroupBy>('weekly')
   const [currency, setCurrency] = useState('CHF')
   const [drawerEvent, setDrawerEvent] = useState<LiquidityEvent | null>(null)
 
