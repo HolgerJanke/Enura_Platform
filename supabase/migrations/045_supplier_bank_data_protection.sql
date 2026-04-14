@@ -310,7 +310,7 @@ INSERT INTO public.supplier_bank_data (
 )
 SELECT
   s.id, s.holding_id, s.company_id, 0, s.iban, s.bic, s.bank_name,
-  TRUE, NOW(), s.created_by
+  TRUE, NOW(), COALESCE(s.created_by, (SELECT id FROM public.profiles LIMIT 1))
 FROM public.suppliers s
 WHERE s.iban IS NOT NULL
   AND s.iban <> ''
@@ -331,7 +331,7 @@ INSERT INTO public.supplier_bank_change_log (
   request_id, holding_id, company_id, action, actor_id, new_status, metadata
 )
 SELECT
-  gen_random_uuid(), -- no request_id for migration entries
+  NULL, -- no request_id for migration entries
   sbd.holding_id, sbd.company_id, 'activated', sbd.created_by, 'approved',
   jsonb_build_object('migration', '045', 'source', 'legacy_data', 'iban_last4', right(sbd.iban, 4))
 FROM public.supplier_bank_data sbd
