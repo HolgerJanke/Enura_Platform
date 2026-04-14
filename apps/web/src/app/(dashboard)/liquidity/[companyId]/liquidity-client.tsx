@@ -46,6 +46,7 @@ type GroupBy = 'weekly' | 'monthly'
 interface PeriodBucket {
   key: string
   label: string
+  sortDate: string
   planIncome: number
   planExpense: number
   actualIncome: number
@@ -153,6 +154,7 @@ export function LiquidityClient({
         bucketMap.set(key, {
           key,
           label: key,
+          sortDate: evt.budget_date!,
           planIncome: 0,
           planExpense: 0,
           actualIncome: 0,
@@ -184,7 +186,7 @@ export function LiquidityClient({
     let cumPlan = openingBalance
     let cumActual = openingBalance
 
-    const todayKey = new Date().toISOString().split('T')[0]!
+    const todayStr = new Date().toISOString().split('T')[0]!
 
     return orderedKeys.map((key) => {
       const b = bucketMap.get(key)!
@@ -195,7 +197,7 @@ export function LiquidityClient({
       b.cumulativePlan = cumPlan
       b.cumulativeActual = cumActual
       // Combined: use Ist for past periods, Plan for future
-      b.isPast = key <= todayKey
+      b.isPast = b.sortDate <= todayStr
       b.cumulativeCombined = b.isPast ? cumActual : cumPlan
       return b
     })
@@ -320,7 +322,37 @@ export function LiquidityClient({
                   borderRadius: 'var(--brand-radius)',
                 }}
               />
-              <Legend />
+              <Legend
+                content={({ payload }) => {
+                  const items = payload ?? []
+                  return (
+                    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2 text-xs text-brand-text-secondary">
+                      {items.map((entry, i) => (
+                        <span key={i} className="flex items-center gap-1.5">
+                          <span
+                            className="inline-block h-2.5 w-4 rounded-sm"
+                            style={{
+                              backgroundColor: entry.type === 'line' ? 'transparent' : (entry.color ?? '#999'),
+                              borderBottom: entry.type === 'line' ? `2.5px solid ${entry.color}` : undefined,
+                              borderStyle: entry.type === 'line' && entry.payload?.strokeDasharray ? 'dashed' : undefined,
+                            }}
+                          />
+                          {entry.value}
+                        </span>
+                      ))}
+                      {minThreshold > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className="inline-block h-0 w-4"
+                            style={{ borderBottom: '2.5px dashed #ef4444' }}
+                          />
+                          Mindestliquidität ({formatAmount(minThreshold, currency)})
+                        </span>
+                      )}
+                    </div>
+                  )
+                }}
+              />
               {minThreshold > 0 && (
                 <ReferenceLine
                   y={minThreshold}
@@ -379,47 +411,72 @@ export function LiquidityClient({
         )}
       </div>
 
-      {/* Overdue events section */}
-      {overdueEvents.length > 0 && (
-        <div className="rounded-brand border-2 border-red-300 bg-red-50 p-4 sm:p-6 mb-8">
-          <h2 className="text-lg font-medium text-red-800 mb-4">
-            Überfällige Ereignisse ({overdueEvents.length})
-          </h2>
-          <div className="space-y-3">
-            {overdueEvents.map((evt) => {
-              const daysOver = evt.budget_date
-                ? daysDiff(evt.budget_date, new Date().toISOString().split('T')[0]!)
-                : 0
-              return (
-                <div
-                  key={evt.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-brand p-3 border border-red-200"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-brand-text-primary">
-                      {projectMap[evt.project_id] ?? 'Projekt'} &mdash; {evt.step_name}
-                    </p>
-                    <p className="text-xs text-brand-text-secondary">
-                      {evt.direction === 'income' ? 'Einnahme' : 'Ausgabe'} &middot;{' '}
-                      Plan: {evt.budget_date ? formatDate(evt.budget_date) : '–'} &middot;{' '}
-                      {formatAmount(Number(evt.budget_amount ?? 0), evt.plan_currency)} &middot;{' '}
-                      <span className="text-red-600 font-medium">{daysOver} Tage überfällig</span>
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleCaptureActual(evt)}
-                    className="inline-flex items-center gap-1.5 rounded-brand bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700"
-                    aria-label={`Ist-Wert erfassen für ${evt.step_name}`}
-                  >
-                    Ist-Wert erfassen
-                  </button>
+      {/* Overdue events section — split into Forderungen (income) and Verbindlichkeiten (expense) */}
+      {overdueEvents.length > 0 && (() => {
+        const overdueForderungen = overdueEvents.filter((e) => e.direction === 'income')
+        const overdueVerbindlichkeiten = overdueEvents.filter((e) => e.direction !== 'income')
+        const renderOverdueCard = (evt: LiquidityEvent) => {
+          const daysOver = evt.budget_date
+            ? daysDiff(evt.budget_date, new Date().toISOString().split('T')[0]!)
+            : 0
+          const isIncome = evt.direction === 'income'
+          return (
+            <div
+              key={evt.id}
+              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-brand p-3 border ${isIncome ? 'border-green-200' : 'border-red-200'}`}
+            >
+              <div className="flex-1">
+                <p className="text-sm font-medium text-brand-text-primary">
+                  {projectMap[evt.project_id] ?? 'Projekt'} &mdash; {evt.step_name}
+                </p>
+                <p className="text-xs text-brand-text-secondary">
+                  Plan: {evt.budget_date ? formatDate(evt.budget_date) : '–'} &middot;{' '}
+                  {formatAmount(Number(evt.budget_amount ?? 0), evt.plan_currency)} &middot;{' '}
+                  <span className={`font-medium ${isIncome ? 'text-green-700' : 'text-red-600'}`}>{daysOver} Tage überfällig</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCaptureActual(evt)}
+                className={`inline-flex items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-medium text-white transition-colors ${isIncome ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                aria-label={`Ist-Wert erfassen für ${evt.step_name}`}
+              >
+                Ist-Wert erfassen
+              </button>
+            </div>
+          )
+        }
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+            {/* Forderungen (income) — green */}
+            <div className="rounded-brand border-2 border-green-300 bg-green-50 p-4 sm:p-6">
+              <h2 className="text-lg font-medium text-green-800 mb-4">
+                Forderungen ({overdueForderungen.length})
+              </h2>
+              {overdueForderungen.length > 0 ? (
+                <div className="space-y-3">
+                  {overdueForderungen.map(renderOverdueCard)}
                 </div>
-              )
-            })}
+              ) : (
+                <p className="text-sm text-green-600">Keine überfälligen Forderungen.</p>
+              )}
+            </div>
+            {/* Verbindlichkeiten (expense) — red */}
+            <div className="rounded-brand border-2 border-red-300 bg-red-50 p-4 sm:p-6">
+              <h2 className="text-lg font-medium text-red-800 mb-4">
+                Verbindlichkeiten ({overdueVerbindlichkeiten.length})
+              </h2>
+              {overdueVerbindlichkeiten.length > 0 ? (
+                <div className="space-y-3">
+                  {overdueVerbindlichkeiten.map(renderOverdueCard)}
+                </div>
+              ) : (
+                <p className="text-sm text-red-600">Keine überfälligen Verbindlichkeiten.</p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Plan vs Ist table */}
       <div className="bg-brand-surface rounded-brand border border-gray-200 overflow-hidden">
