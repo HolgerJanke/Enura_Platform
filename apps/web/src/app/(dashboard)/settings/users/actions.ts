@@ -215,13 +215,26 @@ export async function toggleUserActiveAction(
 
   const serviceClient = createSupabaseServiceClient()
 
+  // When reactivating: force password reset on next login
+  const updateData: Record<string, unknown> = { is_active: active }
+  if (active) {
+    updateData['must_reset_password'] = true
+  }
+
   const { error } = await serviceClient
     .from('profiles')
-    .update({ is_active: active })
+    .update(updateData)
     .eq('id', userId)
     .eq('company_id', session.companyId)
 
   if (error) return { error: 'Status konnte nicht geändert werden.' }
+
+  // If reactivating, also reset their Supabase Auth password to a temp one
+  if (active) {
+    const tempPassword = generateTemporaryPassword()
+    await serviceClient.auth.admin.updateUserById(userId, { password: tempPassword })
+    console.log(`[Reactivation] Temp password for ${userId}: ${tempPassword}`)
+  }
 
   await writeAuditLog({
     companyId: session.companyId,
@@ -229,7 +242,7 @@ export async function toggleUserActiveAction(
     action: active ? 'user.reactivated' : 'user.deactivated',
     tableName: 'profiles',
     recordId: userId,
-    newValues: { is_active: active },
+    newValues: { is_active: active, must_reset_password: active ? true : undefined },
   })
 
   return { success: true }
