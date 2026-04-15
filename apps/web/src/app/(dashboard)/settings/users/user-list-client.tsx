@@ -6,6 +6,7 @@ import type { ProfileRow, RoleRow } from '@enura/types'
 import { resetUserPasswordAction, toggleUserActiveAction, deleteUserAction } from './actions'
 import { CreateUserModal } from './create-user-modal'
 import { EditRolesPanel } from './edit-roles-panel'
+import { EditUserPanel } from './edit-user-panel'
 
 type ProfileRoleJoin = {
   profile_id: string
@@ -38,6 +39,7 @@ export function UserListClient({
   const [editRolesProfile, setEditRolesProfile] = useState<ProfileRow | null>(
     null
   )
+  const [editUserProfile, setEditUserProfile] = useState<ProfileRow | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -291,6 +293,17 @@ export function UserListClient({
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
+                          onClick={() => setEditUserProfile(profile)}
+                          disabled={isPending}
+                          className="rounded-brand px-2.5 py-1.5 text-xs font-medium text-brand-text-secondary hover:bg-gray-100 transition-colors disabled:opacity-50"
+                          title="Benutzer bearbeiten"
+                          aria-label={`Bearbeiten: ${displayName}`}
+                        >
+                          Bearbeiten
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() =>
                             setConfirmAction({
                               type: 'reset_password',
@@ -393,6 +406,18 @@ export function UserListClient({
           isCurrentUser={editRolesProfile.id === currentUserId}
           open={editRolesProfile !== null}
           onClose={() => setEditRolesProfile(null)}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {/* Edit user panel */}
+      {editUserProfile && (
+        <EditUserPanel
+          profile={editUserProfile}
+          email={null}
+          isCurrentUser={editUserProfile.id === currentUserId}
+          open={editUserProfile !== null}
+          onClose={() => setEditUserProfile(null)}
           onSuccess={handleSuccess}
         />
       )}

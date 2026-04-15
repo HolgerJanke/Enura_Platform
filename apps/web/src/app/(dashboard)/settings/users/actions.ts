@@ -239,6 +239,54 @@ export async function toggleUserActiveAction(
 }
 
 // ---------------------------------------------------------------------------
+// Update user profile
+// ---------------------------------------------------------------------------
+
+export async function updateUserProfileAction(
+  userId: string,
+  data: { firstName: string; lastName: string; phone: string | null }
+): Promise<{ error?: string; success?: boolean }> {
+  const session = await getSession()
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
+
+  const serviceClient = createSupabaseServiceClient()
+
+  // Verify user belongs to same company
+  const { data: profile } = await serviceClient
+    .from('profiles')
+    .select('id, company_id')
+    .eq('id', userId)
+    .single()
+
+  if (!profile || profile.company_id !== session.companyId) {
+    return { error: 'Benutzer nicht gefunden.' }
+  }
+
+  const { error } = await serviceClient
+    .from('profiles')
+    .update({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      display_name: `${data.firstName} ${data.lastName}`,
+      phone: data.phone,
+    })
+    .eq('id', userId)
+
+  if (error) return { error: 'Profil konnte nicht aktualisiert werden.' }
+
+  await writeAuditLog({
+    companyId: session.companyId,
+    actorId: session.profile.id,
+    action: 'user.profile_updated',
+    tableName: 'profiles',
+    recordId: userId,
+    newValues: { firstName: data.firstName, lastName: data.lastName, phone: data.phone },
+  })
+
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
 // Delete user
 // ---------------------------------------------------------------------------
 
