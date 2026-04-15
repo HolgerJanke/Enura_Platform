@@ -41,6 +41,7 @@ export function UserListClient({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [showTempPassword, setShowTempPassword] = useState<{ userName: string; password: string } | null>(null)
 
   const getRolesForProfile = useCallback(
     (profileId: string) => {
@@ -65,7 +66,7 @@ export function UserListClient({
     setActionError(null)
 
     startTransition(async () => {
-      let result: { error?: string; success?: boolean }
+      let result: { error?: string; success?: boolean; tempPassword?: string }
 
       if (confirmAction.type === 'reset_password') {
         result = await resetUserPasswordAction(confirmAction.userId)
@@ -79,6 +80,9 @@ export function UserListClient({
       if (result.error) {
         setActionError(result.error)
       } else {
+        if (result.tempPassword) {
+          setShowTempPassword({ userName: confirmAction.userName, password: result.tempPassword })
+        }
         setConfirmAction(null)
         setActionError(null)
         router.refresh()
@@ -478,6 +482,59 @@ export function UserListClient({
                       : 'Deaktivieren'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Temp password display dialog */}
+      {showTempPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-brand p-6 shadow-xl max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Temporaeres Passwort</h3>
+                <p className="text-xs text-gray-500">{showTempPassword.userName}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-3">
+              Bitte teilen Sie dieses Passwort dem Benutzer mit. Es muss beim naechsten Login geaendert werden.
+            </p>
+
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg border border-gray-200 p-3 mb-4">
+              <code className="flex-1 text-sm font-mono font-bold text-gray-900 select-all">
+                {showTempPassword.password}
+              </code>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(showTempPassword.password).catch(() => {})
+                }}
+                className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                Kopieren
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-2.5 mb-4">
+              <p className="text-xs text-yellow-800">
+                Dieses Passwort wird nur einmal angezeigt und kann nicht erneut abgerufen werden.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTempPassword(null)}
+              className="w-full rounded-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: 'var(--brand-primary)' }}
+            >
+              Verstanden
+            </button>
           </div>
         </div>
       )}

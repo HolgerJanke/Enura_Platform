@@ -11,7 +11,7 @@ export async function createUserAction(data: {
   lastName: string
   email: string
   roleIds: string[]
-}): Promise<{ error?: string; success?: boolean }> {
+}): Promise<{ error?: string; success?: boolean; tempPassword?: string }> {
   const session = await getSession()
   if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
@@ -64,11 +64,6 @@ export async function createUserAction(data: {
     })
   }
 
-  // Log temp password in dev (in production, send email via Resend)
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[DEV] New user: ${data.email} / ${tempPassword}`)
-  }
-
   await writeAuditLog({
     companyId: session.companyId,
     actorId: session.profile.id,
@@ -82,7 +77,7 @@ export async function createUserAction(data: {
     },
   })
 
-  return { success: true }
+  return { success: true, tempPassword }
 }
 
 export async function updateUserRolesAction(
@@ -151,7 +146,7 @@ export async function updateUserRolesAction(
 
 export async function resetUserPasswordAction(
   userId: string
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; tempPassword?: string }> {
   const session = await getSession()
   if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
@@ -185,11 +180,6 @@ export async function resetUserPasswordAction(
     })
     .eq('id', userId)
 
-  // Log in dev (in production, send email via Resend)
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[DEV] Password reset for ${userId}: ${tempPassword}`)
-  }
-
   await writeAuditLog({
     companyId: session.companyId,
     actorId: session.profile.id,
@@ -198,7 +188,7 @@ export async function resetUserPasswordAction(
     recordId: userId,
   })
 
-  return { success: true }
+  return { success: true, tempPassword }
 }
 
 export async function toggleUserActiveAction(

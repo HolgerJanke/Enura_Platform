@@ -18,6 +18,7 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [tempPassword, setTempPassword] = useState<string | null>(null)
   const firstInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
       setEmail('')
       setSelectedRoleIds([])
       setError(null)
+      setTempPassword(null)
       // Focus first input after render
       setTimeout(() => firstInputRef.current?.focus(), 50)
     }
@@ -66,6 +68,9 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
 
         if (result.error) {
           setError(result.error)
+        } else if (result.tempPassword) {
+          setTempPassword(result.tempPassword)
+          onSuccess()
         } else {
           onSuccess()
           onClose()
@@ -98,6 +103,50 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
 
       {/* Modal */}
       <div className="relative z-10 w-full max-w-lg rounded-brand bg-brand-background p-6 shadow-xl mx-4">
+        {tempPassword ? (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-brand-text-primary">Benutzer erstellt</h3>
+                <p className="text-xs text-brand-text-secondary">{firstName} {lastName} ({email})</p>
+              </div>
+            </div>
+            <p className="text-xs text-brand-text-secondary mb-3">
+              Bitte teilen Sie dieses temporaere Passwort dem Benutzer mit. Es muss beim ersten Login geaendert werden.
+            </p>
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg border border-gray-200 p-3 mb-4">
+              <code className="flex-1 text-sm font-mono font-bold text-brand-text-primary select-all">
+                {tempPassword}
+              </code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(tempPassword).catch(() => {})}
+                className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                Kopieren
+              </button>
+            </div>
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-2.5 mb-4">
+              <p className="text-xs text-yellow-800">
+                Dieses Passwort wird nur einmal angezeigt und kann nicht erneut abgerufen werden.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: 'var(--brand-primary)' }}
+            >
+              Verstanden
+            </button>
+          </div>
+        ) : (
+        <>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-brand-text-primary">
             Neuer Benutzer
@@ -266,6 +315,8 @@ export function CreateUserModal({ roles, open, onClose, onSuccess }: Props) {
             </button>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   )
