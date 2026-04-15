@@ -194,7 +194,7 @@ export async function resetUserPasswordAction(
 export async function toggleUserActiveAction(
   userId: string,
   active: boolean
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; tempPassword?: string }> {
   const session = await getSession()
   if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
 
@@ -220,10 +220,10 @@ export async function toggleUserActiveAction(
   if (error) return { error: 'Status konnte nicht geändert werden.' }
 
   // If reactivating, also reset their Supabase Auth password to a temp one
+  let tempPassword: string | undefined
   if (active) {
-    const tempPassword = generateTemporaryPassword()
+    tempPassword = generateTemporaryPassword()
     await serviceClient.auth.admin.updateUserById(userId, { password: tempPassword })
-    console.log(`[Reactivation] Temp password for ${userId}: ${tempPassword}`)
   }
 
   await writeAuditLog({
@@ -235,7 +235,7 @@ export async function toggleUserActiveAction(
     newValues: { is_active: active, must_reset_password: active ? true : undefined },
   })
 
-  return { success: true }
+  return { success: true, tempPassword }
 }
 
 // ---------------------------------------------------------------------------
