@@ -356,12 +356,14 @@ export function GanttClient({ projects, events, currency }: Props) {
 
               // Step 1: Calculate cumulative cashflow at each event point
               const points: Array<{ x: number; positive: boolean }> = []
+              let minCashflow = 0
               for (const evt of sorted) {
                 const d = displayDate(evt)!
                 const x = daysBetween(minDate, new Date(d)) * dayWidth
                 const amt = displayAmount(evt)
                 cumulative += evt.direction === 'income' ? amt : -amt
                 points.push({ x, positive: cumulative >= 0 })
+                if (cumulative < minCashflow) minCashflow = cumulative
               }
 
               // Step 2: Build non-overlapping segments between consecutive points
@@ -397,6 +399,10 @@ export function GanttClient({ projects, events, currency }: Props) {
                 })
               }
 
+              // Position label after last segment
+              const lastSeg = segments.length > 0 ? segments[segments.length - 1]! : null
+              const labelX = lastSeg ? lastSeg.x + lastSeg.w + 4 : 0
+
               return (
                 <div key={proj.id} className="flex">
                   {nameCell}
@@ -408,6 +414,14 @@ export function GanttClient({ projects, events, currency }: Props) {
                         style={{ left: seg.x, width: Math.max(seg.w, 2) }}
                       />
                     ))}
+                    {segments.length > 0 && minCashflow < 0 && (
+                      <span
+                        className="absolute top-0.5 text-[9px] font-medium text-red-600 whitespace-nowrap"
+                        style={{ left: labelX }}
+                      >
+                        {formatCHF(minCashflow, currency)}
+                      </span>
+                    )}
                   </div>
                 </div>
               )
