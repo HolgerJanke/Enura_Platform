@@ -2,6 +2,7 @@ import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { UserListClient } from './user-list-client'
+import { Require2faToggle } from './require-2fa-toggle'
 
 export default async function UsersSettingsPage() {
   await requirePermission('module:admin:users')
@@ -34,8 +35,23 @@ export default async function UsersSettingsPage() {
     .select('profile_id, role_id, roles(id, key, label)')
     .in('profile_id', profileIds.length > 0 ? profileIds : ['none'])
 
+  // Fetch 2FA setting
+  const canAdmin = session.permissions.includes('module:admin:write') || session.isHoldingAdmin
+  let require2fa = false
+  if (canAdmin && companyId) {
+    const { data: settings } = await supabase
+      .from('company_settings')
+      .select('require_2fa')
+      .eq('company_id', companyId)
+      .single()
+    require2fa = (settings as Record<string, unknown> | null)?.require_2fa === true
+  }
+
   return (
     <div className="p-6">
+      {canAdmin && (
+        <Require2faToggle initialValue={require2fa} />
+      )}
       <UserListClient
         profiles={profiles ?? []}
         roles={roles ?? []}

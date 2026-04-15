@@ -158,13 +158,7 @@ function handleMockAuth(request: NextRequest): NextResponse {
         if (parsed.mustResetPassword && pathname !== '/reset-password') {
           return redirectTo(request, '/reset-password')
         }
-        if (
-          !parsed.totpEnabled &&
-          pathname !== '/enrol-2fa' &&
-          !parsed.mustResetPassword
-        ) {
-          return redirectTo(request, '/enrol-2fa')
-        }
+        // 2FA gate skipped in mock auth — require_2fa defaults to false
       } catch {
         return redirectTo(request, '/login')
       }
@@ -209,13 +203,7 @@ function handleMockAuth(request: NextRequest): NextResponse {
       if (parsed.mustResetPassword && pathname !== '/reset-password') {
         return redirectTo(request, '/reset-password')
       }
-      if (
-        !parsed.totpEnabled &&
-        pathname !== '/enrol-2fa' &&
-        !parsed.mustResetPassword
-      ) {
-        return redirectTo(request, '/enrol-2fa')
-      }
+      // 2FA gate skipped in mock auth — require_2fa defaults to false
     } catch {
       return redirectTo(request, '/login')
     }
@@ -254,6 +242,7 @@ interface CompanyRow {
 interface ProfileRow {
   must_reset_password: boolean
   totp_enabled: boolean
+  company_id: string | null
 }
 
 async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
@@ -315,7 +304,7 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
       // Fetch profile for auth gates
       const { data: profile } = await supabase
         .from('profiles')
-        .select('must_reset_password, totp_enabled')
+        .select('must_reset_password, totp_enabled, company_id')
         .eq('id', user.id)
         .single<ProfileRow>()
 
@@ -328,14 +317,27 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
           pathname !== '/enrol-2fa' &&
           !profile.must_reset_password
         ) {
-          return redirectTo(request, '/enrol-2fa')
+          // Check if company requires 2FA
+          if (profile.company_id) {
+            const { data: settings } = await supabase
+              .from('company_settings')
+              .select('require_2fa')
+              .eq('company_id', profile.company_id)
+              .single()
+            if ((settings as Record<string, unknown> | null)?.require_2fa) {
+              return redirectTo(request, '/enrol-2fa')
+            }
+          }
+          // 2FA not required — allow access without TOTP
         }
       }
 
-      // Check MFA assurance level
-      const mfaRedirect = await checkMfaLevel(supabase, pathname)
-      if (mfaRedirect) {
-        return redirectTo(request, mfaRedirect)
+      // Check MFA assurance level (only if user has TOTP enabled)
+      if (profile?.totp_enabled) {
+        const mfaRedirect = await checkMfaLevel(supabase, pathname)
+        if (mfaRedirect) {
+          return redirectTo(request, mfaRedirect)
+        }
       }
     }
 
@@ -458,7 +460,7 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
     // Fetch profile for password-reset and TOTP gates
     const { data: profile } = await supabase
       .from('profiles')
-      .select('must_reset_password, totp_enabled')
+      .select('must_reset_password, totp_enabled, company_id')
       .eq('id', user.id)
       .single<ProfileRow>()
 
@@ -468,20 +470,31 @@ async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
         return redirectTo(request, '/reset-password')
       }
 
-      // Gate 2: TOTP must be enrolled (only check after password is set)
+      // Gate 2: TOTP must be enrolled (only if company requires 2FA)
       if (
         !profile.totp_enabled &&
         pathname !== '/enrol-2fa' &&
         !profile.must_reset_password
       ) {
-        return redirectTo(request, '/enrol-2fa')
+        if (profile.company_id) {
+          const { data: settings } = await supabase
+            .from('company_settings')
+            .select('require_2fa')
+            .eq('company_id', profile.company_id)
+            .single()
+          if ((settings as Record<string, unknown> | null)?.require_2fa) {
+            return redirectTo(request, '/enrol-2fa')
+          }
+        }
       }
     }
 
-    // Gate 3: MFA assurance level
-    const mfaRedirect = await checkMfaLevel(supabase, pathname)
-    if (mfaRedirect) {
-      return redirectTo(request, mfaRedirect)
+    // Gate 3: MFA assurance level (only if user has TOTP enabled)
+    if (profile?.totp_enabled) {
+      const mfaRedirect = await checkMfaLevel(supabase, pathname)
+      if (mfaRedirect) {
+        return redirectTo(request, mfaRedirect)
+      }
     }
   }
 

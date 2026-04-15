@@ -324,6 +324,13 @@ export default function EnrolTwoFactorPage() {
         Sie benoetigen eine Authenticator-App auf Ihrem Smartphone. Empfohlene
         Apps: Google Authenticator, Authy oder Microsoft Authenticator.
       </p>
+
+      <a
+        href="/dashboard"
+        className="mt-4 block text-center text-xs text-brand-text-secondary hover:text-brand-text-primary underline transition-colors"
+      >
+        Ueberspringen — spaeter einrichten
+      </a>
     </div>
   )
 }

@@ -234,3 +234,38 @@ export async function toggleUserActiveAction(
 
   return { success: true }
 }
+
+// ---------------------------------------------------------------------------
+// Toggle 2FA requirement for company
+// ---------------------------------------------------------------------------
+
+export async function toggleRequire2faAction(
+  require2fa: boolean
+): Promise<{ error?: string; success?: boolean }> {
+  const session = await getSession()
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
+
+  // Only super_user / admin:write can change this
+  const hasPermission = session.permissions.includes('module:admin:write') || session.isHoldingAdmin
+  if (!hasPermission) return { error: 'Keine Berechtigung.' }
+
+  const serviceClient = createSupabaseServiceClient()
+
+  const { error } = await serviceClient
+    .from('company_settings')
+    .update({ require_2fa: require2fa })
+    .eq('company_id', session.companyId)
+
+  if (error) return { error: 'Einstellung konnte nicht geaendert werden.' }
+
+  await writeAuditLog({
+    companyId: session.companyId,
+    actorId: session.profile.id,
+    action: 'company.2fa_policy_changed',
+    tableName: 'company_settings',
+    recordId: session.companyId,
+    newValues: { require_2fa: require2fa },
+  })
+
+  return { success: true }
+}
