@@ -3,7 +3,7 @@
 import { useCallback, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ProfileRow, RoleRow } from '@enura/types'
-import { resetUserPasswordAction, toggleUserActiveAction } from './actions'
+import { resetUserPasswordAction, toggleUserActiveAction, deleteUserAction } from './actions'
 import { CreateUserModal } from './create-user-modal'
 import { EditRolesPanel } from './edit-roles-panel'
 
@@ -21,7 +21,7 @@ type Props = {
 }
 
 type ConfirmAction = {
-  type: 'reset_password' | 'toggle_active'
+  type: 'reset_password' | 'toggle_active' | 'delete_user'
   userId: string
   userName: string
   active?: boolean
@@ -70,6 +70,8 @@ export function UserListClient({
 
       if (confirmAction.type === 'reset_password') {
         result = await resetUserPasswordAction(confirmAction.userId)
+      } else if (confirmAction.type === 'delete_user') {
+        result = await deleteUserAction(confirmAction.userId)
       } else {
         result = await toggleUserActiveAction(
           confirmAction.userId,
@@ -316,33 +318,53 @@ export function UserListClient({
                         </button>
 
                         {!isCurrentUser && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setConfirmAction({
-                                type: 'toggle_active',
-                                userId: profile.id,
-                                userName: displayName,
-                                active: !profile.is_active,
-                              })
-                            }
-                            disabled={isPending}
-                            className={`rounded-brand px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                              profile.is_active
-                                ? 'text-red-600 hover:bg-red-50'
-                                : 'text-green-600 hover:bg-green-50'
-                            }`}
-                            title={
-                              profile.is_active
+                          <>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setConfirmAction({
+                                  type: 'toggle_active',
+                                  userId: profile.id,
+                                  userName: displayName,
+                                  active: !profile.is_active,
+                                })
+                              }
+                              disabled={isPending}
+                              className={`rounded-brand px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                                profile.is_active
+                                  ? 'text-red-600 hover:bg-red-50'
+                                  : 'text-green-600 hover:bg-green-50'
+                              }`}
+                              title={
+                                profile.is_active
+                                  ? 'Deaktivieren'
+                                  : 'Aktivieren'
+                              }
+                              aria-label={`${profile.is_active ? 'Deaktivieren' : 'Aktivieren'}: ${displayName}`}
+                            >
+                              {profile.is_active
                                 ? 'Deaktivieren'
-                                : 'Aktivieren'
-                            }
-                            aria-label={`${profile.is_active ? 'Deaktivieren' : 'Aktivieren'}: ${displayName}`}
-                          >
-                            {profile.is_active
-                              ? 'Deaktivieren'
-                              : 'Aktivieren'}
-                          </button>
+                                : 'Aktivieren'}
+                            </button>
+                            {!profile.is_active && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setConfirmAction({
+                                    type: 'delete_user',
+                                    userId: profile.id,
+                                    userName: displayName,
+                                  })
+                                }
+                                disabled={isPending}
+                                className="rounded-brand px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                                title="Benutzer loeschen"
+                                aria-label={`Loeschen: ${displayName}`}
+                              >
+                                Loeschen
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
@@ -404,19 +426,29 @@ export function UserListClient({
             <h3 className="text-lg font-semibold text-brand-text-primary mb-2">
               {confirmAction.type === 'reset_password'
                 ? 'Passwort zurücksetzen'
-                : confirmAction.active
-                  ? 'Benutzer aktivieren'
-                  : 'Benutzer deaktivieren'}
+                : confirmAction.type === 'delete_user'
+                  ? 'Benutzer loeschen'
+                  : confirmAction.active
+                    ? 'Benutzer aktivieren'
+                    : 'Benutzer deaktivieren'}
             </h3>
             <p className="text-sm text-brand-text-secondary mb-4">
               {confirmAction.type === 'reset_password' ? (
                 <>
-                  Das Passwort für{' '}
+                  Das Passwort fuer{' '}
                   <strong className="text-brand-text-primary">
                     {confirmAction.userName}
                   </strong>{' '}
-                  wird zurückgesetzt. Der Benutzer erhält ein temporäres
+                  wird zurueckgesetzt. Der Benutzer erhaelt ein temporaeres
                   Passwort und muss sich erneut anmelden.
+                </>
+              ) : confirmAction.type === 'delete_user' ? (
+                <>
+                  <strong className="text-brand-text-primary">
+                    {confirmAction.userName}
+                  </strong>{' '}
+                  wird endgueltig geloescht. Alle Rollenzuweisungen werden entfernt.
+                  Diese Aktion kann nicht rueckgaengig gemacht werden.
                 </>
               ) : confirmAction.active ? (
                 <>
@@ -461,14 +493,14 @@ export function UserListClient({
                 onClick={handleConfirmAction}
                 disabled={isPending}
                 className={`rounded-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50 ${
-                  confirmAction.type === 'toggle_active' &&
-                  !confirmAction.active
+                  confirmAction.type === 'delete_user' ||
+                  (confirmAction.type === 'toggle_active' && !confirmAction.active)
                     ? 'bg-red-600'
                     : ''
                 }`}
                 style={
                   confirmAction.type === 'reset_password' ||
-                  confirmAction.active
+                  (confirmAction.type === 'toggle_active' && confirmAction.active)
                     ? { backgroundColor: 'var(--brand-primary)' }
                     : undefined
                 }
@@ -477,9 +509,11 @@ export function UserListClient({
                   ? 'Bitte warten...'
                   : confirmAction.type === 'reset_password'
                     ? 'Zurücksetzen'
-                    : confirmAction.active
-                      ? 'Aktivieren'
-                      : 'Deaktivieren'}
+                    : confirmAction.type === 'delete_user'
+                      ? 'Endgueltig loeschen'
+                      : confirmAction.active
+                        ? 'Aktivieren'
+                        : 'Deaktivieren'}
               </button>
             </div>
           </div>

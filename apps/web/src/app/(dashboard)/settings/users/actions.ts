@@ -239,6 +239,60 @@ export async function toggleUserActiveAction(
 }
 
 // ---------------------------------------------------------------------------
+// Delete user
+// ---------------------------------------------------------------------------
+
+export async function deleteUserAction(
+  userId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const session = await getSession()
+  if (!session || !session.companyId) return { error: 'Nicht autorisiert' }
+
+  if (userId === session.profile.id) {
+    return { error: 'Sie koennen sich nicht selbst loeschen.' }
+  }
+
+  const serviceClient = createSupabaseServiceClient()
+
+  // Verify user belongs to same company and is inactive
+  const { data: profile } = await serviceClient
+    .from('profiles')
+    .select('id, company_id, is_active, first_name, last_name')
+    .eq('id', userId)
+    .single()
+
+  if (!profile || profile.company_id !== session.companyId) {
+    return { error: 'Benutzer nicht gefunden.' }
+  }
+
+  if (profile.is_active) {
+    return { error: 'Aktive Benutzer koennen nicht geloescht werden. Bitte zuerst deaktivieren.' }
+  }
+
+  // Remove role assignments
+  await serviceClient.from('profile_roles').delete().eq('profile_id', userId)
+
+  // Delete profile
+  await serviceClient.from('profiles').delete().eq('id', userId)
+
+  // Delete auth user
+  await serviceClient.auth.admin.deleteUser(userId)
+
+  await writeAuditLog({
+    companyId: session.companyId,
+    actorId: session.profile.id,
+    action: 'user.deleted',
+    tableName: 'profiles',
+    recordId: userId,
+    oldValues: {
+      name: `${profile.first_name} ${profile.last_name}`,
+    },
+  })
+
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
 // Toggle 2FA requirement for company
 // ---------------------------------------------------------------------------
 
