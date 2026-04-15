@@ -258,21 +258,23 @@ export async function updateUserProfileAction(
     .eq('id', userId)
     .single()
 
-  if (!profile || profile.company_id !== session.companyId) {
+  const profileRow = profile as { id: string; company_id: string | null } | null
+  if (!profileRow || profileRow.company_id !== session.companyId) {
     return { error: 'Benutzer nicht gefunden.' }
   }
 
+  // Note: display_name is a GENERATED column (first_name || ' ' || last_name) — do not set it
   const { error } = await serviceClient
     .from('profiles')
     .update({
       first_name: data.firstName,
       last_name: data.lastName,
-      display_name: `${data.firstName} ${data.lastName}`,
       phone: data.phone,
     })
     .eq('id', userId)
+    .eq('company_id', session.companyId)
 
-  if (error) return { error: 'Profil konnte nicht aktualisiert werden.' }
+  if (error) return { error: `Profil konnte nicht aktualisiert werden: ${error.message}` }
 
   await writeAuditLog({
     companyId: session.companyId,
