@@ -11,3 +11,5 @@ coverage/
 .vercel/
 .cache/
 .vercel
+.DS_Store
+Enura_Platform
