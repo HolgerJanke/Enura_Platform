@@ -14,11 +14,12 @@ export default async function UsersSettingsPage() {
   const supabase = createSupabaseServerClient()
   const companyId = session.companyId ?? ''
 
-  // Fetch users in this tenant
+  // Fetch users in this tenant (exclude anonymised/deleted tombstones)
   const { data: profiles } = await supabase
     .from('profiles')
     .select('*')
     .eq('company_id', companyId)
+    .neq('first_name', 'Gelöscht')
     .order('created_at', { ascending: true })
 
   // Fetch roles for the tenant

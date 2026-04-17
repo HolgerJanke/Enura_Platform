@@ -320,13 +320,45 @@ export async function deleteUserAction(
   }
 
   // Remove role assignments
-  await serviceClient.from('profile_roles').delete().eq('profile_id', userId)
+  const { error: rolesError } = await serviceClient
+    .from('profile_roles')
+    .delete()
+    .eq('profile_id', userId)
 
-  // Delete profile
-  await serviceClient.from('profiles').delete().eq('id', userId)
+  if (rolesError) {
+    console.error('[deleteUser] Failed to remove role assignments:', rolesError.message)
+    return { error: 'Rollenzuweisungen konnten nicht entfernt werden.' }
+  }
 
-  // Delete auth user
-  await serviceClient.auth.admin.deleteUser(userId)
+  // Anonymise the profile instead of deleting it.
+  // Many tables (payment_runs, invoice_validations, supplier_bank_data, etc.)
+  // have NOT NULL foreign keys to profiles — deleting the row would violate
+  // referential integrity. We clear PII (DSGVO) and keep the row as a
+  // tombstone so audit trails remain intact.
+  const { error: anonError } = await serviceClient
+    .from('profiles')
+    .update({
+      first_name: 'Gelöscht',
+      last_name: `(${userId.slice(0, 8)})`,
+      avatar_url: null,
+      phone: null,
+      is_active: false,
+    })
+    .eq('id', userId)
+
+  if (anonError) {
+    console.error('[deleteUser] Failed to anonymise profile:', anonError.message)
+    return { error: 'Profil konnte nicht anonymisiert werden.' }
+  }
+
+  // Delete the auth user — prevents login. The profile row stays
+  // as a tombstone with no PII, preserving FK references.
+  const { error: authError } = await serviceClient.auth.admin.deleteUser(userId)
+
+  if (authError) {
+    console.error('[deleteUser] Failed to delete auth user:', authError.message)
+    return { error: 'Auth-Benutzer konnte nicht entfernt werden.' }
+  }
 
   await writeAuditLog({
     companyId: session.companyId,
