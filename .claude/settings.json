@@ -16,7 +16,9 @@
       "Bash(curl -s \"https://www.enura-group.com/finanzplanung/eingang\" -H \"Cookie: $\\(cat /dev/null\\)\")",
       "Bash(curl -s \"https://www.enura-group.com/finanzplanung/eingang\")",
       "Bash(curl -s \"https://www.enura-group.com/analytics\")",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep -l \"liquidity_event_instances\" \"/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/supabase/migrations\"/*.sql)"
     ],
     "additionalDirectories": [
       "/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web/src/app/(dashboard)/projects"
