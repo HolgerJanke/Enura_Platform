@@ -14,6 +14,13 @@ interface ProcessRow {
   status: string
 }
 
+interface PhaseRow {
+  id: string
+  process_id: string
+  name: string
+  sort_order: number
+}
+
 export default async function ProcessHouseEditorPage({
   searchParams,
 }: {
@@ -54,6 +61,19 @@ export default async function ProcessHouseEditorPage({
     processes = (data ?? []) as ProcessRow[]
   }
 
+  // Fetch phases for all processes
+  let phases: PhaseRow[] = []
+  const processIds = processes.map((p) => p.id)
+  if (processIds.length > 0) {
+    const { data: phaseData } = await supabase
+      .from('process_phases')
+      .select('id, process_id, name, sort_order')
+      .in('process_id', processIds)
+      .order('sort_order')
+
+    phases = (phaseData ?? []) as PhaseRow[]
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-2">
@@ -82,7 +102,7 @@ export default async function ProcessHouseEditorPage({
       )}
 
       {selectedCompanyId ? (
-        <ProcessHouseEditorClient companyId={selectedCompanyId} processes={processes} />
+        <ProcessHouseEditorClient companyId={selectedCompanyId} holdingId={session.holdingId ?? ''} processes={processes} phases={phases} />
       ) : (
         <p className="text-sm text-gray-500">Kein Unternehmen ausgewählt.</p>
       )}
