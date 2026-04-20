@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import {
   updateProcessTypeAction,
   reorderProcessHouseAction,
@@ -242,9 +243,21 @@ export function ProcessHouseEditorClient({ companyId, holdingId, processes, phas
                         <span className="text-sm font-bold text-gray-600 w-8">{key}{i + 1}</span>
                         <span className="flex-1 text-sm font-medium text-gray-900">{proc.menu_label}</span>
                         <span className="text-[11px] text-gray-400">{processPhases.length} {processPhases.length === 1 ? 'Phase' : 'Phasen'}</span>
-                        <span className={`text-xs rounded-full px-2 py-0.5 ${proc.status === 'deployed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {proc.status}
+                        <span className={`text-xs rounded-full px-2 py-0.5 ${
+                          proc.status === 'deployed' ? 'bg-green-100 text-green-700'
+                            : proc.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {proc.status === 'pending_approval' ? 'Freigabe ausstehend' : proc.status}
                         </span>
+                        {(proc.status === 'finalised' || proc.status === 'pending_approval') && (
+                          <Link
+                            href={`/admin/processes/${proc.id}/deploy`}
+                            className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {proc.status === 'finalised' ? 'Deployen' : 'Status'}
+                          </Link>
+                        )}
                         <div className="flex gap-1">
                           <button type="button" disabled={i === 0 || isPending} onClick={() => handleMove(proc.id, key, 'up')} className="rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 disabled:opacity-30" aria-label="Nach oben">↑</button>
                           <button type="button" disabled={i === group.length - 1 || isPending} onClick={() => handleMove(proc.id, key, 'down')} className="rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 disabled:opacity-30" aria-label="Nach unten">↓</button>
