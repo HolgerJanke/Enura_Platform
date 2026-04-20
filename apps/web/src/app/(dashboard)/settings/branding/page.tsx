@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requirePermission, checkPermission } from '@/lib/permissions'
 import { getCompanyDesign } from './actions'
 import DesignModuleClient from './design-module-client'

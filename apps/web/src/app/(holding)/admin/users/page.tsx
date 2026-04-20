@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireHoldingAdmin } from '@/lib/permissions'
 import { getAllUsers } from './actions'
 import { UsersClient } from './users-client'

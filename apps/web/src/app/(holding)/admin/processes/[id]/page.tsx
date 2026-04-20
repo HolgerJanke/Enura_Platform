@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import { requireHoldingAdmin } from '@/lib/permissions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'

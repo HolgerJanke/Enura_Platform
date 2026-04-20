@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireHoldingAdmin } from '@/lib/permissions'
 import { getPermissionMatrix } from './actions'
 import { PermissionMatrixClient } from './permission-matrix-client'

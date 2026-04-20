@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireHoldingAdmin } from '@/lib/permissions'
 import { getHoldingBranding } from './actions'
 import { BrandingEditorClient } from './branding-editor-client'

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { InviteFormClient } from './invite-form-client'
 

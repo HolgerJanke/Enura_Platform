@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { headers } from 'next/headers'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireHoldingAdmin } from '@/lib/permissions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NewProcessForm } from './new-process-form'

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireEnuraAdmin } from '@/lib/permissions'
 import { WizardClient } from './wizard-client'
 

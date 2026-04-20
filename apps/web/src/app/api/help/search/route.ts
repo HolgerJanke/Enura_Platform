@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import Fuse from 'fuse.js'
 import { HELP_ARTICLES } from '@/app/help/data'
