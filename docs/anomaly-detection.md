@@ -291,4 +291,4 @@ VALUES (
 
 ---
 
-*Letzte Aktualisierung: Maerz 2026*
+*Letzte Aktualisierung: April 2026*

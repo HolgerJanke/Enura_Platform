@@ -264,9 +264,88 @@ KPI-Snapshots (letzte 24h)
 
 ---
 
-## 7. Holding-Admin-Dashboard
+## 7. Prozessbauer & Prozesshaus
 
-### 7.1 Funktionsumfang
+### 7.1 Prozess-Builder
+
+Holding-Admins und Super-User definieren Geschaeftsprozesse ueber den Prozess-Builder:
+- Prozesse bestehen aus Schritten (Steps), gruppiert in Phasen
+- Jeder Schritt hat: Name, erwartetes Ergebnis, Kritikalitaet, verantwortliche Rollen
+- Status-Workflow: `draft` → `finalised` → `pending_approval` → `deployed` → `archived`
+
+### 7.2 Prozesshaus
+
+Das Prozesshaus visualisiert alle Prozesse eines Unternehmens in einer Hausstruktur:
+- **M-Prozesse (Management/Strategisch)**: Dargestellt als Dach (Dreieck)
+- **P-Prozesse (Kernprozesse)**: Spalten mit farbigen Headern, Phasen mit In/Out-KPIs und Portfoliowert
+- **S-Prozesse (Stuetzprozesse)**: Spalten mit Akzentfarbe
+
+Phasen koennen direkt im Prozesshaus-Editor verwaltet werden (hinzufuegen, umbenennen, sortieren, loeschen).
+
+### 7.3 Projekt-Kanban
+
+Klick auf eine Phase oeffnet ein Kanban-Popup mit allen Projekten, gruppiert nach Prozessschritt.
+Pro Projekt: Status, Alter, Berater, Portfoliowert.
+
+---
+
+## 8. Finanzplanung & Zahlungsverkehr
+
+### 8.1 Rechnungseingang
+
+```
+Lieferanten-PDF → Upload (E-Mail / SFTP / manuell)
+  → Claude OCR (Vision) → Strukturierte Extraktion
+  → Lieferantenabgleich
+  → 3-stufige Validierung (formell → inhaltlich → intern)
+  → Genehmigung (inkl. WhatsApp-Freigabe)
+```
+
+Tabellen: `invoices_incoming`, `invoice_line_items`, `invoice_validations`, `invoice_approvals`
+
+### 8.2 Lieferantenverwaltung
+
+- Stammdaten mit IBAN/BIC, USt-Nr., bevorzugte Zahlungsfrist
+- **Bankdatenschutz mit 4-Augen-Prinzip**: Aenderungen an IBAN/BIC durchlaufen ein 3-Stufen-Workflow
+  (Antragsteller → Pruefer → Genehmiger, alle muessen unterschiedlich sein)
+- Versionierung: `supplier_bank_data` mit einer aktiven Version pro Lieferant
+- Immutables Audit-Log: `supplier_bank_change_log`
+
+### 8.3 Zahlungslaeufe (Payment Runs)
+
+Status-Workflow: `draft` → `submitted` → `under_review` → `approved` → `exported` → `confirmed_paid`
+
+| Schritt | Rolle | Beschreibung |
+|---------|-------|-------------|
+| Erstellen | Planer (Buchhaltung) | Genehmigte Rechnungen zu einem Lauf buendeln |
+| Einreichen | Planer | Lauf zur Genehmigung einreichen |
+| Genehmigen | Geschaeftsfuehrung | 4-Augen-Freigabe |
+| Exportieren | System | Zahlungsdatei erzeugen |
+
+### 8.4 Zahlungsdatei-Export
+
+Unterstuetzte Formate:
+- **pain.001.001.09** (Swiss Payment Standards / SPS by SIX)
+- **pain.001.001.03** (SEPA Credit Transfer, EU-Standard)
+- **MT101** (SWIFT Legacy)
+- **CSV** (konfigurierbare Spalten)
+
+Konfiguration pro Unternehmen in `company_banking_config` (IBAN, BIC, Format-Praeferenz).
+
+### 8.5 Liquiditaetsplanung
+
+- `liquidity_event_instances`: Budget- / Plan- / Ist-Werte pro Zahlungsereignis
+- Anzeige-Prioritaet: Ist > Plan > Budget (Cascading Fallback)
+- **Cashflow-Gantt**: Zeitleiste mit Projekt-Zahlungsereignissen, Fortschritts- und Cashflow-Ansicht
+- **Cashflow-Diagramm**: Balkendiagramm mit woechentlicher oder monatlicher Granularitaet
+  (Einnahmen, Ausgaben, kumulativer Cashflow)
+- **Liquiditaetsseite**: Gruppierung woechtentlich/monatlich, Waehrungsfilter, ueberfaellige Posten
+
+---
+
+## 9. Holding-Admin-Dashboard
+
+### 9.1 Funktionsumfang
 
 Das Holding-Admin-Dashboard bietet Cross-Tenant-Monitoring in drei Tabs:
 
@@ -282,19 +361,49 @@ Das Holding-Admin-Dashboard bietet Cross-Tenant-Monitoring in drei Tabs:
 - Pro Mandant: Transkriptionen MTD, geschaetzte Whisper-Kosten, generierte Berichte, Claude-Tokens
 - Gesamtzeile mit Summen
 
-### 7.2 Impersonation
+### 9.2 Impersonation
 - Holding-Admins koennen im Mandanten-Detail pro Benutzer eine Impersonation-Session erstellen
 - Token-basiert, 30 Minuten gueltig, vollstaendig im Audit-Log protokolliert
 
+### 9.3 Prozesshaus-Editor
+- Prozesse dem Prozesshaus zuordnen (M/P/S-Typ setzen)
+- Reihenfolge per Drag-and-Drop / Pfeile sortieren
+- Phasen pro Prozess verwalten (hinzufuegen, umbenennen, loeschen, sortieren)
+
 ---
 
-## 8. Datenbank-Schema
+## 10. Benutzerverwaltung
 
-### 8.1 Kern-Tabellen
+### 10.1 Benutzer-Lifecycle
+
+| Aktion | Beschreibung |
+|--------|-------------|
+| Erstellen | Super User erstellt Benutzer mit temporaerem Passwort |
+| Aktivieren | Benutzer meldet sich an → Passwort-Reset → 2FA-Einrichtung |
+| Deaktivieren | Benutzer wird gesperrt (Login nicht mehr moeglich) |
+| Reaktivieren | Benutzer wird mit neuem temporaerem Passwort aktiviert |
+| Loeschen | Profil wird anonymisiert (DSGVO), Auth-User geloescht |
+
+### 10.2 Loeschen vs. Anonymisieren
+
+Benutzerprofile koennen nicht hart geloescht werden, da zahlreiche Tabellen
+(payment_runs, invoice_validations, supplier_bank_data, audit_log) NOT-NULL-Fremdschluessel
+auf `profiles.id` haben. Stattdessen wird das Profil anonymisiert:
+- Name wird auf `Geloescht (UUID-Prefix)` gesetzt
+- Avatar und Telefonnummer werden entfernt
+- Auth-User wird geloescht (kein Login mehr moeglich)
+- Profil-Zeile bleibt als Tombstone fuer referentielle Integritaet
+
+---
+
+## 11. Datenbank-Schema
+
+### 11.1 Kern-Tabellen
 
 | Tabelle | Beschreibung | RLS |
 |---------|-------------|-----|
-| `tenants` | Mandanten-Stammdaten | Ja |
+| `holdings` | Holding-Gesellschaften | Ja |
+| `companies` | Unternehmen (ehem. tenants) | Ja |
 | `profiles` | Benutzerprofile | Ja |
 | `roles` | Rollen-Definitionen | Ja |
 | `profile_roles` | Benutzer-Rollen-Zuordnung | Ja |
@@ -306,7 +415,35 @@ Das Holding-Admin-Dashboard bietet Cross-Tenant-Monitoring in drei Tabs:
 | `impersonation_sessions` | Impersonation-Tokens | Service Role |
 | `audit_log` | Audit-Trail (Hypertable) | Service Role |
 
-### 8.2 TimescaleDB-Hypertables
+### 11.2 Finanzplanung-Tabellen
+
+| Tabelle | Beschreibung | RLS |
+|---------|-------------|-----|
+| `suppliers` | Lieferanten-Stammdaten | Ja |
+| `supplier_bank_data` | Versionierte Bankdaten (4-Augen) | Ja |
+| `supplier_bank_change_requests` | Bankdaten-Aenderungsantraege | Ja |
+| `supplier_bank_change_log` | Immutables Audit-Log fuer Bankdaten | Ja |
+| `invoices_incoming` | Eingangsrechnungen mit OCR-Extraktion | Ja |
+| `invoice_line_items` | Rechnungspositionen | Ja |
+| `invoice_validations` | Validierungs-Audit-Trail | Ja |
+| `invoice_approvals` | Genehmigungsworkflow | Ja |
+| `payment_runs` | Zahlungslaeufe | Ja |
+| `payment_run_items` | Positionen im Zahlungslauf | Ja |
+| `company_banking_config` | Bank-Konfiguration pro Unternehmen | Ja |
+| `liquidity_event_instances` | Liquiditaetsereignisse (Budget/Plan/Ist) | Ja |
+
+### 11.3 Prozess-Tabellen
+
+| Tabelle | Beschreibung | RLS |
+|---------|-------------|-----|
+| `process_definitions` | Prozesse mit M/P/S-Typ und Sortierung | Ja |
+| `process_steps` | Schritte innerhalb eines Prozesses | Ja |
+| `process_phases` | Phasen (Gruppierung von Schritten) | Ja |
+| `process_kpi_definitions` | KPI-Definitionen pro Prozess/Phase | Ja |
+| `process_kpi_values` | KPI-Zeitreihen | Ja |
+| `project_process_instances` | Projekte in Prozessen | Ja |
+
+### 11.4 TimescaleDB-Hypertables
 
 | Tabelle | Partitionsschluessel | Achtung |
 |---------|---------------------|---------|
@@ -318,9 +455,9 @@ Das Holding-Admin-Dashboard bietet Cross-Tenant-Monitoring in drei Tabs:
 
 ---
 
-## 9. Sicherheitsarchitektur
+## 12. Sicherheitsarchitektur
 
-### 9.1 Schichten
+### 12.1 Schichten
 
 ```
 ┌─────────────────────────────────────────┐
@@ -340,12 +477,12 @@ Das Holding-Admin-Dashboard bietet Cross-Tenant-Monitoring in drei Tabs:
 └─────────────────────────────────────────┘
 ```
 
-### 9.2 Datenresidenz
+### 12.2 Datenresidenz
 - Alle Daten ausschliesslich in EU/Schweiz
 - Keine Drittanbieter-Analytics ohne Freigabe
 - KI-Calls nur mit anonymisierten Daten
 
 ---
 
-*Letzte Aktualisierung: Maerz 2026*
-*Schema-Version: 1.0*
+*Letzte Aktualisierung: April 2026*
+*Schema-Version: 1.46 (046_optional_2fa.sql)*
