@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireHoldingAdmin } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'

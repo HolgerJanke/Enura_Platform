@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
