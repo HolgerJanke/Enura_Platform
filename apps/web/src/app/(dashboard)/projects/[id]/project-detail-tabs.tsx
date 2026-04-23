@@ -17,13 +17,14 @@ interface Props {
   calendarEvents: Array<Record<string, unknown>>
 }
 
-type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'setter' | 'berater' | 'dokumente' | 'prozesse'
+type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'guv' | 'setter' | 'berater' | 'dokumente' | 'prozesse'
 type SelectedEvent = { evt: Record<string, unknown>; invoice: Record<string, unknown> | null } | null
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'uebersicht', label: 'Übersicht' },
   { id: 'zeitachse', label: 'Zeitachse' },
   { id: 'finanzen', label: 'Finanzen' },
+  { id: 'guv', label: 'GuV Projekt' },
   { id: 'setter', label: 'Setter' },
   { id: 'berater', label: 'Berater' },
   { id: 'dokumente', label: 'Dokumente' },
@@ -259,6 +260,126 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
           )}
         </div>
       )}
+
+      {/* GuV Projekt tab */}
+      {activeTab === 'guv' && (() => {
+        // Aggregate by step_name and direction
+        interface GuvLine { budget: number; actual: number; costToCome: number; forecast: number }
+        const incomeLines = new Map<string, GuvLine>()
+        const expenseLines = new Map<string, GuvLine>()
+
+        for (const evt of liqEvents) {
+          const stepName = (evt['step_name'] as string) ?? 'Sonstige'
+          const direction = evt['direction'] as string
+          const budgetAmt = Number(evt['budget_amount'] ?? 0)
+          const actualAmt = evt['actual_amount'] != null ? Number(evt['actual_amount']) : 0
+          const hasActual = evt['actual_amount'] != null
+          const ctc = hasActual ? 0 : budgetAmt
+
+          const map = direction === 'income' ? incomeLines : expenseLines
+          const existing = map.get(stepName) ?? { budget: 0, actual: 0, costToCome: 0, forecast: 0 }
+          existing.budget += budgetAmt
+          existing.actual += actualAmt
+          existing.costToCome += ctc
+          existing.forecast += actualAmt + ctc
+          map.set(stepName, existing)
+        }
+
+        const sumLine = (map: Map<string, GuvLine>): GuvLine => {
+          const total: GuvLine = { budget: 0, actual: 0, costToCome: 0, forecast: 0 }
+          for (const v of map.values()) {
+            total.budget += v.budget; total.actual += v.actual
+            total.costToCome += v.costToCome; total.forecast += v.forecast
+          }
+          return total
+        }
+
+        const incomeTotal = sumLine(incomeLines)
+        const expenseTotal = sumLine(expenseLines)
+        const result: GuvLine = {
+          budget: incomeTotal.budget - expenseTotal.budget,
+          actual: incomeTotal.actual - expenseTotal.actual,
+          costToCome: incomeTotal.costToCome - expenseTotal.costToCome,
+          forecast: incomeTotal.forecast - expenseTotal.forecast,
+        }
+        const marginPct = incomeTotal.forecast > 0 ? (result.forecast / incomeTotal.forecast) * 100 : 0
+
+        const renderRow = (label: string, line: GuvLine, bold = false) => (
+          <tr key={label} className={bold ? 'font-semibold border-t border-gray-300' : 'hover:bg-gray-50'}>
+            <td className={`px-4 py-2 ${bold ? 'text-gray-900' : 'text-gray-700'}`}>{label}</td>
+            <td className="px-4 py-2 text-right font-mono">{fmtCHF(line.budget)}</td>
+            <td className="px-4 py-2 text-right font-mono">{fmtCHF(line.actual)}</td>
+            <td className="px-4 py-2 text-right font-mono">{fmtCHF(line.costToCome)}</td>
+            <td className="px-4 py-2 text-right font-mono">{fmtCHF(line.forecast)}</td>
+          </tr>
+        )
+
+        return (
+          <div className="space-y-6">
+            {/* Summary cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-xs text-gray-500">Projekt-Budget</p>
+                <p className={`text-lg font-bold mt-1 ${result.budget >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(result.budget)}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-xs text-gray-500">Forecast Ergebnis</p>
+                <p className={`text-lg font-bold mt-1 ${result.forecast >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(result.forecast)}</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-xs text-gray-500">Marge (Forecast)</p>
+                <p className={`text-lg font-bold mt-1 ${marginPct >= 0 ? 'text-green-700' : 'text-red-600'}`}>{marginPct.toFixed(1)} %</p>
+              </div>
+            </div>
+
+            {/* GuV table */}
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Position</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Budget</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actual</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Cost to Come</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Forecast</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {/* Revenue section */}
+                  <tr className="bg-green-50">
+                    <td colSpan={5} className="px-4 py-2 text-xs font-bold text-green-800 uppercase tracking-wide">Erlöse</td>
+                  </tr>
+                  {[...incomeLines.entries()].map(([name, line]) => renderRow(name, line))}
+                  {renderRow('Summe Erlöse', incomeTotal, true)}
+
+                  {/* Costs section */}
+                  <tr className="bg-red-50">
+                    <td colSpan={5} className="px-4 py-2 text-xs font-bold text-red-800 uppercase tracking-wide">Kosten</td>
+                  </tr>
+                  {[...expenseLines.entries()].map(([name, line]) => renderRow(name, line))}
+                  {renderRow('Summe Kosten', expenseTotal, true)}
+
+                  {/* Result section */}
+                  <tr className="bg-blue-50">
+                    <td colSpan={5} className="px-4 py-2 text-xs font-bold text-blue-800 uppercase tracking-wide">Ergebnis</td>
+                  </tr>
+                  <tr className="font-bold">
+                    <td className="px-4 py-3 text-gray-900">Projektergebnis</td>
+                    <td className={`px-4 py-3 text-right font-mono ${result.budget >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(result.budget)}</td>
+                    <td className={`px-4 py-3 text-right font-mono ${result.actual >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(result.actual)}</td>
+                    <td className={`px-4 py-3 text-right font-mono ${result.costToCome >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(result.costToCome)}</td>
+                    <td className={`px-4 py-3 text-right font-mono ${result.forecast >= 0 ? 'text-green-700' : 'text-red-600'}`}>{fmtCHF(result.forecast)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {liqEvents.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-6">Keine Liquiditätsereignisse für die GuV-Berechnung vorhanden.</p>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Setter tab */}
       {activeTab === 'setter' && (
