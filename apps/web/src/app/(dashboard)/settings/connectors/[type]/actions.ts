@@ -52,13 +52,8 @@ export async function testConnectorAction(
   // Type-specific validation
   switch (type) {
     case 'reonic': {
-      if (!credentials['clientId'] || !credentials['apiKey']) {
-        return { error: 'Client-ID und API Key sind erforderlich.' }
-      }
-      // Validate UUID format for clientId
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      if (!uuidRegex.test(credentials['clientId'] as string)) {
-        return { error: 'Client-ID muss ein gültiges UUID-Format haben (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).' }
+      if (!credentials['apiBaseUrl'] || !credentials['apiKey']) {
+        return { error: 'API Base URL und API Key sind erforderlich.' }
       }
       break
     }
@@ -69,9 +64,6 @@ export async function testConnectorAction(
       break
     }
     case 'bexio': {
-      // PAT mode: validate that an access_token (Personal Access Token / JWT)
-      // is present. OAuth mode would populate this field automatically after
-      // the redirect flow, so the same check covers both paths.
       if (!credentials['access_token']) {
         return { error: 'API Token ist erforderlich.' }
       }
@@ -137,4 +129,16 @@ export async function triggerSyncAction(
     .eq('id', connectorId)
     .eq('company_id', session.companyId)
 
-  return { success: true }
+  return { success: true }
+}
+
+function getConnectorLabel(type: string): string {
+  const labels: Record<string, string> = {
+    reonic: 'Reonic CRM',
+    '3cx': '3CX Cloud',
+    bexio: 'Bexio',
+    google_calendar: 'Google Calendar',
+    leadnotes: 'Leadnotes',
+  }
+  return labels[type] ?? type
+}
