@@ -110,4 +110,43 @@ export async function refreshBexioToken(
     .update({ credentials: updatedCredentials as unknown as Record<string, unknown> })
     .eq('id', connector.id)
 
-  if (error
+  if (error) {
+    throw new ConnectorAuthError(`Failed to persist refreshed Bexio tokens: ${error.message}`)
+  }
+
+  return updatedCredentials
+}
+
+/**
+ * Returns a valid Bexio access token.
+ *
+ * - PAT mode: returns the stored access_token directly (no refresh).
+ *   The token's lifetime is managed by the user in Bexio's UI; if it
+ *   expires, downstream API calls will surface 401/403 errors which
+ *   become ConnectorAuthError and prompt the user to rotate the token.
+ *
+ * - OAuth mode: refreshes the token first if it has expired.
+ */
+export async function getBexioAccessToken(connector: ConnectorConfig): Promise<string> {
+  const credentials = parseCredentials(connector)
+
+  // PAT mode — no refresh, use the access_token as-is.
+  if (isPATCredentials(credentials)) {
+    return credentials.access_token
+  }
+
+  // OAuth mode — narrow to the strict schema (all fields required) and
+  // refresh if the access token is expiring.
+  const oauthResult = BexioOAuthCredentialsSchema.safeParse(credentials)
+  if (!oauthResult.success) {
+    // Partial OAuth credentials — fall back to using access_token as-is.
+    return credentials.access_token
+  }
+
+  if (!isTokenExpired(oauthResult.data)) {
+    return oauthResult.data.access_token
+  }
+
+  const refreshed = await refreshBexioToken(connector, oauthResult.data)
+  return refreshed.access_token
+}
