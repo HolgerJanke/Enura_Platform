@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/step-kpi-snapshot",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/kpi-snapshots",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
