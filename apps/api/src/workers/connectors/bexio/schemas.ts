@@ -46,14 +46,12 @@ export type BexioPayment = z.infer<typeof BexioPaymentSchema>
 
 // ---------------------------------------------------------------------------
 // Bexio Credentials Schema (stored in connector.credentials)
-// ---------------------------------------------------------------------------
-
-export const BexioCredentialsSchema = z.object({
-  client_id: z.string().min(1),
-  client_secret: z.string().min(1),
-  access_token: z.string().min(1),
-  refresh_token: z.string().min(1),
-  expires_at: z.string(),
-})
-
-export type BexioCredentials = z.infer<typeof BexioCredentialsSchema>
+//
+// Two supported auth modes:
+//
+//   1. Personal Access Token (PAT) — only `access_token` is required.
+//      The token is a long-lived JWT issued by Bexio (auth.bexio.com →
+//      API Tokens). It does not refresh; when it expires, the user
+//      generates a new one and updates the connector.
+//
+//   2. OAuth 2.0 — full set of `client_id`, `client_secret`,

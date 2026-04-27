@@ -34,8 +34,20 @@ type TestResult = {
 
 const FIELD_DEFINITIONS: Record<string, ReadonlyArray<FieldDef>> = {
   reonic: [
-    { key: 'apiBaseUrl', label: 'API Base URL', type: 'text', placeholder: 'https://api.reonic.com/v1' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Reonic API-Schlüssel' },
+    {
+      key: 'clientId',
+      label: 'Client-ID',
+      type: 'text',
+      placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      helpText: 'Ihre Reonic Client-UUID — zu finden in den Reonic Einstellungen unter API.',
+    },
+    {
+      key: 'apiKey',
+      label: 'API Key',
+      type: 'password',
+      placeholder: 'Ihr Reonic API-Schlüssel',
+      helpText: 'API-Endpunkt wird automatisch verwendet: api.reonic.de/rest/v2',
+    },
   ],
   '3cx': [
     { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://ihre-instanz.3cx.eu/api' },
@@ -43,7 +55,13 @@ const FIELD_DEFINITIONS: Record<string, ReadonlyArray<FieldDef>> = {
     { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gesprächsaufnahmen automatisch in den EU-Speicher herunterladen' },
   ],
   bexio: [
-    { key: 'oauth', label: 'Bexio Verbindung', type: 'oauth', helpText: 'Verbinden Sie Ihr Bexio-Konto über OAuth 2.0' },
+    {
+      key: 'access_token',
+      label: 'Bexio API Token (PAT)',
+      type: 'password',
+      placeholder: 'eyJhbGciOiJSUzI1NiIs...',
+      helpText: 'Persönlicher Access Token aus Bexio (Profil → API Tokens → Token erstellen). Bearer-JWT, der bis zum eingestellten Ablaufdatum gültig ist.',
+    },
   ],
   google_calendar: [
     { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', helpText: 'Fügen Sie den vollständigen JSON-Schlüssel des Google Service Accounts ein' },
@@ -441,11 +459,4 @@ export function ConnectorForm({ type, existingConnector }: Props) {
           onClick={handleSave}
           disabled={isPending}
           className="rounded-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
-          style={{ backgroundColor: 'var(--brand-primary)' }}
-        >
-          {isPending && !testResult ? 'Wird gespeichert...' : 'Speichern'}
-        </button>
-      </div>
-    </div>
-  )
-}
+        

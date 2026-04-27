@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { ConnectorAuthError } from '../base.js'
 import type { ConnectorConfig } from '../base.js'
-import { BexioCredentialsSchema, type BexioCredentials } from './schemas.js'
+import {
+  BexioCredentialsSchema,
+  BexioOAuthCredentialsSchema,
+  type BexioCredentials,
+  type BexioOAuthCredentials,
+} from './schemas.js'
 
 const BEXIO_TOKEN_URL = 'https://idp.bexio.com/token'
 
@@ -27,12 +32,26 @@ function parseCredentials(connector: ConnectorConfig): BexioCredentials {
 }
 
 /**
- * Check whether the current access token has expired (with a 60s buffer).
+ * Check whether the current OAuth access token has expired (with a 60s buffer).
+ * Only meaningful for OAuth credentials — PAT credentials are not refreshed
+ * here (their lifetime is managed by the user in Bexio's UI).
  */
-function isTokenExpired(credentials: BexioCredentials): boolean {
+function isTokenExpired(credentials: BexioOAuthCredentials): boolean {
   const expiresAt = new Date(credentials.expires_at).getTime()
   const bufferMs = 60_000
   return Date.now() >= expiresAt - bufferMs
+}
+
+/**
+ * Returns true if the stored credentials only carry an `access_token`
+ * (PAT mode) and lack the OAuth refresh fields.
+ */
+function isPATCredentials(credentials: BexioCredentials): boolean {
+  return (
+    !credentials.client_id ||
+    !credentials.client_secret ||
+    !credentials.refresh_token
+  )
 }
 
 /**
@@ -41,8 +60,8 @@ function isTokenExpired(credentials: BexioCredentials): boolean {
  */
 export async function refreshBexioToken(
   connector: ConnectorConfig,
-  credentials: BexioCredentials,
-): Promise<BexioCredentials> {
+  credentials: BexioOAuthCredentials,
+): Promise<BexioOAuthCredentials> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     client_id: credentials.client_id,
@@ -77,7 +96,7 @@ export async function refreshBexioToken(
     throw new ConnectorAuthError('Bexio token response missing access_token or refresh_token')
   }
 
-  const updatedCredentials: BexioCredentials = {
+  const updatedCredentials: BexioOAuthCredentials = {
     client_id: credentials.client_id,
     client_secret: credentials.client_secret,
     access_token: newAccessToken,
@@ -91,23 +110,4 @@ export async function refreshBexioToken(
     .update({ credentials: updatedCredentials as unknown as Record<string, unknown> })
     .eq('id', connector.id)
 
-  if (error) {
-    throw new ConnectorAuthError(`Failed to persist refreshed Bexio tokens: ${error.message}`)
-  }
-
-  return updatedCredentials
-}
-
-/**
- * Returns a valid Bexio access token, refreshing it first if it has expired.
- */
-export async function getBexioAccessToken(connector: ConnectorConfig): Promise<string> {
-  const credentials = parseCredentials(connector)
-
-  if (!isTokenExpired(credentials)) {
-    return credentials.access_token
-  }
-
-  const refreshed = await refreshBexioToken(connector, credentials)
-  return refreshed.access_token
-}
+  if (error
