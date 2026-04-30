@@ -56,18 +56,34 @@ import {
   roles as seedRoles,
   rolePermissions as seedRolePermissions,
   profileRoles as seedProfileRoles,
-  teamMembers as seedTeamMembers,
-  leads as seedLeads,
-  offers as seedOffers,
+  teamMembers as _seedTeamMembers,
+  leads as _seedLeads,
+  offers as _seedOffers,
   calls as seedCalls,
   callAnalyses as seedCallAnalyses,
   projects as seedProjects,
   phaseDefinitions as seedPhaseDefinitions,
   invoices as seedInvoices,
-  connectors as seedConnectors,
-  kpiSnapshots as seedKpiSnapshots,
+  connectors as _seedConnectors,
+  kpiSnapshots as _seedKpiSnapshots,
   permissions as seedPermissions,
 } from './seed-data.js'
+
+// Real Reonic data replaces mock data for demo purposes
+import {
+  realTeamMembers,
+  realLeads,
+  realOffers,
+  realConnectors,
+  realKpiSnapshots,
+} from './reonic-data.js'
+
+// Use real data from Reonic sync instead of mock seed data
+const seedTeamMembers = realTeamMembers
+const seedLeads = realLeads
+const seedOffers = realOffers
+const seedConnectors = realConnectors
+const seedKpiSnapshots = realKpiSnapshots
 
 // ---------------------------------------------------------------------------
 // Helper — async delay to simulate real data access latency
