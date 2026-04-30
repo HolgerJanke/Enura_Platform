@@ -1,8 +1,92 @@
 import { cache } from 'react'
+import { cookies } from 'next/headers'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { UserSession, RoleRow } from '@enura/types'
+import type { UserSession, RoleRow, ProfileRow } from '@enura/types'
+
+const MOCK_AUTH = process.env.MOCK_AUTH !== 'false'
+
+/**
+ * Build a UserSession from the mock-session cookie.
+ * Only used when MOCK_AUTH is active (default in dev / current production).
+ */
+function _getMockSession(): UserSession | null {
+  if (!MOCK_AUTH) return null
+
+  const cookieStore = cookies()
+  const raw = cookieStore.get('mock-session')?.value
+  if (!raw) return null
+
+  try {
+    const mock = JSON.parse(raw) as {
+      userId: string
+      companyId: string | null
+      holdingId?: string | null
+      email: string
+      firstName: string
+      lastName: string
+      displayName: string
+      roles: string[]
+      permissions: string[]
+      isHoldingAdmin: boolean
+      isEnuraAdmin?: boolean
+      mustResetPassword: boolean
+      totpEnabled: boolean
+    }
+
+    const now = new Date().toISOString()
+
+    const profile: ProfileRow = {
+      id: mock.userId,
+      company_id: mock.companyId,
+      holding_id: mock.holdingId ?? null,
+      first_name: mock.firstName,
+      last_name: mock.lastName,
+      display_name: mock.displayName,
+      avatar_url: null,
+      phone: null,
+      locale: 'de-CH',
+      must_reset_password: mock.mustResetPassword,
+      password_reset_at: null,
+      totp_enabled: mock.totpEnabled,
+      totp_enrolled_at: mock.totpEnabled ? now : null,
+      last_sign_in_at: now,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    }
+
+    const roles: RoleRow[] = mock.roles.map((key, i) => ({
+      id: `mock-role-${i}`,
+      company_id: mock.companyId,
+      holding_id: null,
+      key,
+      label: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      description: null,
+      is_system: true,
+      created_at: now,
+      updated_at: now,
+    }))
+
+    return {
+      profile,
+      holdingId: mock.holdingId ?? null,
+      companyId: mock.companyId,
+      roles,
+      permissions: mock.permissions,
+      isEnuraAdmin: mock.isEnuraAdmin ?? false,
+      isHoldingAdmin: mock.isHoldingAdmin,
+    }
+  } catch {
+    return null
+  }
+}
 
 async function _getSession(): Promise<UserSession | null> {
+  // Mock-auth: read from cookie when MOCK_AUTH is active
+  const mockSession = _getMockSession()
+  if (mockSession) return mockSession
+
+  // Real Supabase auth
   try {
     const supabase = createSupabaseServerClient()
 
