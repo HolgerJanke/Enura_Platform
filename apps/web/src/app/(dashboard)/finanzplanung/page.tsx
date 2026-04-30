@@ -38,7 +38,18 @@ export default async function FinanzplanungPage() {
     submitted_by: string | null
     submitted_at: string | null
   }
+  interface RunItemData {
+    id: string
+    invoice_id: string
+    creditor_name: string
+    amount: number
+    currency: string
+    invoice_number: string | null
+    invoice_status: string | null
+    due_date: string | null
+  }
   let pendingRuns: PendingRunData[] = []
+  let runItemsMap: Record<string, RunItemData[]> = {}
   let submitterNames: Record<string, string> = {}
   let approverNames: string[] = []
 
@@ -74,6 +85,52 @@ export default async function FinanzplanungPage() {
     scheduledPayments = scheduledRes.count ?? 0
     overdueCount = overdueRes.count ?? 0
     pendingRuns = (pendingRunsRes.data ?? []) as PendingRunData[]
+
+    // Fetch payment run items with invoice details
+    const runIds = pendingRuns.map(r => r.id)
+    if (runIds.length > 0) {
+      const { data: itemsData } = await serviceDb
+        .from('payment_run_items')
+        .select('id, run_id, invoice_id, creditor_name, amount, currency')
+        .in('run_id', runIds)
+        .order('sort_order')
+
+      // Fetch invoice details for items
+      const invoiceIds = [...new Set((itemsData ?? []).map((i: Record<string, unknown>) => i['invoice_id'] as string))]
+      let invoiceMap: Record<string, { number: string | null; status: string | null; due_date: string | null }> = {}
+      if (invoiceIds.length > 0) {
+        const { data: invoices } = await serviceDb
+          .from('invoices_incoming')
+          .select('id, invoice_number, status, due_date')
+          .in('id', invoiceIds)
+        for (const inv of (invoices ?? []) as Array<Record<string, unknown>>) {
+          invoiceMap[inv['id'] as string] = {
+            number: inv['invoice_number'] as string | null,
+            status: inv['status'] as string | null,
+            due_date: inv['due_date'] as string | null,
+          }
+        }
+      }
+
+      // Group items by run_id
+      for (const item of (itemsData ?? []) as Array<Record<string, unknown>>) {
+        const rid = item['run_id'] as string
+        const invId = item['invoice_id'] as string
+        const inv = invoiceMap[invId]
+        const arr = runItemsMap[rid] ?? []
+        arr.push({
+          id: item['id'] as string,
+          invoice_id: invId,
+          creditor_name: item['creditor_name'] as string,
+          amount: Number(item['amount'] ?? 0),
+          currency: item['currency'] as string,
+          invoice_number: inv?.number ?? null,
+          invoice_status: inv?.status ?? null,
+          due_date: inv?.due_date ?? null,
+        })
+        runItemsMap[rid] = arr
+      }
+    }
 
     // Fetch submitter names
     const submitterIds = [...new Set(pendingRuns.map(r => r.submitted_by).filter(Boolean))] as string[]
@@ -170,6 +227,7 @@ export default async function FinanzplanungPage() {
             <ApprovalsKpiCard
               count={pendingRuns.length}
               pendingRuns={pendingRuns}
+              runItems={runItemsMap}
               submitters={submitterNames}
               approvers={approverNames}
             />
