@@ -60,12 +60,24 @@ ALTER TABLE public.process_kpi_values ENABLE ROW LEVEL SECURITY;
 DO $$
 DECLARE tbl TEXT;
 BEGIN
+  -- enura admin policy applies to both tables
   FOR tbl IN SELECT unnest(ARRAY['process_kpi_definitions', 'process_kpi_values']) LOOP
     EXECUTE format(
       'CREATE POLICY "enura_%s" ON public.%I FOR ALL USING (public.is_enura_admin())', tbl, tbl);
-    EXECUTE format(
-      'CREATE POLICY "holding_%s" ON public.%I FOR ALL USING (holding_id = public.current_holding_id() AND public.is_holding_admin())', tbl, tbl);
   END LOOP;
+
+  -- holding_id only exists on process_kpi_definitions, not on process_kpi_values
+  EXECUTE 'CREATE POLICY "holding_process_kpi_definitions" ON public.process_kpi_definitions
+    FOR ALL USING (holding_id = public.current_holding_id() AND public.is_holding_admin())';
+
+  -- For process_kpi_values: resolve holding via parent definition
+  EXECUTE 'CREATE POLICY "holding_process_kpi_values" ON public.process_kpi_values
+    FOR ALL USING (EXISTS (
+      SELECT 1 FROM public.process_kpi_definitions d
+      WHERE d.id = kpi_id
+        AND d.holding_id = public.current_holding_id()
+        AND public.is_holding_admin()
+    ))';
 END $$;
 
 -- KPI definitions: company users with process access can read
