@@ -34,21 +34,21 @@ export class ReonicConnector implements ConnectorBase {
 
   async validate(connector: ConnectorConfig): Promise<void> {
     const creds = connector.credentials as Record<string, string>
-    if (!creds['api_key']) {
+    if (!creds['apiKey']) {
       throw new ConnectorValidationError(
-        'api_key',
+        'apiKey',
         'API-Schlüssel ist erforderlich',
       )
     }
-    if (!creds['base_url']) {
+    if (!creds['clientId']) {
       throw new ConnectorValidationError(
-        'base_url',
-        'Basis-URL ist erforderlich',
+        'clientId',
+        'Client-ID ist erforderlich',
       )
     }
 
     // Test connection by fetching users
-    const client = new ReonicApiClient(creds['base_url'], creds['api_key'])
+    const client = new ReonicApiClient(creds['apiKey'], creds['clientId'])
     await client.getUsers()
   }
 
@@ -58,7 +58,7 @@ export class ReonicConnector implements ConnectorBase {
   ): Promise<SyncResult> {
     const startTime = Date.now()
     const creds = connector.credentials as Record<string, string>
-    const client = new ReonicApiClient(creds['base_url']!, creds['api_key']!)
+    const client = new ReonicApiClient(creds['apiKey']!, creds['clientId']!)
     const db = getServiceClient()
     let fetched = 0
     let written = 0
@@ -161,6 +161,7 @@ export class ReonicConnector implements ConnectorBase {
 
       // -----------------------------------------------------------------------
       // 3. Sync offers (paginated, incremental)
+      //    h360/offers uses { results, hasNextPage } — no totalPages
       // -----------------------------------------------------------------------
       page = 1
       // eslint-disable-next-line no-constant-condition
@@ -196,7 +197,8 @@ export class ReonicConnector implements ConnectorBase {
         written += offersResult.written
         errors.push(...offersResult.errors)
 
-        if (page >= resp.totalPages) break
+        // h360/offers returns hasNextPage instead of totalPages
+        if (!resp.hasNextPage || resp.data.length === 0) break
         page++
         await delay(200)
       }

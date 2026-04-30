@@ -38,7 +38,11 @@ export class HttpClient {
     body?: unknown,
     query?: Record<string, string>,
   ): Promise<T> {
-    const url = new URL(path, this.baseUrl)
+    // Ensure base + path concatenation preserves sub-paths
+    // (new URL('/sub', 'https://a.com/v2/') drops /v2/)
+    const base = this.baseUrl.endsWith('/') ? this.baseUrl : this.baseUrl + '/'
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path
+    const url = new URL(cleanPath, base)
     if (query) {
       Object.entries(query).forEach(([k, v]) => url.searchParams.set(k, v))
     }
