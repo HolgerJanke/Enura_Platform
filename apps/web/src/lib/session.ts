@@ -1,73 +1,8 @@
 import { cache } from 'react'
-import { cookies } from 'next/headers'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import type { UserSession, RoleRow, ProfileRow } from '@enura/types'
-import type { MockSession } from '@/lib/auth'
-
-const MOCK_AUTH = process.env.MOCK_AUTH !== 'false'
-
-function _getMockSession(): UserSession | null {
-  try {
-    const cookieStore = cookies()
-    const raw = cookieStore.get('mock-session')?.value
-    if (!raw) return null
-
-    const mock = JSON.parse(raw) as MockSession
-    const now = new Date().toISOString()
-
-    const profile: ProfileRow = {
-      id: mock.userId,
-      company_id: mock.companyId,
-      holding_id: null,
-      first_name: mock.firstName,
-      last_name: mock.lastName,
-      display_name: mock.displayName,
-      avatar_url: null,
-      phone: null,
-      locale: 'de-CH',
-      must_reset_password: mock.mustResetPassword,
-      password_reset_at: null,
-      totp_enabled: mock.totpEnabled,
-      totp_enrolled_at: null,
-      last_sign_in_at: now,
-      is_active: true,
-      created_at: now,
-      updated_at: now,
-    }
-
-    const roles: RoleRow[] = mock.roles.map((key) => ({
-      id: `mock-role-${key}`,
-      company_id: mock.companyId,
-      holding_id: null,
-      key,
-      label: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      description: null,
-      is_system: false,
-      created_at: now,
-      updated_at: now,
-    }))
-
-    return {
-      profile,
-      holdingId: null,
-      companyId: mock.companyId,
-      roles,
-      permissions: mock.permissions,
-      isEnuraAdmin: mock.roles.includes('enura_admin'),
-      isHoldingAdmin: mock.isHoldingAdmin,
-    }
-  } catch (err) {
-    console.error('[getSession] Mock session parse error:', err)
-    return null
-  }
-}
+import type { UserSession, RoleRow } from '@enura/types'
 
 async function _getSession(): Promise<UserSession | null> {
-  // Mock auth mode — read from cookie, no Supabase needed
-  if (MOCK_AUTH) {
-    return _getMockSession()
-  }
-
   try {
     const supabase = createSupabaseServerClient()
 

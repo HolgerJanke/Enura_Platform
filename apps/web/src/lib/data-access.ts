@@ -15,7 +15,7 @@ import type { DataAccess } from '@enura/types'
  * reuse the same instance (and the same Supabase client / session).
  */
 export const getDataAccess = cache((): DataAccess => {
-  if (process.env.MOCK_DATA !== 'false') {
+  if (process.env.MOCK_DATA === 'true') {
     return createMockDataAccess()
   }
   const supabase = createSupabaseServerClient()
