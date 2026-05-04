@@ -1,11 +1,21 @@
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { formatNumber, formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
 import type { ProjectsDailyMetrics } from '@enura/types'
-import type { ProjectRow, PhaseDefinitionRow } from '@enura/types'
+import type { ProjectRow, PhaseDefinitionRow, OfferRow, TeamMemberRow } from '@enura/types'
+
+// Offer-status pipeline columns when no projects exist
+const OFFER_PIPELINE_PHASES = [
+  { key: 'draft', label: 'Entwurf', color: '#94a3b8' },
+  { key: 'sent', label: 'Versendet', color: '#3b82f6' },
+  { key: 'won', label: 'Gewonnen', color: '#22c55e' },
+  { key: 'lost', label: 'Verloren', color: '#ef4444' },
+  { key: 'expired', label: 'Abgelaufen', color: '#f59e0b' },
+] as const
 
 export default async function ProjectsPage() {
   await requirePermission('module:bau:read')
@@ -28,12 +38,43 @@ export default async function ProjectsPage() {
     db.phaseDefinitions.findByCompanyId(session.companyId),
   ])
 
-  // Sort phases by phase_number
+  const hasProjects = projects.length > 0
+
+  // If no projects exist, fetch offers + leads for a pipeline view
+  let offers: OfferRow[] = []
+  let teamMembers: TeamMemberRow[] = []
+  let wonCount = 0
+  let sentCount = 0
+  let draftCount = 0
+  let lostCount = 0
+  let expiredCount = 0
+  let pipelineTotal = 0
+
+  if (!hasProjects) {
+    const [allOffers, tm, wc, sc, dc, lc, ec, pt] = await Promise.all([
+      db.offers.findMany(session.companyId),
+      db.teamMembers.findByCompanyId(session.companyId),
+      db.offers.count(session.companyId, { status: 'won' }),
+      db.offers.count(session.companyId, { status: 'sent' }),
+      db.offers.count(session.companyId, { status: 'draft' }),
+      db.offers.count(session.companyId, { status: 'lost' }),
+      db.offers.count(session.companyId, { status: 'expired' }),
+      db.offers.sumAmountChf(session.companyId, { excludeStatus: ['lost', 'expired'] }),
+    ])
+    offers = allOffers
+    teamMembers = tm
+    wonCount = wc
+    sentCount = sc
+    draftCount = dc
+    lostCount = lc
+    expiredCount = ec
+    pipelineTotal = pt
+  }
+
+  // --- Projects-based Kanban ---
   const sortedPhases = [...phaseDefinitions].sort(
     (a, b) => a.phase_number - b.phase_number,
   )
-
-  // Group projects by phase_id
   const projectsByPhase = new Map<string, ProjectRow[]>()
   for (const project of projects) {
     const phaseId = project.phase_id ?? 'unassigned'
@@ -42,7 +83,6 @@ export default async function ProjectsPage() {
     projectsByPhase.set(phaseId, existing)
   }
 
-  // Detect stalled projects (phase_entered_at older than threshold)
   function isStalledProject(
     project: ProjectRow,
     phase: PhaseDefinitionRow | undefined,
@@ -55,6 +95,28 @@ export default async function ProjectsPage() {
     )
     return daysSinceEntry > phase.stall_threshold_days
   }
+
+  // --- Offer-based Kanban helpers ---
+  const offersByStatus = new Map<string, OfferRow[]>()
+  for (const offer of offers) {
+    const existing = offersByStatus.get(offer.status) ?? []
+    existing.push(offer)
+    offersByStatus.set(offer.status, existing)
+  }
+  const memberMap = new Map(teamMembers.map((m) => [m.id, m]))
+
+  // Compute stats for offer-based view
+  const totalActive = hasProjects ? (metrics?.total_active ?? projects.length) : (draftCount + sentCount + wonCount)
+  const totalWon = hasProjects ? (metrics?.completed_30d ?? 0) : wonCount
+  const totalDelayed = hasProjects ? (metrics?.delayed_count ?? 0) : expiredCount
+  const totalStalled = hasProjects ? (metrics?.stalled_count ?? 0) : lostCount
+  const pipelineValue = hasProjects
+    ? (metrics?.avg_throughput_days !== null && metrics?.avg_throughput_days !== undefined ? `${metrics.avg_throughput_days}d` : '--')
+    : (pipelineTotal > 1_000_000
+        ? `CHF ${(pipelineTotal / 1_000_000).toFixed(1)}M`
+        : pipelineTotal > 0
+          ? `CHF ${Math.round(pipelineTotal).toLocaleString('de-CH')}`
+          : 'CHF 0')
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -82,105 +144,178 @@ export default async function ProjectsPage() {
       {/* Stats bar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
-          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Aktive Projekte</p>
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">
+            {hasProjects ? 'Aktive Projekte' : 'Angebote aktiv'}
+          </p>
           <p className="text-2xl font-bold text-brand-text-primary mt-1">
-            {formatNumber(metrics?.total_active ?? projects.length)}
+            {formatNumber(totalActive)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
-          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Verzögert</p>
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">
+            {hasProjects ? 'Verzögert' : 'Abgelaufen'}
+          </p>
           <p className="text-2xl font-bold text-red-500 mt-1">
-            {formatNumber(metrics?.delayed_count ?? 0)}
+            {formatNumber(totalDelayed)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
-          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Blockiert</p>
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">
+            {hasProjects ? 'Blockiert' : 'Verloren'}
+          </p>
           <p className="text-2xl font-bold text-yellow-500 mt-1">
-            {formatNumber(metrics?.stalled_count ?? 0)}
+            {formatNumber(totalStalled)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
-          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Abgeschlossen (30d)</p>
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">
+            {hasProjects ? 'Abgeschlossen (30d)' : 'Gewonnen'}
+          </p>
           <p className="text-2xl font-bold text-green-600 mt-1">
-            {formatNumber(metrics?.completed_30d ?? 0)}
+            {formatNumber(totalWon)}
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
-          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Durchlaufzeit</p>
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">
+            {hasProjects ? 'Durchlaufzeit' : 'Pipeline-Wert'}
+          </p>
           <p className="text-2xl font-bold text-brand-text-primary mt-1">
-            {metrics?.avg_throughput_days !== null &&
-            metrics?.avg_throughput_days !== undefined
-              ? `${metrics.avg_throughput_days}d`
-              : '--'}
+            {pipelineValue}
           </p>
         </div>
       </div>
 
-      {/* Kanban board — horizontal scroll of phases */}
+      {/* Kanban board */}
       <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {sortedPhases.map((phase) => {
-            const phaseProjects = projectsByPhase.get(phase.id) ?? []
-            return (
-              <div
-                key={phase.id}
-                className="flex-shrink-0 w-52"
-              >
-                {/* Phase header with color bar */}
-                <div className="mb-3">
-                  <div
-                    className="h-1 rounded-full mb-2"
-                    style={{ backgroundColor: phase.color ?? 'var(--brand-primary)' }}
-                  />
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-brand-text-primary truncate">
-                      {phase.phase_number}. {phase.name}
-                    </p>
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-brand-text-secondary">
-                      {phaseProjects.length}
-                    </span>
+        {hasProjects ? (
+          /* Phase-based Kanban from projects table */
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {sortedPhases.map((phase) => {
+              const phaseProjects = projectsByPhase.get(phase.id) ?? []
+              return (
+                <div key={phase.id} className="flex-shrink-0 w-52">
+                  <div className="mb-3">
+                    <div
+                      className="h-1 rounded-full mb-2"
+                      style={{ backgroundColor: phase.color ?? 'var(--brand-primary)' }}
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-brand-text-primary truncate">
+                        {phase.phase_number}. {phase.name}
+                      </p>
+                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-brand-text-secondary">
+                        {phaseProjects.length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {phaseProjects.map((project) => {
+                      const stalled = isStalledProject(project, phase)
+                      return (
+                        <Link
+                          key={project.id}
+                          href={`/projects/${project.id}`}
+                          className={`block rounded-lg bg-brand-background border p-3 shadow-brand-sm hover:shadow-brand-md transition-shadow ${
+                            stalled ? 'border-red-200 bg-red-50' : 'border-gray-100'
+                          }`}
+                        >
+                          <p className="text-sm font-medium text-brand-text-primary truncate">
+                            {project.customer_name}
+                          </p>
+                          <p className="text-xs text-brand-text-secondary truncate mt-0.5">
+                            {project.title}
+                          </p>
+                          {stalled && (
+                            <div className="flex items-center gap-1 mt-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                              <p className="text-[10px] text-red-600 font-medium">Verzögert</p>
+                            </div>
+                          )}
+                        </Link>
+                      )
+                    })}
+                    {phaseProjects.length === 0 && (
+                      <p className="text-xs text-brand-text-secondary italic text-center py-4">
+                        Keine Projekte
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {phaseProjects.map((project) => {
-                    const stalled = isStalledProject(project, phase)
-                    return (
-                      <div
-                        key={project.id}
-                        className={`rounded-lg bg-brand-background border p-3 shadow-brand-sm hover:shadow-brand-md transition-shadow cursor-pointer ${
-                          stalled
-                            ? 'border-red-200 bg-red-50'
-                            : 'border-gray-100'
-                        }`}
-                      >
-                        <p className="text-sm font-medium text-brand-text-primary truncate">
-                          {project.customer_name}
-                        </p>
-                        <p className="text-xs text-brand-text-secondary truncate mt-0.5">
-                          {project.title}
-                        </p>
-                        {stalled && (
-                          <div className="flex items-center gap-1 mt-2">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                            <p className="text-[10px] text-red-600 font-medium">Verzögert</p>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                  {phaseProjects.length === 0 && (
-                    <p className="text-xs text-brand-text-secondary italic text-center py-4">
-                      Keine Projekte
-                    </p>
-                  )}
+              )
+            })}
+          </div>
+        ) : (
+          /* Offer-based pipeline Kanban */
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {OFFER_PIPELINE_PHASES.map((phase) => {
+              const phaseOffers = offersByStatus.get(phase.key) ?? []
+              return (
+                <div key={phase.key} className="flex-shrink-0 w-56">
+                  <div className="mb-3">
+                    <div
+                      className="h-1 rounded-full mb-2"
+                      style={{ backgroundColor: phase.color }}
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-brand-text-primary">
+                        {phase.label}
+                      </p>
+                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-brand-text-secondary">
+                        {phaseOffers.length}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {phaseOffers.slice(0, 20).map((offer) => {
+                      const berater = offer.berater_id ? memberMap.get(offer.berater_id) : null
+                      const beraterName = berater
+                        ? `${berater.first_name ?? ''} ${berater.last_name ?? ''}`.trim()
+                        : null
+                      const amount = Number(offer.amount_chf) || 0
+                      return (
+                        <Link
+                          key={offer.id}
+                          href={offer.lead_id ? `/leads/${offer.lead_id}` : '#'}
+                          className="block rounded-lg bg-brand-background border border-gray-100 p-3 shadow-brand-sm hover:shadow-brand-md transition-shadow"
+                        >
+                          <p className="text-sm font-medium text-brand-text-primary truncate">
+                            {offer.title || 'Ohne Titel'}
+                          </p>
+                          {amount > 0 && (
+                            <p className="text-xs font-semibold text-brand-text-primary mt-1">
+                              CHF {amount.toLocaleString('de-CH')}
+                            </p>
+                          )}
+                          {beraterName && (
+                            <p className="text-[11px] text-brand-text-secondary mt-1 truncate">
+                              {beraterName}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-brand-text-secondary mt-1">
+                            {formatDate(offer.updated_at)}
+                          </p>
+                        </Link>
+                      )
+                    })}
+                    {phaseOffers.length > 20 && (
+                      <p className="text-[11px] text-brand-text-secondary text-center py-2">
+                        +{phaseOffers.length - 20} weitere
+                      </p>
+                    )}
+                    {phaseOffers.length === 0 && (
+                      <p className="text-xs text-brand-text-secondary italic text-center py-4">
+                        Keine Angebote
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Phase distribution table */}
+      {/* Phase distribution table (from snapshot) */}
       {metrics?.by_phase && Object.keys(metrics.by_phase).length > 0 && (
         <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-lg font-medium text-brand-text-primary mb-4">
@@ -189,12 +324,8 @@ export default async function ProjectsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="py-2 text-left text-brand-text-secondary font-medium">
-                  Phase
-                </th>
-                <th className="py-2 text-right text-brand-text-secondary font-medium">
-                  Anzahl
-                </th>
+                <th className="py-2 text-left text-brand-text-secondary font-medium">Phase</th>
+                <th className="py-2 text-right text-brand-text-secondary font-medium">Anzahl</th>
               </tr>
             </thead>
             <tbody>
@@ -202,14 +333,50 @@ export default async function ProjectsPage() {
                 .sort(([a], [b]) => a.localeCompare(b, 'de', { numeric: true }))
                 .map(([phaseName, count]) => (
                   <tr key={phaseName} className="border-b border-gray-100">
-                    <td className="py-2 text-brand-text-primary">
-                      {phaseName}
-                    </td>
+                    <td className="py-2 text-brand-text-primary">{phaseName}</td>
                     <td className="py-2 text-right font-medium text-brand-text-primary">
                       {formatNumber(count)}
                     </td>
                   </tr>
                 ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Offer-based pipeline summary table */}
+      {!hasProjects && offers.length > 0 && (
+        <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
+          <h2 className="text-lg font-medium text-brand-text-primary mb-4">
+            Angebote nach Status
+          </h2>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="py-2 text-left text-brand-text-secondary font-medium">Status</th>
+                <th className="py-2 text-right text-brand-text-secondary font-medium">Anzahl</th>
+                <th className="py-2 text-right text-brand-text-secondary font-medium">Volumen (CHF)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {OFFER_PIPELINE_PHASES.map((phase) => {
+                const phaseOffers = offersByStatus.get(phase.key) ?? []
+                const volume = phaseOffers.reduce((s, o) => s + (Number(o.amount_chf) || 0), 0)
+                return (
+                  <tr key={phase.key} className="border-b border-gray-100">
+                    <td className="py-2 text-brand-text-primary flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: phase.color }} />
+                      {phase.label}
+                    </td>
+                    <td className="py-2 text-right font-medium text-brand-text-primary">
+                      {formatNumber(phaseOffers.length)}
+                    </td>
+                    <td className="py-2 text-right font-medium text-brand-text-primary">
+                      {volume > 0 ? `CHF ${volume.toLocaleString('de-CH')}` : '--'}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

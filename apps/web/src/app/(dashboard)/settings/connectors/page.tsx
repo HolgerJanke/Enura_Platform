@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ConnectorListClient } from './connector-list-client'
 
 const CONNECTOR_TYPES = [
@@ -20,7 +20,7 @@ export default async function ConnectorsPage() {
   const session = await getSession()
   if (!session?.companyId) return null
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Fetch configured connectors for this tenant
   const { data: connectors } = await supabase

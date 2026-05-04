@@ -13,7 +13,7 @@ import {
   formatDate,
   KPI_SNAPSHOT_TYPES,
 } from '@enura/types'
-import type { BeraterDailyMetrics } from '@enura/types'
+import type { BeraterDailyMetrics, OfferRow } from '@enura/types'
 import { TeamMemberFilter } from '@/components/team-member-filter'
 
 export default async function BeraterPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -43,7 +43,72 @@ export default async function BeraterPage({ searchParams }: { searchParams: Prom
     KPI_SNAPSHOT_TYPES.BERATER_DAILY,
   )
 
-  const metrics = snapshot?.metrics as BeraterDailyMetrics | undefined
+  let metrics = snapshot?.metrics as BeraterDailyMetrics | undefined
+
+  // If no KPI snapshot exists, compute real-time from offers + leads
+  if (!metrics) {
+    const [allOffers, leadsResult] = await Promise.all([
+      db.offers.findMany(session.companyId, selectedMember ? { beraterId: selectedMember } : undefined),
+      db.leads.count(session.companyId, { status: 'appointment_booked' }),
+    ])
+
+    // This week
+    const weekStart = new Date()
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+    weekStart.setHours(0, 0, 0, 0)
+
+    // Filter for selected berater if needed
+    const relevantOffers = selectedMember
+      ? allOffers.filter((o: OfferRow) => o.berater_id === selectedMember)
+      : allOffers
+
+    const wonOffers = relevantOffers.filter((o: OfferRow) => o.status === 'won')
+    const lostOffers = relevantOffers.filter((o: OfferRow) => o.status === 'lost')
+    const closingRate = wonOffers.length + lostOffers.length > 0
+      ? wonOffers.length / (wonOffers.length + lostOffers.length)
+      : 0
+
+    const pipelineValue = relevantOffers
+      .filter((o: OfferRow) => !['won', 'lost', 'expired'].includes(o.status))
+      .reduce((sum: number, o: OfferRow) => sum + (Number(o.amount_chf) || 0), 0)
+
+    // Calculate weekly appointments from leads with appointment statuses
+    let weeklyAppointmentsQuery = serviceDb
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', session.companyId)
+      .in('status', ['appointment_set', 'appointment_booked'])
+      .gte('updated_at', weekStart.toISOString())
+
+    const { count: weeklyAppointments } = await weeklyAppointmentsQuery
+
+    // Calculate avg deal duration from won offers
+    const dealDurations = wonOffers
+      .filter((o: OfferRow) => o.decided_at && o.created_at)
+      .map((o: OfferRow) => {
+        const created = new Date(o.created_at)
+        const decided = new Date(o.decided_at!)
+        return Math.floor((decided.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+      })
+    const avgDealDuration = dealDurations.length > 0
+      ? Math.round(dealDurations.reduce((a, b) => a + b, 0) / dealDurations.length)
+      : null
+
+    // This week's offers
+    const thisWeekOffers = relevantOffers.filter((o: OfferRow) => new Date(o.created_at) >= weekStart)
+
+    metrics = {
+      appointments_total: weeklyAppointments ?? 0,
+      appointments_done: weeklyAppointments ?? 0,
+      appointments_no_show: 0,
+      closing_rate: closingRate,
+      pipeline_value_chf: pipelineValue,
+      offers_created: thisWeekOffers.length,
+      offers_won: wonOffers.length,
+      avg_deal_duration_days: avgDealDuration,
+      activities_total: relevantOffers.length,
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6">
@@ -114,7 +179,7 @@ export default async function BeraterPage({ searchParams }: { searchParams: Prom
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-sm text-brand-text-secondary">
-            Aktivitäten heute
+            Angebote total
           </p>
           <p className="text-2xl font-semibold text-brand-text-primary mt-1">
             {formatNumber(metrics?.activities_total ?? 0)}

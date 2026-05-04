@@ -5,7 +5,6 @@ import { Suspense } from 'react'
 import { requirePermission, checkPermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import {
   formatPercent,
@@ -46,14 +45,13 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
     KPI_SNAPSHOT_TYPES.SETTER_DAILY,
   )
 
-  const metrics = snapshot?.metrics as SetterDailyMetrics | undefined
+  let metrics = snapshot?.metrics as SetterDailyMetrics | undefined
 
   // Fetch recent calls (last 30 days, limited to 20)
-  const supabase = createSupabaseServerClient()
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  let callsQuery = supabase
+  let callsQuery = serviceDb
     .from('calls')
     .select(
       'id, started_at, duration_seconds, direction, status, team_member_id, recording_url',
@@ -69,12 +67,84 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
 
   const { data: recentCalls } = await callsQuery
 
+  // If no KPI snapshot exists, compute real-time metrics from calls data
+  if (!metrics) {
+    // Fetch all calls from today for live KPIs
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    let todayCallsQuery = serviceDb
+      .from('calls')
+      .select('id, started_at, duration_seconds, direction, status, team_member_id')
+      .eq('company_id', session.companyId)
+      .gte('started_at', todayStart.toISOString())
+
+    if (selectedMember) {
+      todayCallsQuery = todayCallsQuery.eq('team_member_id', selectedMember)
+    }
+
+    const { data: todayCalls } = await todayCallsQuery
+
+    // Also get 30-day calls for broader metrics
+    let monthCallsQuery = serviceDb
+      .from('calls')
+      .select('id, started_at, duration_seconds, direction, status, team_member_id')
+      .eq('company_id', session.companyId)
+      .gte('started_at', thirtyDaysAgo.toISOString())
+
+    if (selectedMember) {
+      monthCallsQuery = monthCallsQuery.eq('team_member_id', selectedMember)
+    }
+
+    const { data: monthCalls } = await monthCallsQuery
+
+    // Count leads with appointment_booked status as proxy for booked appointments
+    let appointmentsQuery = serviceDb
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', session.companyId)
+      .in('status', ['appointment_set', 'appointment_booked'])
+
+    if (selectedMember) {
+      appointmentsQuery = appointmentsQuery.eq('setter_id', selectedMember)
+    }
+
+    const { count: appointmentCount } = await appointmentsQuery
+
+    const allCalls = (todayCalls ?? []) as Array<Record<string, unknown>>
+    const allMonthCalls = (monthCalls ?? []) as Array<Record<string, unknown>>
+
+    const answered = allCalls.filter((c) => c['status'] === 'answered')
+    const missed = allCalls.filter((c) => c['status'] === 'missed' || c['status'] === 'no-answer')
+    const voicemail = allCalls.filter((c) => c['status'] === 'voicemail')
+    const totalDuration = allCalls.reduce((s, c) => s + (Number(c['duration_seconds']) ?? 0), 0)
+    const avgDuration = answered.length > 0
+      ? Math.round(totalDuration / answered.length)
+      : 0
+    const reachRate = allCalls.length > 0 ? answered.length / allCalls.length : 0
+    const appointmentRate = allCalls.length > 0 ? (appointmentCount ?? 0) / allCalls.length : 0
+
+    metrics = {
+      calls_total: allCalls.length,
+      calls_answered: answered.length,
+      calls_missed: missed.length,
+      calls_voicemail: voicemail.length,
+      reach_rate: reachRate,
+      appointments_booked: appointmentCount ?? 0,
+      appointment_rate: appointmentRate,
+      avg_duration_sec: avgDuration,
+      total_duration_sec: totalDuration,
+      no_show_count: 0,
+      no_show_rate: 0,
+    }
+  }
+
   // Fetch analyses for those calls
   const callIds = (recentCalls ?? []).map(
     (c: Record<string, unknown>) => c['id'] as string,
   )
   const { data: analyses } = callIds.length > 0
-    ? await supabase
+    ? await serviceDb
         .from('call_analysis')
         .select(
           'call_id, overall_score, greeting_score, needs_analysis_score, presentation_score, closing_score, suggestions, analyzed_at',
