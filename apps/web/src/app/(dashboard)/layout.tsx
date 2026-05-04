@@ -3,23 +3,15 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { DashboardShell } from '@/components/dashboard-shell'
-
-const SUPER_USER_NAV = [
-  { label: 'Prozesse', href: '/settings/call-script' },
-  { label: 'Integrationen', href: '/settings/connectors' },
-  { label: 'Benutzer', href: '/settings/users' },
-  { label: 'Branding', href: '/settings/branding' },
-  { label: 'Berichte', href: '/settings/reports' },
-]
+import { getDataAccess } from '@/lib/data-access'
+import { DashboardShellV2 } from '@/components/dashboard-shell-v2'
+import type { ConnectorRow } from '@enura/types'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
 
   // If no session, show a loading/redirect state instead of calling redirect()
   // redirect() in Server Component layouts causes 404 on Vercel
-  // The middleware handles the actual auth redirect
   if (!session) {
     return (
       <>
@@ -37,42 +29,47 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const { companyName: rawCompanyName } = getCompanyContext()
-  // Enura admins with no company see neutral branding
   const companyName = session.isEnuraAdmin && !session.companyId
     ? 'Enura Group'
     : rawCompanyName
 
   const displayName = session.profile.display_name ?? session.profile.first_name ?? 'Benutzer'
   const roleLabel = session.roles[0]?.label ?? ''
-
-  // Fetch active critical anomaly count for banner
-  let criticalAnomalyCount = 0
-  if (session.companyId) {
-    const supabase = createSupabaseServerClient()
-    const { count } = await supabase
-      .from('anomalies')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', session.companyId)
-      .eq('is_active', true)
-      .eq('severity', 'critical')
-
-    criticalAnomalyCount = count ?? 0
-  }
-
-  // Finanzplanung is now accessed via Process House (M2), not sidebar
+  // ProfileRow doesn't have email — derive from display_name or fall back
+  const userEmail = `${(session.profile.first_name ?? 'user').toLowerCase()}@${rawCompanyName.toLowerCase().replace(/\s+/g, '-')}.ch`
 
   const isSuperUser = session.roles.some(r => r.key === 'super_user')
 
+  // Fetch connectors for sidebar status indicators
+  let connectorInfos: { name: string; status: 'connected' | 'warning' | 'disconnected' }[] = []
+  if (session.companyId) {
+    const db = getDataAccess()
+    const connectors = await db.connectors.findByCompanyId(session.companyId)
+    connectorInfos = connectors.map((c: ConnectorRow) => ({
+      name: c.name,
+      status: c.status === 'active'
+        ? 'connected' as const
+        : c.status === 'paused' || c.status === 'error'
+          ? 'warning' as const
+          : 'disconnected' as const,
+    }))
+  }
+
+  // Check for critical anomalies
+  let criticalAnomalyCount = 0
+  // Anomaly count is skipped when using mock data — no anomalies table in mock
+
   return (
-    <>
-      <DashboardShell
-        companyName={companyName}
-        userName={displayName}
-        userRole={roleLabel}
-        isHoldingAdmin={session.isHoldingAdmin}
-        isSuperUser={isSuperUser}
-      >
-        {criticalAnomalyCount > 0 && (
+    <DashboardShellV2
+      companyName={companyName}
+      userName={displayName}
+      userEmail={userEmail}
+      userRole={roleLabel}
+      isHoldingAdmin={session.isHoldingAdmin}
+      isSuperUser={isSuperUser}
+      connectors={connectorInfos}
+    >
+      {criticalAnomalyCount > 0 && (
         <div className="border-b border-red-300 bg-red-600 px-4 py-2.5 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -93,7 +90,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       )}
       {children}
-    </DashboardShell>
-    </>
+    </DashboardShellV2>
   )
 }

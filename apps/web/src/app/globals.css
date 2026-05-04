@@ -5,18 +5,28 @@
 :root {
   --brand-primary: #1A56DB;
   --brand-secondary: #1A1A1A;
-  --brand-accent: #F3A917;
-  --brand-background: #FFFFFF;
-  --brand-surface: #F9FAFB;
+  --brand-accent: #14B8A6;
+  --brand-background: #F5F6F8;
+  --brand-surface: #FFFFFF;
   --brand-text-primary: #111827;
   --brand-text-secondary: #6B7280;
   --brand-font: 'Inter', system-ui, sans-serif;
-  --brand-radius: 8px;
+  --brand-radius: 12px;
+
+  /* Sidebar — dark navy, per-tenant overridable */
+  --sidebar-bg: #1a1f36;
+  --sidebar-width: 260px;
+
+  /* KPI card accent colors */
+  --brand-kpi-1: #14B8A6;
+  --brand-kpi-2: #3B82F6;
+  --brand-kpi-3: #F59E0B;
+  --brand-kpi-4: #EF4444;
 
   /* Extended design tokens */
   --brand-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --brand-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --brand-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --brand-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --brand-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
   --brand-spacing-base: 4px;
   --brand-font-size-base: 16px;
   --brand-font-size-scale: 1.25;
@@ -31,9 +41,33 @@ body {
   font-family: var(--brand-font);
 }
 
+/* Sidebar styling */
+.sidebar-nav {
+  background: var(--sidebar-bg);
+}
+
+/* Main content offset when sidebar is visible */
+.main-with-sidebar {
+  margin-left: var(--sidebar-width);
+}
+
 /* Ensure mobile-only elements are hidden on desktop (belt-and-suspenders with lg:hidden) */
 @media (min-width: 1024px) {
   .mobile-only {
     display: none !important;
+  }
+}
+
+/* Mobile: sidebar hidden by default */
+@media (max-width: 1023px) {
+  .sidebar-nav {
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar-nav.sidebar-open {
+    transform: translateX(0);
+  }
+  .main-with-sidebar {
+    margin-left: 0;
   }
 }

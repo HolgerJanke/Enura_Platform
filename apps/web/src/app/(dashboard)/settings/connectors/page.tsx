@@ -40,9 +40,9 @@ export default async function ConnectorsPage() {
     : { data: [] }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-brand-text-primary mb-2">Integrationen</h1>
-      <p className="text-brand-text-secondary mb-6">
+    <div className="p-6 lg:p-8">
+      <h1 className="text-2xl font-bold text-brand-text-primary mb-2">Integrationen</h1>
+      <p className="text-sm text-brand-text-secondary mb-6">
         Verbinden Sie externe Systeme, um Daten automatisch zu synchronisieren.
       </p>
       <ConnectorListClient

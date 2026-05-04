@@ -57,109 +57,119 @@ export default async function ProjectsPage() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-brand-text-primary mb-2">
-        Bau &amp; Montage &mdash; 27-Phasen Kanban
-      </h1>
-      <p className="text-brand-text-secondary mb-6">{formatDate(today)}</p>
+    <div className="p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-brand-text-primary">Projektmanagement</h1>
+          <p className="text-sm text-brand-text-secondary mt-1">{formatDate(today)}</p>
+        </div>
+        <div className="flex gap-1 rounded-lg bg-white border border-gray-200 p-1">
+          {['Kanban', 'Liste', 'Gantt'].map((tab, i) => (
+            <button
+              key={tab}
+              type="button"
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                i === 0 ? 'bg-brand-primary text-white' : 'text-brand-text-secondary hover:bg-gray-50'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Aktive Projekte</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Aktive Projekte</p>
+          <p className="text-2xl font-bold text-brand-text-primary mt-1">
             {formatNumber(metrics?.total_active ?? projects.length)}
           </p>
         </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Verzoegert</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
+        <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Verzögert</p>
+          <p className="text-2xl font-bold text-red-500 mt-1">
             {formatNumber(metrics?.delayed_count ?? 0)}
           </p>
         </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Blockiert</p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
+        <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Blockiert</p>
+          <p className="text-2xl font-bold text-yellow-500 mt-1">
             {formatNumber(metrics?.stalled_count ?? 0)}
           </p>
         </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">
-            Abgeschlossen (30 Tage)
-          </p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
+        <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Abgeschlossen (30d)</p>
+          <p className="text-2xl font-bold text-green-600 mt-1">
             {formatNumber(metrics?.completed_30d ?? 0)}
           </p>
         </div>
-        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">
-            Durchschnittl. Durchlaufzeit
-          </p>
-          <p className="text-2xl font-semibold text-brand-text-primary mt-1">
+        <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100">
+          <p className="text-xs font-medium text-brand-text-secondary uppercase tracking-wide">Durchlaufzeit</p>
+          <p className="text-2xl font-bold text-brand-text-primary mt-1">
             {metrics?.avg_throughput_days !== null &&
             metrics?.avg_throughput_days !== undefined
-              ? `${metrics.avg_throughput_days} Tage`
+              ? `${metrics.avg_throughput_days}d`
               : '--'}
           </p>
         </div>
       </div>
 
       {/* Kanban board — horizontal scroll of phases */}
-      <div className="bg-brand-surface rounded-brand p-6 border border-gray-200">
-        <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-          Kanban-Board
-        </h2>
-        <div className="flex gap-3 overflow-x-auto pb-4">
+      <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
+        <div className="flex gap-4 overflow-x-auto pb-4">
           {sortedPhases.map((phase) => {
             const phaseProjects = projectsByPhase.get(phase.id) ?? []
             return (
               <div
                 key={phase.id}
-                className="flex-shrink-0 w-48 rounded-brand border border-gray-300 bg-brand-background p-3"
+                className="flex-shrink-0 w-52"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  {phase.color && (
-                    <span
-                      className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: phase.color }}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <p className="text-xs font-medium text-brand-text-secondary truncate">
-                    {phase.phase_number}. {phase.name}
-                  </p>
-                  <span className="ml-auto text-xs text-brand-text-secondary">
-                    {phaseProjects.length}
-                  </span>
+                {/* Phase header with color bar */}
+                <div className="mb-3">
+                  <div
+                    className="h-1 rounded-full mb-2"
+                    style={{ backgroundColor: phase.color ?? 'var(--brand-primary)' }}
+                  />
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-brand-text-primary truncate">
+                      {phase.phase_number}. {phase.name}
+                    </p>
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-brand-text-secondary">
+                      {phaseProjects.length}
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-80 overflow-y-auto">
                   {phaseProjects.map((project) => {
                     const stalled = isStalledProject(project, phase)
                     return (
                       <div
                         key={project.id}
-                        className={`rounded bg-white border p-2 shadow-sm ${
+                        className={`rounded-lg bg-brand-background border p-3 shadow-brand-sm hover:shadow-brand-md transition-shadow cursor-pointer ${
                           stalled
-                            ? 'border-red-300 bg-red-50'
-                            : 'border-gray-200'
+                            ? 'border-red-200 bg-red-50'
+                            : 'border-gray-100'
                         }`}
                       >
-                        <p className="text-xs font-medium text-brand-text-primary truncate">
-                          {project.title}
-                        </p>
-                        <p className="text-xs text-brand-text-secondary truncate mt-0.5">
+                        <p className="text-sm font-medium text-brand-text-primary truncate">
                           {project.customer_name}
                         </p>
+                        <p className="text-xs text-brand-text-secondary truncate mt-0.5">
+                          {project.title}
+                        </p>
                         {stalled && (
-                          <p className="text-xs text-red-600 mt-1 font-medium">
-                            Verzoegert
-                          </p>
+                          <div className="flex items-center gap-1 mt-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                            <p className="text-[10px] text-red-600 font-medium">Verzögert</p>
+                          </div>
                         )}
                       </div>
                     )
                   })}
                   {phaseProjects.length === 0 && (
-                    <p className="text-xs text-brand-text-secondary italic">
+                    <p className="text-xs text-brand-text-secondary italic text-center py-4">
                       Keine Projekte
                     </p>
                   )}
@@ -172,7 +182,7 @@ export default async function ProjectsPage() {
 
       {/* Phase distribution table */}
       {metrics?.by_phase && Object.keys(metrics.by_phase).length > 0 && (
-        <div className="mt-6 bg-brand-surface rounded-brand p-6 border border-gray-200">
+        <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-lg font-medium text-brand-text-primary mb-4">
             Projekte pro Phase (Snapshot)
           </h2>
