@@ -202,7 +202,7 @@ export default function NewTenantPage() {
                   value={form.name}
                   onChange={(e) => updateName(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Alpen Energie GmbH"
+                  placeholder="Solar Solutions GmbH"
                 />
               </div>
               <div>
@@ -220,7 +220,7 @@ export default function NewTenantPage() {
                         ? 'border-red-300 focus:border-red-500'
                         : 'border-gray-300 focus:border-blue-500'
                     }`}
-                    placeholder="alpen-energie"
+                    placeholder="solar-solutions"
                   />
                   <span className="flex-shrink-0 text-sm text-gray-500">.platform.com</span>
                 </div>

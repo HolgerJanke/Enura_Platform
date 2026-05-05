@@ -40,18 +40,13 @@ export function getCompanyContext(): CompanyContext {
 // ---------------------------------------------------------------------------
 
 const MOCK_TENANT_BRANDINGS: Record<string, BrandTokens> = {
-  'alpen-energie': { ...defaultBrandTokens },
-  'test-company': {
-    ...defaultBrandTokens,
-    primary: '#059669',
-    accent: '#D97706',
-  },
+  demo: { ...defaultBrandTokens },
   admin: { ...defaultBrandTokens },
 }
 
 /**
  * Returns brand tokens from the mock data layer.
- * Used during Phase 1 development without Supabase.
+ * Used during development without Supabase branding configured.
  */
 export function getMockBrandingForTenant(slug: string | null): BrandTokens {
   if (!slug) return defaultBrandTokens

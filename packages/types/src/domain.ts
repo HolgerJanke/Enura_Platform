@@ -61,13 +61,45 @@ export type NavigationItem = {
   requiredPermission: string | null
 }
 
-export const navigationItems: NavigationItem[] = [
-  { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'home', requiredPermission: null },
-  { key: 'setter', label: 'Setter', href: '/setter', icon: 'phone', requiredPermission: 'module:setter:read' },
-  { key: 'berater', label: 'Berater', href: '/berater', icon: 'briefcase', requiredPermission: 'module:berater:read' },
-  { key: 'leads', label: 'Leads', href: '/leads', icon: 'users', requiredPermission: 'module:leads:read' },
-  { key: 'innendienst', label: 'Innendienst', href: '/innendienst', icon: 'clipboard', requiredPermission: 'module:innendienst:read' },
-  { key: 'projects', label: 'Projekte', href: '/projects', icon: 'kanban', requiredPermission: 'module:bau:read' },
-  { key: 'finance', label: 'Finanzen', href: '/finance', icon: 'wallet', requiredPermission: 'module:finance:read' },
-  { key: 'settings', label: 'Einstellungen', href: '/settings/users', icon: 'settings', requiredPermission: 'module:admin:read' },
+export type NavigationSection = {
+  key: string
+  title: string
+  items: NavigationItem[]
+}
+
+/**
+ * Platform navigation structure — "Prozesshaus" (Process House).
+ * Items are shown/hidden based on the user's permissions.
+ */
+export const navigationSections: NavigationSection[] = [
+  {
+    key: 'processes',
+    title: 'PROZESSE',
+    items: [
+      { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'dashboard', requiredPermission: null },
+      { key: 'leads', label: 'P1  Vertrieb & Akquise', href: '/leads', icon: 'sales', requiredPermission: 'module:leads:read' },
+      { key: 'projects', label: 'P2  Projektmanagement', href: '/projects', icon: 'project', requiredPermission: 'module:bau:read' },
+      { key: 'processes', label: 'P3  Montage & Technik', href: '/processes', icon: 'montage', requiredPermission: 'module:bau:read' },
+    ],
+  },
+  {
+    key: 'support',
+    title: 'SUPPORT',
+    items: [
+      { key: 'analytics', label: 'S1  Analytics', href: '/analytics', icon: 'analytics', requiredPermission: 'module:reports:read' },
+      { key: 'controlling', label: 'S2  Finanzen & Controlling', href: '/controlling', icon: 'finance', requiredPermission: 'module:finance:read' },
+    ],
+  },
 ]
+
+/** Flat list of all navigation items (for lookups) */
+export const navigationItems: NavigationItem[] = navigationSections.flatMap((s) => s.items)
+
+/** Settings nav item — shown separately for admins */
+export const settingsNavItem: NavigationItem = {
+  key: 'settings',
+  label: 'Einstellungen',
+  href: '/settings/connectors',
+  icon: 'settings',
+  requiredPermission: 'module:admin:read',
+}

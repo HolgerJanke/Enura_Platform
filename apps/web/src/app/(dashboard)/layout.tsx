@@ -65,6 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       userName={displayName}
       userEmail={userEmail}
       userRole={roleLabel}
+      permissions={session.permissions}
       isHoldingAdmin={session.isHoldingAdmin}
       isSuperUser={isSuperUser}
       connectors={connectorInfos}

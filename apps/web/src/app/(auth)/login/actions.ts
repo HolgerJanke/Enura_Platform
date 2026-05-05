@@ -6,8 +6,9 @@ import { LoginSchema } from '@enura/types'
 
 const MOCK_AUTH = process.env.MOCK_AUTH !== 'false'
 
-/** Company ID for the default "Alpen Energie GmbH" tenant */
-const DEFAULT_COMPANY_ID = '00000000-0000-0000-0000-000000000001'
+/** Company ID for the default tenant (env-driven, no hardcoded tenant name) */
+const DEFAULT_COMPANY_ID =
+  process.env.DEV_DEFAULT_COMPANY_ID ?? '00000000-0000-0000-0000-000000000001'
 
 export async function loginAction(
   formData: FormData

@@ -382,7 +382,7 @@ function StepHoldingDetails({
           type="text"
           value={data.holdingName}
           onChange={(e) => updateField('holdingName', e.target.value)}
-          placeholder="z.B. Alpen Energie Gruppe"
+          placeholder="z.B. Solar Solutions AG"
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
@@ -397,7 +397,7 @@ function StepHoldingDetails({
             type="text"
             value={data.holdingSlug}
             onChange={(e) => updateField('holdingSlug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-            placeholder="alpen-energie"
+            placeholder="solar-solutions"
             className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           {/* Availability indicator */}
@@ -659,7 +659,7 @@ function StepFirstCompany({
           type="text"
           value={data.companyName}
           onChange={(e) => updateField('companyName', e.target.value)}
-          placeholder="z.B. Alpen Energie GmbH"
+          placeholder="z.B. Solar Solutions GmbH"
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
@@ -673,7 +673,7 @@ function StepFirstCompany({
           type="text"
           value={data.companySlug}
           onChange={(e) => updateField('companySlug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-          placeholder="alpen-energie"
+          placeholder="solar-solutions"
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>

@@ -19,11 +19,12 @@ export default async function DebugPage() {
   // Test direct REST fetch (same as middleware does)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const debugSlug = process.env.DEV_DEFAULT_TENANT_SLUG ?? 'demo'
   envStatus = `URL=${supabaseUrl ? 'set' : 'MISSING'}, KEY=${supabaseKey ? supabaseKey.slice(0, 15) + '...' : 'MISSING'}`
 
   try {
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/tenants?slug=eq.alpen-energie&status=eq.active&select=id,slug,name,status&limit=1`,
+      `${supabaseUrl}/rest/v1/tenants?slug=eq.${debugSlug}&status=eq.active&select=id,slug,name,status&limit=1`,
       {
         headers: {
           apikey: supabaseKey ?? '',
@@ -47,7 +48,7 @@ export default async function DebugPage() {
     const { data: tenantData, error: tenantError } = await supabase
       .from('tenants')
       .select('id, slug, name, status')
-      .eq('slug', 'alpen-energie')
+      .eq('slug', debugSlug)
       .eq('status', 'active')
       .single()
     tenantQueryStatus = tenantData

@@ -6,6 +6,21 @@ type MockUser = {
   session: MockSession
 }
 
+// ---------------------------------------------------------------------------
+// Env-driven defaults — no hardcoded tenant references
+// ---------------------------------------------------------------------------
+
+const DEFAULT_COMPANY_ID =
+  process.env.DEV_DEFAULT_COMPANY_ID ?? '00000000-0000-0000-0000-000000000001'
+const DEFAULT_TENANT_SLUG =
+  process.env.DEV_DEFAULT_TENANT_SLUG ?? 'demo'
+const MOCK_EMAIL_DOMAIN =
+  process.env.DEV_MOCK_EMAIL_DOMAIN ?? `${DEFAULT_TENANT_SLUG}.enura.ch`
+
+// ---------------------------------------------------------------------------
+// Mock users — generic roles, no tenant-specific data
+// ---------------------------------------------------------------------------
+
 export const mockUsers: MockUser[] = [
   {
     email: 'admin@enura.ch',
@@ -25,12 +40,12 @@ export const mockUsers: MockUser[] = [
     },
   },
   {
-    email: 'super@alpen-energie.ch',
+    email: `super@${MOCK_EMAIL_DOMAIN}`,
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      companyId: '00000000-0000-0000-0000-000000000001',
-      email: 'super@alpen-energie.ch',
+      companyId: DEFAULT_COMPANY_ID,
+      email: `super@${MOCK_EMAIL_DOMAIN}`,
       firstName: 'Hans',
       lastName: 'Müller',
       displayName: 'Hans Müller',
@@ -52,12 +67,12 @@ export const mockUsers: MockUser[] = [
     },
   },
   {
-    email: 'gf@alpen-energie.ch',
+    email: `gf@${MOCK_EMAIL_DOMAIN}`,
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      companyId: '00000000-0000-0000-0000-000000000001',
-      email: 'gf@alpen-energie.ch',
+      companyId: DEFAULT_COMPANY_ID,
+      email: `gf@${MOCK_EMAIL_DOMAIN}`,
       firstName: 'Petra',
       lastName: 'Schneider',
       displayName: 'Petra Schneider',
@@ -73,12 +88,12 @@ export const mockUsers: MockUser[] = [
     },
   },
   {
-    email: 'setter@alpen-energie.ch',
+    email: `setter@${MOCK_EMAIL_DOMAIN}`,
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000004',
-      companyId: '00000000-0000-0000-0000-000000000001',
-      email: 'setter@alpen-energie.ch',
+      companyId: DEFAULT_COMPANY_ID,
+      email: `setter@${MOCK_EMAIL_DOMAIN}`,
       firstName: 'Lukas',
       lastName: 'Weber',
       displayName: 'Lukas Weber',
@@ -90,12 +105,12 @@ export const mockUsers: MockUser[] = [
     },
   },
   {
-    email: 'berater@alpen-energie.ch',
+    email: `berater@${MOCK_EMAIL_DOMAIN}`,
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000005',
-      companyId: '00000000-0000-0000-0000-000000000001',
-      email: 'berater@alpen-energie.ch',
+      companyId: DEFAULT_COMPANY_ID,
+      email: `berater@${MOCK_EMAIL_DOMAIN}`,
       firstName: 'Marco',
       lastName: 'Bernasconi',
       displayName: 'Marco Bernasconi',
@@ -107,12 +122,12 @@ export const mockUsers: MockUser[] = [
     },
   },
   {
-    email: 'finance@alpen-energie.ch',
+    email: `finance@${MOCK_EMAIL_DOMAIN}`,
     password: 'Test1234!',
     session: {
       userId: 'a0000000-0000-0000-0000-000000000008',
-      companyId: '00000000-0000-0000-0000-000000000001',
-      email: 'finance@alpen-energie.ch',
+      companyId: DEFAULT_COMPANY_ID,
+      email: `finance@${MOCK_EMAIL_DOMAIN}`,
       firstName: 'Elena',
       lastName: 'Fischer',
       displayName: 'Elena Fischer',

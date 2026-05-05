@@ -17,6 +17,7 @@ type DashboardShellV2Props = {
   userName: string
   userEmail: string
   userRole: string
+  permissions: string[]
   isHoldingAdmin?: boolean
   isSuperUser?: boolean
   connectors?: ConnectorInfo[]
@@ -32,6 +33,7 @@ export function DashboardShellV2({
   userName,
   userEmail,
   userRole,
+  permissions,
   isHoldingAdmin = false,
   isSuperUser = false,
   connectors = [],
@@ -60,6 +62,7 @@ export function DashboardShellV2({
           userName={userName}
           userEmail={userEmail}
           userRole={userRole}
+          permissions={permissions}
           isHoldingAdmin={isHoldingAdmin}
           isSuperUser={isSuperUser}
           connectors={connectors}

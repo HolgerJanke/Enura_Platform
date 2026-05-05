@@ -3,6 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOutAction } from '@/app/actions'
+import {
+  navigationSections,
+  settingsNavItem,
+  type NavigationSection,
+  type NavigationItem,
+} from '@enura/types'
 
 // ---------------------------------------------------------------------------
 // Icons as inline SVG components (to avoid icon library dependency)
@@ -74,41 +80,46 @@ function IconLogout({ className }: { className?: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// Navigation structure
+// Icon registry — maps icon keys from domain.ts to components
 // ---------------------------------------------------------------------------
 
-type NavItem = {
-  label: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  dashboard: IconDashboard,
+  sales: IconSales,
+  project: IconProject,
+  montage: IconMontage,
+  analytics: IconAnalytics,
+  finance: IconFinance,
+  settings: IconSettings,
 }
 
-type NavSection = {
-  title: string
-  items: NavItem[]
+function getIcon(iconKey: string): React.ComponentType<{ className?: string }> {
+  return ICON_MAP[iconKey] ?? IconDashboard
 }
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    title: 'PROZESSE',
-    items: [
-      { label: 'Dashboard', href: '/dashboard', icon: IconDashboard },
-      { label: 'P1  Vertrieb & Akquise', href: '/leads', icon: IconSales },
-      { label: 'P2  Projektmanagement', href: '/projects', icon: IconProject },
-      { label: 'P3  Montage & Technik', href: '/processes', icon: IconMontage },
-    ],
-  },
-  {
-    title: 'SUPPORT',
-    items: [
-      { label: 'S1  Analytics', href: '/analytics', icon: IconAnalytics },
-      { label: 'S2  Finanzen & Controlling', href: '/finanzplanung', icon: IconFinance },
-    ],
-  },
-]
 
 // ---------------------------------------------------------------------------
-// Connector status indicators
+// Permission filtering
+// ---------------------------------------------------------------------------
+
+function filterByPermissions(
+  sections: NavigationSection[],
+  permissions: string[],
+  isHoldingAdmin: boolean,
+): NavigationSection[] {
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        if (!item.requiredPermission) return true
+        if (isHoldingAdmin) return true
+        return permissions.includes(item.requiredPermission)
+      }),
+    }))
+    .filter((section) => section.items.length > 0)
+}
+
+// ---------------------------------------------------------------------------
+// Props
 // ---------------------------------------------------------------------------
 
 type ConnectorInfo = {
@@ -116,15 +127,12 @@ type ConnectorInfo = {
   status: 'connected' | 'warning' | 'disconnected'
 }
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
 type SidebarNavProps = {
   companyName: string
   userName: string
   userEmail: string
   userRole: string
+  permissions: string[]
   isHoldingAdmin?: boolean
   isSuperUser?: boolean
   connectors?: ConnectorInfo[]
@@ -139,6 +147,7 @@ export function SidebarNav({
   userName,
   userEmail,
   userRole: _userRole,
+  permissions,
   isHoldingAdmin = false,
   isSuperUser = false,
   connectors = [],
@@ -161,6 +170,15 @@ export function SidebarNav({
     }
   }
 
+  // Filter navigation by user permissions
+  const visibleSections = filterByPermissions(navigationSections, permissions, isHoldingAdmin)
+
+  // Settings visible if admin or super_user
+  const showSettings =
+    isHoldingAdmin ||
+    isSuperUser ||
+    permissions.includes(settingsNavItem.requiredPermission!)
+
   // User initials
   const initials = userName
     .split(' ')
@@ -182,18 +200,19 @@ export function SidebarNav({
         </div>
       </div>
 
-      {/* Nav sections */}
+      {/* Nav sections — driven by permissions */}
       <nav className="flex-1 px-3 py-2 space-y-5">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.title}>
+        {visibleSections.map((section) => (
+          <div key={section.key}>
             <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/40">
               {section.title}
             </p>
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const active = isActive(item.href)
+                const Icon = getIcon(item.icon)
                 return (
-                  <li key={item.href}>
+                  <li key={item.key}>
                     <Link
                       href={item.href}
                       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
@@ -202,7 +221,7 @@ export function SidebarNav({
                           : 'text-white/60 hover:bg-white/5 hover:text-white/90'
                       }`}
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
+                      <Icon className="h-[18px] w-[18px] shrink-0" />
                       {item.label}
                     </Link>
                   </li>
@@ -232,12 +251,12 @@ export function SidebarNav({
         )}
 
         {/* Settings (for admins) */}
-        {(isHoldingAdmin || isSuperUser) && (
+        {showSettings && (
           <div>
             <ul className="space-y-0.5">
               <li>
                 <Link
-                  href="/settings/connectors"
+                  href={settingsNavItem.href}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
                     pathname.startsWith('/settings')
                       ? 'bg-white/10 text-white'
@@ -245,7 +264,7 @@ export function SidebarNav({
                   }`}
                 >
                   <IconSettings className="h-[18px] w-[18px] shrink-0" />
-                  Einstellungen
+                  {settingsNavItem.label}
                 </Link>
               </li>
             </ul>
