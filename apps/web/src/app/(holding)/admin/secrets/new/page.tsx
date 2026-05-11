@@ -111,7 +111,7 @@ export default function NewSecretPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '_'))}
-            placeholder="REONIC_API_KEY"
+            placeholder="MY_API_KEY"
             required
             className={`w-full rounded-lg border px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               !nameValid ? 'border-red-300 bg-red-50' : 'border-gray-300'
@@ -120,7 +120,7 @@ export default function NewSecretPage() {
           />
           {!nameValid && (
             <p className="mt-1 text-xs text-red-600">
-              Name muss SCREAMING_SNAKE_CASE sein (z.B. REONIC_API_KEY)
+              Name muss SCREAMING_SNAKE_CASE sein (z.B. MY_API_KEY)
             </p>
           )}
           {fieldErrors['name'] && (

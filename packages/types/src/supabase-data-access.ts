@@ -23,6 +23,7 @@ import type {
   TeamMembersRepository,
   ConnectorsRepository,
   PhaseDefinitionsRepository,
+  PaginatedResult,
 } from './data-access.js'
 import type {
   CompanyRow,
@@ -306,6 +307,47 @@ function createLeadsRepo(client: SupabaseClient): LeadsRepository {
       return dataOrDefault<LeadRow[]>(await query, [])
     },
 
+    async findPaginated(companyId: string, opts?: { status?: string; setterId?: string; page?: number; pageSize?: number }): Promise<PaginatedResult<LeadRow>> {
+      const page = opts?.page ?? 1
+      const pageSize = opts?.pageSize ?? 50
+      const from = (page - 1) * pageSize
+      const to = from + pageSize - 1
+
+      let query = client
+        .from('leads')
+        .select('*', { count: 'exact' })
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+        .range(from, to)
+
+      if (opts?.status) {
+        query = query.eq('status', opts.status)
+      }
+      if (opts?.setterId) {
+        query = query.eq('setter_id', opts.setterId)
+      }
+
+      const result = await query
+      const data = (result.data ?? []) as unknown as LeadRow[]
+      const total = result.count ?? 0
+
+      return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
+    },
+
+    async count(companyId: string, opts?: { status?: string }): Promise<number> {
+      let query = client
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+
+      if (opts?.status) {
+        query = query.eq('status', opts.status)
+      }
+
+      const result = await query
+      return result.count ?? 0
+    },
+
     async findById(companyId: string, id: string): Promise<LeadRow | null> {
       const result = await client
         .from('leads')
@@ -355,6 +397,60 @@ function createOffersRepo(client: SupabaseClient): OffersRepository {
       }
 
       return dataOrDefault<OfferRow[]>(await query, [])
+    },
+
+    async findPaginated(companyId: string, opts?: { status?: string; beraterId?: string; minAmountChf?: number; page?: number; pageSize?: number }): Promise<PaginatedResult<OfferRow>> {
+      const page = opts?.page ?? 1
+      const pageSize = opts?.pageSize ?? 50
+      const from = (page - 1) * pageSize
+      const to = from + pageSize - 1
+
+      let query = client
+        .from('offers')
+        .select('*', { count: 'exact' })
+        .eq('company_id', companyId)
+        .order('updated_at', { ascending: false })
+        .range(from, to)
+
+      if (opts?.status) query = query.eq('status', opts.status)
+      if (opts?.beraterId) query = query.eq('berater_id', opts.beraterId)
+      if (opts?.minAmountChf) query = query.gt('amount_chf', 0)
+
+      const result = await query
+      const data = (result.data ?? []) as unknown as OfferRow[]
+      const total = result.count ?? 0
+      return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
+    },
+
+    async count(companyId: string, opts?: { status?: string }): Promise<number> {
+      let query = client
+        .from('offers')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+
+      if (opts?.status) {
+        query = query.eq('status', opts.status)
+      }
+
+      const result = await query
+      return result.count ?? 0
+    },
+
+    async sumAmountChf(companyId: string, opts?: { excludeStatus?: string[] }): Promise<number> {
+      let query = client
+        .from('offers')
+        .select('amount_chf')
+        .eq('company_id', companyId)
+
+      if (opts?.excludeStatus) {
+        for (const s of opts.excludeStatus) {
+          query = query.neq('status', s)
+        }
+      }
+
+      const result = await query
+      const rows = (result.data ?? []) as unknown as Array<{ amount_chf: number | null }>
+      return rows.reduce((sum, r) => sum + (r.amount_chf ?? 0), 0)
     },
 
     async findById(companyId: string, id: string): Promise<OfferRow | null> {

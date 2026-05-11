@@ -47,6 +47,7 @@ import type {
   TeamMembersRepository,
   ConnectorsRepository,
   PhaseDefinitionsRepository,
+  PaginatedResult,
 } from '../data-access.js'
 
 import {
@@ -320,6 +321,27 @@ function createLeadsRepository(data: LeadRow[]): LeadsRepository {
       return clone(filtered)
     },
 
+    async findPaginated(companyId: string, opts?: { status?: string; setterId?: string; page?: number; pageSize?: number }) {
+      const all = await this.findMany(companyId, opts)
+      const page = opts?.page ?? 1
+      const pageSize = opts?.pageSize ?? 50
+      const start = (page - 1) * pageSize
+      return {
+        data: all.slice(start, start + pageSize),
+        total: all.length,
+        page,
+        pageSize,
+        totalPages: Math.ceil(all.length / pageSize),
+      }
+    },
+
+    async count(companyId: string, opts?: { status?: string }): Promise<number> {
+      await delay()
+      let filtered = data.filter((l) => l.company_id === companyId)
+      if (opts?.status) filtered = filtered.filter((l) => l.status === opts.status)
+      return filtered.length
+    },
+
     async findById(companyId: string, id: string): Promise<LeadRow | null> {
       await delay()
       const lead = data.find((l) => l.id === id && l.company_id === companyId)
@@ -388,6 +410,39 @@ function createOffersRepository(data: OfferRow[]): OffersRepository {
         filtered = filtered.filter((o) => o.berater_id === opts.beraterId)
       }
       return clone(filtered)
+    },
+
+    async findPaginated(
+      companyId: string,
+      opts?: { status?: string; beraterId?: string; minAmountChf?: number; page?: number; pageSize?: number },
+    ): Promise<PaginatedResult<OfferRow>> {
+      await delay()
+      let filtered = data.filter((o) => o.company_id === companyId)
+      if (opts?.status) filtered = filtered.filter((o) => o.status === opts.status)
+      if (opts?.beraterId) filtered = filtered.filter((o) => o.berater_id === opts.beraterId)
+      if (opts?.minAmountChf) filtered = filtered.filter((o) => Number(o.amount_chf) > 0)
+      filtered.sort((a, b) => new Date(b.updated_at ?? b.created_at).getTime() - new Date(a.updated_at ?? a.created_at).getTime())
+      const page = opts?.page ?? 1
+      const pageSize = opts?.pageSize ?? 50
+      const total = filtered.length
+      const start = (page - 1) * pageSize
+      return { data: clone(filtered.slice(start, start + pageSize)), total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
+    },
+
+    async count(companyId: string, opts?: { status?: string }): Promise<number> {
+      await delay()
+      let filtered = data.filter((o) => o.company_id === companyId)
+      if (opts?.status) filtered = filtered.filter((o) => o.status === opts.status)
+      return filtered.length
+    },
+
+    async sumAmountChf(companyId: string, opts?: { excludeStatus?: string[] }): Promise<number> {
+      await delay()
+      let filtered = data.filter((o) => o.company_id === companyId)
+      if (opts?.excludeStatus) {
+        filtered = filtered.filter((o) => !opts.excludeStatus!.includes(o.status))
+      }
+      return filtered.reduce((sum, o) => sum + (Number(o.amount_chf) || 0), 0)
     },
 
     async findById(companyId: string, id: string): Promise<OfferRow | null> {

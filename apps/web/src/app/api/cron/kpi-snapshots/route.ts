@@ -20,8 +20,8 @@ export const maxDuration = 60
  *   - tenant_daily_summary   — combined snapshot for the tenant overview
  *
  * `setter_daily` and `finance_monthly` are NOT computed here yet — those
- * depend on the 3CX call data and the more complex bexio aggregation,
- * which are scheduled to follow once 3CX is wired up.
+ * depend on telephony call data and accounting aggregation,
+ * which are scheduled to follow once the connectors are wired up.
  */
 
 type Row = Record<string, unknown>

@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
-import { KPI_SNAPSHOT_TYPES, formatDate } from '@enura/types'
-import type { ConnectorRow, LeadRow, OfferRow } from '@enura/types'
+import { formatDate } from '@enura/types'
+import type { ConnectorRow, LeadRow } from '@enura/types'
 import Link from 'next/link'
 
 // ---------------------------------------------------------------------------
@@ -42,38 +42,54 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!session?.companyId) return null
 
   const db = getDataAccess()
+  const cid = session.companyId
 
-  // Parallel data fetch
-  const [snapshot, connectors, leads, offers] = await Promise.all([
-    db.kpis.findLatest(session.companyId, KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY),
-    db.connectors.findByCompanyId(session.companyId),
-    db.leads.findMany(session.companyId),
-    db.offers.findMany(session.companyId),
+  // Parallel data fetch — use counts instead of fetching all rows
+  const [
+    connectors,
+    recentLeadsResult,
+    openLeads,
+    pipelineTotal,
+    wonCount,
+    draftCount,
+    sentCount,
+    lostCount,
+    expiredCount,
+  ] = await Promise.all([
+    db.connectors.findByCompanyId(cid),
+    db.leads.findPaginated(cid, { page: 1, pageSize: 5 }),
+    db.leads.count(cid),
+    db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
+    db.offers.count(cid, { status: 'won' }),
+    db.offers.count(cid, { status: 'draft' }),
+    db.offers.count(cid, { status: 'sent' }),
+    db.offers.count(cid, { status: 'lost' }),
+    db.offers.count(cid, { status: 'expired' }),
   ])
 
-  const metrics = (snapshot?.metrics ?? {}) as Record<string, unknown>
+  const activeOffers = draftCount + sentCount
+
   const displayName = session.profile.first_name ?? session.profile.display_name ?? 'Benutzer'
 
   // Derive greeting based on time of day
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend'
 
-  // KPI values from metrics
-  const pipelineValue = typeof metrics['pipeline_value'] === 'number'
-    ? `CHF ${(metrics['pipeline_value'] as number / 1_000_000).toFixed(1)}M`
-    : 'CHF 0'
-  const wonCount = typeof metrics['won_count'] === 'number' ? metrics['won_count'] as number : 0
-  const openLeads = leads.length
-  const activeOffers = offers.filter((o: OfferRow) => o.status === 'draft' || o.status === 'sent').length
+  const pipelineValue = pipelineTotal > 1_000_000
+    ? `CHF ${(pipelineTotal / 1_000_000).toFixed(1)}M`
+    : pipelineTotal > 0
+      ? `CHF ${Math.round(pipelineTotal).toLocaleString('de-CH')}`
+      : 'CHF 0'
 
-  // Recent leads for "Heute im Fokus"
-  const recentLeads = leads.slice(0, 5)
+  const recentLeads = recentLeadsResult.data
 
-  // Pipeline summary
-  const phaseCounts: Record<string, number> = {}
-  for (const o of offers) {
-    const s = (o as OfferRow).status ?? 'unknown'
-    phaseCounts[s] = (phaseCounts[s] ?? 0) + 1
+  // Pipeline summary from counts
+  const phaseCounts: Record<string, number> = {
+    draft: draftCount,
+    sent: sentCount,
+    won: wonCount,
+    lost: lostCount,
+    expired: expiredCount,
   }
 
   // Connector status
@@ -117,7 +133,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {recentLeads.length > 0 ? (
             <ul className="divide-y divide-gray-100">
               {recentLeads.map((lead: LeadRow) => (
-                <li key={lead.id} className="flex items-center justify-between py-3">
+                <li key={lead.id}>
+                  <Link href={`/leads/${lead.id}`} className="flex items-center justify-between py-3 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
                   <div>
                     <p className="text-sm font-medium text-brand-text-primary">
                       {`${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim() || 'Unbekannt'}
@@ -137,6 +154,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     : lead.status === 'contacted' ? 'Kontaktiert'
                     : lead.status ?? 'Offen'}
                   </span>
+                  </Link>
                 </li>
               ))}
             </ul>

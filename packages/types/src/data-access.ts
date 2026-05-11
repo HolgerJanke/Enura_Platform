@@ -57,8 +57,23 @@ export interface RolesRepository {
   getPermissions(roleId: string): Promise<string[]>
 }
 
+export interface PaginationOpts {
+  page?: number
+  pageSize?: number
+}
+
+export interface PaginatedResult<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 export interface LeadsRepository {
   findMany(companyId: string, opts?: { status?: string; setterId?: string }): Promise<LeadRow[]>
+  findPaginated(companyId: string, opts?: { status?: string; setterId?: string } & PaginationOpts): Promise<PaginatedResult<LeadRow>>
+  count(companyId: string, opts?: { status?: string }): Promise<number>
   findById(companyId: string, id: string): Promise<LeadRow | null>
   create(companyId: string, data: LeadInsert): Promise<LeadRow>
   update(companyId: string, id: string, data: LeadUpdate): Promise<LeadRow>
@@ -66,6 +81,9 @@ export interface LeadsRepository {
 
 export interface OffersRepository {
   findMany(companyId: string, opts?: { status?: string; beraterId?: string }): Promise<OfferRow[]>
+  findPaginated(companyId: string, opts?: { status?: string; beraterId?: string; minAmountChf?: number } & PaginationOpts): Promise<PaginatedResult<OfferRow>>
+  count(companyId: string, opts?: { status?: string }): Promise<number>
+  sumAmountChf(companyId: string, opts?: { excludeStatus?: string[] }): Promise<number>
   findById(companyId: string, id: string): Promise<OfferRow | null>
   create(companyId: string, data: OfferInsert): Promise<OfferRow>
   update(companyId: string, id: string, data: OfferUpdate): Promise<OfferRow>

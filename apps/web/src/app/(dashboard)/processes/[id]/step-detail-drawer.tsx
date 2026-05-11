@@ -35,11 +35,15 @@ const INTERFACE_TYPE_LABELS: Record<string, string> = {
 }
 
 const KNOWN_TOOL_URLS: Record<string, string> = {
-  reonic: 'https://app.reonic.com',
-  bexio: 'https://office.bexio.com',
-  '3cx': 'https://login.3cx.net',
-  google_calendar: 'https://calendar.google.com',
-  leadnotes: 'https://app.leadnotes.io',
+  // Generic connector type URLs — customer configures specific systems
+  crm: '#',
+  accounting: '#',
+  telephony: '#',
+  calendar: 'https://calendar.google.com',
+  leads: '#',
+  email: '#',
+  storage: '#',
+  webhook: '#',
 }
 
 // ---------------------------------------------------------------------------

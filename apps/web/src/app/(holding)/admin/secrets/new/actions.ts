@@ -26,7 +26,7 @@ const CreateSecretSchema = z.object({
     .max(100, 'Name darf maximal 100 Zeichen haben')
     .regex(
       /^[A-Z][A-Z0-9_]*$/,
-      'Name muss SCREAMING_SNAKE_CASE sein (z.B. REONIC_API_KEY)',
+      'Name muss SCREAMING_SNAKE_CASE sein (z.B. MY_API_KEY)',
     ),
   secret_type: z.enum(SECRET_TYPES, {
     errorMap: () => ({ message: 'Bitte wählen Sie einen Secret-Typ' }),

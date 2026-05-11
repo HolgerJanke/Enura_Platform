@@ -7,7 +7,7 @@ lastUpdated: "2026-03-30"
 
 # Feldmapping
 
-Das Feldmapping definiert, wie Daten aus externen Systemen in die Plattform uebernommen werden. Jede Zuordnung verbindet ein Quellfeld (z.B. ein CRM-Feld aus Reonic) mit einem Zielfeld in der Plattform-Datenbank.
+Das Feldmapping definiert, wie Daten aus externen Systemen in die Plattform uebernommen werden. Jede Zuordnung verbindet ein Quellfeld (z.B. ein CRM-Feld) mit einem Zielfeld in der Plattform-Datenbank.
 
 ## Grundkonzept
 
@@ -27,7 +27,7 @@ source_field → Transformation → target_table.target_field
 
 Die `mapping`-Transformation wandelt Werte anhand einer Zuordnungstabelle um. Das ist nuetzlich, wenn das Quellsystem andere Bezeichnungen verwendet als die Plattform.
 
-**Beispiel**: Reonic verwendet den Projektstatus `"In Bearbeitung"`, die Plattform erwartet `"active"`.
+**Beispiel**: Das CRM verwendet den Projektstatus `"In Bearbeitung"`, die Plattform erwartet `"active"`.
 
 ```json
 {
@@ -45,7 +45,7 @@ Die `mapping`-Transformation wandelt Werte anhand einer Zuordnungstabelle um. Da
 
 Die `date_iso`-Transformation konvertiert verschiedene Datumsformate in das ISO-8601-Format (`YYYY-MM-DD`).
 
-**Beispiel**: Bexio liefert Daten im Format `"25.03.2026"`, die Plattform erwartet `"2026-03-25"`.
+**Beispiel**: Das Buchhaltungssystem liefert Daten im Format `"25.03.2026"`, die Plattform erwartet `"2026-03-25"`.
 
 ```json
 {
@@ -60,7 +60,7 @@ Unterstuetzte Eingabeformate: `DD.MM.YYYY`, `MM/DD/YYYY`, `YYYY-MM-DD` (bereits 
 
 Die `numeric`-Transformation konvertiert Textwerte in Zahlen und ermoeglicht einfache Berechnungen.
 
-**Beispiel**: Reonic liefert den Angebotsbetrag als `"45'000.00 CHF"`, die Plattform erwartet `45000.00`.
+**Beispiel**: Das CRM liefert den Angebotsbetrag als `"45'000.00 CHF"`, die Plattform erwartet `45000.00`.
 
 ```json
 {
@@ -72,7 +72,7 @@ Die `numeric`-Transformation konvertiert Textwerte in Zahlen und ermoeglicht ein
 
 ## Vollstaendiges Beispiel
 
-So sieht ein typisches Mapping fuer den Reonic-Connector aus:
+So sieht ein typisches Mapping fuer den CRM-Connector aus:
 
 | Quellfeld | Transformation | Zielfeld |
 |-----------|---------------|----------|
@@ -95,4 +95,4 @@ Die Plattform validiert jedes Mapping vor dem Speichern:
 
 - Beginnen Sie mit den Pflichtfeldern und ergaenzen Sie optionale Felder schrittweise.
 - Testen Sie das Mapping mit einem einzelnen Datensatz, bevor Sie die vollstaendige Synchronisation starten.
-- Dokumentieren Sie Besonderheiten in der Beschreibung des Mappings (z.B. "Bexio liefert Betraege in Rappen").
+- Dokumentieren Sie Besonderheiten in der Beschreibung des Mappings (z.B. "Buchhaltungssystem liefert Betraege in Rappen").

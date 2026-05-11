@@ -5,6 +5,7 @@ import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { formatDate } from '@enura/types'
 import type { LeadRow, TeamMemberRow } from '@enura/types'
+import Link from 'next/link'
 
 // ---------------------------------------------------------------------------
 // Phase badge
@@ -15,7 +16,10 @@ function PhaseBadge({ status }: { status: string }) {
     new: { label: 'Neuer Lead', cls: 'bg-green-50 text-green-700 border-green-200' },
     contacted: { label: 'Kontaktiert', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
     qualified: { label: 'Qualifiziert', cls: 'bg-teal-50 text-teal-700 border-teal-200' },
+    appointment_set: { label: 'Termin gebucht', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
     appointment_booked: { label: 'Termin gebucht', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+    won: { label: 'Gewonnen', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    lost: { label: 'Verloren', cls: 'bg-red-50 text-red-700 border-red-200' },
     disqualified: { label: 'Disqualifiziert', cls: 'bg-gray-50 text-gray-500 border-gray-200' },
     angebot_versendet: { label: 'Angebot versendet', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
     erstgespraech: { label: 'Erstgespräch', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
@@ -31,27 +35,87 @@ function PhaseBadge({ status }: { status: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Pagination component
+// ---------------------------------------------------------------------------
+
+function Pagination({ page, totalPages, basePath }: { page: number; totalPages: number; basePath: string }) {
+  if (totalPages <= 1) return null
+
+  const pages: (number | '...')[] = []
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...')
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-1 py-4">
+      {page > 1 && (
+        <Link
+          href={`${basePath}?page=${page - 1}`}
+          className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-text-secondary hover:bg-gray-100 transition-colors"
+        >
+          ← Zurück
+        </Link>
+      )}
+      {pages.map((p, idx) =>
+        p === '...' ? (
+          <span key={`dots-${idx}`} className="px-2 text-brand-text-secondary">…</span>
+        ) : (
+          <Link
+            key={p}
+            href={`${basePath}?page=${p}`}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              p === page
+                ? 'bg-brand-primary text-white'
+                : 'text-brand-text-secondary hover:bg-gray-100'
+            }`}
+          >
+            {p}
+          </Link>
+        ),
+      )}
+      {page < totalPages && (
+        <Link
+          href={`${basePath}?page=${page + 1}`}
+          className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-text-secondary hover:bg-gray-100 transition-colors"
+        >
+          Weiter →
+        </Link>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function LeadsPage() {
+export default async function LeadsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams
   await requirePermission('module:leads:read')
   const session = await getSession()
   if (!session?.companyId) return null
 
+  const page = Math.max(1, parseInt(String(sp.page ?? '1'), 10) || 1)
+  const pageSize = 50
+
   const db = getDataAccess()
-  const [leads, teamMembers] = await Promise.all([
-    db.leads.findMany(session.companyId),
+
+  // Parallel: paginated leads + counts + team members
+  const [result, totalLeads, openLeads, contactedLeads, qualifiedLeads, teamMembers] = await Promise.all([
+    db.leads.findPaginated(session.companyId, { page, pageSize }),
+    db.leads.count(session.companyId),
+    db.leads.count(session.companyId, { status: 'new' }),
+    db.leads.count(session.companyId, { status: 'contacted' }),
+    db.leads.count(session.companyId, { status: 'qualified' }),
     db.teamMembers.findByCompanyId(session.companyId),
   ])
 
+  const { data: leads, totalPages } = result
   const memberMap = new Map(teamMembers.map((m: TeamMemberRow) => [m.id, m]))
-
-  // KPI values
-  const openLeads = leads.filter((l: LeadRow) => l.status === 'new').length
-  const followUpLeads = leads.filter((l: LeadRow) => l.status === 'contacted').length
-  const qualifiedLeads = leads.filter((l: LeadRow) => l.status === 'qualified').length
-  const totalLeads = leads.length
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -61,22 +125,13 @@ export default async function LeadsPage() {
           <h1 className="text-2xl font-bold text-brand-text-primary">Vertrieb & Akquise</h1>
           <p className="text-sm text-brand-text-secondary mt-1">Lead-Pipeline und Vertriebsübersicht</p>
         </div>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary/90 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Neuer Lead
-        </button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Offene Leads', value: openLeads, color: '--brand-kpi-1' },
-          { label: 'Im Follow-up', value: followUpLeads, color: '--brand-kpi-2' },
+          { label: 'Im Follow-up', value: contactedLeads, color: '--brand-kpi-2' },
           { label: 'Qualifiziert', value: qualifiedLeads, color: '--brand-kpi-3' },
           { label: 'Total Leads', value: totalLeads, color: '--brand-kpi-1' },
         ].map((kpi) => (
@@ -89,8 +144,11 @@ export default async function LeadsPage() {
 
       {/* Lead Pipeline Table */}
       <div className="rounded-xl bg-white shadow-brand-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-base font-semibold text-brand-text-primary">Lead-Pipeline</h2>
+          <p className="text-xs text-brand-text-secondary">
+            {totalLeads > 0 ? `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, totalLeads)} von ${totalLeads}` : '0 Leads'}
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -101,7 +159,6 @@ export default async function LeadsPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-brand-text-secondary">Phase</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-brand-text-secondary">Zugewiesen</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-brand-text-secondary">Erstellt</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-brand-text-secondary">Aktion</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -115,16 +172,16 @@ export default async function LeadsPage() {
                   : ''
 
                 return (
-                  <tr key={lead.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={lead.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer group">
                     <td className="px-6 py-3">
-                      <div>
-                        <p className="font-medium text-brand-text-primary">
+                      <Link href={`/leads/${lead.id}`} className="block">
+                        <p className="font-medium text-brand-text-primary group-hover:text-brand-primary transition-colors">
                           {`${lead.first_name ?? ''} ${lead.last_name ?? ''}`.trim() || 'Unbekannt'}
                         </p>
                         <p className="text-xs text-brand-text-secondary">
                           {[lead.address_street, lead.address_zip, lead.address_city].filter(Boolean).join(', ') || '—'}
                         </p>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-brand-text-secondary capitalize">
                       {(lead.source ?? 'unbekannt').replace(/_/g, ' ')}
@@ -147,11 +204,6 @@ export default async function LeadsPage() {
                     <td className="px-4 py-3 text-brand-text-secondary">
                       {formatDate(lead.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="text-xs font-medium text-brand-primary hover:underline cursor-pointer">
-                        Anzeigen
-                      </span>
-                    </td>
                   </tr>
                 )
               })}
@@ -163,6 +215,7 @@ export default async function LeadsPage() {
             <p className="text-sm text-brand-text-secondary">Keine Leads vorhanden.</p>
           </div>
         )}
+        <Pagination page={page} totalPages={totalPages} basePath="/leads" />
       </div>
     </div>
   )

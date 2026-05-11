@@ -15,7 +15,7 @@ Die Planung arbeitet mit zwei Datenreihen:
 
 **Plan-Werte** sind erwartete Zahlungen. Sie entstehen automatisch, wenn ein Projekt einen Prozessschritt mit Liquiditaetsmarker erreicht (z.B. "Rechnung versendet → Zahlungseingang in 30 Tagen"). Plan-Werte koennen auch manuell erfasst werden.
 
-**Ist-Werte** sind tatsaechliche Zahlungsbewegungen. Sie werden automatisch ueber den Bexio-Connector erkannt oder per Bank-Upload importiert. Ist-Werte werden den Plan-Eintraegen zugeordnet, um Abweichungen sichtbar zu machen.
+**Ist-Werte** sind tatsaechliche Zahlungsbewegungen. Sie werden automatisch ueber den Buchhaltungs-Connector erkannt oder per Bank-Upload importiert. Ist-Werte werden den Plan-Eintraegen zugeordnet, um Abweichungen sichtbar zu machen.
 
 ## Wie Plan-Daten entstehen
 
@@ -25,9 +25,9 @@ Plan-Eintraege werden auf drei Wegen erstellt:
 
 Wenn ein Projekt den konfigurierten Trigger-Schritt im Prozess erreicht, berechnet die Plattform das erwartete Faelligkeitsdatum und den Betrag. Beispiel: Schritt "Schlussrechnung versendet" erzeugt einen Plan-Eingang mit Faelligkeit in 30 Tagen.
 
-### 2. Automatisch ueber Bexio
+### 2. Automatisch ueber Buchhaltungs-Connector
 
-Der Bexio-Connector importiert Rechnungsdaten. Fuer jede versendete Rechnung wird ein Plan-Eintrag mit dem Rechnungsbetrag und dem Zahlungsziel erstellt.
+Der Buchhaltungs-Connector importiert Rechnungsdaten. Fuer jede versendete Rechnung wird ein Plan-Eintrag mit dem Rechnungsbetrag und dem Zahlungsziel erstellt.
 
 ### 3. Manuell
 
@@ -48,7 +48,7 @@ Das Diagramm zeigt zwei Kurven:
 
 | Methode | Daten-Typ | Aktualisierung |
 |---------|-----------|---------------|
-| **Bexio-Connector** | Rechnungen, Zahlungen | Stuendlich automatisch |
+| **Buchhaltungs-Connector** | Rechnungen, Zahlungen | Stuendlich automatisch |
 | **Bank-Upload** | Kontobewegungen (CSV/MT940) | Manuell bei Bedarf |
 | **Manuelle Eingabe** | Sonstige Plan-Werte | Manuell bei Bedarf |
 
@@ -56,6 +56,6 @@ Das Diagramm zeigt zwei Kurven:
 
 1. Prozesse mit Liquiditaetsmarkern definieren (Holding-Admin).
 2. Projekte durchlaufen den Prozess — Plan-Werte entstehen automatisch.
-3. Bexio synchronisiert Rechnungen und Zahlungen — Ist-Werte werden zugeordnet.
+3. Der Buchhaltungs-Connector synchronisiert Rechnungen und Zahlungen — Ist-Werte werden zugeordnet.
 4. Bank-Uploads ergaenzen die Ist-Daten um direkte Kontobewegungen.
 5. Das Dashboard zeigt Plan/Ist-Vergleich und warnt bei Abweichungen.

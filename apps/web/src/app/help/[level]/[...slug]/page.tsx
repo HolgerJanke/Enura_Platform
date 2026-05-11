@@ -184,11 +184,11 @@ Connectors verbinden die Plattform mit externen Systemen.
 
 | Connector | Sync-Intervall | Authentifizierung |
 |-----------|---------------|-------------------|
-| Reonic CRM | 15 Min. | REST API Key |
-| 3CX Cloud | 15 Min. | REST API + Webhook |
-| Bexio | 1 Stunde | OAuth 2.0 |
-| Google Calendar | 15 Min. | Google OAuth |
-| Leadnotes | 15 Min. | REST API Key |
+| CRM | 15 Min. | API Key / OAuth 2.0 |
+| Telefonie | 15 Min. | API Key + Webhook |
+| Buchhaltung | 1 Stunde | OAuth 2.0 |
+| Kalender | 15 Min. | OAuth / Service Account |
+| Lead-System | 15 Min. | API Key |
 
 ### Status prüfen
 
@@ -255,7 +255,7 @@ Die Liquiditätsplanung zeigt Budget-, Plan- und Ist-Werte für alle Zahlungsstr
 
 - **Budget**: Geplanter Betrag aus dem Prozessschritt-Template (vom Holding Admin im Process Builder festgelegt)
 - **Plan (Scheduled)**: Durch den Cash-out-Planer terminierte Zahlung — entsteht nach technischer Genehmigung einer Rechnung
-- **Ist (Actual)**: Tatsächlicher Zahlungseingang/-ausgang (aus Bexio-Abgleich, Bank-Upload oder manueller Eingabe)
+- **Ist (Actual)**: Tatsächlicher Zahlungseingang/-ausgang (aus Buchhaltungs-Abgleich, Bank-Upload oder manueller Eingabe)
 
 ### Anzeigelogik
 
@@ -267,7 +267,7 @@ Wenn eine Rechnung kleiner als das Budget ist, kann der Cash-out-Planer einen Re
 
 ### Manueller Eintrag
 
-Klicken Sie auf ein Liquiditätsereignis, um manuell Ist-Werte einzutragen (z.B. bei fehlender Bexio-Anbindung).
+Klicken Sie auf ein Liquiditätsereignis, um manuell Ist-Werte einzutragen (z.B. bei fehlender Buchhaltungs-Anbindung).
   `,
   'anomalien': `
 ## Anomalien und Warnungen
@@ -350,11 +350,11 @@ Verbinden Sie externe Systeme mit der Plattform, um Daten automatisch zu synchro
 
 | Connector | Typ | Synchronisation |
 |-----------|-----|-----------------|
-| Reonic CRM | REST API | Alle 15 Minuten |
-| 3CX Cloud | REST + Webhook | Alle 15 Minuten |
-| Bexio | OAuth 2.0 | Stündlich |
-| Google Calendar | Google OAuth | Alle 15 Minuten |
-| Leadnotes | REST API | Alle 15 Minuten |
+| CRM | REST API | Alle 15 Minuten |
+| Telefonie | REST + Webhook | Alle 15 Minuten |
+| Buchhaltung | OAuth 2.0 | Stündlich |
+| Kalender | OAuth / Service Account | Alle 15 Minuten |
+| Lead-System | REST API | Alle 15 Minuten |
 
 ### Einrichtung
 

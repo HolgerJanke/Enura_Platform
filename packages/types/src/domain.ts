@@ -83,6 +83,13 @@ export const navigationSections: NavigationSection[] = [
     ],
   },
   {
+    key: 'automation',
+    title: 'AUTOMATION',
+    items: [
+      { key: 'bots', label: 'Bots', href: '/bots', icon: 'bot', requiredPermission: 'module:bots:read' },
+    ],
+  },
+  {
     key: 'support',
     title: 'SUPPORT',
     items: [

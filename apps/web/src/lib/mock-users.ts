@@ -59,6 +59,7 @@ export const mockUsers: MockUser[] = [
         'module:finance:read', 'module:finance:write',
         'module:reports:read', 'module:reports:write',
         'module:ai:read', 'module:ai:write',
+        'module:bots:read', 'module:bots:write',
         'module:admin:read', 'module:admin:write',
       ],
       isHoldingAdmin: false,
@@ -80,7 +81,7 @@ export const mockUsers: MockUser[] = [
       permissions: [
         'module:setter:read', 'module:berater:read', 'module:leads:read',
         'module:innendienst:read', 'module:bau:read', 'module:finance:read',
-        'module:reports:read', 'module:ai:read',
+        'module:reports:read', 'module:ai:read', 'module:bots:read',
       ],
       isHoldingAdmin: false,
       mustResetPassword: false,

@@ -71,6 +71,14 @@ function IconSettings({ className }: { className?: string }) {
   )
 }
 
+function IconBot({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-1.46 1.46a3.375 3.375 0 01-4.78 0L12 15.2l-.76.76a3.375 3.375 0 01-4.78 0L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5" />
+    </svg>
+  )
+}
+
 function IconLogout({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,6 +98,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   montage: IconMontage,
   analytics: IconAnalytics,
   finance: IconFinance,
+  bot: IconBot,
   settings: IconSettings,
 }
 

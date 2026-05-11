@@ -8,23 +8,31 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ConnectorForm } from './connector-form'
 import { SyncHistory } from './sync-history'
 
-const VALID_TYPES = ['reonic', '3cx', 'bexio', 'google_calendar', 'leadnotes'] as const
+const VALID_TYPES = ['crm', 'telephony', 'accounting', 'calendar', 'leads', 'email', 'storage', 'webhook', 'custom'] as const
 type ValidType = (typeof VALID_TYPES)[number]
 
 const CONNECTOR_LABELS: Record<ValidType, string> = {
-  reonic: 'Reonic CRM',
-  '3cx': '3CX Cloud',
-  bexio: 'Bexio',
-  google_calendar: 'Google Calendar',
-  leadnotes: 'Leadnotes',
+  crm: 'CRM',
+  telephony: 'Telefonie',
+  accounting: 'Buchhaltung',
+  calendar: 'Kalender',
+  leads: 'Lead-System',
+  email: 'E-Mail',
+  storage: 'Dateispeicher',
+  webhook: 'Webhooks',
+  custom: 'Weitere',
 }
 
 const CONNECTOR_DESCRIPTIONS: Record<ValidType, string> = {
-  reonic: 'Synchronisiert Leads, Angebote und Team-Mitglieder aus dem Reonic CRM.',
-  '3cx': 'Synchronisiert Anrufe und Aufnahmen aus der 3CX Cloud-Telefonanlage.',
-  bexio: 'Synchronisiert Rechnungen und Zahlungen aus der Bexio Buchhaltung.',
-  google_calendar: 'Synchronisiert Termine aller Mitarbeiter aus Google Calendar.',
-  leadnotes: 'Synchronisiert eingehende Leads aus dem Leadnotes-System.',
+  crm: 'Synchronisiert Leads, Angebote und Kontakte aus Ihrem CRM.',
+  telephony: 'Synchronisiert Anrufe und Aufnahmen aus der Telefonanlage.',
+  accounting: 'Synchronisiert Rechnungen und Zahlungen aus der Buchhaltung.',
+  calendar: 'Synchronisiert Termine aller Mitarbeiter.',
+  leads: 'Synchronisiert eingehende Leads aus dem Lead-System.',
+  email: 'Verbindet Posteingang und Versand (IMAP/SMTP).',
+  storage: 'Verbindet Dateispeicher für Dokumente und Belege.',
+  webhook: 'Konfiguriert ausgehende Webhooks an Drittsysteme.',
+  custom: 'Individuelle Anbindung an ein externes System.',
 }
 
 function isValidType(type: string): type is ValidType {

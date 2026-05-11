@@ -201,7 +201,7 @@ export const PROCESS_BUILDER_WALKTHROUGH: TourStep[] = [
     position: 'left',
     title: 'Schnittstellen',
     content:
-      'Schnittstellen bestimmen, welche externen Systeme bei diesem Schritt angesprochen werden: Bexio, Reonic, Google Calendar oder andere Connectoren.',
+      'Schnittstellen bestimmen, welche externen Systeme bei diesem Schritt angesprochen werden: CRM, Buchhaltung, Kalender oder andere Connectoren.',
     actionLabel: 'Weiter',
   },
   {

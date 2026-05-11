@@ -809,7 +809,7 @@ export interface PaymentRow {
   holding_id: string;
   invoice_id: string;
   amount_chf: string;
-  received_at: string;
+  payment_date: string;
   payment_method: string | null;
   reference: string | null;
   notes: string | null;
@@ -821,7 +821,7 @@ export interface PaymentInsert {
   company_id: string;
   invoice_id: string;
   amount_chf: string;
-  received_at: string;
+  payment_date: string;
   payment_method?: string | null;
   reference?: string | null;
   notes?: string | null;
@@ -833,7 +833,7 @@ export interface PaymentUpdate {
   company_id?: string;
   invoice_id?: string;
   amount_chf?: string;
-  received_at?: string;
+  payment_date?: string;
   payment_method?: string | null;
   reference?: string | null;
   notes?: string | null;

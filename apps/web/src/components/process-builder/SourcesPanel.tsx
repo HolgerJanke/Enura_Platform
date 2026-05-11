@@ -116,7 +116,7 @@ function SourceRow({ source, processId, onDeleted }: SourceRowProps) {
               value={toolName}
               onChange={(e) => setToolName(e.target.value)}
               onBlur={save}
-              placeholder="z.B. Reonic"
+              placeholder="z.B. CRM"
               className="block w-full rounded border border-gray-200 px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none"
             />
           </div>

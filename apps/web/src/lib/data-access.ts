@@ -7,7 +7,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
  * Returns a DataAccess instance scoped to the current request.
  *
  * When MOCK_DATA is set to 'true' (or service-role key is missing),
- * falls back to mock data layer with real Reonic demo data.
+ * falls back to mock data layer with demo data.
  *
  * Otherwise uses the Supabase service-role client which bypasses RLS
  * to query the real database.

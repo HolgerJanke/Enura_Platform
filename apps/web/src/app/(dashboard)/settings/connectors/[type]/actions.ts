@@ -49,47 +49,21 @@ export async function testConnectorAction(
     return { error: 'Bitte geben Sie die Zugangsdaten ein.' }
   }
 
-  // Type-specific validation
-  switch (type) {
-    case 'reonic': {
-      if (!credentials['apiBaseUrl'] || !credentials['apiKey']) {
-        return { error: 'API Base URL und API Key sind erforderlich.' }
-      }
-      break
+  // Generic validation — at least one credential field must be set
+  const filledFields = Object.entries(credentials).filter(
+    ([, v]) => typeof v === 'string' ? v.trim().length > 0 : Boolean(v)
+  )
+  if (filledFields.length === 0) {
+    return { error: 'Mindestens ein Zugangsdaten-Feld muss ausgefüllt sein.' }
+  }
+
+  // Calendar-type: validate JSON in serviceAccountKey if present
+  if (type === 'calendar' && credentials['serviceAccountKey']) {
+    try {
+      JSON.parse(credentials['serviceAccountKey'] as string)
+    } catch {
+      return { error: 'Service Account Key ist kein gültiges JSON.' }
     }
-    case '3cx': {
-      if (!credentials['apiUrl'] || !credentials['apiKey']) {
-        return { error: 'API URL und API Key sind erforderlich.' }
-      }
-      break
-    }
-    case 'bexio': {
-      if (!credentials['access_token']) {
-        return { error: 'API Token ist erforderlich.' }
-      }
-      break
-    }
-    case 'google_calendar': {
-      if (!credentials['serviceAccountKey']) {
-        return { error: 'Service Account Key ist erforderlich.' }
-      }
-      // Validate JSON format
-      try {
-        const key = credentials['serviceAccountKey'] as string
-        JSON.parse(key)
-      } catch {
-        return { error: 'Service Account Key ist kein gültiges JSON.' }
-      }
-      break
-    }
-    case 'leadnotes': {
-      if (!credentials['apiKey']) {
-        return { error: 'API Key ist erforderlich.' }
-      }
-      break
-    }
-    default:
-      return { error: `Unbekannter Connector-Typ: ${type}` }
   }
 
   // In production, this would call the connector's validate() method
@@ -134,11 +108,15 @@ export async function triggerSyncAction(
 
 function getConnectorLabel(type: string): string {
   const labels: Record<string, string> = {
-    reonic: 'Reonic CRM',
-    '3cx': '3CX Cloud',
-    bexio: 'Bexio',
-    google_calendar: 'Google Calendar',
-    leadnotes: 'Leadnotes',
+    crm: 'CRM',
+    telephony: 'Telefonie',
+    accounting: 'Buchhaltung',
+    calendar: 'Kalender',
+    leads: 'Lead-System',
+    email: 'E-Mail',
+    storage: 'Dateispeicher',
+    webhook: 'Webhooks',
+    custom: 'Weitere',
   }
   return labels[type] ?? type
 }

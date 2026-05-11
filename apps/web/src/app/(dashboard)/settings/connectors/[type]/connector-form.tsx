@@ -32,25 +32,56 @@ type TestResult = {
   error?: string
 }
 
+/** Generic connector fields — each type gets API URL + credentials */
+const DEFAULT_FIELDS: ReadonlyArray<FieldDef> = [
+  { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.example.com/v1' },
+  { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr API-Schlüssel' },
+]
+
 const FIELD_DEFINITIONS: Record<string, ReadonlyArray<FieldDef>> = {
-  reonic: [
-    { key: 'apiBaseUrl', label: 'API Base URL', type: 'text', placeholder: 'https://api.reonic.com/v1' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Reonic API-Schlüssel' },
+  crm: [
+    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.ihr-crm.com/v1' },
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr CRM API-Schlüssel' },
   ],
-  '3cx': [
-    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://ihre-instanz.3cx.eu/api' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr 3CX API-Schlüssel' },
-    { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gesprächsaufnahmen automatisch in den EU-Speicher herunterladen' },
+  telephony: [
+    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://ihre-instanz.telefonie.com/api' },
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Telefonie API-Schlüssel' },
+    { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gesprächsaufnahmen automatisch herunterladen' },
   ],
-  bexio: [
-    { key: 'access_token', label: 'Bexio API Token (PAT)', type: 'password', placeholder: 'eyJhbGciOiJSUzI1NiIs...', helpText: 'Persönlicher Access Token aus Bexio (Profil → API Tokens). Bearer-JWT.' },
+  accounting: [
+    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.buchhaltung.com/v1' },
+    { key: 'access_token', label: 'API Token', type: 'password', placeholder: 'Ihr API-Token oder Schlüssel', helpText: 'Persönlicher Access Token aus Ihrem Buchhaltungssystem.' },
   ],
-  google_calendar: [
-    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', helpText: 'Fügen Sie den vollständigen JSON-Schlüssel des Google Service Accounts ein' },
+  calendar: [
+    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', helpText: 'Fügen Sie den JSON-Schlüssel des Service Accounts ein' },
     { key: 'calendarEmails', label: 'Kalender E-Mails', type: 'textarea', placeholder: 'mitarbeiter1@firma.ch\nmitarbeiter2@firma.ch', helpText: 'Eine E-Mail-Adresse pro Zeile. Diese Kalender werden synchronisiert.' },
   ],
-  leadnotes: [
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Leadnotes API-Schlüssel' },
+  leads: [
+    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.lead-system.com/v1' },
+    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Lead-System API-Schlüssel' },
+  ],
+  email: [
+    { key: 'imapHost', label: 'IMAP Host', type: 'text', placeholder: 'imap.ihr-provider.ch' },
+    { key: 'imapPort', label: 'IMAP Port', type: 'text', placeholder: '993' },
+    { key: 'smtpHost', label: 'SMTP Host', type: 'text', placeholder: 'smtp.ihr-provider.ch' },
+    { key: 'smtpPort', label: 'SMTP Port', type: 'text', placeholder: '587' },
+    { key: 'email', label: 'E-Mail', type: 'text', placeholder: 'info@firma.ch' },
+    { key: 'password', label: 'Passwort', type: 'password', placeholder: 'Ihr E-Mail-Passwort' },
+  ],
+  storage: [
+    { key: 'endpoint', label: 'Endpoint', type: 'text', placeholder: 'https://s3.eu-central-1.amazonaws.com' },
+    { key: 'bucket', label: 'Bucket', type: 'text', placeholder: 'mein-bucket' },
+    { key: 'accessKey', label: 'Access Key', type: 'password', placeholder: 'Ihr Access Key' },
+    { key: 'secretKey', label: 'Secret Key', type: 'password', placeholder: 'Ihr Secret Key' },
+  ],
+  webhook: [
+    { key: 'targetUrl', label: 'Ziel-URL', type: 'text', placeholder: 'https://ihr-system.com/webhook' },
+    { key: 'secret', label: 'Webhook Secret', type: 'password', placeholder: 'Optionales Shared Secret', helpText: 'Wird im Header X-Webhook-Secret mitgeschickt' },
+  ],
+  custom: [
+    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.example.com' },
+    { key: 'apiKey', label: 'API Key / Token', type: 'password', placeholder: 'Ihr API-Schlüssel' },
+    { key: 'notes', label: 'Hinweise', type: 'textarea', placeholder: 'Besonderheiten dieser Anbindung...' },
   ],
 }
 
@@ -190,7 +221,7 @@ export function ConnectorForm({ type, existingConnector }: Props) {
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-2.03a4.5 4.5 0 0 0-1.242-7.244l-4.5-4.5a4.5 4.5 0 0 0-6.364 6.364L5.25 9.879" />
                     </svg>
-                    Mit Bexio verbinden
+                    Verbinden
                   </button>
                 )}
               </div>
@@ -317,62 +348,32 @@ export function ConnectorForm({ type, existingConnector }: Props) {
         })}
 
         {/* Sync interval */}
-        {type !== 'bexio' && (
-          <div>
-            <label
-              htmlFor="sync-interval"
-              className="block text-sm font-medium text-brand-text-primary mb-1.5"
-            >
-              Synchronisierungsintervall
-            </label>
-            <select
-              id="sync-interval"
-              value={syncInterval}
-              onChange={(e) => {
-                setSyncInterval(Number(e.target.value))
-                setSaveSuccess(false)
-                setSaveError(null)
-              }}
-              className="w-full rounded-brand border border-gray-300 bg-brand-background px-3 py-2 text-sm text-brand-text-primary focus:border-transparent focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
-            >
-              {SYNC_INTERVALS.map((interval) => (
-                <option key={interval.value} value={interval.value}>
-                  {interval.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* For Bexio (OAuth), also show interval */}
-        {type === 'bexio' && (
-          <div>
-            <label
-              htmlFor="sync-interval"
-              className="block text-sm font-medium text-brand-text-primary mb-1.5"
-            >
-              Synchronisierungsintervall
-            </label>
-            <select
-              id="sync-interval"
-              value={syncInterval}
-              onChange={(e) => {
-                setSyncInterval(Number(e.target.value))
-                setSaveSuccess(false)
-                setSaveError(null)
-              }}
-              className="w-full rounded-brand border border-gray-300 bg-brand-background px-3 py-2 text-sm text-brand-text-primary focus:border-transparent focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
-            >
-              {SYNC_INTERVALS.map((interval) => (
-                <option key={interval.value} value={interval.value}>
-                  {interval.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Sync interval — shown for all connector types */}
+        <div>
+          <label
+            htmlFor="sync-interval"
+            className="block text-sm font-medium text-brand-text-primary mb-1.5"
+          >
+            Synchronisierungsintervall
+          </label>
+          <select
+            id="sync-interval"
+            value={syncInterval}
+            onChange={(e) => {
+              setSyncInterval(Number(e.target.value))
+              setSaveSuccess(false)
+              setSaveError(null)
+            }}
+            className="w-full rounded-brand border border-gray-300 bg-brand-background px-3 py-2 text-sm text-brand-text-primary focus:border-transparent focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
+          >
+            {SYNC_INTERVALS.map((interval) => (
+              <option key={interval.value} value={interval.value}>
+                {interval.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Test result */}

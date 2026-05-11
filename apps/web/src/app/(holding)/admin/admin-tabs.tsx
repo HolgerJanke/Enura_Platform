@@ -58,16 +58,18 @@ type AdminTabsProps = {
 // Constants
 // ---------------------------------------------------------------------------
 
-const KNOWN_CONNECTOR_TYPES = ['reonic', '3cx', 'bexio', 'google_calendar', 'leadnotes', 'whatsapp', 'gmail'] as const
+const KNOWN_CONNECTOR_TYPES = ['crm', 'telephony', 'accounting', 'calendar', 'leads', 'email', 'storage', 'webhook', 'custom'] as const
 
 const CONNECTOR_LABELS: Record<string, string> = {
-  reonic: 'Reonic',
-  '3cx': '3CX',
-  bexio: 'Bexio',
-  google_calendar: 'Google Cal',
-  leadnotes: 'Leadnotes',
-  whatsapp: 'WhatsApp',
-  gmail: 'Gmail',
+  crm: 'CRM',
+  telephony: 'Telefonie',
+  accounting: 'Buchhaltung',
+  calendar: 'Kalender',
+  leads: 'Lead-System',
+  email: 'E-Mail',
+  storage: 'Dateispeicher',
+  webhook: 'Webhooks',
+  custom: 'Weitere',
 }
 
 const HEALTH_DOT_CLASSES: Record<ConnectorHealthLevel, string> = {

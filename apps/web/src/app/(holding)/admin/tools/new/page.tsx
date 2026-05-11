@@ -138,7 +138,7 @@ export default function NewToolPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Reonic CRM"
+            placeholder="Mein CRM"
             required
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Tool-Name"
@@ -161,7 +161,7 @@ export default function NewToolPage() {
               setSlug(e.target.value)
               setSlugManuallyEdited(true)
             }}
-            placeholder="reonic-crm"
+            placeholder="mein-crm"
             required
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Tool-Slug"
@@ -209,7 +209,7 @@ export default function NewToolPage() {
             type="url"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="https://api.reonic.com/v1"
+            placeholder="https://api.example.com/v1"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Tool Base-URL"
           />
@@ -253,12 +253,12 @@ export default function NewToolPage() {
             type="text"
             value={secretRef}
             onChange={(e) => setSecretRef(e.target.value)}
-            placeholder="REONIC_API_KEY"
+            placeholder="MY_API_KEY"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Secret-Referenz (Name des Secrets)"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Name des Secrets aus der Secret-Verwaltung (z.B. REONIC_API_KEY)
+            Name des Secrets aus der Secret-Verwaltung (z.B. MY_API_KEY)
           </p>
           {fieldErrors['secret_ref'] && (
             <p className="mt-1 text-xs text-red-600">{fieldErrors['secret_ref'].join(', ')}</p>
@@ -275,7 +275,7 @@ export default function NewToolPage() {
             type="url"
             value={docsUrl}
             onChange={(e) => setDocsUrl(e.target.value)}
-            placeholder="https://docs.reonic.com"
+            placeholder="https://docs.example.com"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Dokumentations-URL"
           />
