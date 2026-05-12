@@ -77,9 +77,9 @@ export const navigationSections: NavigationSection[] = [
     title: 'PROZESSE',
     items: [
       { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'dashboard', requiredPermission: null },
-      { key: 'leads', label: 'P1  Vertrieb & Akquise', href: '/leads', icon: 'sales', requiredPermission: 'module:leads:read' },
-      { key: 'projects', label: 'P2  Projektmanagement', href: '/projects', icon: 'project', requiredPermission: 'module:bau:read' },
-      { key: 'processes', label: 'P3  Montage & Technik', href: '/processes', icon: 'montage', requiredPermission: 'module:bau:read' },
+      { key: 'leads', label: 'Leads & Vertrieb', href: '/leads', icon: 'sales', requiredPermission: 'module:leads:read' },
+      { key: 'projects', label: 'Projekte', href: '/projects', icon: 'project', requiredPermission: 'module:bau:read' },
+      { key: 'processes', label: 'Prozesse', href: '/processes', icon: 'montage', requiredPermission: 'module:bau:read' },
     ],
   },
   {
@@ -93,8 +93,8 @@ export const navigationSections: NavigationSection[] = [
     key: 'support',
     title: 'SUPPORT',
     items: [
-      { key: 'analytics', label: 'S1  Analytics', href: '/analytics', icon: 'analytics', requiredPermission: 'module:reports:read' },
-      { key: 'controlling', label: 'S2  Finanzen & Controlling', href: '/controlling', icon: 'finance', requiredPermission: 'module:finance:read' },
+      { key: 'analytics', label: 'Analytics', href: '/analytics', icon: 'analytics', requiredPermission: 'module:reports:read' },
+      { key: 'controlling', label: 'Finanzen & Controlling', href: '/controlling', icon: 'finance', requiredPermission: 'module:finance:read' },
     ],
   },
 ]

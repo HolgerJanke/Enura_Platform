@@ -70,7 +70,7 @@ import {
   permissions as seedPermissions,
 } from './seed-data.js'
 
-// Real Reonic data replaces mock data for demo purposes
+// Demo data for development and testing
 import {
   realTeamMembers,
   realLeads,
@@ -79,7 +79,7 @@ import {
   realKpiSnapshots,
 } from './reonic-data.js'
 
-// Use real data from Reonic sync instead of mock seed data
+// Use demo data instead of minimal seed data
 const seedTeamMembers = realTeamMembers
 const seedLeads = realLeads
 const seedOffers = realOffers

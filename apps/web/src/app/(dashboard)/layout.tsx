@@ -41,12 +41,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const isSuperUser = session.roles.some(r => r.key === 'super_user')
 
   // Fetch connectors for sidebar status indicators
+  const CONNECTOR_LABELS: Record<string, string> = {
+    // Generic connector types
+    crm: 'CRM',
+    telephony: 'Telefonie',
+    accounting: 'Buchhaltung',
+    calendar: 'Kalender',
+    leads: 'Lead-System',
+    email: 'E-Mail',
+    storage: 'Dateispeicher',
+    webhook: 'Webhooks',
+    custom: 'Weitere',
+    // Legacy vendor-specific types (map to generic labels)
+    reonic: 'CRM',
+    '3cx': 'Telefonie',
+    bexio: 'Buchhaltung',
+    google_calendar: 'Kalender',
+    leadnotes: 'Lead-System',
+  }
   let connectorInfos: { name: string; status: 'connected' | 'warning' | 'disconnected' }[] = []
   if (session.companyId) {
     const db = getDataAccess()
     const connectors = await db.connectors.findByCompanyId(session.companyId)
     connectorInfos = connectors.map((c: ConnectorRow) => ({
-      name: c.name,
+      name: CONNECTOR_LABELS[c.type] ?? c.name,
       status: c.status === 'active'
         ? 'connected' as const
         : c.status === 'paused' || c.status === 'error'

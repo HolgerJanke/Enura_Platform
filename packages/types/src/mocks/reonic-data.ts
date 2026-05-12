@@ -1380,8 +1380,8 @@ export const realOffers: OfferRow[] = [
 export const realConnectors: ConnectorRow[] = [
   {
     id: '78e5a75b-a5bb-4f03-adf9-0065c81e12d6', company_id: CID, holding_id: HID,
-    type: 'reonic', name: 'Reonic CRM',
-    credentials: {"apiKey":"Basic M2MwNTU5NGMtZmU1ZS00M2YxLWI2YzgtMzJkMzdiNjNiOWEwOmU0MTA4OTYyN2VhZjQ2OGE4OWE4MzhjYTVjODE5OGYzMGM1MTlkNjQ4ZjdkNGQyZmJkNmRiNTRjZTgzYTIwMGU=","clientId":"3c05594c-fe5e-43f1-b6c8-32d37b63b9a0"},
+    type: 'crm', name: 'CRM',
+    credentials: {},
     config: {}, status: 'active',
     last_synced_at: '2026-04-30T12:44:25.137+00:00',
     last_error: null, sync_interval_minutes: 15,
@@ -1389,7 +1389,7 @@ export const realConnectors: ConnectorRow[] = [
   },
   {
     id: '51c477b9-c86b-439d-8171-5cc4c55b9b6f', company_id: CID, holding_id: HID,
-    type: 'bexio', name: 'Bexio',
+    type: 'accounting', name: 'Buchhaltung',
     credentials: {},
     config: {}, status: 'disconnected',
     last_synced_at: null,
@@ -1398,7 +1398,7 @@ export const realConnectors: ConnectorRow[] = [
   },
   {
     id: '69ca0adb-91e1-43b6-9c3c-f78965c9b2da', company_id: CID, holding_id: HID,
-    type: '3cx', name: '3CX Cloud',
+    type: 'telephony', name: 'Telefonie',
     credentials: {},
     config: {}, status: 'disconnected',
     last_synced_at: null,
@@ -1407,7 +1407,7 @@ export const realConnectors: ConnectorRow[] = [
   },
   {
     id: '377bff99-316e-4a3f-be8e-ea7c2b44def4', company_id: CID, holding_id: HID,
-    type: 'google_calendar', name: 'Google Calendar',
+    type: 'calendar', name: 'Kalender',
     credentials: {},
     config: {}, status: 'disconnected',
     last_synced_at: null,
@@ -1416,8 +1416,8 @@ export const realConnectors: ConnectorRow[] = [
   },
   {
     id: '718ad510-f8b5-4dc0-816e-e1909f722f8e', company_id: CID, holding_id: HID,
-    type: 'leadnotes', name: 'Leadnotes',
-    credentials: {"api_key":"1383|Z4kBmg3mTWpcBDna0A2B1CPGja6YJNMWpji3dxSc31565d26","base_url":"https://api.leadnotes.io"},
+    type: 'leads', name: 'Lead-System',
+    credentials: {},
     config: {}, status: 'active',
     last_synced_at: null,
     last_error: null, sync_interval_minutes: 15,
