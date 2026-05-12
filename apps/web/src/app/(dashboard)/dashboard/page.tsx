@@ -92,6 +92,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     expired: expiredCount,
   }
 
+  // Map connector types to generic display names
+  const CONNECTOR_LABELS: Record<string, string> = {
+    crm: 'CRM', telephony: 'Telefonie', accounting: 'Buchhaltung',
+    calendar: 'Kalender', leads: 'Lead-System', email: 'E-Mail',
+    storage: 'Dateispeicher', webhook: 'Webhooks', custom: 'Weitere',
+    // Legacy vendor types
+    reonic: 'CRM', '3cx': 'Telefonie', bexio: 'Buchhaltung',
+    google_calendar: 'Kalender', leadnotes: 'Lead-System',
+  }
+
   // Connector status
   const connectorStatusLabel: Record<string, { label: string; dotClass: string }> = {
     active: { label: 'Aktiv', dotClass: 'bg-green-400' },
@@ -177,7 +187,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   <li key={connector.id} className="flex items-center gap-3">
                     <span className={`h-2 w-2 rounded-full shrink-0 ${info.dotClass}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-brand-text-primary truncate">{connector.name}</p>
+                      <p className="text-sm font-medium text-brand-text-primary truncate">{CONNECTOR_LABELS[connector.type] ?? connector.name}</p>
                       {connector.last_synced_at && (
                         <p className="text-[11px] text-brand-text-secondary">
                           Sync: {formatDate(connector.last_synced_at)}
