@@ -27,7 +27,9 @@ export default async function ControllingLandingPage() {
     draftCount,
     lostCount,
     pipelineTotal,
-    invoicesRes,
+    incomingInvoicesRes,
+    bexioInvoicesRes,
+    bexioPaymentsRes,
   ] = await Promise.all([
     db.offers.count(cid, { status: 'won' }),
     db.offers.count(cid, { status: 'sent' }),
@@ -38,24 +40,51 @@ export default async function ControllingLandingPage() {
       .from('invoices_incoming')
       .select('id, gross_amount, status, due_date')
       .eq('company_id', cid),
+    // Bexio outgoing invoices
+    serviceDb
+      .from('invoices')
+      .select('id, total_chf, status, due_at')
+      .eq('company_id', cid),
+    // Bexio payments
+    serviceDb
+      .from('payments')
+      .select('id, amount_chf')
+      .eq('company_id', cid),
   ])
 
-  const invoices = (invoicesRes.data ?? []) as Array<Record<string, unknown>>
-  const openInvoices = invoices.filter(
+  // Incoming invoices (supplier bills)
+  const incomingInvoices = (incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+  const incomingOpen = incomingInvoices.filter(
     (i) => !['paid', 'returned_formal', 'returned_sender'].includes(i['status'] as string),
   )
-  const overdueInvoices = openInvoices.filter((i) => {
+  const incomingOverdue = incomingOpen.filter((i) => {
     const due = i['due_date'] as string | null
     return due && new Date(due) < new Date()
   })
-  const openReceivables = openInvoices.reduce(
-    (s, i) => s + Number(i['gross_amount'] ?? 0),
-    0,
-  )
-  const overdueAmount = overdueInvoices.reduce(
-    (s, i) => s + Number(i['gross_amount'] ?? 0),
-    0,
-  )
+
+  // Bexio outgoing invoices (customer invoices)
+  const bexioInvoices = (bexioInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+  const bexioPayments = (bexioPaymentsRes.data ?? []) as Array<Record<string, unknown>>
+  const bexioOpen = bexioInvoices.filter(i => ['sent', 'overdue', 'partially_paid'].includes(i['status'] as string))
+  const bexioOverdue = bexioInvoices.filter(i => {
+    if (i['status'] === 'overdue') return true
+    const due = i['due_at'] as string | null
+    return due && new Date(due) < new Date() && ['sent', 'partially_paid'].includes(i['status'] as string)
+  })
+  const bexioPaid = bexioInvoices.filter(i => i['status'] === 'paid')
+
+  // Combined receivables: use Bexio data if available, else incoming
+  const openReceivables = bexioOpen.length > 0
+    ? bexioOpen.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    : incomingOpen.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+  const overdueAmount = bexioOverdue.length > 0
+    ? bexioOverdue.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    : incomingOverdue.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+  const overdueCount = bexioOverdue.length > 0 ? bexioOverdue.length : incomingOverdue.length
+  const openInvoicesCount = bexioOpen.length > 0 ? bexioOpen.length : incomingOpen.length
+  const totalInvoicesCount = bexioInvoices.length > 0 ? bexioInvoices.length : incomingInvoices.length
+  const totalRevenue = bexioPaid.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+  const totalPaymentsReceived = bexioPayments.reduce((s, i) => s + Number(i['amount_chf'] ?? 0), 0)
 
   // Prepare context summary for AI
   const aiContext = {
@@ -66,9 +95,13 @@ export default async function ControllingLandingPage() {
     offers_lost: lostCount,
     open_receivables: openReceivables,
     overdue_amount: overdueAmount,
-    overdue_count: overdueInvoices.length,
-    open_invoices_count: openInvoices.length,
-    total_invoices: invoices.length,
+    overdue_count: overdueCount,
+    open_invoices_count: openInvoicesCount,
+    total_invoices: totalInvoicesCount,
+    total_revenue_paid: totalRevenue,
+    total_payments_received: totalPaymentsReceived,
+    bexio_invoices_count: bexioInvoices.length,
+    bexio_payments_count: bexioPayments.length,
   }
 
   const tools = [
@@ -113,14 +146,14 @@ export default async function ControllingLandingPage() {
           <p className="text-lg font-bold text-gray-900 mt-1">
             CHF {Math.round(openReceivables).toLocaleString('de-CH')}
           </p>
-          <p className="text-[11px] text-gray-400">{openInvoices.length} Rechnungen</p>
+          <p className="text-[11px] text-gray-400">{openInvoicesCount} Rechnungen</p>
         </div>
-        <div className={`rounded-lg border p-4 ${overdueInvoices.length > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
-          <p className={`text-xs ${overdueInvoices.length > 0 ? 'text-red-600' : 'text-gray-500'}`}>Überfällig</p>
-          <p className={`text-lg font-bold mt-1 ${overdueInvoices.length > 0 ? 'text-red-700' : 'text-gray-900'}`}>
+        <div className={`rounded-lg border p-4 ${overdueCount > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+          <p className={`text-xs ${overdueCount > 0 ? 'text-red-600' : 'text-gray-500'}`}>Überfällig</p>
+          <p className={`text-lg font-bold mt-1 ${overdueCount > 0 ? 'text-red-700' : 'text-gray-900'}`}>
             CHF {Math.round(overdueAmount).toLocaleString('de-CH')}
           </p>
-          <p className={`text-[11px] ${overdueInvoices.length > 0 ? 'text-red-500' : 'text-gray-400'}`}>{overdueInvoices.length} Rechnungen</p>
+          <p className={`text-[11px] ${overdueCount > 0 ? 'text-red-500' : 'text-gray-400'}`}>{overdueCount} Rechnungen</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500">Abschlüsse</p>
