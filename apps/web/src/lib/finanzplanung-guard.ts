@@ -1,16 +1,16 @@
 import { getSession } from './session'
-import { createSupabaseServerClient } from './supabase/server'
+import { createSupabaseServiceClient } from './supabase/service'
 
 /**
  * Check if the current company has the Finanzplanung module enabled.
- * Returns true only when both holding AND company flags are set.
+ * Uses service client to bypass RLS (works with mock auth).
  */
 export async function checkFinanzplanungActive(
   session: { companyId: string | null; holdingId: string | null } | null,
 ): Promise<boolean> {
   if (!session?.companyId) return false
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { data } = await supabase
     .from('company_feature_flags')
     .select('finanzplanung_enabled')
@@ -41,6 +41,7 @@ export async function requireFinanzplanung(): Promise<boolean> {
 
 /**
  * Role-specific permission checks. All require base Finanzplanung access.
+ * Holding/Enura admins bypass all checks (consistent with requireFinanzplanung).
  */
 export async function hasFinanzplanungPermission(
   permission: string,
@@ -48,9 +49,11 @@ export async function hasFinanzplanungPermission(
   const session = await getSession()
   if (!session) return false
 
+  // Holding/Enura admins bypass all checks
+  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
+
   const isActive = await checkFinanzplanungActive(session)
   if (!isActive) return false
 
-  if (session.isHoldingAdmin || session.isEnuraAdmin) return true
   return session.permissions.includes(permission)
 }

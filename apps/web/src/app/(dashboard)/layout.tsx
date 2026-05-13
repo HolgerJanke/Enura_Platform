@@ -42,7 +42,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Fetch connectors for sidebar status indicators
   const CONNECTOR_LABELS: Record<string, string> = {
-    // Generic connector types
+    // Vendor-specific connector names (shown in sidebar)
+    reonic: 'Reonic',
+    '3cx': '3CX Cloud',
+    bexio: 'Bexio',
+    google_calendar: 'Google Calendar',
+    leadnotes: 'LeadNotes',
+    gmail: 'Gmail',
+    whatsapp: 'WhatsApp',
+    // Generic fallback types
     crm: 'CRM',
     telephony: 'Telefonie',
     accounting: 'Buchhaltung',
@@ -52,12 +60,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     storage: 'Dateispeicher',
     webhook: 'Webhooks',
     custom: 'Weitere',
-    // Legacy vendor-specific types (map to generic labels)
-    reonic: 'CRM',
-    '3cx': 'Telefonie',
-    bexio: 'Buchhaltung',
-    google_calendar: 'Kalender',
-    leadnotes: 'Lead-System',
   }
   let connectorInfos: { name: string; status: 'connected' | 'warning' | 'disconnected' }[] = []
   if (session.companyId) {

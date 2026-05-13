@@ -92,14 +92,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     expired: expiredCount,
   }
 
-  // Map connector types to generic display names
+  // Map connector types to display names (real service names)
   const CONNECTOR_LABELS: Record<string, string> = {
+    reonic: 'Reonic', '3cx': '3CX Cloud', bexio: 'Bexio',
+    google_calendar: 'Google Calendar', leadnotes: 'LeadNotes',
+    gmail: 'Gmail', whatsapp: 'WhatsApp',
+    // Generic fallback types
     crm: 'CRM', telephony: 'Telefonie', accounting: 'Buchhaltung',
     calendar: 'Kalender', leads: 'Lead-System', email: 'E-Mail',
     storage: 'Dateispeicher', webhook: 'Webhooks', custom: 'Weitere',
-    // Legacy vendor types
-    reonic: 'CRM', '3cx': 'Telefonie', bexio: 'Buchhaltung',
-    google_calendar: 'Kalender', leadnotes: 'Lead-System',
   }
 
   // Connector status
