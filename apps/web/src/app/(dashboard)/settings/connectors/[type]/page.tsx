@@ -4,35 +4,31 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ConnectorForm } from './connector-form'
 import { SyncHistory } from './sync-history'
 
-const VALID_TYPES = ['crm', 'telephony', 'accounting', 'calendar', 'leads', 'email', 'storage', 'webhook', 'custom'] as const
+const VALID_TYPES = ['reonic', '3cx', 'bexio', 'google_calendar', 'leadnotes', 'gmail', 'whatsapp'] as const
 type ValidType = (typeof VALID_TYPES)[number]
 
 const CONNECTOR_LABELS: Record<ValidType, string> = {
-  crm: 'CRM',
-  telephony: 'Telefonie',
-  accounting: 'Buchhaltung',
-  calendar: 'Kalender',
-  leads: 'Lead-System',
-  email: 'E-Mail',
-  storage: 'Dateispeicher',
-  webhook: 'Webhooks',
-  custom: 'Weitere',
+  reonic: 'Reonic',
+  '3cx': '3CX Cloud',
+  bexio: 'Bexio',
+  google_calendar: 'Google Calendar',
+  leadnotes: 'LeadNotes',
+  gmail: 'Gmail',
+  whatsapp: 'WhatsApp',
 }
 
 const CONNECTOR_DESCRIPTIONS: Record<ValidType, string> = {
-  crm: 'Synchronisiert Leads, Angebote und Kontakte aus Ihrem CRM.',
-  telephony: 'Synchronisiert Anrufe und Aufnahmen aus der Telefonanlage.',
-  accounting: 'Synchronisiert Rechnungen und Zahlungen aus der Buchhaltung.',
-  calendar: 'Synchronisiert Termine aller Mitarbeiter.',
-  leads: 'Synchronisiert eingehende Leads aus dem Lead-System.',
-  email: 'Verbindet Posteingang und Versand (IMAP/SMTP).',
-  storage: 'Verbindet Dateispeicher für Dokumente und Belege.',
-  webhook: 'Konfiguriert ausgehende Webhooks an Drittsysteme.',
-  custom: 'Individuelle Anbindung an ein externes System.',
+  reonic: 'Synchronisiert Leads, Projekte und Angebote aus Reonic.',
+  '3cx': 'Synchronisiert Anrufe, Aufnahmen und Nebenstellen aus 3CX Cloud.',
+  bexio: 'Synchronisiert Rechnungen und Zahlungen aus Bexio.',
+  google_calendar: 'Synchronisiert Termine aller Mitarbeiter via Google Calendar.',
+  leadnotes: 'Synchronisiert eingehende Leads aus LeadNotes.',
+  gmail: 'Verbindet Gmail-Posteingang und Versand.',
+  whatsapp: 'Verbindet WhatsApp Business für Kundenkommunikation.',
 }
 
 function isValidType(type: string): type is ValidType {
@@ -52,9 +48,9 @@ export default async function ConnectorConfigPage({
   const session = await getSession()
   if (!session?.companyId) return null
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
-  // Fetch existing connector config
+  // Fetch existing connector config (using service client to bypass RLS)
   const { data: connector } = await supabase
     .from('connectors')
     .select('*')

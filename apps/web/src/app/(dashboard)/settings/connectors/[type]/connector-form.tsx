@@ -32,56 +32,39 @@ type TestResult = {
   error?: string
 }
 
-/** Generic connector fields — each type gets API URL + credentials */
-const DEFAULT_FIELDS: ReadonlyArray<FieldDef> = [
-  { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.example.com/v1' },
-  { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr API-Schlüssel' },
-]
-
+/** Vendor-specific field definitions matching actual worker credential schemas */
 const FIELD_DEFINITIONS: Record<string, ReadonlyArray<FieldDef>> = {
-  crm: [
-    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.ihr-crm.com/v1' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr CRM API-Schlüssel' },
+  reonic: [
+    { key: 'apiUrl', label: 'Reonic API URL', type: 'text', placeholder: 'https://api.reonic.de/v1' },
+    { key: 'apiKey', label: 'Reonic API Key', type: 'password', placeholder: 'Ihr Reonic API-Schlüssel' },
   ],
-  telephony: [
-    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://ihre-instanz.telefonie.com/api' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Telefonie API-Schlüssel' },
-    { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gesprächsaufnahmen automatisch herunterladen' },
+  '3cx': [
+    { key: 'apiUrl', label: '3CX Cloud URL', type: 'text', placeholder: 'https://ihre-instanz.3cx.ch', helpText: 'Basis-URL Ihrer 3CX Cloud-Instanz' },
+    { key: 'apiKey', label: '3CX API Key', type: 'password', placeholder: 'Ihr 3CX API-Schlüssel' },
+    { key: 'downloadRecordings', label: 'Aufnahmen herunterladen', type: 'toggle', helpText: 'Gesprächsaufnahmen automatisch in Supabase Storage speichern' },
   ],
-  accounting: [
-    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.buchhaltung.com/v1' },
-    { key: 'access_token', label: 'API Token', type: 'password', placeholder: 'Ihr API-Token oder Schlüssel', helpText: 'Persönlicher Access Token aus Ihrem Buchhaltungssystem.' },
+  bexio: [
+    { key: 'access_token', label: 'Bexio API Token', type: 'password', placeholder: 'Persönlicher Access Token aus Bexio', helpText: 'Unter Bexio → Einstellungen → API-Tokens erstellen. Für OAuth-Mode zusätzlich Client ID/Secret eintragen.' },
+    { key: 'client_id', label: 'OAuth Client ID (optional)', type: 'text', placeholder: 'Aus dem Bexio Developer Portal', helpText: 'Nur für automatische Token-Erneuerung nötig. Ohne OAuth wird der PAT-Token direkt verwendet.' },
+    { key: 'client_secret', label: 'OAuth Client Secret (optional)', type: 'password', placeholder: 'Client Secret' },
+    { key: 'refresh_token', label: 'OAuth Refresh Token (optional)', type: 'password', placeholder: 'Refresh Token' },
   ],
-  calendar: [
-    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', helpText: 'Fügen Sie den JSON-Schlüssel des Service Accounts ein' },
-    { key: 'calendarEmails', label: 'Kalender E-Mails', type: 'textarea', placeholder: 'mitarbeiter1@firma.ch\nmitarbeiter2@firma.ch', helpText: 'Eine E-Mail-Adresse pro Zeile. Diese Kalender werden synchronisiert.' },
+  google_calendar: [
+    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  "private_key": "...",\n  "client_email": "...",\n  ...\n}', helpText: 'Google Cloud Console → Service Account → Schlüssel erstellen (JSON)' },
+    { key: 'calendarEmails', label: 'Kalender E-Mails', type: 'textarea', placeholder: 'mitarbeiter1@alpen-energie.ch\nmitarbeiter2@alpen-energie.ch', helpText: 'Eine E-Mail-Adresse pro Zeile. Diese Kalender werden synchronisiert.' },
   ],
-  leads: [
-    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.lead-system.com/v1' },
-    { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Ihr Lead-System API-Schlüssel' },
+  leadnotes: [
+    { key: 'apiKey', label: 'LeadNotes API Key', type: 'password', placeholder: 'Ihr LeadNotes API-Schlüssel' },
+    { key: 'baseUrl', label: 'LeadNotes URL', type: 'text', placeholder: 'https://leads.alpen-energie.ch', helpText: 'Standard: https://leads.alpen-energie.ch' },
   ],
-  email: [
-    { key: 'imapHost', label: 'IMAP Host', type: 'text', placeholder: 'imap.ihr-provider.ch' },
-    { key: 'imapPort', label: 'IMAP Port', type: 'text', placeholder: '993' },
-    { key: 'smtpHost', label: 'SMTP Host', type: 'text', placeholder: 'smtp.ihr-provider.ch' },
-    { key: 'smtpPort', label: 'SMTP Port', type: 'text', placeholder: '587' },
-    { key: 'email', label: 'E-Mail', type: 'text', placeholder: 'info@firma.ch' },
-    { key: 'password', label: 'Passwort', type: 'password', placeholder: 'Ihr E-Mail-Passwort' },
+  gmail: [
+    { key: 'serviceAccountKey', label: 'Service Account Key (JSON)', type: 'textarea', placeholder: '{\n  "type": "service_account",\n  ...\n}', helpText: 'Google Cloud Console → Service Account mit Gmail API-Zugriff' },
+    { key: 'emailAddress', label: 'Gmail-Adresse', type: 'text', placeholder: 'info@alpen-energie.ch' },
   ],
-  storage: [
-    { key: 'endpoint', label: 'Endpoint', type: 'text', placeholder: 'https://s3.eu-central-1.amazonaws.com' },
-    { key: 'bucket', label: 'Bucket', type: 'text', placeholder: 'mein-bucket' },
-    { key: 'accessKey', label: 'Access Key', type: 'password', placeholder: 'Ihr Access Key' },
-    { key: 'secretKey', label: 'Secret Key', type: 'password', placeholder: 'Ihr Secret Key' },
-  ],
-  webhook: [
-    { key: 'targetUrl', label: 'Ziel-URL', type: 'text', placeholder: 'https://ihr-system.com/webhook' },
-    { key: 'secret', label: 'Webhook Secret', type: 'password', placeholder: 'Optionales Shared Secret', helpText: 'Wird im Header X-Webhook-Secret mitgeschickt' },
-  ],
-  custom: [
-    { key: 'apiUrl', label: 'API URL', type: 'text', placeholder: 'https://api.example.com' },
-    { key: 'apiKey', label: 'API Key / Token', type: 'password', placeholder: 'Ihr API-Schlüssel' },
-    { key: 'notes', label: 'Hinweise', type: 'textarea', placeholder: 'Besonderheiten dieser Anbindung...' },
+  whatsapp: [
+    { key: 'phoneNumberId', label: 'WhatsApp Phone Number ID', type: 'text', placeholder: 'Ihre Phone Number ID aus dem Meta Business Manager' },
+    { key: 'accessToken', label: 'WhatsApp Access Token', type: 'password', placeholder: 'Permanenter Access Token', helpText: 'Meta Business Suite → WhatsApp → API Setup' },
+    { key: 'verifyToken', label: 'Webhook Verify Token', type: 'text', placeholder: 'Selbst gewählter Verify-Token für Webhook-Registrierung' },
   ],
 }
 

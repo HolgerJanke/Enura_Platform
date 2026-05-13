@@ -57,8 +57,8 @@ export async function testConnectorAction(
     return { error: 'Mindestens ein Zugangsdaten-Feld muss ausgefüllt sein.' }
   }
 
-  // Calendar-type: validate JSON in serviceAccountKey if present
-  if (type === 'calendar' && credentials['serviceAccountKey']) {
+  // Google Calendar / Gmail: validate JSON in serviceAccountKey if present
+  if ((type === 'google_calendar' || type === 'gmail') && credentials['serviceAccountKey']) {
     try {
       JSON.parse(credentials['serviceAccountKey'] as string)
     } catch {
@@ -108,15 +108,13 @@ export async function triggerSyncAction(
 
 function getConnectorLabel(type: string): string {
   const labels: Record<string, string> = {
-    crm: 'CRM',
-    telephony: 'Telefonie',
-    accounting: 'Buchhaltung',
-    calendar: 'Kalender',
-    leads: 'Lead-System',
-    email: 'E-Mail',
-    storage: 'Dateispeicher',
-    webhook: 'Webhooks',
-    custom: 'Weitere',
+    reonic: 'Reonic',
+    '3cx': '3CX Cloud',
+    bexio: 'Bexio',
+    google_calendar: 'Google Calendar',
+    leadnotes: 'LeadNotes',
+    gmail: 'Gmail',
+    whatsapp: 'WhatsApp',
   }
   return labels[type] ?? type
 }

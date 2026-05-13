@@ -6,15 +6,13 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ConnectorListClient } from './connector-list-client'
 
 const CONNECTOR_TYPES = [
-  { type: 'crm', label: 'CRM', description: 'Leads, Angebote, Kontakte', icon: 'link' },
-  { type: 'telephony', label: 'Telefonie', description: 'Anrufe, Aufnahmen', icon: 'phone' },
-  { type: 'accounting', label: 'Buchhaltung', description: 'Rechnungen, Zahlungen', icon: 'banknotes' },
-  { type: 'calendar', label: 'Kalender', description: 'Termine aller Mitarbeiter', icon: 'calendar' },
-  { type: 'leads', label: 'Lead-System', description: 'Eingehende Leads', icon: 'inbox' },
-  { type: 'email', label: 'E-Mail', description: 'Posteingang, Versand', icon: 'mail' },
-  { type: 'storage', label: 'Dateispeicher', description: 'Dokumente, Belege', icon: 'folder' },
-  { type: 'webhook', label: 'Webhooks', description: 'Outgoing Events an Drittsysteme', icon: 'link' },
-  { type: 'custom', label: 'Weitere', description: 'Individuelle Anbindung', icon: 'link' },
+  { type: 'reonic', label: 'Reonic', description: 'Leads, Projekte, Angebote', icon: 'link' },
+  { type: '3cx', label: '3CX Cloud', description: 'Anrufe, Aufnahmen, Nebenstellen', icon: 'phone' },
+  { type: 'bexio', label: 'Bexio', description: 'Rechnungen, Zahlungen', icon: 'banknotes' },
+  { type: 'google_calendar', label: 'Google Calendar', description: 'Termine aller Mitarbeiter', icon: 'calendar' },
+  { type: 'leadnotes', label: 'LeadNotes', description: 'Eingehende Leads', icon: 'inbox' },
+  { type: 'gmail', label: 'Gmail', description: 'Posteingang und Versand', icon: 'mail' },
+  { type: 'whatsapp', label: 'WhatsApp', description: 'Business Messaging', icon: 'link' },
 ] as const
 
 export type ConnectorTypeInfo = (typeof CONNECTOR_TYPES)[number]
