@@ -19,41 +19,60 @@ function mapLeadSource(source: string): LeadSource {
 }
 
 /**
- * Build a notes string that preserves the original Leadnotes source
- * and any message content from the lead.
+ * Map Leadnodes lead status to internal status.
  */
-function buildNotes(lead: LeadnotesLead): string | null {
-  const parts: string[] = []
-
-  parts.push(`[Leadnotes] Source: ${lead.source}`)
-
-  if (lead.source_detail) {
-    parts.push(`Source detail: ${lead.source_detail}`)
-  }
-
-  if (lead.message) {
-    parts.push(`Message: ${lead.message}`)
-  }
-
-  return parts.length > 0 ? parts.join('\n') : null
+function mapLeadStatus(status: string | null | undefined): string {
+  if (!status) return 'new'
+  const s = status.toLowerCase()
+  if (s === 'approved' || s === 'accepted') return 'qualified'
+  if (s === 'pending' || s === 'new') return 'new'
+  if (s === 'rejected' || s === 'declined') return 'lost'
+  if (s === 'delivered') return 'contacted'
+  return 'new'
 }
 
 /**
- * Transform a raw Leadnotes lead into the shape expected by the leads table.
+ * Build a notes string from the lead's custom data.
+ */
+function buildNotes(lead: LeadnotesLead): string | null {
+  const parts: string[] = []
+  parts.push('[Leadnodes]')
+
+  if (lead.custom_data) {
+    const herkunft = lead.custom_data['herkunft'] as string | undefined
+    if (herkunft) parts.push(`Herkunft: ${herkunft}`)
+  }
+
+  if (lead.company) {
+    parts.push(`Firma: ${lead.company}`)
+  }
+
+  return parts.length > 1 ? parts.join('\n') : null
+}
+
+/**
+ * Transform a raw Leadnodes v2 lead into the shape expected by the leads table.
  */
 export function normaliseLead(
   companyId: string,
   lead: LeadnotesLead,
 ): LeadInsert {
+  // Extract source from custom_data if available
+  const herkunft = (lead.custom_data?.['herkunft'] as string) ?? ''
+  const source = herkunft ? mapLeadSource(herkunft) : 'leadnotes'
+
   return {
     company_id: companyId,
-    external_id: lead.id,
+    external_id: String(lead.id),
     first_name: lead.first_name,
     last_name: lead.last_name,
-    email: lead.email,
-    phone: lead.phone,
-    source: mapLeadSource(lead.source),
-    status: 'new',
+    email: lead.email ?? null,
+    phone: lead.phone ?? null,
+    address_street: lead.street_no ?? null,
+    address_zip: lead.zip_code ?? null,
+    address_city: lead.city ?? null,
+    source,
+    status: mapLeadStatus(lead.status),
     notes: buildNotes(lead),
     created_at: lead.created_at,
   }

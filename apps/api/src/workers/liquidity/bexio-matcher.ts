@@ -70,10 +70,10 @@ export async function matchBexioPayments(
   // Fetch unmatched payments from last 90 days
   const { data: paymentsRaw, error: payErr } = await supabase
     .from('payments')
-    .select('id, amount_chf, received_at, reference, notes')
+    .select('id, amount_chf, payment_date, reference, notes')
     .eq('company_id', companyId)
-    .gte('received_at', lookbackISO)
-    .order('received_at', { ascending: true })
+    .gte('payment_date', lookbackISO)
+    .order('payment_date', { ascending: true })
 
   if (payErr) {
     throw new Error(`Fehler beim Laden der Zahlungen: ${payErr.message}`)
@@ -128,7 +128,7 @@ export async function matchBexioPayments(
 
       // Check date proximity
       const dateDelta = event.budget_date
-        ? daysDiff(payment.received_at, event.budget_date)
+        ? daysDiff(payment.payment_date, event.budget_date)
         : MAX_DATE_DELTA_DAYS
 
       if (dateDelta > MAX_DATE_DELTA_DAYS) continue
@@ -174,7 +174,7 @@ export async function matchBexioPayments(
     const { error: updateErr } = await supabase
       .from('liquidity_event_instances')
       .update({
-        actual_date: payment.received_at.split('T')[0],
+        actual_date: payment.payment_date.split('T')[0],
         actual_amount: String(paymentAmount),
         actual_currency: 'CHF',
         actual_source: 'bexio' as const,

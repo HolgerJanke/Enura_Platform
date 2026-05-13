@@ -56,7 +56,7 @@ export function normalisePayment(
     company_id: companyId,
     invoice_id: invoiceId,
     amount_chf: payment.value,
-    received_at: payment.date,
+    payment_date: payment.date,
     reference: `bexio-payment-${payment.id}`,
     notes: payment.title,
   }

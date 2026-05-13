@@ -41,21 +41,21 @@ export class ThreeCXConnector implements ConnectorBase {
 
   async validate(connector: ConnectorConfig): Promise<void> {
     const creds = connector.credentials as Record<string, string>
-    if (!creds['api_key']) {
+    if (!creds['apiKey']) {
       throw new ConnectorValidationError(
-        'api_key',
+        'apiKey',
         'API-Schlüssel ist erforderlich',
       )
     }
-    if (!creds['base_url']) {
+    if (!creds['apiUrl']) {
       throw new ConnectorValidationError(
-        'base_url',
+        'apiUrl',
         'Basis-URL ist erforderlich',
       )
     }
 
     // Test connection by fetching extensions
-    const client = new ThreeCXApiClient(creds['base_url'], creds['api_key'])
+    const client = new ThreeCXApiClient(creds['apiUrl'], creds['apiKey'])
     await client.getExtensions()
   }
 
@@ -65,7 +65,7 @@ export class ThreeCXConnector implements ConnectorBase {
   ): Promise<SyncResult> {
     const startTime = Date.now()
     const creds = connector.credentials as Record<string, string>
-    const client = new ThreeCXApiClient(creds['base_url']!, creds['api_key']!)
+    const client = new ThreeCXApiClient(creds['apiUrl']!, creds['apiKey']!)
     const db = getServiceClient()
     let fetched = 0
     let written = 0

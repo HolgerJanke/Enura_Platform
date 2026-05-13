@@ -33,7 +33,7 @@ export async function deduplicateLeads(
     .filter((p): p is string => p !== null && p !== undefined && p.length > 0)
 
   // Also check external_id to avoid re-importing the same Leadnotes lead
-  const externalIds = leads.map((l) => l.id)
+  const externalIds = leads.map((l) => String(l.id))
 
   // Fetch existing leads that match by external_id
   const existingByExternalId = new Set<string>()
@@ -89,7 +89,7 @@ export async function deduplicateLeads(
 
   for (const lead of leads) {
     // Check external_id first (exact match from previous syncs)
-    if (existingByExternalId.has(lead.id)) {
+    if (existingByExternalId.has(String(lead.id))) {
       duplicateCount++
       continue
     }

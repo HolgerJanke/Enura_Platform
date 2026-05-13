@@ -15,16 +15,25 @@ export interface GetLeadsResult {
 }
 
 /**
- * Leadnotes API pagination response schema.
+ * Leadnodes API v2 pagination response schema.
+ * Uses standard Laravel paginator format: data + links + meta.
  */
 const LeadnotesApiResponseSchema = z.object({
   data: z.array(LeadnotesLeadSchema),
   meta: z.object({
     total: z.number(),
-    page: z.number(),
+    current_page: z.number(),
     per_page: z.number(),
-    has_more: z.boolean(),
-  }),
+    last_page: z.number(),
+    from: z.number().nullable().optional(),
+    to: z.number().nullable().optional(),
+  }).passthrough(),
+  links: z.object({
+    first: z.string().nullable().optional(),
+    last: z.string().nullable().optional(),
+    prev: z.string().nullable().optional(),
+    next: z.string().nullable().optional(),
+  }).passthrough().optional(),
 })
 
 /**
@@ -37,11 +46,9 @@ export async function getLeads(
   const page = opts?.page ?? 1
   const perPage = opts?.perPage ?? 100
 
-  const url = new URL('/api/v1/leads', credentials.base_url)
+  const url = new URL('/api/v2/leads', credentials.base_url)
   url.searchParams.set('page', String(page))
   url.searchParams.set('per_page', String(perPage))
-  url.searchParams.set('sort', 'created_at')
-  url.searchParams.set('order', 'desc')
 
   if (opts?.createdAfter) {
     url.searchParams.set('created_after', opts.createdAfter)
@@ -77,7 +84,7 @@ export async function getLeads(
 
   return {
     leads: parsed.data,
-    hasMore: parsed.meta.has_more,
+    hasMore: parsed.meta.current_page < parsed.meta.last_page,
     totalCount: parsed.meta.total,
   }
 }

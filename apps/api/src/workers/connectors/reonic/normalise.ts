@@ -186,8 +186,12 @@ export function normaliseOffer(
   // Title or name
   const title = offer.title ?? offer.name ?? (refNr ? `Angebot ${refNr}` : 'Angebot')
 
-  // Monetary value: customDealValue > totalPlannedPrice > value > totalPrice
-  const amount = offer.customDealValue ?? offer.totalPlannedPrice ?? offer.value ?? offer.totalPrice ?? 0
+  // Monetary value: prefer customDealValue if set and > 0, then totalPlannedPrice, etc.
+  const amount = (offer.customDealValue && offer.customDealValue > 0 ? offer.customDealValue : null)
+    ?? (offer.totalPlannedPrice && offer.totalPlannedPrice > 0 ? offer.totalPlannedPrice : null)
+    ?? (offer.value && offer.value > 0 ? offer.value : null)
+    ?? offer.totalPrice
+    ?? 0
 
   // Consultant: assignedToId (v2 real) or assignedUserId or berater_id (legacy)
   const beraterExtId = offer.assignedToId ?? offer.assignedUserId ?? offer.berater_id ?? null
