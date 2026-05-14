@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/connector-sync",
+      "schedule": "0 * * * *"
+    },
+    {
       "path": "/api/cron/kpi-snapshots",
       "schedule": "0 5 * * *"
     },

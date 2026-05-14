@@ -337,8 +337,14 @@ export const bexioConnector: ConnectorBase = {
       })
     }
 
+    // Bills 404 is expected when the Bexio plan doesn't include the Kreditoren module.
+    // Don't count it as a sync failure — only fatal/data errors should fail the sync.
+    const criticalErrors = errors.filter(
+      (e) => e.code !== 'BEXIO_FETCH_BILLS' || !e.message.includes('404'),
+    )
+
     return {
-      success: errors.length === 0,
+      success: criticalErrors.length === 0,
       recordsFetched,
       recordsWritten,
       recordsSkipped: Math.max(0, recordsSkipped),
