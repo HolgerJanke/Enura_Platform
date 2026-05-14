@@ -7,6 +7,8 @@ interface Props {
   project: Record<string, unknown>
   lead: Record<string, unknown> | null
   offer: Record<string, unknown> | null
+  berater: Record<string, unknown> | null
+  setter: Record<string, unknown> | null
   phaseHistory: Array<Record<string, unknown>>
   processInstances: Array<Record<string, unknown>>
   liqEvents: Array<Record<string, unknown>>
@@ -41,7 +43,7 @@ function fmtCHF(n: number | null | undefined): string {
   return `CHF ${Number(n).toLocaleString('de-CH', { minimumFractionDigits: 2 })}`
 }
 
-export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents, calls, calendarEvents }: Props) {
+export function ProjectDetailTabs({ project, lead, offer, berater, setter, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents, calls, calendarEvents }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('uebersicht')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
 
@@ -107,17 +109,56 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
             ) : null}
           </div>
 
+          {/* Berater & Setter side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-5">
+              <h3 className="text-sm font-semibold text-indigo-900 mb-3 flex items-center gap-2">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                Berater
+              </h3>
+              {berater ? (
+                <div className="space-y-1.5 text-sm">
+                  <p className="font-semibold text-indigo-900">{String(berater['first_name'] ?? '')} {String(berater['last_name'] ?? '')}</p>
+                  {berater['email'] ? <p className="text-indigo-700 text-xs">{String(berater['email'])}</p> : null}
+                  {berater['phone'] ? <p className="text-indigo-700 text-xs font-mono">{String(berater['phone'])}</p> : null}
+                  {berater['role'] ? <p className="text-indigo-600 text-xs">{String(berater['role'])}</p> : null}
+                </div>
+              ) : (
+                <p className="text-sm text-indigo-600">Nicht zugeordnet</p>
+              )}
+            </div>
+            <div className="rounded-lg border border-teal-200 bg-teal-50 p-5">
+              <h3 className="text-sm font-semibold text-teal-900 mb-3 flex items-center gap-2">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Setter
+              </h3>
+              {setter ? (
+                <div className="space-y-1.5 text-sm">
+                  <p className="font-semibold text-teal-900">{String(setter['first_name'] ?? '')} {String(setter['last_name'] ?? '')}</p>
+                  {setter['email'] ? <p className="text-teal-700 text-xs">{String(setter['email'])}</p> : null}
+                  {setter['phone'] ? <p className="text-teal-700 text-xs font-mono">{String(setter['phone'])}</p> : null}
+                  {setter['role'] ? <p className="text-teal-600 text-xs">{String(setter['role'])}</p> : null}
+                </div>
+              ) : (
+                <p className="text-sm text-teal-600">Nicht zugeordnet</p>
+              )}
+            </div>
+          </div>
+
           {/* Lead info */}
           {lead && (
             <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Lead-Daten</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Lead / Kunde
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div><span className="text-gray-500">Name:</span> <span className="font-medium">{String(lead['first_name'] ?? '')} {String(lead['last_name'] ?? '')}</span></div>
                 <div><span className="text-gray-500">E-Mail:</span> <span className="font-medium">{String(lead['email'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Telefon:</span> <span className="font-medium">{String(lead['phone'] ?? '—')}</span></div>
+                <div><span className="text-gray-500">Telefon:</span> <span className="font-medium font-mono">{String(lead['phone'] ?? '—')}</span></div>
+                <div><span className="text-gray-500">Adresse:</span> <span className="font-medium">{[lead['address_street'], lead['address_zip'], lead['address_city']].filter(Boolean).join(', ') || '—'}</span></div>
                 <div><span className="text-gray-500">Quelle:</span> <span className="font-medium">{String(lead['source'] ?? '—')}</span></div>
                 <div><span className="text-gray-500">Status:</span> <span className="font-medium">{String(lead['status'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Qualifiziert:</span> <span className="font-medium">{fmtDate(lead['qualified_at'] as string | null)}</span></div>
               </div>
             </div>
           )}
@@ -125,12 +166,17 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
           {/* Offer info */}
           {offer && (
             <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Angebot</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Angebot
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div><span className="text-gray-500">Titel:</span> <span className="font-medium">{String(offer['title'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Betrag:</span> <span className="font-medium">{fmtCHF(offer['amount_chf'] as number | null)}</span></div>
-                <div><span className="text-gray-500">Status:</span> <span className="font-medium">{String(offer['status'] ?? '—')}</span></div>
+                <div><span className="text-gray-500">Betrag:</span> <span className="font-medium font-mono">{fmtCHF(offer['amount_chf'] as number | null)}</span></div>
+                <div><span className="text-gray-500">Status:</span> <span className={`font-medium ${offer['status'] === 'won' ? 'text-green-700' : offer['status'] === 'lost' ? 'text-red-600' : 'text-gray-900'}`}>{offer['status'] === 'won' ? 'Gewonnen' : offer['status'] === 'sent' ? 'Versendet' : offer['status'] === 'draft' ? 'Entwurf' : offer['status'] === 'lost' ? 'Verloren' : String(offer['status'] ?? '—')}</span></div>
                 <div><span className="text-gray-500">Gesendet:</span> <span className="font-medium">{fmtDate(offer['sent_at'] as string | null)}</span></div>
+                {offer['valid_until'] ? <div><span className="text-gray-500">Gültig bis:</span> <span className="font-medium">{fmtDate(offer['valid_until'] as string)}</span></div> : null}
+                {offer['created_at'] ? <div><span className="text-gray-500">Erstellt:</span> <span className="font-medium">{fmtDate(offer['created_at'] as string)}</span></div> : null}
               </div>
             </div>
           )}
@@ -384,15 +430,35 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
       {/* Setter tab */}
       {activeTab === 'setter' && (
         <div>
-          {lead ? (
-            <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
-              Setter: <span className="font-medium">{String(lead['setter_id'] ? 'Zugeordnet' : 'Nicht zugeordnet')}</span>
-              {lead['phone'] ? <span className="ml-3">Kunden-Tel: <span className="font-mono">{String(lead['phone'])}</span></span> : null}
+          {/* Setter info card */}
+          <div className="mb-4 rounded-lg bg-teal-50 border border-teal-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-teal-600 mb-1">Zugeordneter Setter</p>
+                {setter ? (
+                  <div>
+                    <p className="text-sm font-semibold text-teal-900">{String(setter['first_name'] ?? '')} {String(setter['last_name'] ?? '')}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      {setter['email'] ? <span className="text-xs text-teal-700">{String(setter['email'])}</span> : null}
+                      {setter['phone'] ? <span className="text-xs text-teal-700 font-mono">{String(setter['phone'])}</span> : null}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium text-teal-700">Nicht zugeordnet</p>
+                )}
+              </div>
+              {lead?.['phone'] ? (
+                <div className="text-right">
+                  <p className="text-xs text-teal-600">Kunden-Telefon</p>
+                  <p className="text-sm font-mono text-teal-900">{String(lead['phone'])}</p>
+                </div>
+              ) : null}
             </div>
-          ) : null}
+          </div>
           {calls.length === 0 && calendarEvents.length === 0 ? (
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
               <p className="text-sm text-gray-500">Keine Setter-Kommunikation zu diesem Projekt.</p>
+              <p className="text-xs text-gray-400 mt-1">Anrufe und Termine werden automatisch aus den Integrationen geladen.</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -469,11 +535,21 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
       {/* Berater tab */}
       {activeTab === 'berater' && (
         <div>
-          {project['berater_id'] ? (
-            <div className="mb-4 rounded-lg bg-indigo-50 border border-indigo-200 p-3 text-sm text-indigo-800">
-              Berater zugeordnet
-            </div>
-          ) : null}
+          {/* Berater info card */}
+          <div className="mb-4 rounded-lg bg-indigo-50 border border-indigo-200 p-4">
+            <p className="text-xs text-indigo-600 mb-1">Zugeordneter Berater</p>
+            {berater ? (
+              <div>
+                <p className="text-sm font-semibold text-indigo-900">{String(berater['first_name'] ?? '')} {String(berater['last_name'] ?? '')}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  {berater['email'] ? <span className="text-xs text-indigo-700">{String(berater['email'])}</span> : null}
+                  {berater['phone'] ? <span className="text-xs text-indigo-700 font-mono">{String(berater['phone'])}</span> : null}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-medium text-indigo-700">Nicht zugeordnet</p>
+            )}
+          </div>
           <div className="space-y-6">
             {/* Berater calls */}
             {calls.length > 0 && (
@@ -567,6 +643,7 @@ export function ProjectDetailTabs({ project, lead, offer, phaseHistory, processI
             {calls.length === 0 && calendarEvents.length === 0 && !offer && (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
                 <p className="text-sm text-gray-500">Keine Berater-Kommunikation zu diesem Projekt.</p>
+                <p className="text-xs text-gray-400 mt-1">Anrufe, Termine und Angebote werden automatisch aus den Integrationen geladen.</p>
               </div>
             )}
           </div>

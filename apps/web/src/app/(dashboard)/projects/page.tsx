@@ -185,48 +185,50 @@ export default async function ProjectsPage() {
         </div>
       </div>
 
-      {/* Kanban board — full width */}
-      <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100 overflow-hidden">
+      {/* Kanban board — full width, no horizontal scroll */}
+      <div className="rounded-xl bg-white p-3 shadow-brand-sm border border-gray-100">
         {hasProjects ? (
           /* Phase-based Kanban from projects table */
-          <div className="grid gap-3 overflow-x-auto pb-2" style={{ gridTemplateColumns: `repeat(${sortedPhases.length}, minmax(200px, 1fr))` }}>
+          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${sortedPhases.length}, minmax(0, 1fr))` }}>
             {sortedPhases.map((phase) => {
               const phaseProjects = projectsByPhase.get(phase.id) ?? []
               return (
                 <div key={phase.id} className="min-w-0">
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <div
-                      className="h-1 rounded-full mb-2"
+                      className="h-1 rounded-full mb-1.5"
                       style={{ backgroundColor: phase.color ?? 'var(--brand-primary)' }}
                     />
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-brand-text-primary truncate">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-[11px] font-semibold text-brand-text-primary truncate">
                         {phase.phase_number}. {phase.name}
                       </p>
-                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-brand-text-secondary">
+                      <span className="flex-shrink-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gray-100 px-1 text-[9px] font-semibold text-brand-text-secondary">
                         {phaseProjects.length}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                  <div className="space-y-1.5 max-h-[calc(100vh-320px)] overflow-y-auto pr-0.5">
                     {phaseProjects.map((project) => {
                       const stalled = isStalledProject(project, phase)
                       return (
                         <Link
                           key={project.id}
                           href={`/projects/${project.id}`}
-                          className={`block rounded-lg bg-brand-background border p-3 shadow-brand-sm hover:shadow-brand-md transition-shadow ${
+                          className={`block rounded-md bg-brand-background border p-2 shadow-brand-sm hover:shadow-brand-md transition-shadow ${
                             stalled ? 'border-red-200 bg-red-50' : 'border-gray-100'
                           }`}
                         >
-                          <p className="text-sm font-medium text-brand-text-primary truncate">
+                          <p className="text-xs font-medium text-brand-text-primary truncate">
                             {project.customer_name}
                           </p>
-                          <p className="text-xs text-brand-text-secondary truncate mt-0.5">
-                            {project.title}
-                          </p>
+                          {project.title !== project.customer_name && (
+                            <p className="text-[10px] text-brand-text-secondary truncate mt-0.5">
+                              {project.title}
+                            </p>
+                          )}
                           {stalled && (
-                            <div className="flex items-center gap-1 mt-2">
+                            <div className="flex items-center gap-1 mt-1">
                               <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                               <p className="text-[10px] text-red-600 font-medium">Verzögert</p>
                             </div>
@@ -235,7 +237,7 @@ export default async function ProjectsPage() {
                       )
                     })}
                     {phaseProjects.length === 0 && (
-                      <p className="text-xs text-brand-text-secondary italic text-center py-4">
+                      <p className="text-[10px] text-brand-text-secondary italic text-center py-3">
                         Keine Projekte
                       </p>
                     )}
@@ -246,27 +248,27 @@ export default async function ProjectsPage() {
           </div>
         ) : (
           /* Offer-based pipeline Kanban — full width */
-          <div className="grid gap-3 overflow-x-auto pb-2" style={{ gridTemplateColumns: `repeat(${OFFER_PIPELINE_PHASES.length}, minmax(200px, 1fr))` }}>
+          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${OFFER_PIPELINE_PHASES.length}, minmax(0, 1fr))` }}>
             {OFFER_PIPELINE_PHASES.map((phase) => {
               const phaseOffers = offersByStatus.get(phase.key) ?? []
               return (
                 <div key={phase.key} className="min-w-0">
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <div
-                      className="h-1 rounded-full mb-2"
+                      className="h-1 rounded-full mb-1.5"
                       style={{ backgroundColor: phase.color }}
                     />
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-brand-text-primary">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-[11px] font-semibold text-brand-text-primary truncate">
                         {phase.label}
                       </p>
-                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-brand-text-secondary">
+                      <span className="flex-shrink-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gray-100 px-1 text-[9px] font-semibold text-brand-text-secondary">
                         {phaseOffers.length}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                    {phaseOffers.slice(0, 20).map((offer) => {
+                  <div className="space-y-1.5 max-h-[calc(100vh-320px)] overflow-y-auto pr-0.5">
+                    {phaseOffers.slice(0, 30).map((offer) => {
                       const berater = offer.berater_id ? memberMap.get(offer.berater_id) : null
                       const beraterName = berater
                         ? `${berater.first_name ?? ''} ${berater.last_name ?? ''}`.trim()
@@ -276,34 +278,31 @@ export default async function ProjectsPage() {
                         <Link
                           key={offer.id}
                           href={offer.lead_id ? `/leads/${offer.lead_id}` : '#'}
-                          className="block rounded-lg bg-brand-background border border-gray-100 p-3 shadow-brand-sm hover:shadow-brand-md transition-shadow"
+                          className="block rounded-md bg-brand-background border border-gray-100 p-2 shadow-brand-sm hover:shadow-brand-md transition-shadow"
                         >
-                          <p className="text-sm font-medium text-brand-text-primary truncate">
+                          <p className="text-xs font-medium text-brand-text-primary truncate">
                             {offer.title || 'Ohne Titel'}
                           </p>
                           {amount > 0 && (
-                            <p className="text-xs font-semibold text-brand-text-primary mt-1">
+                            <p className="text-[10px] font-semibold text-brand-text-primary mt-0.5">
                               CHF {amount.toLocaleString('de-CH')}
                             </p>
                           )}
                           {beraterName && (
-                            <p className="text-[11px] text-brand-text-secondary mt-1 truncate">
+                            <p className="text-[10px] text-brand-text-secondary mt-0.5 truncate">
                               {beraterName}
                             </p>
                           )}
-                          <p className="text-[10px] text-brand-text-secondary mt-1">
-                            {formatDate(offer.updated_at)}
-                          </p>
                         </Link>
                       )
                     })}
-                    {phaseOffers.length > 20 && (
-                      <p className="text-[11px] text-brand-text-secondary text-center py-2">
-                        +{phaseOffers.length - 20} weitere
+                    {phaseOffers.length > 30 && (
+                      <p className="text-[10px] text-brand-text-secondary text-center py-1.5">
+                        +{phaseOffers.length - 30} weitere
                       </p>
                     )}
                     {phaseOffers.length === 0 && (
-                      <p className="text-xs text-brand-text-secondary italic text-center py-4">
+                      <p className="text-[10px] text-brand-text-secondary italic text-center py-3">
                         Keine Angebote
                       </p>
                     )}

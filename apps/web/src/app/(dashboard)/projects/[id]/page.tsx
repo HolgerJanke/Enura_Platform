@@ -34,7 +34,7 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
   const p = project as Record<string, unknown>
 
   // Fetch related data in parallel
-  const [leadRes, offerRes, phaseHistoryRes, processInstancesRes, liqEventsRes, incomingInvoicesRes, outgoingInvoicesRes, documentsRes, callsRes, calendarRes] = await Promise.all([
+  const [leadRes, offerRes, phaseHistoryRes, processInstancesRes, liqEventsRes, incomingInvoicesRes, outgoingInvoicesRes, documentsRes, callsRes, calendarRes, beraterRes, setterRes] = await Promise.all([
     p['lead_id'] ? db.from('leads').select('*').eq('id', p['lead_id'] as string).single() : Promise.resolve({ data: null }),
     p['offer_id'] ? db.from('offers').select('*').eq('id', p['offer_id'] as string).single() : Promise.resolve({ data: null }),
     db.from('project_phase_history').select('*').eq('project_id', id).order('created_at', { ascending: false }),
@@ -45,6 +45,8 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
     db.from('project_documents').select('*').eq('project_id', id).order('created_at', { ascending: false }),
     db.from('calls').select('id, started_at, duration_seconds, direction, status, team_member_id, caller_number, callee_number').eq('project_id', id).order('started_at', { ascending: false }).limit(50),
     db.from('calendar_events').select('id, title, description, location, starts_at, ends_at, team_member_id, event_type').eq('project_id', id).order('starts_at', { ascending: false }).limit(50),
+    p['berater_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role').eq('id', p['berater_id'] as string).single() : Promise.resolve({ data: null }),
+    p['setter_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role').eq('id', p['setter_id'] as string).single() : Promise.resolve({ data: null }),
   ])
 
   // Compute financial summary
@@ -53,6 +55,19 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
   const totalBudgetExpense = liqEvents.filter(e => e['direction'] === 'expense').reduce((s, e) => s + Number(e['budget_amount'] ?? 0), 0)
   const totalActualIncome = liqEvents.filter(e => e['direction'] === 'income').reduce((s, e) => s + Number(e['actual_amount'] ?? 0), 0)
   const totalActualExpense = liqEvents.filter(e => e['direction'] === 'expense').reduce((s, e) => s + Number(e['actual_amount'] ?? 0), 0)
+  const hasFinancialData = liqEvents.length > 0
+
+  // Resolve berater / setter names
+  const berater = beraterRes.data as Record<string, unknown> | null
+  const setter = setterRes.data as Record<string, unknown> | null
+  const beraterName = berater ? `${berater['first_name'] ?? ''} ${berater['last_name'] ?? ''}`.trim() : null
+  const setterName = setter ? `${setter['first_name'] ?? ''} ${setter['last_name'] ?? ''}`.trim() : null
+
+  // Offer data
+  const offerData = offerRes.data as Record<string, unknown> | null
+  const offerAmount = offerData ? Number(offerData['amount_chf'] ?? 0) : 0
+  const projectValue = Number(p['project_value'] ?? 0) || offerAmount
+  const offerStatus = offerData ? (offerData['status'] as string) : null
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
@@ -72,8 +87,8 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
           ← Zurück zu {typeof sp['name'] === 'string' ? sp['name'] : 'Prozess'}
         </Link>
       ) : (
-        <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-          ← Zurück zum Prozesshaus
+        <Link href="/projects" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+          ← Zurück zur Projektübersicht
         </Link>
       )}
 
@@ -105,39 +120,62 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
           }`}>
             {p['status'] as string}
           </span>
-          {(p['project_value'] as number | null) && (
+          {projectValue > 0 && (
             <span className="text-lg font-bold text-gray-900">
-              CHF {Number(p['project_value']).toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              CHF {projectValue.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </span>
           )}
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500">Budget Einnahmen</p>
-          <p className="text-lg font-bold text-green-700">CHF {totalBudgetIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+      {/* Summary cards — show integration data when no financial events exist */}
+      {hasFinancialData ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Budget Einnahmen</p>
+            <p className="text-lg font-bold text-green-700">CHF {totalBudgetIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Budget Ausgaben</p>
+            <p className="text-lg font-bold text-red-600">CHF {totalBudgetExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Ist Einnahmen</p>
+            <p className="text-lg font-bold text-green-700">CHF {totalActualIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Ist Ausgaben</p>
+            <p className="text-lg font-bold text-red-600">CHF {totalActualExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+          </div>
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500">Budget Ausgaben</p>
-          <p className="text-lg font-bold text-red-600">CHF {totalBudgetExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Angebotswert</p>
+            <p className="text-lg font-bold text-gray-900">{offerAmount > 0 ? `CHF ${offerAmount.toLocaleString('de-CH', { minimumFractionDigits: 0 })}` : '—'}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Angebotsstatus</p>
+            <p className="text-lg font-bold text-gray-900">{offerStatus === 'won' ? '✓ Gewonnen' : offerStatus === 'sent' ? '📤 Versendet' : offerStatus === 'draft' ? '📝 Entwurf' : offerStatus === 'lost' ? '✗ Verloren' : offerStatus ?? '—'}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Berater</p>
+            <p className="text-base font-semibold text-gray-900 truncate">{beraterName || '—'}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs text-gray-500">Setter</p>
+            <p className="text-base font-semibold text-gray-900 truncate">{setterName || '—'}</p>
+          </div>
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500">Ist Einnahmen</p>
-          <p className="text-lg font-bold text-green-700">CHF {totalActualIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500">Ist Ausgaben</p>
-          <p className="text-lg font-bold text-red-600">CHF {totalActualExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
-        </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <ProjectDetailTabs
         project={project as Record<string, unknown>}
         lead={leadRes.data as Record<string, unknown> | null}
         offer={offerRes.data as Record<string, unknown> | null}
+        berater={berater}
+        setter={setter}
         phaseHistory={(phaseHistoryRes.data ?? []) as Array<Record<string, unknown>>}
         processInstances={(processInstancesRes.data ?? []) as Array<Record<string, unknown>>}
         liqEvents={liqEvents}
