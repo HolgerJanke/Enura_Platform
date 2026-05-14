@@ -1,12 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/cron/step-kpi-snapshot",
-      "schedule": "0 2 * * *"
+      "path": "/api/cron/kpi-snapshots",
+      "schedule": "0 5 * * *"
     },
     {
-      "path": "/api/cron/kpi-snapshots",
+      "path": "/api/cron/anomaly-detection",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/daily-reports",
+      "schedule": "0 7 * * *"
     }
   ]
 }
