@@ -56,7 +56,12 @@ export type ConnectorType =
   | 'google_calendar'
   | 'leadnotes'
   | 'whatsapp'
-  | 'gmail';
+  | 'gmail'
+  | 'crm'
+  | 'telephony'
+  | 'accounting'
+  | 'calendar'
+  | 'leads';
 
 export type ConnectorStatus = 'active' | 'paused' | 'error' | 'disconnected';
 
