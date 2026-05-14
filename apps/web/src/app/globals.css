@@ -4,8 +4,11 @@
 
 :root {
   --brand-primary: #1A56DB;
+  --brand-primary-rgb: 26 86 219;
   --brand-secondary: #1A1A1A;
+  --brand-secondary-rgb: 26 26 26;
   --brand-accent: #14B8A6;
+  --brand-accent-rgb: 20 184 166;
   --brand-background: #F5F6F8;
   --brand-surface: #FFFFFF;
   --brand-text-primary: #111827;

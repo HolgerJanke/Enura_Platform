@@ -86,6 +86,27 @@ function mapOfferStatus(raw: string | null | undefined): string {
   return OFFER_STATUS_MAP[raw.toLowerCase()] ?? 'draft'
 }
 
+/**
+ * Derive offer status from both `state` and `type` fields.
+ * Reonic v2 h360/offers returns:
+ *   state: "Open" | "Won" | "Lost"
+ *   type:  "request" | "offer" | "installation"
+ *
+ * Mapping:
+ *   Won (any type)           → won
+ *   Lost (any type)          → lost
+ *   Open + offer/installation → sent  (already quoted)
+ *   Open + request           → draft (not yet quoted)
+ */
+function deriveOfferStatus(state: string | null | undefined, type: string | null | undefined): string {
+  const s = (state ?? '').toLowerCase()
+  const t = (type ?? '').toLowerCase()
+  if (s === 'won' || s === 'gewonnen') return 'won'
+  if (s === 'lost' || s === 'verloren') return 'lost'
+  if (t === 'offer' || t === 'installation') return 'sent'
+  return mapOfferStatus(s)
+}
+
 function mapRoleType(raw: string | null | undefined): string {
   if (!raw) return 'other'
   return ROLE_TYPE_MAP[raw.toLowerCase()] ?? raw.toLowerCase()
@@ -201,9 +222,7 @@ export function normaliseOffer(
   const contactExtId = offer.customer?.id ?? offer.contactId ?? offer.lead_id ?? null
   const leadId = contactExtId ? (leadMap.get(contactExtId) ?? null) : null
 
-  // Status: v2 uses `state` field (Open, Won, Lost), fallback to `status`
-  const statusRaw = offer.state ?? offer.status
-
+  // Status: derive from both `state` (Open/Won/Lost) and `type` (request/offer/installation)
   return {
     company_id:     companyId,
     external_id:    offer.id,
@@ -212,7 +231,7 @@ export function normaliseOffer(
     title,
     description:    refNr ? `Ref: ${refNr}` : null,
     amount_chf:     amount,
-    status:         mapOfferStatus(statusRaw),
+    status:         deriveOfferStatus(offer.state, offer.type),
     created_at:     createdAt,
     updated_at:     updatedAt,
   }

@@ -164,21 +164,38 @@ export default async function AnalyticsPage() {
         <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-base font-semibold text-brand-text-primary mb-4">Angebote pro Monat</h2>
           {sortedMonths.length > 0 ? (
-            <div className="flex items-end gap-3 h-40">
-              {sortedMonths.map(([month, count]) => {
-                const monthKey = month.split('-')[1] ?? '01'
-                const heightPct = (count / maxMonthCount) * 100
-                return (
-                  <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-[11px] font-medium text-brand-text-primary">{count}</span>
-                    <div
-                      className="w-full rounded-t-md bg-brand-primary/80"
-                      style={{ height: `${Math.max(heightPct, 4)}%` }}
-                    />
-                    <span className="text-[10px] text-brand-text-secondary">{monthNames[monthKey] ?? monthKey}</span>
+            <div className="relative">
+              {/* Y-axis grid lines */}
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none" style={{ bottom: '24px' }}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center w-full">
+                    <span className="text-[10px] text-gray-400 w-8 text-right pr-2 shrink-0">
+                      {Math.round(maxMonthCount * (1 - i / 3))}
+                    </span>
+                    <div className="flex-1 border-t border-gray-100" />
                   </div>
-                )
-              })}
+                ))}
+              </div>
+              {/* Bars */}
+              <div className="flex items-end gap-1.5 pl-10" style={{ height: '200px', paddingBottom: '24px' }}>
+                {sortedMonths.map(([month, count]) => {
+                  const monthKey = month.split('-')[1] ?? '01'
+                  const heightPct = (count / maxMonthCount) * 100
+                  return (
+                    <div key={month} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                      {/* Tooltip on hover */}
+                      <div className="absolute -top-6 hidden group-hover:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
+                        {count} Angebote
+                      </div>
+                      <div
+                        className="w-full rounded-t-md bg-brand-primary hover:bg-brand-primary/80 transition-colors cursor-default"
+                        style={{ height: `${Math.max(heightPct, 3)}%`, minHeight: count > 0 ? '4px' : '0' }}
+                      />
+                      <span className="text-[10px] text-brand-text-secondary mt-1.5 font-medium">{monthNames[monthKey] ?? monthKey}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           ) : (
             <p className="text-sm text-brand-text-secondary">Keine Daten vorhanden.</p>
@@ -188,21 +205,28 @@ export default async function AnalyticsPage() {
         {/* Pipeline Funnel */}
         <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-base font-semibold text-brand-text-primary mb-4">Pipeline-Funnel</h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {phaseCounts.map((phase) => {
               const widthPct = (phase.count / maxPhaseCount) * 100
+              const colorClass = phase.key === 'won'
+                ? 'bg-emerald-500'
+                : phase.key === 'lost'
+                  ? 'bg-red-400'
+                  : phase.key === 'sent'
+                    ? 'bg-amber-400'
+                    : 'bg-brand-primary'
               return (
-                <div key={phase.key} className="flex items-center gap-3">
-                  <span className="w-20 text-xs text-brand-text-secondary text-right shrink-0">{phase.label}</span>
-                  <div className="flex-1 h-7 bg-gray-100 rounded-md overflow-hidden">
+                <div key={phase.key}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-brand-text-secondary">{phase.label}</span>
+                    <span className="text-sm font-bold text-brand-text-primary">{phase.count.toLocaleString('de-CH')}</span>
+                  </div>
+                  <div className="h-8 bg-gray-100 rounded-lg overflow-hidden">
                     <div
-                      className={`h-full rounded-md transition-all ${
-                        phase.key === 'won' ? 'bg-green-500' : phase.key === 'lost' ? 'bg-red-400' : 'bg-brand-primary/70'
-                      }`}
-                      style={{ width: `${Math.max(widthPct, 2)}%` }}
+                      className={`h-full rounded-lg transition-all ${colorClass}`}
+                      style={{ width: `${Math.max(widthPct, phase.count > 0 ? 3 : 0)}%` }}
                     />
                   </div>
-                  <span className="text-sm font-semibold text-brand-text-primary w-10 text-right">{phase.count}</span>
                 </div>
               )
             })}
