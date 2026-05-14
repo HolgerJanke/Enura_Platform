@@ -105,14 +105,17 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const db = getDataAccess()
 
   // Parallel: paginated leads + counts + team members
-  const [result, totalLeads, openLeads, contactedLeads, qualifiedLeads, teamMembers] = await Promise.all([
+  const [result, totalLeads, contactedLeads, qualifiedLeads, wonLeads, lostLeads, teamMembers] = await Promise.all([
     db.leads.findPaginated(session.companyId, { page, pageSize }),
     db.leads.count(session.companyId),
-    db.leads.count(session.companyId, { status: 'new' }),
     db.leads.count(session.companyId, { status: 'contacted' }),
     db.leads.count(session.companyId, { status: 'qualified' }),
+    db.leads.count(session.companyId, { status: 'won' }),
+    db.leads.count(session.companyId, { status: 'lost' }),
     db.teamMembers.findByCompanyId(session.companyId),
   ])
+  // Active pipeline leads = total minus terminal states (won, lost)
+  const openLeads = totalLeads - wonLeads - lostLeads
 
   const { data: leads, totalPages } = result
   const memberMap = new Map(teamMembers.map((m: TeamMemberRow) => [m.id, m]))
@@ -131,7 +134,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Offene Leads', value: openLeads, color: '--brand-kpi-1' },
-          { label: 'Im Follow-up', value: contactedLeads, color: '--brand-kpi-2' },
+          { label: 'Kontaktiert', value: contactedLeads, color: '--brand-kpi-2' },
           { label: 'Qualifiziert', value: qualifiedLeads, color: '--brand-kpi-3' },
           { label: 'Total Leads', value: totalLeads, color: '--brand-kpi-1' },
         ].map((kpi) => (
