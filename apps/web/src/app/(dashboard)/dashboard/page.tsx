@@ -48,7 +48,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const [
     connectors,
     recentLeadsResult,
-    openLeads,
+    totalLeads,
+    wonLeadsCount,
+    lostLeadsCount,
     pipelineTotal,
     wonCount,
     draftCount,
@@ -59,6 +61,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     db.connectors.findByCompanyId(cid),
     db.leads.findPaginated(cid, { page: 1, pageSize: 5 }),
     db.leads.count(cid),
+    db.leads.count(cid, { status: 'won' }),
+    db.leads.count(cid, { status: 'lost' }),
     db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
     db.offers.count(cid, { status: 'won' }),
     db.offers.count(cid, { status: 'draft' }),
@@ -66,6 +70,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     db.offers.count(cid, { status: 'lost' }),
     db.offers.count(cid, { status: 'expired' }),
   ])
+
+  // Open leads = total minus terminal states (won, lost)
+  const openLeads = totalLeads - wonLeadsCount - lostLeadsCount
 
   const activeOffers = draftCount + sentCount
 

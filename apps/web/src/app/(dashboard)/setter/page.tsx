@@ -29,13 +29,18 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
   const serviceDb = createSupabaseServiceClient()
   const { data: setterMembers } = await serviceDb
     .from('team_members')
-    .select('id, display_name')
+    .select('id, first_name, last_name, display_name')
     .eq('company_id', session.companyId)
     .eq('is_active', true)
-    .in('role_type', ['setter', 'admin'])
-    .order('display_name')
+    .in('role_type', ['setter', 'berater', 'admin', 'teamleiter'])
+    .order('first_name')
 
-  const setters = (setterMembers ?? []) as Array<{ id: string; display_name: string }>
+  const setters = (setterMembers ?? []).map((m: Record<string, unknown>) => ({
+    id: m.id as string,
+    display_name: (m.display_name as string)
+      || `${(m.first_name as string) ?? ''} ${(m.last_name as string) ?? ''}`.trim()
+      || (m.id as string).slice(0, 8),
+  }))
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
@@ -305,8 +310,12 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
                   <div key={date} className="flex-1 flex flex-col items-center gap-1">
                     <span className="text-[11px] font-medium text-brand-text-primary">{count > 0 ? count : ''}</span>
                     <div
-                      className="w-full rounded-t-md bg-brand-primary/80"
-                      style={{ height: `${Math.max(heightPct, count > 0 ? 8 : 2)}%` }}
+                      className="w-full rounded-t-md"
+                      style={{
+                        height: `${Math.max(heightPct, count > 0 ? 8 : 2)}%`,
+                        backgroundColor: '#1A56DB',
+                        opacity: 0.8,
+                      }}
                     />
                     <span className="text-[10px] text-brand-text-secondary">{dayNames[d.getDay()] ?? ''}</span>
                     <span className="text-[9px] text-gray-400">{d.getDate()}.{d.getMonth() + 1}</span>

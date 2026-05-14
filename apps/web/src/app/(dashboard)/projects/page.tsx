@@ -185,15 +185,15 @@ export default async function ProjectsPage() {
         </div>
       </div>
 
-      {/* Kanban board */}
-      <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
+      {/* Kanban board — full width */}
+      <div className="rounded-xl bg-white p-4 shadow-brand-sm border border-gray-100 overflow-hidden">
         {hasProjects ? (
           /* Phase-based Kanban from projects table */
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="grid gap-3 overflow-x-auto pb-2" style={{ gridTemplateColumns: `repeat(${sortedPhases.length}, minmax(200px, 1fr))` }}>
             {sortedPhases.map((phase) => {
               const phaseProjects = projectsByPhase.get(phase.id) ?? []
               return (
-                <div key={phase.id} className="flex-shrink-0 w-52">
+                <div key={phase.id} className="min-w-0">
                   <div className="mb-3">
                     <div
                       className="h-1 rounded-full mb-2"
@@ -245,12 +245,12 @@ export default async function ProjectsPage() {
             })}
           </div>
         ) : (
-          /* Offer-based pipeline Kanban */
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          /* Offer-based pipeline Kanban — full width */
+          <div className="grid gap-3 overflow-x-auto pb-2" style={{ gridTemplateColumns: `repeat(${OFFER_PIPELINE_PHASES.length}, minmax(200px, 1fr))` }}>
             {OFFER_PIPELINE_PHASES.map((phase) => {
               const phaseOffers = offersByStatus.get(phase.key) ?? []
               return (
-                <div key={phase.key} className="flex-shrink-0 w-56">
+                <div key={phase.key} className="min-w-0">
                   <div className="mb-3">
                     <div
                       className="h-1 rounded-full mb-2"
