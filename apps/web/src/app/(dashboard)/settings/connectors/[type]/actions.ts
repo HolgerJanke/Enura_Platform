@@ -171,6 +171,45 @@ export async function triggerSyncAction(
         }
         return { success: true }
       }
+      case 'reonic': {
+        const { syncReonic, writeSyncResult } = await import('@/lib/connectors/reonic-sync')
+        const result = await syncReonic(
+          companyId,
+          c['credentials'] as Record<string, unknown>,
+          c['last_synced_at'] as string | null,
+        )
+        await writeSyncResult(connectorId, companyId, startedAt, result)
+        if (!result.success) {
+          return { error: `Sync fehlgeschlagen: ${result.errors[0]?.message ?? 'Unbekannter Fehler'}` }
+        }
+        return { success: true }
+      }
+      case '3cx': {
+        const { syncThreeCX, writeSyncResult } = await import('@/lib/connectors/threecx-sync')
+        const result = await syncThreeCX(
+          companyId,
+          c['credentials'] as Record<string, unknown>,
+          c['last_synced_at'] as string | null,
+        )
+        await writeSyncResult(connectorId, companyId, startedAt, result)
+        if (!result.success) {
+          return { error: `Sync fehlgeschlagen: ${result.errors[0]?.message ?? 'Unbekannter Fehler'}` }
+        }
+        return { success: true }
+      }
+      case 'leadnotes': {
+        const { syncLeadnotes, writeSyncResult } = await import('@/lib/connectors/leadnotes-sync')
+        const result = await syncLeadnotes(
+          companyId,
+          c['credentials'] as Record<string, unknown>,
+          c['last_synced_at'] as string | null,
+        )
+        await writeSyncResult(connectorId, companyId, startedAt, result)
+        if (!result.success) {
+          return { error: `Sync fehlgeschlagen: ${result.errors[0]?.message ?? 'Unbekannter Fehler'}` }
+        }
+        return { success: true }
+      }
       default:
         return { error: `Sync für Typ "${type}" noch nicht implementiert.` }
     }

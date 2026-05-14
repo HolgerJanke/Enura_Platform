@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { syncBexio, writeSyncResult } from '@/lib/connectors/bexio-sync'
+import { syncReonic, writeSyncResult as writeReonicResult } from '@/lib/connectors/reonic-sync'
+import { syncThreeCX, writeSyncResult as writeThreeCXResult } from '@/lib/connectors/threecx-sync'
+import { syncLeadnotes, writeSyncResult as writeLeadnotesResult } from '@/lib/connectors/leadnotes-sync'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -61,6 +64,39 @@ export async function GET(request: NextRequest) {
             connector['last_synced_at'] as string | null,
           )
           await writeSyncResult(connectorId, companyId, startedAt, result)
+          results.push({ type, companyId, success: result.success, records: result.recordsWritten, duration: result.durationMs })
+          synced++
+          break
+        }
+        case 'reonic': {
+          const result = await syncReonic(
+            companyId,
+            connector['credentials'] as Row,
+            connector['last_synced_at'] as string | null,
+          )
+          await writeReonicResult(connectorId, companyId, startedAt, result)
+          results.push({ type, companyId, success: result.success, records: result.recordsWritten, duration: result.durationMs })
+          synced++
+          break
+        }
+        case '3cx': {
+          const result = await syncThreeCX(
+            companyId,
+            connector['credentials'] as Row,
+            connector['last_synced_at'] as string | null,
+          )
+          await writeThreeCXResult(connectorId, companyId, startedAt, result)
+          results.push({ type, companyId, success: result.success, records: result.recordsWritten, duration: result.durationMs })
+          synced++
+          break
+        }
+        case 'leadnotes': {
+          const result = await syncLeadnotes(
+            companyId,
+            connector['credentials'] as Row,
+            connector['last_synced_at'] as string | null,
+          )
+          await writeLeadnotesResult(connectorId, companyId, startedAt, result)
           results.push({ type, companyId, success: result.success, records: result.recordsWritten, duration: result.durationMs })
           synced++
           break
