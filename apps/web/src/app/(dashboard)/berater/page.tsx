@@ -248,8 +248,8 @@ export default async function BeraterPage({ searchParams }: { searchParams: Prom
                   <div key={month} className="flex-1 flex flex-col items-center gap-1">
                     <span className="text-[10px] font-medium text-brand-text-primary">{revenueK}</span>
                     <div
-                      className="w-full rounded-t-md bg-green-500/80"
-                      style={{ height: `${Math.max(heightPct, 4)}%` }}
+                      className="w-full rounded-t-md"
+                      style={{ height: `${Math.max(heightPct, 4)}%`, backgroundColor: '#10B981', opacity: 0.8 }}
                       title={`${monthNames[monthKey]}: CHF ${Math.round(revenue).toLocaleString('de-CH')} (${wonCountForMonth} Deals)`}
                     />
                     <span className="text-[10px] text-brand-text-secondary">{monthNames[monthKey] ?? monthKey}</span>
@@ -269,9 +269,9 @@ export default async function BeraterPage({ searchParams }: { searchParams: Prom
           </h2>
           <div className="space-y-3">
             {[
-              { label: 'Entwurf', count: draft, color: 'bg-brand-primary/70' },
-              { label: 'Gewonnen', count: won, color: 'bg-green-500' },
-              { label: 'Verloren', count: lost, color: 'bg-red-400' },
+              { label: 'Entwurf', count: draft, barColor: '#1A56DB' },
+              { label: 'Gewonnen', count: won, barColor: '#10B981' },
+              { label: 'Verloren', count: lost, barColor: '#F87171' },
             ].map((phase) => {
               const maxCount = Math.max(draft, won, lost, 1)
               const widthPct = (phase.count / maxCount) * 100
@@ -280,8 +280,8 @@ export default async function BeraterPage({ searchParams }: { searchParams: Prom
                   <span className="w-20 text-xs text-brand-text-secondary text-right shrink-0">{phase.label}</span>
                   <div className="flex-1 h-7 bg-gray-100 rounded-md overflow-hidden">
                     <div
-                      className={`h-full rounded-md transition-all ${phase.color}`}
-                      style={{ width: `${Math.max(widthPct, 2)}%` }}
+                      className="h-full rounded-md transition-all"
+                      style={{ width: `${Math.max(widthPct, 2)}%`, backgroundColor: phase.barColor, opacity: 0.85 }}
                     />
                   </div>
                   <span className="text-sm font-semibold text-brand-text-primary w-10 text-right">{phase.count}</span>

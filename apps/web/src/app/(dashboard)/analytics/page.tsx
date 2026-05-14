@@ -126,6 +126,30 @@ export default async function AnalyticsPage() {
   const sortedMonths = Object.entries(monthCounts).sort((a, b) => a[0].localeCompare(b[0])).slice(-12)
   const maxMonthCount = Math.max(...sortedMonths.map(([, v]) => v), 1)
 
+  // Revenue trend from won offers — monthly
+  const { data: wonOfferDates } = await serviceDb
+    .from('offers')
+    .select('amount_chf, created_at')
+    .eq('company_id', cid)
+    .eq('status', 'won')
+
+  const monthlyRevenue: Record<string, number> = {}
+  for (const o of wonOfferDates ?? []) {
+    const row = o as { amount_chf: number; created_at: string }
+    const d = new Date(row.created_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + (Number(row.amount_chf) || 0)
+  }
+  const sortedRevenueMonths = Object.entries(monthlyRevenue)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-12)
+  const maxMonthlyRevenue = Math.max(...sortedRevenueMonths.map(([, v]) => v), 1)
+
+  // Total revenue
+  const totalWonRevenue = (wonOfferDates ?? []).reduce(
+    (sum, o) => sum + (Number((o as { amount_chf: number }).amount_chf) || 0), 0
+  )
+
   // Pipeline funnel from counts
   const phaseCounts = [
     { label: 'Entwurf', key: 'draft', count: draftCount },
@@ -252,6 +276,85 @@ export default async function AnalyticsPage() {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Umsatz Trend Chart */}
+      <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-brand-text-primary">Umsatz-Trend (gewonnene Angebote)</h2>
+          <span className="text-sm font-bold text-green-600">
+            {totalWonRevenue > 1_000_000
+              ? `CHF ${(totalWonRevenue / 1_000_000).toFixed(1)}M`
+              : totalWonRevenue > 0
+                ? `CHF ${Math.round(totalWonRevenue).toLocaleString('de-CH')}`
+                : 'CHF 0'}
+          </span>
+        </div>
+        {sortedRevenueMonths.length > 0 ? (
+          <div className="relative" style={{ height: '220px' }}>
+            {/* Y-axis labels */}
+            <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none w-12">
+              {[...Array(5)].map((_, i) => {
+                const val = maxMonthlyRevenue * (1 - i / 4)
+                const label = val >= 1_000_000
+                  ? `${(val / 1_000_000).toFixed(1)}M`
+                  : val >= 1000
+                    ? `${Math.round(val / 1000)}k`
+                    : Math.round(val).toString()
+                return (
+                  <span key={i} className="text-[10px] text-gray-400 text-right pr-1 leading-none">
+                    {label}
+                  </span>
+                )
+              })}
+            </div>
+            {/* Grid lines */}
+            <div className="absolute left-14 right-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="border-t border-gray-100 w-full" />
+              ))}
+            </div>
+            {/* Bars */}
+            <div className="absolute left-14 right-0 top-0 bottom-6 flex items-end gap-1">
+              {sortedRevenueMonths.map(([month, revenue]) => {
+                const monthKey = month.split('-')[1] ?? '01'
+                const heightPct = (revenue / maxMonthlyRevenue) * 100
+                const revenueLabel = revenue >= 1000
+                  ? `${Math.round(revenue / 1000)}k`
+                  : Math.round(revenue).toString()
+                return (
+                  <div key={month} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
+                      CHF {Math.round(revenue).toLocaleString('de-CH')}
+                    </div>
+                    <div
+                      className="w-full rounded-t-md cursor-default"
+                      style={{
+                        height: `${Math.max(heightPct, revenue > 0 ? 3 : 0)}%`,
+                        minHeight: revenue > 0 ? '4px' : '0',
+                        backgroundColor: '#10B981',
+                        opacity: 0.85,
+                      }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            {/* Month labels */}
+            <div className="absolute left-14 right-0 bottom-0 flex gap-1">
+              {sortedRevenueMonths.map(([month]) => {
+                const monthKey = month.split('-')[1] ?? '01'
+                return (
+                  <div key={month} className="flex-1 text-center">
+                    <span className="text-[10px] text-brand-text-secondary font-medium">{monthNames[monthKey] ?? monthKey}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-brand-text-secondary">Keine gewonnenen Angebote vorhanden.</p>
+        )}
       </div>
 
       {/* Top Sellers + Quick Links */}

@@ -5,6 +5,159 @@ import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { FinanceCashflowChart } from './finance-chart'
 
+// ---------------------------------------------------------------------------
+// Offer-based revenue overview when no Bexio data is available
+// ---------------------------------------------------------------------------
+async function OfferRevenueOverview({ companyId }: { companyId: string }) {
+  const serviceDb = createSupabaseServiceClient()
+
+  // Fetch won offers with amount and date
+  const { data: wonOffers } = await serviceDb
+    .from('offers')
+    .select('amount_chf, created_at, status')
+    .eq('company_id', companyId)
+    .eq('status', 'won')
+    .order('created_at', { ascending: true })
+
+  const { count: totalOfferCount } = await serviceDb
+    .from('offers')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', companyId)
+
+  const { count: openOfferCount } = await serviceDb
+    .from('offers')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', companyId)
+    .not('status', 'in', '("won","lost","expired")')
+
+  // Pipeline value
+  const { data: pipelineRows } = await serviceDb
+    .from('offers')
+    .select('amount_chf')
+    .eq('company_id', companyId)
+    .not('status', 'in', '("won","lost","expired")')
+
+  const pipelineValue = (pipelineRows ?? []).reduce(
+    (sum, r: Record<string, unknown>) => sum + (Number(r.amount_chf) || 0), 0
+  )
+
+  const offers = (wonOffers ?? []) as Array<{ amount_chf: number; created_at: string }>
+  const totalRevenue = offers.reduce((sum, o) => sum + (Number(o.amount_chf) || 0), 0)
+
+  // Monthly revenue
+  const monthlyRevenue: Record<string, number> = {}
+  for (const o of offers) {
+    const d = new Date(o.created_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + (Number(o.amount_chf) || 0)
+  }
+  const sortedMonths = Object.entries(monthlyRevenue)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-12)
+  const maxMonthRev = Math.max(...sortedMonths.map(([, v]) => v), 1)
+
+  const monthNames: Record<string, string> = {
+    '01': 'Jan', '02': 'Feb', '03': 'Mär', '04': 'Apr', '05': 'Mai', '06': 'Jun',
+    '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Okt', '11': 'Nov', '12': 'Dez',
+  }
+
+  function fmtCHF(n: number): string {
+    return `CHF ${n.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  }
+
+  return (
+    <>
+      {/* Info banner */}
+      <div className="rounded-brand bg-blue-50 border border-blue-200 p-4 mb-6">
+        <p className="text-sm font-medium text-blue-800">Finanzdaten aus Angeboten</p>
+        <p className="text-xs text-blue-700 mt-1">
+          Bexio ist noch nicht verbunden. Diese Übersicht basiert auf gewonnenen Angeboten.
+        </p>
+        <Link href="/settings/connectors/bexio" className="inline-block mt-2 text-xs font-medium text-blue-600 hover:underline">
+          Bexio verbinden für vollständige Finanzdaten →
+        </Link>
+      </div>
+
+      {/* Offer-based KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
+          <p className="text-xs text-brand-text-secondary">Gewonnener Umsatz</p>
+          <p className="text-xl font-bold text-green-700 mt-1">{fmtCHF(totalRevenue)}</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{offers.length} Abschlüsse</p>
+        </div>
+        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
+          <p className="text-xs text-brand-text-secondary">Pipeline-Wert</p>
+          <p className="text-xl font-bold text-blue-700 mt-1">{fmtCHF(pipelineValue)}</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{openOfferCount ?? 0} offene Angebote</p>
+        </div>
+        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
+          <p className="text-xs text-brand-text-secondary">Angebote Total</p>
+          <p className="text-xl font-bold text-brand-text-primary mt-1">{totalOfferCount ?? 0}</p>
+        </div>
+        <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
+          <p className="text-xs text-brand-text-secondary">Ø pro Abschluss</p>
+          <p className="text-xl font-bold text-brand-text-primary mt-1">
+            {offers.length > 0 ? fmtCHF(Math.round(totalRevenue / offers.length)) : 'CHF 0'}
+          </p>
+        </div>
+      </div>
+
+      {/* Monthly revenue chart */}
+      {sortedMonths.length > 0 && (
+        <div className="bg-brand-surface rounded-brand p-6 border border-gray-200 mb-6">
+          <h2 className="text-lg font-semibold text-brand-text-primary mb-4">Umsatz-Trend (Abschlüsse)</h2>
+          <div className="relative" style={{ height: '200px' }}>
+            {/* Y-axis */}
+            <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none w-12">
+              {[...Array(5)].map((_, i) => {
+                const val = maxMonthRev * (1 - i / 4)
+                const label = val >= 1000 ? `${Math.round(val / 1000)}k` : Math.round(val).toString()
+                return (
+                  <span key={i} className="text-[10px] text-gray-400 text-right pr-1 leading-none">{label}</span>
+                )
+              })}
+            </div>
+            {/* Bars */}
+            <div className="absolute left-14 right-0 top-0 bottom-6 flex items-end gap-1">
+              {sortedMonths.map(([month, revenue]) => {
+                const monthKey = month.split('-')[1] ?? '01'
+                const heightPct = (revenue / maxMonthRev) * 100
+                return (
+                  <div key={month} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
+                      {fmtCHF(Math.round(revenue))}
+                    </div>
+                    <div
+                      className="w-full rounded-t-md cursor-default"
+                      style={{
+                        height: `${Math.max(heightPct, revenue > 0 ? 3 : 0)}%`,
+                        minHeight: revenue > 0 ? '4px' : '0',
+                        backgroundColor: '#10B981',
+                        opacity: 0.85,
+                      }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            {/* Labels */}
+            <div className="absolute left-14 right-0 bottom-0 flex gap-1">
+              {sortedMonths.map(([month]) => {
+                const monthKey = month.split('-')[1] ?? '01'
+                return (
+                  <div key={month} className="flex-1 text-center">
+                    <span className="text-[10px] text-brand-text-secondary font-medium">{monthNames[monthKey] ?? monthKey}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default async function FinancePage() {
   const session = await getSession()
   if (!session?.companyId) return null
@@ -308,15 +461,9 @@ export default async function FinancePage() {
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty state — show offer-based revenue when no Bexio data */}
       {bexioInvoices.length === 0 && incomingInvoices.length === 0 && (
-        <div className="rounded-brand bg-gray-50 border border-gray-200 p-8 text-center">
-          <p className="text-sm text-gray-500 mb-2">Keine Finanzdaten vorhanden.</p>
-          <p className="text-xs text-gray-400">Verbinden Sie Bexio unter Einstellungen → Integrationen, um Rechnungen und Zahlungen zu synchronisieren.</p>
-          <Link href="/settings/connectors/bexio" className="inline-block mt-3 text-xs font-medium text-blue-600 hover:underline">
-            Bexio verbinden →
-          </Link>
-        </div>
+        <OfferRevenueOverview companyId={session.companyId} />
       )}
     </div>
   )

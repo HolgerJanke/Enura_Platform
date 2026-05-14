@@ -10,6 +10,7 @@ import {
   type AnomalyType,
   type AnomalySeverity,
 } from '@enura/types'
+import { AnomalyScanButton } from './scan-button'
 
 // ---------------------------------------------------------------------------
 // Severity badge component
@@ -107,12 +108,17 @@ export default async function AnomaliesPage() {
       </Link>
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-brand-text-primary">
-          Anomalie-Erkennung
-        </h1>
-        <p className="mt-1 text-sm text-brand-text-secondary">
-          Automatisch erkannte Abweichungen und Warnungen für Ihre KPIs und Systeme.
-        </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-brand-text-primary">
+              Anomalie-Erkennung
+            </h1>
+            <p className="mt-1 text-sm text-brand-text-secondary">
+              Automatisch erkannte Abweichungen und Warnungen für Ihre KPIs und Systeme.
+            </p>
+          </div>
+          <AnomalyScanButton />
+        </div>
       </div>
 
       {/* Summary cards */}

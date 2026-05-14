@@ -12,6 +12,9 @@ export type AnomalyType =
   | 'invoice_overdue_spike'
   | 'connector_sync_failure'
   | 'call_quality_drop'
+  | 'offer_win_rate_drop'
+  | 'stalled_projects'
+  | 'revenue_drop'
 
 export type AnomalySeverity = 'critical' | 'warning' | 'info'
 
@@ -42,6 +45,9 @@ export const ANOMALY_TYPE_LABELS: Record<AnomalyType, string> = {
   invoice_overdue_spike: 'Überfällige Rechnungen gestiegen',
   connector_sync_failure: 'Connector-Sync fehlgeschlagen',
   call_quality_drop: 'Anrufqualität gesunken',
+  offer_win_rate_drop: 'Abschlussquote gesunken',
+  stalled_projects: 'Projekte blockiert',
+  revenue_drop: 'Umsatzrückgang',
 }
 
 export const ANOMALY_SEVERITY_LABELS: Record<AnomalySeverity, string> = {
