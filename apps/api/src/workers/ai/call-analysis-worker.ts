@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import { fetchRecordingBuffer } from '../../ai/fetch-recording.js'
-import { transcribeAudio } from '../../ai/transcription.js'
 import { normaliseSwissGerman } from '../../ai/swiss-german-normalise.js'
 import { scrubPII } from '../../ai/pii-scrubber.js'
 import { loadPrompt } from '../../ai/prompts/loader.js'
@@ -106,18 +105,23 @@ export async function processCallAnalysis(
   }
 
   // -----------------------------------------------------------------------
-  // 3. Transcribe with Whisper
+  // 3. Transcribe — prefer Whisper (OpenAI), fall back to Claude audio
   // -----------------------------------------------------------------------
   const filename = storagePath.split('/').pop() ?? 'call.mp3'
 
-  const transcription = await transcribeAudio(audioBuffer, filename, {
-    hints: [
-      'Setter-Call',
-      'Photovoltaik',
-      'Schweiz',
-      'Terminvereinbarung',
-    ],
-  })
+  let transcription: { text: string; language: string; durationMs: number | null }
+
+  if (process.env.OPENAI_API_KEY) {
+    const { transcribeAudio } = await import('../../ai/transcription.js')
+    transcription = await transcribeAudio(audioBuffer, filename, {
+      hints: ['Setter-Call', 'Photovoltaik', 'Schweiz', 'Terminvereinbarung'],
+    })
+    console.info(`[call-analysis] Transcribed with Whisper (${transcription.language})`)
+  } else {
+    const { transcribeWithClaude } = await import('../../ai/transcription-claude.js')
+    transcription = await transcribeWithClaude(audioBuffer, filename)
+    console.info(`[call-analysis] Transcribed with Claude (fallback, no OPENAI_API_KEY)`)
+  }
 
   // -----------------------------------------------------------------------
   // 4. Normalise Swiss German dialect
@@ -212,13 +216,13 @@ export async function processCallAnalysis(
       suggestions: {
         strengths: analysis.strengths,
         improvements: analysis.suggestions,
-        feedback: {
-          script: analysis.feedback_script,
-          objection: analysis.feedback_objection,
-          closing: analysis.feedback_closing,
-          tone: analysis.feedback_tone,
-        },
+        // Flat keys expected by the call-analysis-panel component
+        greeting_feedback: analysis.feedback_script,
+        objection_feedback: analysis.feedback_objection,
+        closing_feedback: analysis.feedback_closing,
+        tone_feedback: analysis.feedback_tone,
         summary: analysis.summary,
+        transcript: anonTranscript,
       },
       model_version: 'claude-sonnet-4-6',
       analyzed_at: new Date().toISOString(),
