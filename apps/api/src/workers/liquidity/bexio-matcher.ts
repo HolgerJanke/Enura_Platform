@@ -126,12 +126,13 @@ export async function matchBexioPayments(
         continue
       }
 
-      // Check date proximity
-      const dateDelta = event.budget_date
-        ? daysDiff(payment.payment_date, event.budget_date)
-        : MAX_DATE_DELTA_DAYS
+      // Check date proximity — NULL budget_date means "no expectation" → neutral score
+      const hasBudgetDate = !!event.budget_date
+      const dateDelta = hasBudgetDate
+        ? daysDiff(payment.payment_date, event.budget_date!)
+        : 0
 
-      if (dateDelta > MAX_DATE_DELTA_DAYS) continue
+      if (hasBudgetDate && dateDelta > MAX_DATE_DELTA_DAYS) continue
 
       const confidence = computeConfidence(amountRatio, dateDelta)
 

@@ -1,7 +1,6 @@
 'use server'
 
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 
@@ -25,7 +24,7 @@ export async function performValidationAction(
   if (step <= 2 && !hasValidate) return { success: false, error: 'Keine Berechtigung zum Prüfen.' }
   if (step === 3 && !hasApprove) return { success: false, error: 'Keine Berechtigung zum Genehmigen.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Insert validation log entry (append-only)
   const { error: valError } = await supabase
@@ -162,7 +161,7 @@ export async function updateInvoiceMatch(
   const session = await getSession()
   if (!session) return { success: false, error: 'Nicht authentifiziert.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { error } = await supabase
     .from('invoices_incoming')
     .update({
@@ -277,7 +276,7 @@ export async function createPaymentRun(
   const hasPlan = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:plan_cashout')
   if (!hasPlan) return { success: false, error: 'Keine Berechtigung.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Fetch invoices with supplier data
   const { data: invoices } = await supabase
@@ -391,7 +390,7 @@ export async function submitPaymentRun(
   const session = await getSession()
   if (!session) return { success: false, error: 'Nicht authentifiziert.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { error } = await supabase
     .from('payment_runs')
     .update({
@@ -417,7 +416,7 @@ export async function approvePaymentRun(
   const hasApprove = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:approve_payment')
   if (!hasApprove) return { success: false, error: 'Keine Berechtigung.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { error } = await supabase
     .from('payment_runs')
     .update({
@@ -442,7 +441,7 @@ export async function rejectPaymentRun(
   const session = await getSession()
   if (!session) return { success: false, error: 'Nicht authentifiziert.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { error } = await supabase
     .from('payment_runs')
     .update({
@@ -523,7 +522,7 @@ export async function requestBankDataChange(
   const hasPermission = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:manage_suppliers')
   if (!hasPermission) return { success: false, error: 'Keine Berechtigung.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Check no pending request exists for this supplier
   const { data: existing } = await supabase
@@ -588,7 +587,7 @@ export async function reviewBankDataChange(
   const hasPermission = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:review_bank_data')
   if (!hasPermission) return { success: false, error: 'Keine Berechtigung fuer Bankdatenpruefung.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Fetch request
   const { data: req } = await supabase
@@ -656,7 +655,7 @@ export async function approveBankDataChange(
   const hasPermission = session.isHoldingAdmin || session.permissions.includes('module:finanzplanung:approve_bank_data')
   if (!hasPermission) return { success: false, error: 'Keine Berechtigung fuer Bankdaten-Genehmigung.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const serviceClient = createSupabaseServiceClient()
 
   // Fetch request
@@ -813,7 +812,7 @@ export async function cancelBankDataChange(
   const session = await getSession()
   if (!session?.companyId) return { success: false, error: 'Nicht authentifiziert.' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const { data: req } = await supabase
     .from('supplier_bank_change_requests')

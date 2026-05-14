@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import Link from 'next/link'
 import type { DailyReportRow } from '@enura/types'
 
@@ -18,6 +17,13 @@ type ReportSection = {
   }>
   open_actions?: string[]
   tomorrow_focus?: string[]
+  // Alternative format: generic sections
+  title?: string
+  date?: string
+  sections?: Array<{
+    title: string
+    items: string[]
+  }>
 }
 
 function formatDate(dateString: string | null): string {
@@ -75,7 +81,7 @@ export default async function ReportDetailPage({
   const session = await getSession()
   if (!session?.companyId) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const { data: report } = await supabase
     .from('daily_reports')
@@ -90,6 +96,9 @@ export default async function ReportDetailPage({
   const sections = typedReport.report_json as unknown as ReportSection
 
   const recipientCount = Array.isArray(typedReport.sent_to) ? typedReport.sent_to.length : 0
+
+  // Check if report uses the generic sections format
+  const hasGenericSections = Array.isArray(sections.sections) && sections.sections.length > 0
 
   return (
     <div className="p-6">
@@ -114,7 +123,7 @@ export default async function ReportDetailPage({
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-brand-text-primary">
-          Tagesbericht
+          {sections.title || 'Tagesbericht'}
         </h1>
         <p className="text-brand-text-secondary mt-1">
           {formatDate(typedReport.report_date)}
@@ -125,8 +134,40 @@ export default async function ReportDetailPage({
         </div>
       </div>
 
-      {/* Executive Summary */}
-      {sections.executive_summary && (
+      {/* Generic sections format */}
+      {hasGenericSections && sections.sections!.map((section, sIdx) => (
+        <SectionCard key={sIdx}>
+          <SectionHeading>{section.title}</SectionHeading>
+          <ul className="space-y-2">
+            {section.items.map((item, idx) => {
+              const isCritical = item.toUpperCase().startsWith('KRITISCH')
+              const isWarning = item.toUpperCase().startsWith('WARNUNG')
+              const isInfo = item.toUpperCase().startsWith('INFO')
+              return (
+                <li key={idx} className="flex items-start gap-2 text-sm text-brand-text-primary">
+                  {isCritical ? (
+                    <svg className="h-4 w-4 mt-0.5 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                  ) : isWarning ? (
+                    <svg className="h-4 w-4 mt-0.5 flex-shrink-0 text-yellow-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                  ) : (
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-text-secondary" aria-hidden="true" />
+                  )}
+                  <span className={isCritical ? 'text-red-700 font-medium' : isWarning ? 'text-yellow-700' : ''}>
+                    {item}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </SectionCard>
+      ))}
+
+      {/* Structured format: Executive Summary */}
+      {!hasGenericSections && sections.executive_summary && (
         <SectionCard>
           <SectionHeading>Zusammenfassung</SectionHeading>
           <p className="text-sm text-brand-text-primary leading-relaxed whitespace-pre-wrap">
@@ -136,29 +177,16 @@ export default async function ReportDetailPage({
       )}
 
       {/* Highlights */}
-      {sections.highlights && sections.highlights.length > 0 && (
+      {!hasGenericSections && sections.highlights && sections.highlights.length > 0 && (
         <SectionCard>
           <SectionHeading>
-            <span
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs text-white"
-              style={{ backgroundColor: 'var(--brand-primary)' }}
-              aria-hidden="true"
-            >
-              +
-            </span>
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs text-white" style={{ backgroundColor: 'var(--brand-primary)' }} aria-hidden="true">+</span>
             Highlights
           </SectionHeading>
           <ul className="space-y-2">
             {sections.highlights.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-brand-text-primary">
-                <svg
-                  className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
+                <svg className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
                 <span>{item}</span>
@@ -169,28 +197,16 @@ export default async function ReportDetailPage({
       )}
 
       {/* Concerns */}
-      {sections.concerns && sections.concerns.length > 0 && (
+      {!hasGenericSections && sections.concerns && sections.concerns.length > 0 && (
         <SectionCard>
           <SectionHeading>
-            <span
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs text-red-700"
-              aria-hidden="true"
-            >
-              !
-            </span>
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs text-red-700" aria-hidden="true">!</span>
             Handlungsbedarf
           </SectionHeading>
           <ul className="space-y-2">
             {sections.concerns.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-brand-text-primary">
-                <svg
-                  className="h-4 w-4 mt-0.5 flex-shrink-0 text-red-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
+                <svg className="h-4 w-4 mt-0.5 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                 </svg>
                 <span>{item}</span>
@@ -201,28 +217,19 @@ export default async function ReportDetailPage({
       )}
 
       {/* Coaching */}
-      {sections.coaching && sections.coaching.length > 0 && (
+      {!hasGenericSections && sections.coaching && sections.coaching.length > 0 && (
         <SectionCard>
           <SectionHeading>Coaching-Hinweise</SectionHeading>
           <div className="space-y-4">
             {sections.coaching.map((entry, idx) => (
-              <div
-                key={idx}
-                className="rounded-brand border border-gray-200 bg-brand-background p-4"
-              >
+              <div key={idx} className="rounded-brand border border-gray-200 bg-brand-background p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium text-brand-text-primary">
-                    {entry.name ?? 'Mitarbeiter'}
-                  </span>
+                  <span className="text-sm font-medium text-brand-text-primary">{entry.name ?? 'Mitarbeiter'}</span>
                   {entry.role && (
-                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-brand-text-secondary">
-                      {entry.role}
-                    </span>
+                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-brand-text-secondary">{entry.role}</span>
                   )}
                 </div>
-                <p className="text-sm text-brand-text-secondary leading-relaxed whitespace-pre-wrap">
-                  {entry.feedback ?? ''}
-                </p>
+                <p className="text-sm text-brand-text-secondary leading-relaxed whitespace-pre-wrap">{entry.feedback ?? ''}</p>
               </div>
             ))}
           </div>
@@ -230,7 +237,7 @@ export default async function ReportDetailPage({
       )}
 
       {/* Open Actions */}
-      {sections.open_actions && sections.open_actions.length > 0 && (
+      {!hasGenericSections && sections.open_actions && sections.open_actions.length > 0 && (
         <SectionCard>
           <SectionHeading>Offene Massnahmen</SectionHeading>
           <ul className="space-y-2">
@@ -245,21 +252,13 @@ export default async function ReportDetailPage({
       )}
 
       {/* Tomorrow Focus */}
-      {sections.tomorrow_focus && sections.tomorrow_focus.length > 0 && (
+      {!hasGenericSections && sections.tomorrow_focus && sections.tomorrow_focus.length > 0 && (
         <SectionCard>
           <SectionHeading>Fokus für morgen</SectionHeading>
           <ul className="space-y-2">
             {sections.tomorrow_focus.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-brand-text-primary">
-                <svg
-                  className="h-4 w-4 mt-0.5 flex-shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  aria-hidden="true"
-                  style={{ color: 'var(--brand-primary)' }}
-                >
+                <svg className="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true" style={{ color: 'var(--brand-primary)' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
                 <span>{item}</span>
@@ -269,8 +268,9 @@ export default async function ReportDetailPage({
         </SectionCard>
       )}
 
-      {/* Empty state if no sections at all */}
-      {!sections.executive_summary &&
+      {/* Empty state */}
+      {!hasGenericSections &&
+        !sections.executive_summary &&
         (!sections.highlights || sections.highlights.length === 0) &&
         (!sections.concerns || sections.concerns.length === 0) &&
         (!sections.coaching || sections.coaching.length === 0) &&

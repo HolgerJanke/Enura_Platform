@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 import { PaymentRunClient } from './payment-run-client'
 
@@ -43,7 +43,7 @@ export default async function PaymentRunDetailPage({ params }: { params: Promise
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const { data: run } = await supabase
     .from('payment_runs')

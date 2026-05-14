@@ -6,8 +6,8 @@ import type {
 } from '../base.js'
 import { ConnectorValidationError } from '../base.js'
 import { ThreeCXApiClient } from './client.js'
-import { ThreeCXCallSchema, ThreeCXExtensionSchema } from './schemas.js'
-import { normaliseCall, normaliseExtension } from './normalise.js'
+import { ThreeCXRecordingSchema, ThreeCXUserSchema } from './schemas.js'
+import { normaliseRecording, normaliseExtension } from './normalise.js'
 import { upsertRecords } from '../upsert.js'
 import { storeRecording } from './recording-storage.js'
 import { createClient } from '@supabase/supabase-js'
@@ -24,38 +24,45 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/**
- * Computes a default start date for the call log query when no
- * previous sync timestamp is available. Defaults to 30 days ago.
- */
 function defaultStartDate(): string {
   const d = new Date()
-  d.setDate(d.getDate() - 30)
+  d.setDate(d.getDate() - 90)
   return d.toISOString()
 }
+
+const PAGE_SIZE = 100
 
 export class ThreeCXConnector implements ConnectorBase {
   readonly type = '3cx'
   readonly label = '3CX Cloud'
-  readonly version = '1.0.0'
+  readonly version = '2.0.0'
 
   async validate(connector: ConnectorConfig): Promise<void> {
     const creds = connector.credentials as Record<string, string>
-    if (!creds['apiKey']) {
+    if (!creds['username']) {
       throw new ConnectorValidationError(
-        'apiKey',
-        'API-Schlüssel ist erforderlich',
+        'username',
+        'Benutzername ist erforderlich',
+      )
+    }
+    if (!creds['password']) {
+      throw new ConnectorValidationError(
+        'password',
+        'Passwort ist erforderlich',
       )
     }
     if (!creds['apiUrl']) {
       throw new ConnectorValidationError(
         'apiUrl',
-        'Basis-URL ist erforderlich',
+        'Basis-URL ist erforderlich (z.B. https://firma.3cx.ch)',
       )
     }
 
-    // Test connection by fetching extensions
-    const client = new ThreeCXApiClient(creds['apiUrl'], creds['apiKey'])
+    const client = new ThreeCXApiClient(
+      creds['apiUrl'],
+      creds['username'],
+      creds['password'],
+    )
     await client.getExtensions()
   }
 
@@ -65,7 +72,11 @@ export class ThreeCXConnector implements ConnectorBase {
   ): Promise<SyncResult> {
     const startTime = Date.now()
     const creds = connector.credentials as Record<string, string>
-    const client = new ThreeCXApiClient(creds['apiUrl']!, creds['apiKey']!)
+    const client = new ThreeCXApiClient(
+      creds['apiUrl']!,
+      creds['username']!,
+      creds['password']!,
+    )
     const db = getServiceClient()
     let fetched = 0
     let written = 0
@@ -73,18 +84,18 @@ export class ThreeCXConnector implements ConnectorBase {
 
     try {
       // -------------------------------------------------------------------
-      // Phase 0: Sync extensions -> team_members
+      // Phase 0: Sync extensions (Users) -> team_members
       // -------------------------------------------------------------------
       const rawExtensions = await client.getExtensions()
       const validExtensions: Record<string, unknown>[] = []
 
       for (const ext of rawExtensions) {
-        const result = ThreeCXExtensionSchema.safeParse(ext)
+        const result = ThreeCXUserSchema.safeParse(ext)
         if (!result.success) {
           errors.push({
             code: 'VALIDATION',
-            message: `Extension validation failed: ${result.error.message}`,
-            context: { entity: 'extension', raw: ext },
+            message: `User validation failed: ${result.error.message}`,
+            context: { entity: 'user', raw: ext },
           })
           continue
         }
@@ -101,9 +112,6 @@ export class ThreeCXConnector implements ConnectorBase {
       errors.push(...extResult.errors)
 
       // Build extension-number -> team_member.id map
-      // We need to map 3CX extension numbers to team member IDs.
-      // The external_id stored is `3cx-ext-{id}`, but calls reference by extension number.
-      // So we also need a mapping from extension number -> member id.
       const { data: members } = await db
         .from('team_members')
         .select('id, external_id, phone')
@@ -112,60 +120,56 @@ export class ThreeCXConnector implements ConnectorBase {
       const extensionMemberMap = new Map<string, string>()
       for (const m of members ?? []) {
         const member = m as { id: string; external_id: string | null; phone: string | null }
-        // Map by phone (which stores the extension number for 3CX members)
         if (member.phone) {
           extensionMemberMap.set(member.phone, member.id)
         }
-        // Also map by external_id for direct lookups
         if (member.external_id) {
           extensionMemberMap.set(member.external_id, member.id)
         }
       }
 
       // -------------------------------------------------------------------
-      // Phase 1: Sync call log metadata (paginated)
+      // Phase 1: Sync recordings -> calls (paginated via OData)
       // -------------------------------------------------------------------
       const syncSince = connector.last_synced_at ?? defaultStartDate()
-      let page = 1
+      let skip = 0
 
-      // Track calls that have recordings for Phase 2
-      const callsWithRecordings: Array<{
+      const recordingsToStore: Array<{
         externalId: string
-        recordingFile: string
+        recId: string
       }> = []
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const resp = await client.getCallLog({
-          page,
-          perPage: 100,
+        const resp = await client.getRecordings({
+          top: PAGE_SIZE,
+          skip,
           startDate: syncSince,
         })
 
         const validCalls: Record<string, unknown>[] = []
-        for (const c of resp.data) {
-          const result = ThreeCXCallSchema.safeParse(c)
+        for (const c of resp.value) {
+          const result = ThreeCXRecordingSchema.safeParse(c)
           if (!result.success) {
             errors.push({
               code: 'VALIDATION',
-              message: `Call validation failed: ${result.error.message}`,
-              context: { entity: 'call', raw: c },
+              message: `Recording validation failed: ${result.error.message}`,
+              context: { entity: 'recording', raw: c },
             })
             continue
           }
 
-          const normalised = normaliseCall(
+          const normalised = normaliseRecording(
             result.data,
             companyId,
             extensionMemberMap,
           )
           validCalls.push(normalised)
 
-          // Track calls with recording files for Phase 2
-          if (result.data.recording_file) {
-            callsWithRecordings.push({
-              externalId: result.data.id,
-              recordingFile: result.data.recording_file,
+          if (result.data.RecordingUrl) {
+            recordingsToStore.push({
+              externalId: `3cx-rec-${result.data.Id}`,
+              recId: result.data.Id,
             })
           }
         }
@@ -179,15 +183,14 @@ export class ThreeCXConnector implements ConnectorBase {
         written += callsResult.written
         errors.push(...callsResult.errors)
 
-        if (page >= resp.totalPages) break
-        page++
+        if (resp.value.length < PAGE_SIZE || skip + PAGE_SIZE >= resp.totalCount) break
+        skip += PAGE_SIZE
         await delay(200)
       }
 
       // -------------------------------------------------------------------
-      // Phase 2: Download and store recordings for calls that need them
+      // Phase 2: Download and store recordings to Supabase Storage
       // -------------------------------------------------------------------
-      // Find calls that have a recording file but no recording_url stored yet
       const { data: callsNeedingRecordings } = await db
         .from('calls')
         .select('id, external_id, started_at')
@@ -201,7 +204,6 @@ export class ThreeCXConnector implements ConnectorBase {
         ),
       )
 
-      // Build a map of external_id -> internal call data for updating
       const callInternalMap = new Map<
         string,
         { id: string; started_at: string }
@@ -214,17 +216,14 @@ export class ThreeCXConnector implements ConnectorBase {
         })
       }
 
-      for (const entry of callsWithRecordings) {
+      for (const entry of recordingsToStore) {
         if (!callsNeedingSet.has(entry.externalId)) continue
 
         const internalCall = callInternalMap.get(entry.externalId)
         if (!internalCall) continue
 
         try {
-          // Get the signed download URL from 3CX
-          const downloadUrl = await client.getRecordingUrl(entry.externalId)
-
-          // Download and store in Supabase Storage
+          const downloadUrl = await client.getRecordingDownloadUrl(entry.recId)
           const storagePath = await storeRecording(
             companyId,
             internalCall.id,
@@ -232,7 +231,6 @@ export class ThreeCXConnector implements ConnectorBase {
           )
 
           if (storagePath) {
-            // Update the call record with the storage path
             await db
               .from('calls')
               .update({ recording_url: storagePath })
@@ -242,7 +240,7 @@ export class ThreeCXConnector implements ConnectorBase {
         } catch (err) {
           errors.push({
             code: 'RECORDING_DOWNLOAD',
-            message: `Failed to store recording for call ${entry.externalId}: ${
+            message: `Failed to store recording for ${entry.externalId}: ${
               err instanceof Error ? err.message : String(err)
             }`,
             context: {
@@ -252,7 +250,6 @@ export class ThreeCXConnector implements ConnectorBase {
           })
         }
 
-        // Rate-limit recording downloads
         await delay(500)
       }
     } catch (err) {

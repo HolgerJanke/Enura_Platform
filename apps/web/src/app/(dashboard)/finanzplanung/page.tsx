@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 import { ApprovalsKpiCard } from './finanzplanung-approvals-popup'
@@ -19,8 +18,6 @@ export default async function FinanzplanungPage() {
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
-
   // Fetch summary stats
   let openInvoices = 0
   let scheduledPayments = 0
@@ -57,17 +54,17 @@ export default async function FinanzplanungPage() {
     const serviceDb = createSupabaseServiceClient()
 
     const [invoicesRes, scheduledRes, overdueRes, pendingRunsRes] = await Promise.all([
-      supabase
+      serviceDb
         .from('invoices_incoming')
         .select('id', { count: 'exact', head: true })
         .eq('company_id', session.companyId)
         .in('status', ['received', 'extraction_done', 'match_review', 'in_validation']),
-      supabase
+      serviceDb
         .from('invoices_incoming')
         .select('id', { count: 'exact', head: true })
         .eq('company_id', session.companyId)
         .eq('status', 'scheduled'),
-      supabase
+      serviceDb
         .from('invoices_incoming')
         .select('id', { count: 'exact', head: true })
         .eq('company_id', session.companyId)
@@ -171,7 +168,7 @@ export default async function FinanzplanungPage() {
       }
     }
 
-    const bankDataRes = await supabase
+    const bankDataRes = await serviceDb
       .from('supplier_bank_change_requests')
       .select('id', { count: 'exact', head: true })
       .eq('company_id', session.companyId)
@@ -288,6 +285,55 @@ export default async function FinanzplanungPage() {
           </p>
         </Link>
       )}
+
+      {/* Auftrag → Kalkulation → Zahlungsplan → Einkauf */}
+      <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Auftragsmanagement</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <Link
+          href="/finanzplanung/vertraege"
+          className="rounded-lg border border-gray-200 bg-white p-5 hover:shadow-md hover:border-blue-200 transition-all"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
+              <svg className="h-4.5 w-4.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">Kundenvertr&auml;ge</h3>
+          </div>
+          <p className="text-xs text-gray-500">Auftr&auml;ge, Vertragswerte, Zahlungspl&auml;ne (Verkauf)</p>
+        </Link>
+
+        <Link
+          href="/finanzplanung/einkauf"
+          className="rounded-lg border border-gray-200 bg-white p-5 hover:shadow-md hover:border-orange-200 transition-all"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100">
+              <svg className="h-4.5 w-4.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+              </svg>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">Einkauf &amp; Lieferplan</h3>
+          </div>
+          <p className="text-xs text-gray-500">Bestellungen, Liefertermine, Zahlungsbereitschaft</p>
+        </Link>
+
+        <Link
+          href="/finanzplanung/kalkulation"
+          className="rounded-lg border border-gray-200 bg-white p-5 hover:shadow-md hover:border-green-200 transition-all"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100">
+              <svg className="h-4.5 w-4.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">Kalkulationen</h3>
+          </div>
+          <p className="text-xs text-gray-500">Kostenaufstellung, Rohertrag, Marge pro Projekt</p>
+        </Link>
+      </div>
 
       {/* Secondary actions */}
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Aktionen</p>

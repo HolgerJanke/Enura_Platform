@@ -1,6 +1,15 @@
 import { z } from 'zod'
 import { ConnectorAuthError, ConnectorRateLimitError } from '../base.js'
-import { BexioInvoiceSchema, BexioPaymentSchema, type BexioInvoice, type BexioPayment } from './schemas.js'
+import {
+  BexioInvoiceSchema,
+  BexioPaymentSchema,
+  BexioContactSchema,
+  BexioBillSchema,
+  type BexioInvoice,
+  type BexioPayment,
+  type BexioContact,
+  type BexioBill,
+} from './schemas.js'
 
 const BEXIO_API_BASE = 'https://api.bexio.com/2.0'
 
@@ -70,4 +79,32 @@ export async function getInvoicePayments(
   const path = `/kb_invoice/${invoiceId}/payment`
 
   return bexioRequest(accessToken, path, z.array(BexioPaymentSchema))
+}
+
+/**
+ * Fetch contacts from Bexio with pagination support.
+ */
+export async function getContacts(
+  accessToken: string,
+  opts?: BexioListOptions,
+): Promise<BexioContact[]> {
+  const offset = opts?.offset ?? 0
+  const limit = opts?.limit ?? 100
+  const path = `/contact?offset=${offset}&limit=${limit}&order_by=updated_at&order=DESC`
+
+  return bexioRequest(accessToken, path, z.array(BexioContactSchema))
+}
+
+/**
+ * Fetch bills (Kreditoren) from Bexio with pagination support.
+ */
+export async function getBills(
+  accessToken: string,
+  opts?: BexioListOptions,
+): Promise<BexioBill[]> {
+  const offset = opts?.offset ?? 0
+  const limit = opts?.limit ?? 100
+  const path = `/kb_bill?offset=${offset}&limit=${limit}&order_by=updated_at&order=DESC`
+
+  return bexioRequest(accessToken, path, z.array(BexioBillSchema))
 }

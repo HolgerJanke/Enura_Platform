@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import {
   ANOMALY_TYPE_LABELS,
   ANOMALY_SEVERITY_LABELS,
@@ -74,7 +74,7 @@ export default async function AnomaliesPage() {
   const session = await getSession()
   if (!session?.companyId) return null
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Fetch active anomalies
   const { data: activeAnomalies } = await supabase

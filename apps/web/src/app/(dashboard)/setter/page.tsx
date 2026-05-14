@@ -25,16 +25,17 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
   const sp = await searchParams
   const selectedMember = typeof sp['member'] === 'string' ? sp['member'] : ''
 
-  // Fetch setter team members
+  // Fetch setter team members from team_members (profiles table is empty)
   const serviceDb = createSupabaseServiceClient()
-  const { data: setterProfiles } = await serviceDb
-    .from('profiles')
+  const { data: setterMembers } = await serviceDb
+    .from('team_members')
     .select('id, display_name')
     .eq('company_id', session.companyId)
     .eq('is_active', true)
+    .in('role_type', ['setter', 'admin'])
     .order('display_name')
 
-  const setters = (setterProfiles ?? []) as Array<{ id: string; display_name: string }>
+  const setters = (setterMembers ?? []) as Array<{ id: string; display_name: string }>
 
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
@@ -69,23 +70,7 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
 
   // If no KPI snapshot exists, compute real-time metrics from calls data
   if (!metrics) {
-    // Fetch all calls from today for live KPIs
-    const todayStart = new Date()
-    todayStart.setHours(0, 0, 0, 0)
-
-    let todayCallsQuery = serviceDb
-      .from('calls')
-      .select('id, started_at, duration_seconds, direction, status, team_member_id')
-      .eq('company_id', session.companyId)
-      .gte('started_at', todayStart.toISOString())
-
-    if (selectedMember) {
-      todayCallsQuery = todayCallsQuery.eq('team_member_id', selectedMember)
-    }
-
-    const { data: todayCalls } = await todayCallsQuery
-
-    // Also get 30-day calls for broader metrics
+    // Use 30-day window for KPIs (not just today — 3CX syncs periodically)
     let monthCallsQuery = serviceDb
       .from('calls')
       .select('id, started_at, duration_seconds, direction, status, team_member_id')
@@ -111,8 +96,7 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
 
     const { count: appointmentCount } = await appointmentsQuery
 
-    const allCalls = (todayCalls ?? []) as Array<Record<string, unknown>>
-    const allMonthCalls = (monthCalls ?? []) as Array<Record<string, unknown>>
+    const allCalls = (monthCalls ?? []) as Array<Record<string, unknown>>
 
     const answered = allCalls.filter((c) => c['status'] === 'answered')
     const missed = allCalls.filter((c) => c['status'] === 'missed' || c['status'] === 'no-answer')
@@ -138,6 +122,39 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
       no_show_rate: 0,
     }
   }
+
+  // Compute daily call counts for last 7 days
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+  let weekCallsQuery = serviceDb
+    .from('calls')
+    .select('started_at')
+    .eq('company_id', session.companyId)
+    .gte('started_at', sevenDaysAgo.toISOString())
+
+  if (selectedMember) {
+    weekCallsQuery = weekCallsQuery.eq('team_member_id', selectedMember)
+  }
+
+  const { data: weekCalls } = await weekCallsQuery
+
+  const dailyCounts: Record<string, number> = {}
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    dailyCounts[d.toISOString().split('T')[0]!] = 0
+  }
+  for (const c of weekCalls ?? []) {
+    const day = new Date((c as { started_at: string }).started_at).toISOString().split('T')[0]!
+    if (day in dailyCounts) {
+      dailyCounts[day] = (dailyCounts[day] ?? 0) + 1
+    }
+  }
+  const dailyCountEntries = Object.entries(dailyCounts)
+  const maxDailyCount = Math.max(...dailyCountEntries.map(([, v]) => v), 1)
+
+  const dayNames: Record<number, string> = { 0: 'So', 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa' }
 
   // Fetch analyses for those calls
   const callIds = (recentCalls ?? []).map(
@@ -194,7 +211,7 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
       {/* Primary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
-          <p className="text-sm text-brand-text-secondary">Anrufe heute</p>
+          <p className="text-sm text-brand-text-secondary">Anrufe (30 Tage)</p>
           <p className="text-2xl font-semibold text-brand-text-primary mt-1">
             {formatNumber(metrics?.calls_total ?? 0)}
           </p>
@@ -279,9 +296,27 @@ export default async function SetterPage({ searchParams }: { searchParams: Promi
           <h2 className="text-lg font-medium text-brand-text-primary mb-4">
             Anrufe letzte 7 Tage
           </h2>
-          <p className="text-sm text-brand-text-secondary">
-            Trend-Diagramm wird mit dem Chart-Modul integriert.
-          </p>
+          {dailyCountEntries.some(([, v]) => v > 0) ? (
+            <div className="flex items-end gap-2 h-32">
+              {dailyCountEntries.map(([date, count]) => {
+                const d = new Date(date)
+                const heightPct = (count / maxDailyCount) * 100
+                return (
+                  <div key={date} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-[11px] font-medium text-brand-text-primary">{count > 0 ? count : ''}</span>
+                    <div
+                      className="w-full rounded-t-md bg-brand-primary/80"
+                      style={{ height: `${Math.max(heightPct, count > 0 ? 8 : 2)}%` }}
+                    />
+                    <span className="text-[10px] text-brand-text-secondary">{dayNames[d.getDay()] ?? ''}</span>
+                    <span className="text-[9px] text-gray-400">{d.getDate()}.{d.getMonth() + 1}</span>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-brand-text-secondary">Keine Anrufe in den letzten 7 Tagen.</p>
+          )}
         </div>
       </div>
 

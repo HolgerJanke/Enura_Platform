@@ -3,9 +3,9 @@ import type { ConnectorBase, ConnectorConfig, SyncResult, SyncError } from '../b
 import { ConnectorRateLimitError } from '../base.js'
 import { upsertRecords } from '../upsert.js'
 import { getBexioAccessToken } from './oauth.js'
-import { getInvoices, getInvoicePayments } from './client.js'
-import { normaliseInvoice, normalisePayment } from './normalise.js'
-import type { BexioInvoice } from './schemas.js'
+import { getInvoices, getInvoicePayments, getContacts, getBills } from './client.js'
+import { normaliseInvoice, normalisePayment, normaliseContact, normaliseBill } from './normalise.js'
+import type { BexioInvoice, BexioContact, BexioBill } from './schemas.js'
 
 const RATE_LIMIT_DELAY_MS = 300
 const PAGE_SIZE = 100
@@ -202,6 +202,130 @@ export const bexioConnector: ConnectorBase = {
         const paymentResult = await syncPayments(accessToken, companyId, invoices)
         recordsWritten += paymentResult.written
         errors.push(...paymentResult.errors)
+      }
+
+      // 3. Sync contacts → suppliers (full sync, no incremental)
+      const contactErrors: SyncError[] = []
+      let contactOffset = 0
+      const allContacts: BexioContact[] = []
+
+      while (true) {
+        try {
+          const page = await getContacts(accessToken, { offset: contactOffset, limit: PAGE_SIZE })
+          if (page.length === 0) break
+          allContacts.push(...page)
+          if (page.length < PAGE_SIZE) break
+          contactOffset += PAGE_SIZE
+          await sleep(RATE_LIMIT_DELAY_MS)
+        } catch (err) {
+          if (err instanceof ConnectorRateLimitError) {
+            await sleep(err.retryAfterMs)
+            continue
+          }
+          contactErrors.push({
+            code: 'BEXIO_FETCH_CONTACTS',
+            message: err instanceof Error ? err.message : String(err),
+            context: { offset: contactOffset },
+          })
+          break
+        }
+      }
+
+      if (allContacts.length > 0) {
+        const db = getServiceClient()
+        const { data: company } = await db
+          .from('companies')
+          .select('holding_id')
+          .eq('id', companyId)
+          .single()
+        const holdingId = company?.holding_id ?? ''
+
+        const normalisedContacts = allContacts.map((c) =>
+          normaliseContact(companyId, holdingId, c),
+        )
+        const contactResult = await upsertRecords(
+          'suppliers',
+          normalisedContacts as unknown as Record<string, unknown>[],
+          ['company_id', 'external_id'],
+        )
+        recordsWritten += contactResult.written
+        recordsFetched += allContacts.length
+        errors.push(...contactResult.errors)
+      }
+      errors.push(...contactErrors)
+
+      // 4. Sync bills (kb_bill) → invoices_incoming
+      const db = getServiceClient()
+
+      // Build supplier FK map: external_id → internal UUID
+      const { data: suppliers } = await db
+        .from('suppliers')
+        .select('id, external_id')
+        .eq('company_id', companyId)
+      const supplierMap = new Map<string, string>(
+        (suppliers ?? []).map((s: { id: string; external_id: string }) => [
+          s.external_id,
+          s.id,
+        ]),
+      )
+
+      const { data: companyRow } = await db
+        .from('companies')
+        .select('holding_id')
+        .eq('id', companyId)
+        .single()
+      const holdingIdForBills = companyRow?.holding_id ?? ''
+
+      const cutoff = connector.last_synced_at
+        ? new Date(connector.last_synced_at).getTime()
+        : 0
+
+      let billOffset = 0
+      const allBills: BexioBill[] = []
+      while (true) {
+        try {
+          const page = await getBills(accessToken, { offset: billOffset, limit: PAGE_SIZE })
+          if (page.length === 0) break
+
+          let reachedCutoff = false
+          for (const bill of page) {
+            const updatedAt = new Date(bill.updated_at).getTime()
+            if (cutoff > 0 && updatedAt < cutoff) {
+              reachedCutoff = true
+              break
+            }
+            allBills.push(bill)
+          }
+
+          if (reachedCutoff || page.length < PAGE_SIZE) break
+          billOffset += PAGE_SIZE
+          await sleep(RATE_LIMIT_DELAY_MS)
+        } catch (err) {
+          if (err instanceof ConnectorRateLimitError) {
+            await sleep(err.retryAfterMs)
+            continue
+          }
+          errors.push({
+            code: 'BEXIO_FETCH_BILLS',
+            message: err instanceof Error ? err.message : String(err),
+            context: { offset: billOffset },
+          })
+          break
+        }
+      }
+
+      if (allBills.length > 0) {
+        const normalisedBills = allBills.map((b) =>
+          normaliseBill(companyId, holdingIdForBills, b, supplierMap),
+        )
+        const billResult = await upsertRecords(
+          'invoices_incoming',
+          normalisedBills as unknown as Record<string, unknown>[],
+          ['company_id', 'external_id'],
+        )
+        recordsWritten += billResult.written
+        recordsFetched += allBills.length
+        errors.push(...billResult.errors)
       }
 
       recordsSkipped = recordsFetched - recordsWritten

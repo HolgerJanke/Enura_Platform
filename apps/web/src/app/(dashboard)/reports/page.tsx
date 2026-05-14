@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import type { DailyReportRow } from '@enura/types'
 import Link from 'next/link'
 
@@ -40,7 +40,7 @@ export default async function ReportsArchivePage() {
   const session = await getSession()
   if (!session?.companyId) return null
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const { data: reports } = await supabase
     .from('daily_reports')

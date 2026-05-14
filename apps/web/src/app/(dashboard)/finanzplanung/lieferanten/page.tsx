@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 
 interface SupplierRow {
@@ -31,7 +31,7 @@ export default async function LieferantenPage() {
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const { data: suppliers } = await supabase
     .from('suppliers')

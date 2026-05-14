@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 import { formatDate } from '@enura/types'
 
@@ -22,7 +22,7 @@ export default async function SupplierDetailPage({ params }: PageProps) {
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { id } = params
 
   // Fetch supplier

@@ -18,13 +18,60 @@ export async function saveConnectorAction(type: string, data: {
 
   const db = createSupabaseServiceClient()
 
+  // Transform credentials for connectors that need it
+  let finalCredentials = data.credentials
+  let finalConfig = data.config
+
+  if (type === 'google_calendar') {
+    // Parse service account JSON and extract needed fields
+    const rawKey = data.credentials['serviceAccountKey']
+    if (typeof rawKey === 'string' && rawKey.trim()) {
+      try {
+        const parsed = JSON.parse(rawKey) as Record<string, unknown>
+        finalCredentials = {
+          service_account_email: parsed['client_email'] as string,
+          private_key: parsed['private_key'] as string,
+        }
+      } catch {
+        return { error: 'Service Account Key ist kein gültiges JSON.' }
+      }
+    }
+
+    // Parse calendar emails (newline-separated) into array
+    const rawEmails = data.credentials['calendarEmails']
+    if (typeof rawEmails === 'string' && rawEmails.trim()) {
+      const emails = rawEmails
+        .split('\n')
+        .map((e: string) => e.trim())
+        .filter((e: string) => e.length > 0 && e.includes('@'))
+      finalConfig = { calendar_ids: emails }
+    }
+  }
+
+  if (type === 'gmail') {
+    // Parse service account JSON for Gmail too
+    const rawKey = data.credentials['serviceAccountKey']
+    if (typeof rawKey === 'string' && rawKey.trim()) {
+      try {
+        const parsed = JSON.parse(rawKey) as Record<string, unknown>
+        finalCredentials = {
+          service_account_email: parsed['client_email'] as string,
+          private_key: parsed['private_key'] as string,
+          email_address: data.credentials['emailAddress'] as string,
+        }
+      } catch {
+        return { error: 'Service Account Key ist kein gültiges JSON.' }
+      }
+    }
+  }
+
   // Upsert connector
   const { error } = await db.from('connectors').upsert({
     company_id: session.companyId,
     type,
     name: getConnectorLabel(type),
-    credentials: data.credentials,
-    config: data.config,
+    credentials: finalCredentials,
+    config: finalConfig,
     sync_interval_minutes: data.syncIntervalMinutes,
     status: 'active',
   }, { onConflict: 'company_id,type' })
@@ -66,9 +113,18 @@ export async function testConnectorAction(
     }
   }
 
-  // In production, this would call the connector's validate() method
-  // to actually test the connection against the external API.
-  // For now, return success if validation passes.
+  // Type-specific validation
+  if (type === 'google_calendar' && credentials['serviceAccountKey']) {
+    try {
+      const parsed = JSON.parse(credentials['serviceAccountKey'] as string) as Record<string, unknown>
+      if (!parsed['client_email'] || !parsed['private_key']) {
+        return { error: 'Service Account Key muss "client_email" und "private_key" enthalten.' }
+      }
+    } catch {
+      return { error: 'Service Account Key ist kein gültiges JSON.' }
+    }
+  }
+
   return { success: true }
 }
 

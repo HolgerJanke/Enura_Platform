@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getConnectorImpl } from './registry.js'
 import { writeSyncResult } from './sync-writer.js'
 import type { ConnectorConfig } from './base.js'
+import { matchBexioPayments } from '../liquidity/bexio-matcher.js'
 
 export interface SyncJobData {
   connectorId: string
@@ -51,4 +52,16 @@ export async function processSyncJob(job: SyncJobData): Promise<void> {
   console.log(
     `[sync] ${job.type} for ${job.companyId}: ${result.recordsWritten} written, ${result.errors.length} errors, ${result.durationMs}ms`,
   )
+
+  // Post-sync: match Bexio payments to liquidity event instances
+  if (job.type === 'bexio' && result.recordsWritten > 0) {
+    try {
+      const matchResult = await matchBexioPayments(db, job.companyId)
+      console.log(
+        `[sync:liquidity] Bexio matcher for ${job.companyId}: ${matchResult.matchedCount} matched, ${matchResult.skippedCount} skipped (${matchResult.totalPayments} total payments)`,
+      )
+    } catch (err) {
+      console.error(`[sync:liquidity] Bexio matcher failed for ${job.companyId}:`, err)
+    }
+  }
 }

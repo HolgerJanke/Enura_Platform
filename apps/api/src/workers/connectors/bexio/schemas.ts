@@ -45,6 +45,62 @@ export const BexioPaymentSchema = z
 export type BexioPayment = z.infer<typeof BexioPaymentSchema>
 
 // ---------------------------------------------------------------------------
+// Bexio Bill (Kreditoren) Status Map
+// ---------------------------------------------------------------------------
+
+export const BEXIO_BILL_STATUS_MAP: Record<number, string> = {
+  7: 'draft',
+  8: 'pending', // Offen
+  9: 'paid',
+  16: 'partially_paid',
+  19: 'overdue',
+}
+
+// ---------------------------------------------------------------------------
+// Bexio Contact Schema
+// ---------------------------------------------------------------------------
+
+export const BexioContactSchema = z
+  .object({
+    id: z.number(),
+    contact_type_id: z.number(), // 1 = company, 2 = person
+    name_1: z.string().nullable(), // Company name or last name
+    name_2: z.string().nullable(), // First name (for persons)
+    address: z.string().nullable(),
+    postcode: z.string().nullable(),
+    city: z.string().nullable(),
+    country_id: z.number().nullable(),
+    mail: z.string().nullable(),
+    phone_fixed: z.string().nullable(),
+    updated_at: z.string(),
+  })
+  .passthrough()
+
+export type BexioContact = z.infer<typeof BexioContactSchema>
+
+// ---------------------------------------------------------------------------
+// Bexio Bill (Kreditorenrechnung) Schema
+// ---------------------------------------------------------------------------
+
+export const BexioBillSchema = z
+  .object({
+    id: z.number(),
+    document_nr: z.string().nullable(),
+    title: z.string().nullable(),
+    contact_id: z.number().nullable(),
+    total_gross: z.string(),
+    total_net: z.string(),
+    total_taxes: z.string(),
+    kb_item_status_id: z.number(),
+    is_valid_from: z.string().nullable(),
+    is_valid_to: z.string().nullable(), // due date
+    updated_at: z.string(),
+  })
+  .passthrough()
+
+export type BexioBill = z.infer<typeof BexioBillSchema>
+
+// ---------------------------------------------------------------------------
 // Bexio Credentials Schema (stored in connector.credentials)
 // ---------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { KPI_SNAPSHOT_TYPES } from '@enura/types'
 import type { OfferRow, TeamMemberRow } from '@enura/types'
 
@@ -58,7 +59,6 @@ export default async function AnalyticsPage() {
     draftCount,
     sentCount,
     pipelineTotal,
-    recentOffersResult,
     teamMembers,
   ] = await Promise.all([
     db.kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY),
@@ -68,13 +68,10 @@ export default async function AnalyticsPage() {
     db.offers.count(cid, { status: 'draft' }),
     db.offers.count(cid, { status: 'sent' }),
     db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
-    // Only fetch recent offers for the monthly chart + top sellers (limited)
-    db.offers.findPaginated(cid, { page: 1, pageSize: 200 }),
     db.teamMembers.findByCompanyId(cid),
   ])
 
   const metrics = (snapshot?.metrics ?? {}) as Record<string, unknown>
-  const recentOffers = recentOffersResult.data
 
   // KPI values
   const pipelineValue = pipelineTotal > 1_000_000
@@ -88,27 +85,45 @@ export default async function AnalyticsPage() {
     ? `${Math.round((wonCount / (wonCount + lostCount)) * 100)}%`
     : '--'
 
-  // Top sellers by number of won offers
-  const wonOffers = recentOffers.filter((o: OfferRow) => o.status === 'won')
+  // Top sellers by number of won offers — fetch won offers directly
+  const wonOffersResult = await db.offers.findPaginated(cid, {
+    page: 1,
+    pageSize: 500,
+    status: 'won',
+  })
+  const wonOffers = wonOffersResult.data
   const sellerCounts: Record<string, number> = {}
   for (const o of wonOffers) {
     const bid = (o as OfferRow).berater_id
     if (bid) sellerCounts[bid] = (sellerCounts[bid] ?? 0) + 1
   }
-  const topSellerIds = Object.entries(sellerCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
 
   const memberMap = new Map(teamMembers.map((m: TeamMemberRow) => [m.id, m]))
 
-  // Monthly offer counts (from recent data)
+  // Filter out inactive/system accounts from top sellers
+  const topSellerIds = Object.entries(sellerCounts)
+    .filter(([id]) => {
+      const m = memberMap.get(id)
+      if (!m) return false // Unknown member — skip
+      return m.is_active !== false
+    })
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+
+  // Monthly offer counts — fetch all dates (lightweight: only created_at column)
+  const serviceDb = createSupabaseServiceClient()
+  const { data: offerDates } = await serviceDb
+    .from('offers')
+    .select('created_at')
+    .eq('company_id', cid)
+
   const monthCounts: Record<string, number> = {}
-  for (const o of recentOffers) {
-    const d = new Date((o as OfferRow).created_at)
+  for (const o of offerDates ?? []) {
+    const d = new Date((o as { created_at: string }).created_at)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     monthCounts[key] = (monthCounts[key] ?? 0) + 1
   }
-  const sortedMonths = Object.entries(monthCounts).sort((a, b) => a[0].localeCompare(b[0])).slice(-6)
+  const sortedMonths = Object.entries(monthCounts).sort((a, b) => a[0].localeCompare(b[0])).slice(-12)
   const maxMonthCount = Math.max(...sortedMonths.map(([, v]) => v), 1)
 
   // Pipeline funnel from counts
@@ -239,7 +254,7 @@ export default async function AnalyticsPage() {
             {[
               { label: 'Setter-Performance', href: '/setter', color: 'bg-blue-50 text-blue-700 border-blue-100' },
               { label: 'Berater-Performance', href: '/berater', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-              { label: 'Lead-Pipeline', href: '/leads', color: 'bg-green-50 text-green-700 border-green-100' },
+              { label: 'Leads & Vertrieb', href: '/leads', color: 'bg-green-50 text-green-700 border-green-100' },
               { label: 'Anomalien', href: '/anomalies', color: 'bg-amber-50 text-amber-700 border-amber-100' },
               { label: 'Tagesberichte', href: '/reports', color: 'bg-purple-50 text-purple-700 border-purple-100' },
               { label: 'Finanzen', href: '/finance', color: 'bg-teal-50 text-teal-700 border-teal-100' },

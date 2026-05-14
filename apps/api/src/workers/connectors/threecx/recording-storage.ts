@@ -26,7 +26,7 @@ export async function storeRecording(
   const now = new Date()
   const year = now.getFullYear()
   const month = String(now.getMonth() + 1).padStart(2, '0')
-  const path = `${companyId}/calls/${year}/${month}/${callId}.mp3`
+  const path = `${companyId}/calls/${year}/${month}/${callId}.wav`
 
   const response = await fetch(externalUrl)
   if (!response.ok || !response.body) {
@@ -41,7 +41,7 @@ export async function storeRecording(
   const { error } = await db.storage
     .from(RECORDINGS_BUCKET)
     .upload(path, arrayBuffer, {
-      contentType: 'audio/mpeg',
+      contentType: response.headers.get('content-type') ?? 'audio/x-wav',
       upsert: true,
     })
 

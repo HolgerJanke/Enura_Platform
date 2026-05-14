@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { formatDate } from '@enura/types'
 import { LiquidityClient } from './liquidity-client'
 
@@ -62,7 +62,7 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
   return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
   }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const today = new Date()
   const defaultFrom = new Date(today)
   defaultFrom.setDate(defaultFrom.getDate() - 90)
@@ -72,7 +72,8 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
     .toISOString()
     .split('T')[0]!
 
-  // Fetch liquidity event instances
+  // Fetch liquidity event instances — include events with budget_date in range
+  // OR events without budget_date that have an actual_date in range
   const { data: eventsRaw } = await supabase
     .from('liquidity_event_instances')
     .select(`
@@ -83,13 +84,12 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
     `)
     .eq('company_id', companyId)
     .eq('marker_type', 'event')
-    .gte('budget_date', fromStr)
-    .lte('budget_date', toStr)
-    .order('budget_date', { ascending: true })
+    .or(`and(budget_date.gte.${fromStr},budget_date.lte.${toStr}),and(budget_date.is.null,actual_date.gte.${fromStr},actual_date.lte.${toStr})`)
+    .order('budget_date', { ascending: true, nullsFirst: false })
 
   const events = (eventsRaw ?? []) as unknown as LiquidityEventRow[]
 
-  // Fetch overdue events
+  // Fetch overdue events (budget_date in the past, no actual_date)
   const todayStr = today.toISOString().split('T')[0]!
   const { data: overdueRaw } = await supabase
     .from('liquidity_event_instances')
@@ -103,6 +103,7 @@ export default async function LiquidityCompanyPage({ params }: PageProps) {
     .eq('marker_type', 'event')
     .lt('budget_date', todayStr)
     .is('actual_date', null)
+    .not('budget_date', 'is', null)
     .order('budget_date', { ascending: true })
 
   const overdueEvents = (overdueRaw ?? []) as unknown as LiquidityEventRow[]

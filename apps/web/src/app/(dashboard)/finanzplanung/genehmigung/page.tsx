@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 
 const RUN_STATUS_LABELS: Record<string, string> = {
@@ -49,7 +49,7 @@ export default async function GenehmigungPage() {
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Fetch all payment runs
   const { data: runs } = await supabase

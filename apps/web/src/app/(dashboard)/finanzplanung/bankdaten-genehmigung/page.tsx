@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 import { formatDate } from '@enura/types'
 import { BankApprovalActions } from './bank-approval-actions'
@@ -21,7 +21,7 @@ export default async function BankdatenGenehmigungPage() {
   }
 
   const session = await getSession()
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Fetch all pending/reviewed requests with supplier names
   const { data: requestsRaw } = await supabase

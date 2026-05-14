@@ -1,63 +1,46 @@
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
-// 3CX API Response Schemas
+// 3CX xAPI Recordings Schema (OData format)
 // ---------------------------------------------------------------------------
 
-export const ThreeCXCallDirectionEnum = z.enum([
-  'Inbound',
-  'Outbound',
-  'inbound',
-  'outbound',
+export const ThreeCXCallTypeEnum = z.enum([
+  'InboundExternal',
+  'OutboundExternal',
+  'Local',
 ])
 
-export const ThreeCXCallResultEnum = z.enum([
-  'Answered',
-  'Missed',
-  'Voicemail',
-  'Busy',
-  'Failed',
-  'answered',
-  'missed',
-  'voicemail',
-  'busy',
-  'failed',
-  'NoAnswer',
-  'NotAnswered',
-])
-
-export const ThreeCXCallSchema = z
+export const ThreeCXRecordingSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
-    start_time: z.string(),
-    end_time: z.string().nullish(),
-    duration: z.number(),
-    direction: ThreeCXCallDirectionEnum,
-    result: ThreeCXCallResultEnum,
-    caller_number: z.string().nullish(),
-    callee_number: z.string().nullish(),
-    extension: z.string().nullish(),
-    recording_file: z.string().nullish(),
+    Id: z.union([z.string(), z.number()]).transform(String),
+    StartTime: z.string(),
+    EndTime: z.string().nullish(),
+    CallType: ThreeCXCallTypeEnum,
+    FromDn: z.string().nullish(),
+    FromCallerNumber: z.string().nullish(),
+    FromDisplayName: z.string().nullish(),
+    ToDn: z.string().nullish(),
+    ToCallerNumber: z.string().nullish(),
+    ToDisplayName: z.string().nullish(),
+    RecordingUrl: z.string().nullish(),
+    IsTranscribed: z.boolean().optional(),
   })
   .passthrough()
 
-export type ThreeCXCall = z.infer<typeof ThreeCXCallSchema>
+export type ThreeCXRecording = z.infer<typeof ThreeCXRecordingSchema>
 
-export const ThreeCXExtensionSchema = z
+// ---------------------------------------------------------------------------
+// 3CX xAPI Users Schema (Extensions)
+// ---------------------------------------------------------------------------
+
+export const ThreeCXUserSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(String),
-    number: z.string(),
-    first_name: z.string(),
-    last_name: z.string(),
-    email: z.string().nullish(),
+    Id: z.union([z.string(), z.number()]).transform(String),
+    Number: z.string(),
+    FirstName: z.string(),
+    LastName: z.string(),
+    EmailAddress: z.string().nullish(),
   })
   .passthrough()
 
-export type ThreeCXExtension = z.infer<typeof ThreeCXExtensionSchema>
-
-export const ThreeCXCallLogResponseSchema = z.object({
-  data: z.array(ThreeCXCallSchema),
-  totalPages: z.number(),
-})
-
-export type ThreeCXCallLogResponse = z.infer<typeof ThreeCXCallLogResponseSchema>
+export type ThreeCXUser = z.infer<typeof ThreeCXUserSchema>

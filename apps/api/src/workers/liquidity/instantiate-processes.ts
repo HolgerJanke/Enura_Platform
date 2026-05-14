@@ -36,6 +36,16 @@ export async function instantiateProcessesForProject(
     errors: [],
   }
 
+  // Fetch project value for resolving percentage-based amounts
+  const { data: projectRow } = await supabase
+    .from('projects')
+    .select('project_value')
+    .eq('id', projectId)
+    .single()
+  const projectValue = projectRow
+    ? Number((projectRow as Record<string, unknown>)['project_value'] ?? 0)
+    : 0
+
   // Find deployed process definitions for this company that have liquidity markers
   const { data: processesRaw, error: procErr } = await supabase
     .from('process_definitions')
@@ -136,6 +146,12 @@ export async function instantiateProcessesForProject(
       const step = stepMap.get(liq.step_id)
       if (!step) continue
 
+      // Resolve budget_amount: for percentage types, multiply by project_value
+      let resolvedAmount: number | null = liq.plan_amount != null ? Number(liq.plan_amount) : null
+      if (resolvedAmount != null && liq.amount_type === 'percentage' && projectValue > 0) {
+        resolvedAmount = Math.round((resolvedAmount / 100) * projectValue * 100) / 100
+      }
+
       const { data: eventInstance, error: evtErr } = await supabase
         .from('liquidity_event_instances')
         .insert({
@@ -150,7 +166,7 @@ export async function instantiateProcessesForProject(
           marker_type: liq.marker_type,
           direction: liq.direction,
           plan_currency: liq.plan_currency,
-          budget_amount: liq.plan_amount,
+          budget_amount: resolvedAmount != null ? String(resolvedAmount) : null,
           amount_type: liq.amount_type,
           plan_delay_days: liq.plan_delay_days ?? 0,
         })

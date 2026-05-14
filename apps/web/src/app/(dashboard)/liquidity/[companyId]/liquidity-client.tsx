@@ -134,9 +134,10 @@ export function LiquidityClient({
     past.setDate(past.getDate() - periodDays)
 
     return events.filter((e) => {
-      if (!e.budget_date) return false
+      const effectiveDate = e.budget_date ?? e.actual_date
+      if (!effectiveDate) return false
       if (e.plan_currency !== currency) return false
-      const d = new Date(e.budget_date)
+      const d = new Date(effectiveDate)
       return d >= past && d <= cutoff
     })
   }, [events, periodDays, currency])
@@ -147,14 +148,15 @@ export function LiquidityClient({
     const orderedKeys: string[] = []
 
     for (const evt of filteredEvents) {
-      if (!evt.budget_date) continue
-      const key = periodKey(evt.budget_date, groupBy)
+      const evtDate = evt.budget_date ?? evt.actual_date
+      if (!evtDate) continue
+      const key = periodKey(evtDate, groupBy)
 
       if (!bucketMap.has(key)) {
         bucketMap.set(key, {
           key,
           label: key,
-          sortDate: evt.budget_date!,
+          sortDate: evtDate,
           planIncome: 0,
           planExpense: 0,
           actualIncome: 0,
@@ -211,8 +213,8 @@ export function LiquidityClient({
   // All events (for the table) — combine plan and overdue
   const allTableEvents = useMemo(() => {
     return [...filteredEvents].sort((a, b) => {
-      const da = a.budget_date ?? ''
-      const db = b.budget_date ?? ''
+      const da = a.budget_date ?? a.actual_date ?? ''
+      const db = b.budget_date ?? b.actual_date ?? ''
       return da.localeCompare(db)
     })
   }, [filteredEvents])

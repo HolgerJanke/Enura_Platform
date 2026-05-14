@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 import { BankDataChangeForm } from './bank-data-change-form'
 
@@ -21,7 +21,7 @@ export default async function BankdatenAendernPage({ params }: PageProps) {
     )
   }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
   const { id } = params
 
   // Fetch supplier name
