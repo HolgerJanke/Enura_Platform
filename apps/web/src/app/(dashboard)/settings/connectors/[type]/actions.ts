@@ -140,10 +140,10 @@ export async function triggerSyncAction(
 
   const db = createSupabaseServiceClient()
 
-  // Verify connector belongs to this tenant
+  // Load full connector data
   const { data: connector } = await db
     .from('connectors')
-    .select('id, company_id')
+    .select('id, company_id, type, credentials, config, last_synced_at, status')
     .eq('id', connectorId)
     .single()
 
@@ -151,15 +151,38 @@ export async function triggerSyncAction(
     return { error: 'Connector nicht gefunden.' }
   }
 
-  // In production, this would enqueue a BullMQ job:
-  // await syncQueue.add('connector-sync', { connectorId, companyId: session.companyId })
-  // For now, just update the last_synced_at to simulate a sync.
-  await db.from('connectors')
-    .update({ last_synced_at: new Date().toISOString() })
-    .eq('id', connectorId)
-    .eq('company_id', session.companyId)
+  const c = connector as Record<string, unknown>
+  const type = c['type'] as string
+  const companyId = session.companyId
+  const startedAt = new Date()
 
-  return { success: true }
+  try {
+    switch (type) {
+      case 'bexio': {
+        const { syncBexio, writeSyncResult } = await import('@/lib/connectors/bexio-sync')
+        const result = await syncBexio(
+          companyId,
+          c['credentials'] as Record<string, unknown>,
+          c['last_synced_at'] as string | null,
+        )
+        await writeSyncResult(connectorId, companyId, startedAt, result)
+        if (!result.success) {
+          return { error: `Sync fehlgeschlagen: ${result.errors[0]?.message ?? 'Unbekannter Fehler'}` }
+        }
+        return { success: true }
+      }
+      default:
+        return { error: `Sync für Typ "${type}" noch nicht implementiert.` }
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    // Write error to sync log
+    const { writeSyncResult } = await import('@/lib/connectors/bexio-sync')
+    await writeSyncResult(connectorId, companyId, startedAt, {
+      success: false, recordsWritten: 0, errors: [{ code: 'MANUAL_SYNC_ERROR', message: msg, context: {} }],
+    })
+    return { error: `Sync-Fehler: ${msg}` }
+  }
 }
 
 function getConnectorLabel(type: string): string {
