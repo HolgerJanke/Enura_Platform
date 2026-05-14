@@ -164,34 +164,51 @@ export default async function AnalyticsPage() {
         <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-base font-semibold text-brand-text-primary mb-4">Angebote pro Monat</h2>
           {sortedMonths.length > 0 ? (
-            <div className="relative">
-              {/* Y-axis grid lines */}
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none" style={{ bottom: '24px' }}>
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="flex items-center w-full">
-                    <span className="text-[10px] text-gray-400 w-8 text-right pr-2 shrink-0">
-                      {Math.round(maxMonthCount * (1 - i / 3))}
-                    </span>
-                    <div className="flex-1 border-t border-gray-100" />
-                  </div>
+            <div className="relative" style={{ height: '240px' }}>
+              {/* Y-axis labels */}
+              <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none w-8">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-[10px] text-gray-400 text-right pr-1 leading-none">
+                    {Math.round(maxMonthCount * (1 - i / 4))}
+                  </span>
+                ))}
+              </div>
+              {/* Grid lines */}
+              <div className="absolute left-9 right-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="border-t border-gray-100 w-full" />
                 ))}
               </div>
               {/* Bars */}
-              <div className="flex items-end gap-1.5 pl-10" style={{ height: '200px', paddingBottom: '24px' }}>
+              <div className="absolute left-9 right-0 top-0 bottom-6 flex items-end gap-1">
                 {sortedMonths.map(([month, count]) => {
                   const monthKey = month.split('-')[1] ?? '01'
                   const heightPct = (count / maxMonthCount) * 100
                   return (
                     <div key={month} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                      {/* Tooltip on hover */}
-                      <div className="absolute -top-6 hidden group-hover:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-10">
                         {count} Angebote
                       </div>
                       <div
-                        className="w-full rounded-t-md bg-brand-primary hover:bg-brand-primary/80 transition-colors cursor-default"
-                        style={{ height: `${Math.max(heightPct, 3)}%`, minHeight: count > 0 ? '4px' : '0' }}
+                        className="w-full rounded-t-md transition-opacity cursor-default"
+                        style={{
+                          height: `${Math.max(heightPct, count > 0 ? 2 : 0)}%`,
+                          minHeight: count > 0 ? '4px' : '0',
+                          backgroundColor: '#1A56DB',
+                          opacity: 0.85,
+                        }}
                       />
-                      <span className="text-[10px] text-brand-text-secondary mt-1.5 font-medium">{monthNames[monthKey] ?? monthKey}</span>
+                    </div>
+                  )
+                })}
+              </div>
+              {/* Month labels */}
+              <div className="absolute left-9 right-0 bottom-0 flex gap-1">
+                {sortedMonths.map(([month]) => {
+                  const monthKey = month.split('-')[1] ?? '01'
+                  return (
+                    <div key={month} className="flex-1 text-center">
+                      <span className="text-[10px] text-brand-text-secondary font-medium">{monthNames[monthKey] ?? monthKey}</span>
                     </div>
                   )
                 })}
@@ -208,13 +225,13 @@ export default async function AnalyticsPage() {
           <div className="space-y-4">
             {phaseCounts.map((phase) => {
               const widthPct = (phase.count / maxPhaseCount) * 100
-              const colorClass = phase.key === 'won'
-                ? 'bg-emerald-500'
+              const barColor = phase.key === 'won'
+                ? '#10B981'
                 : phase.key === 'lost'
-                  ? 'bg-red-400'
+                  ? '#F87171'
                   : phase.key === 'sent'
-                    ? 'bg-amber-400'
-                    : 'bg-brand-primary'
+                    ? '#FBBF24'
+                    : '#1A56DB'
               return (
                 <div key={phase.key}>
                   <div className="flex items-center justify-between mb-1">
@@ -223,8 +240,11 @@ export default async function AnalyticsPage() {
                   </div>
                   <div className="h-8 bg-gray-100 rounded-lg overflow-hidden">
                     <div
-                      className={`h-full rounded-lg transition-all ${colorClass}`}
-                      style={{ width: `${Math.max(widthPct, phase.count > 0 ? 3 : 0)}%` }}
+                      className="h-full rounded-lg transition-all"
+                      style={{
+                        width: `${Math.max(widthPct, phase.count > 0 ? 3 : 0)}%`,
+                        backgroundColor: barColor,
+                      }}
                     />
                   </div>
                 </div>

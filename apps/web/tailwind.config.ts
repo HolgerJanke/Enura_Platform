@@ -10,9 +10,9 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          primary: 'rgb(var(--brand-primary-rgb) / <alpha-value>)',
-          secondary: 'rgb(var(--brand-secondary-rgb) / <alpha-value>)',
-          accent: 'rgb(var(--brand-accent-rgb) / <alpha-value>)',
+          primary: 'var(--brand-primary)',
+          secondary: 'var(--brand-secondary)',
+          accent: 'var(--brand-accent)',
           background: 'var(--brand-background)',
           surface: 'var(--brand-surface)',
           'text-primary': 'var(--brand-text-primary)',
