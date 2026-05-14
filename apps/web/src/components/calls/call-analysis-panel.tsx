@@ -215,10 +215,55 @@ export function CallAnalysisPanel({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Call info — always shown */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-brand bg-gray-50 p-3">
+              <p className="text-[11px] text-brand-text-secondary uppercase tracking-wide">Status</p>
+              <p className="text-sm font-medium text-brand-text-primary mt-0.5">
+                {call.status === 'answered' ? 'Angenommen'
+                  : call.status === 'missed' ? 'Verpasst'
+                  : call.status === 'voicemail' ? 'Voicemail'
+                  : call.status === 'busy' ? 'Besetzt'
+                  : call.status}
+              </p>
+            </div>
+            <div className="rounded-brand bg-gray-50 p-3">
+              <p className="text-[11px] text-brand-text-secondary uppercase tracking-wide">Richtung</p>
+              <p className="text-sm font-medium text-brand-text-primary mt-0.5">
+                {call.direction === 'outbound' ? 'Ausgehend' : 'Eingehend'}
+              </p>
+            </div>
+            <div className="rounded-brand bg-gray-50 p-3">
+              <p className="text-[11px] text-brand-text-secondary uppercase tracking-wide">Dauer</p>
+              <p className="text-sm font-medium text-brand-text-primary mt-0.5">
+                {formatDuration(call.duration_seconds)}
+              </p>
+            </div>
+            <div className="rounded-brand bg-gray-50 p-3">
+              <p className="text-[11px] text-brand-text-secondary uppercase tracking-wide">Zeitpunkt</p>
+              <p className="text-sm font-medium text-brand-text-primary mt-0.5">
+                {formatDateTime(call.started_at)}
+              </p>
+            </div>
+          </div>
+
+          {/* Recording link */}
+          {call.recording_url && (
+            <div className="rounded-brand border border-gray-200 p-3">
+              <p className="text-[11px] text-brand-text-secondary uppercase tracking-wide mb-1">Aufnahme</p>
+              <audio controls className="w-full h-8" src={call.recording_url}>
+                <track kind="captions" />
+              </audio>
+            </div>
+          )}
+
           {!analysis ? (
-            <div className="rounded-brand bg-gray-50 p-6 text-center">
-              <p className="text-sm text-brand-text-secondary">
-                Für diesen Anruf liegt noch keine Analyse vor.
+            <div className="rounded-brand bg-amber-50 border border-amber-200 p-4 text-center">
+              <p className="text-sm font-medium text-amber-800">
+                Noch keine KI-Analyse vorhanden
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                Die Analyse wird automatisch erstellt, sobald die Aufnahme verarbeitet wurde.
               </p>
             </div>
           ) : (
