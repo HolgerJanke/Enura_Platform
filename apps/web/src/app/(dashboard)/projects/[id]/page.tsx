@@ -45,8 +45,8 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
     db.from('project_documents').select('*').eq('project_id', id).order('created_at', { ascending: false }),
     db.from('calls').select('id, started_at, duration_seconds, direction, status, team_member_id, caller_number, callee_number').eq('project_id', id).order('started_at', { ascending: false }).limit(50),
     db.from('calendar_events').select('id, title, description, location, starts_at, ends_at, team_member_id, event_type').eq('project_id', id).order('starts_at', { ascending: false }).limit(50),
-    p['berater_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role').eq('id', p['berater_id'] as string).single() : Promise.resolve({ data: null }),
-    p['setter_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role').eq('id', p['setter_id'] as string).single() : Promise.resolve({ data: null }),
+    p['berater_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role_type').eq('id', p['berater_id'] as string).single() : Promise.resolve({ data: null }),
+    p['setter_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role_type').eq('id', p['setter_id'] as string).single() : Promise.resolve({ data: null }),
   ])
 
   // Compute financial events — use real liquidity events, or generate from offer/invoice data
@@ -187,7 +187,7 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
   // Fallback: if project has no berater but offer does, resolve from offer
   if (!berater && offerForFallback?.['berater_id']) {
     const { data: offerBerater } = await db.from('team_members')
-      .select('id, first_name, last_name, email, phone, role')
+      .select('id, first_name, last_name, email, phone, role_type')
       .eq('id', offerForFallback['berater_id'] as string).single()
     if (offerBerater) {
       berater = offerBerater as Record<string, unknown>
@@ -198,7 +198,7 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
   // Fallback: if project has no setter but lead does, resolve from lead
   if (!setter && leadForFallback?.['setter_id']) {
     const { data: leadSetter } = await db.from('team_members')
-      .select('id, first_name, last_name, email, phone, role')
+      .select('id, first_name, last_name, email, phone, role_type')
       .eq('id', leadForFallback['setter_id'] as string).single()
     if (leadSetter) {
       setter = leadSetter as Record<string, unknown>
