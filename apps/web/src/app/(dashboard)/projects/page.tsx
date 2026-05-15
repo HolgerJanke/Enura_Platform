@@ -119,15 +119,15 @@ export default async function ProjectsPage() {
 
   // Completed in last 30 days
   const completed30d = completedProjects.filter(
-    (p) => p.completed_at && new Date(p.completed_at) > thirtyDaysAgo,
+    (p) => p.completion_date && new Date(p.completion_date) > thirtyDaysAgo,
   ).length
 
-  // Average throughput: days from created_at to completed_at for recently completed projects
-  const completedWithDates = completedProjects.filter((p) => p.completed_at && p.created_at)
+  // Average throughput: days from created_at to completion_date for completed projects
+  const completedWithDates = completedProjects.filter((p) => p.completion_date && p.created_at)
   const avgThroughputDays = completedWithDates.length > 0
     ? Math.round(
         completedWithDates.reduce((sum, p) => {
-          return sum + (new Date(p.completed_at!).getTime() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)
+          return sum + (new Date(p.completion_date!).getTime() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)
         }, 0) / completedWithDates.length,
       )
     : null
