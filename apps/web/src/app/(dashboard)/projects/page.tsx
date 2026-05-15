@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
-import { formatNumber, formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
-import type { ProjectsDailyMetrics } from '@enura/types'
+import { formatNumber, formatDate } from '@enura/types'
 import type { ProjectRow, PhaseDefinitionRow, OfferRow, TeamMemberRow } from '@enura/types'
 
 // Offer-status pipeline columns when no projects exist
@@ -25,18 +24,14 @@ export default async function ProjectsPage() {
   const db = getDataAccess()
   const today = new Date().toISOString().split('T')[0]!
 
-  // Fetch KPI snapshot for summary stats
-  const snapshot = await db.kpis.findLatest(
-    session.companyId,
-    KPI_SNAPSHOT_TYPES.PROJECTS_DAILY,
-  )
-  const metrics = snapshot?.metrics as ProjectsDailyMetrics | undefined
-
   // Fetch live projects and phase definitions for the Kanban view
-  const [projects, phaseDefinitions] = await Promise.all([
+  const [activeProjects, completedProjects, onHoldProjects, phaseDefinitions] = await Promise.all([
     db.projects.findMany(session.companyId, { status: 'active' }),
+    db.projects.findMany(session.companyId, { status: 'completed' }),
+    db.projects.findMany(session.companyId, { status: 'on_hold' }),
     db.phaseDefinitions.findByCompanyId(session.companyId),
   ])
+  const projects = activeProjects
 
   const hasProjects = projects.length > 0
 
@@ -105,13 +100,44 @@ export default async function ProjectsPage() {
   }
   const memberMap = new Map(teamMembers.map((m) => [m.id, m]))
 
-  // Compute stats for offer-based view
-  const totalActive = hasProjects ? (metrics?.total_active ?? projects.length) : (draftCount + sentCount + wonCount)
-  const totalWon = hasProjects ? (metrics?.completed_30d ?? 0) : wonCount
-  const totalDelayed = hasProjects ? (metrics?.delayed_count ?? 0) : expiredCount
-  const totalStalled = hasProjects ? (metrics?.stalled_count ?? 0) : lostCount
+  // Compute stats live from loaded project data
+  const now = new Date()
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const phaseMapForStats = new Map(phaseDefinitions.map((p) => [p.id, p]))
+
+  // Delayed: active projects exceeding their phase's stall threshold
+  const delayedCount = activeProjects.filter((p) => {
+    if (!p.phase_entered_at || !p.phase_id) return false
+    const phase = phaseMapForStats.get(p.phase_id)
+    if (!phase?.stall_threshold_days) return false
+    const days = Math.floor((now.getTime() - new Date(p.phase_entered_at).getTime()) / (1000 * 60 * 60 * 24))
+    return days > phase.stall_threshold_days
+  }).length
+
+  // Blocked: projects with status on_hold
+  const blockedCount = onHoldProjects.length
+
+  // Completed in last 30 days
+  const completed30d = completedProjects.filter(
+    (p) => p.completed_at && new Date(p.completed_at) > thirtyDaysAgo,
+  ).length
+
+  // Average throughput: days from created_at to completed_at for recently completed projects
+  const completedWithDates = completedProjects.filter((p) => p.completed_at && p.created_at)
+  const avgThroughputDays = completedWithDates.length > 0
+    ? Math.round(
+        completedWithDates.reduce((sum, p) => {
+          return sum + (new Date(p.completed_at!).getTime() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)
+        }, 0) / completedWithDates.length,
+      )
+    : null
+
+  const totalActive = hasProjects ? activeProjects.length : (draftCount + sentCount + wonCount)
+  const totalDelayed = hasProjects ? delayedCount : expiredCount
+  const totalStalled = hasProjects ? blockedCount : lostCount
+  const totalWon = hasProjects ? completed30d : wonCount
   const pipelineValue = hasProjects
-    ? (metrics?.avg_throughput_days !== null && metrics?.avg_throughput_days !== undefined ? `${metrics.avg_throughput_days}d` : '--')
+    ? (avgThroughputDays !== null ? `${avgThroughputDays}d` : '--')
     : (pipelineTotal > 1_000_000
         ? `CHF ${(pipelineTotal / 1_000_000).toFixed(1)}M`
         : pipelineTotal > 0
@@ -314,30 +340,43 @@ export default async function ProjectsPage() {
         )}
       </div>
 
-      {/* Phase distribution table (from snapshot) */}
-      {metrics?.by_phase && Object.keys(metrics.by_phase).length > 0 && (
+      {/* Phase distribution table (live) */}
+      {hasProjects && sortedPhases.length > 0 && (
         <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-lg font-medium text-brand-text-primary mb-4">
-            Projekte pro Phase (Snapshot)
+            Projekte pro Phase
           </h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="py-2 text-left text-brand-text-secondary font-medium">Phase</th>
                 <th className="py-2 text-right text-brand-text-secondary font-medium">Anzahl</th>
+                <th className="py-2 text-right text-brand-text-secondary font-medium">Verzögert</th>
               </tr>
             </thead>
             <tbody>
-              {Object.entries(metrics.by_phase)
-                .sort(([a], [b]) => a.localeCompare(b, 'de', { numeric: true }))
-                .map(([phaseName, count]) => (
-                  <tr key={phaseName} className="border-b border-gray-100">
-                    <td className="py-2 text-brand-text-primary">{phaseName}</td>
+              {sortedPhases.map((phase) => {
+                const phaseProjects = projectsByPhase.get(phase.id) ?? []
+                const stalledInPhase = phaseProjects.filter((p) => isStalledProject(p, phase)).length
+                return (
+                  <tr key={phase.id} className="border-b border-gray-100">
+                    <td className="py-2 text-brand-text-primary flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: phase.color ?? '#6b7280' }} />
+                      {phase.phase_number}. {phase.name}
+                    </td>
                     <td className="py-2 text-right font-medium text-brand-text-primary">
-                      {formatNumber(count)}
+                      {formatNumber(phaseProjects.length)}
+                    </td>
+                    <td className="py-2 text-right font-medium">
+                      {stalledInPhase > 0 ? (
+                        <span className="text-red-600">{stalledInPhase}</span>
+                      ) : (
+                        <span className="text-brand-text-secondary">0</span>
+                      )}
                     </td>
                   </tr>
-                ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
