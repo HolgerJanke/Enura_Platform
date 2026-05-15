@@ -10,9 +10,9 @@ import type { BotManifestInfo } from '@/lib/bot-client'
 // ---------------------------------------------------------------------------
 
 const TIER_CONFIG: Record<string, { label: string; color: string }> = {
-  tier1: { label: 'MVP', color: 'bg-green-50 text-green-700' },
-  tier2: { label: 'Standard', color: 'bg-blue-50 text-blue-700' },
-  tier3: { label: 'Branche', color: 'bg-purple-50 text-purple-700' },
+  tier1: { label: 'Core', color: 'bg-green-50 text-green-700' },
+  tier2: { label: 'Multi-Channel', color: 'bg-blue-50 text-blue-700' },
+  tier3: { label: 'Custom', color: 'bg-purple-50 text-purple-700' },
 }
 
 function TierBadge({ tier }: { tier: string }) {
@@ -108,14 +108,14 @@ export default async function BotsPage() {
     tier3: bots.filter((b) => b.tier === 'tier3'),
   }
 
-  // Preview bots to show in "coming soon" state
+  // Real bots from alpen-energie-bots (running on Strato VPS)
   const previewBots = [
-    { name: 'Rechnungsprüfer', description: 'Prüft eingehende Rechnungen automatisch auf Vollständigkeit, Duplikate und Abweichungen.', tier: 'tier1', connectors: ['Bexio'] },
-    { name: 'Cashflow-Prognose', description: 'Erstellt wöchentliche Cashflow-Prognosen basierend auf offenen Rechnungen und geplanten Ausgaben.', tier: 'tier1', connectors: ['Bexio'] },
-    { name: 'Lead-Qualifizierer', description: 'Bewertet eingehende Leads automatisch anhand von Kriterien wie PLZ, Dachfläche und Energieverbrauch.', tier: 'tier2', connectors: ['Reonic', 'LeadNotes'] },
-    { name: 'Angebots-Nachfasser', description: 'Erkennt unbeantwortete Angebote und erstellt personalisierte Follow-up-Vorschläge.', tier: 'tier2', connectors: ['Bexio', '3CX'] },
-    { name: 'Anomalie-Wächter', description: 'Überwacht KPIs und meldet ungewöhnliche Abweichungen in Echtzeit an das Team.', tier: 'tier1', connectors: [] },
-    { name: 'Montage-Planer', description: 'Optimiert Montagetermine basierend auf Teamverfügbarkeit, Standort und Materiallager.', tier: 'tier3', connectors: ['Google Calendar'] },
+    { name: 'AB-Bot', description: 'Compliance-Prüfung: PVSol + Signed-Offer + Bildanalyse via Claude Vision. 4-Wege-Diff pro Deal, Approve/Stop an Berater.', tier: 'tier1', connectors: ['Reonic', 'Claude'], status: 'active' },
+    { name: 'Lead-Checker', description: 'Tägliche Pipeline-Hygiene: Leads ohne Erstkontakt (2h), kein Update (48h), Eskalation (72h), stille Deals (>14d).', tier: 'tier1', connectors: ['Reonic', 'Telegram'], status: 'active' },
+    { name: 'CEO-Bot', description: 'KPI-Aggregator: Pipeline-Verteilung, Won-Deals, offene Deals aus Reonic. Tägliches + stündliches Reporting.', tier: 'tier1', connectors: ['Reonic'], status: 'active' },
+    { name: 'Ticket-Bot', description: 'Multi-Channel Ticket-System: Tag-Auswahl, Beschreibung, Auto-Routing an zuständige Person. Tickets landen in Vikunja.', tier: 'tier2', connectors: ['Telegram', 'WhatsApp', 'Vikunja'], status: 'active' },
+    { name: 'Telegram-Bot', description: 'Worker für Berater-Benachrichtigungen, Compliance-Resultate, Approve/Stop-Buttons und Callback-Handling.', tier: 'tier1', connectors: ['Telegram'], status: 'active' },
+    { name: 'WhatsApp-Bot', description: 'Webhook-Handler für eingehende WhatsApp-Nachrichten. Leitet Kundenanfragen an den Ticket-Flow weiter.', tier: 'tier2', connectors: ['WhatsApp'], status: 'planned' },
   ]
 
   return (
@@ -160,14 +160,20 @@ export default async function BotsPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Intelligente Automatisierungen</h2>
+                <h2 className="text-base font-semibold text-gray-900">Alpen Energie Bots</h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Bots automatisieren wiederkehrende Aufgaben wie Rechnungsprüfung, Lead-Qualifizierung und Cashflow-Prognosen.
-                  Sie nutzen Ihre verbundenen Connectoren und lernen aus Ihren Daten.
+                  Diese Bots laufen bereits produktiv und automatisieren Compliance-Checks, Lead-Monitoring,
+                  KPI-Reporting und Ticket-Management. Integration in die Plattform wird vorbereitet.
                 </p>
-                <p className="text-xs text-blue-600 font-medium mt-3">
-                  Verfügbar im nächsten Release
-                </p>
+                <div className="flex items-center gap-3 mt-3">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> 5 Bots aktiv auf VPS
+                  </span>
+                  <span className="text-xs text-gray-400">|</span>
+                  <span className="text-xs text-blue-600 font-medium">
+                    Plattform-Integration in Arbeit
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -176,15 +182,21 @@ export default async function BotsPage() {
             {previewBots.map((bot) => (
               <div
                 key={bot.name}
-                className="rounded-xl bg-white p-5 shadow-brand-sm border border-gray-100 opacity-75"
+                className="rounded-xl bg-white p-5 shadow-brand-sm border border-gray-100"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-400">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${bot.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5" />
                     </svg>
                   </div>
-                  <TierBadge tier={bot.tier} />
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${bot.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${bot.status === 'active' ? 'bg-green-400' : 'bg-gray-300'}`} />
+                      {bot.status === 'active' ? 'Aktiv' : 'Geplant'}
+                    </span>
+                    <TierBadge tier={bot.tier} />
+                  </div>
                 </div>
                 <h3 className="text-sm font-semibold text-brand-text-primary">{bot.name}</h3>
                 <p className="text-xs text-brand-text-secondary mt-1 line-clamp-2">{bot.description}</p>
