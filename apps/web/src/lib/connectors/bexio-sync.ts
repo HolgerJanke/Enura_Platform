@@ -322,6 +322,86 @@ async function matchInvoicesToProjects(
 }
 
 // ---------------------------------------------------------------------------
+// 5b. Auto-match incoming invoices (expenses) to projects by sender_name
+// ---------------------------------------------------------------------------
+
+async function matchExpensesToProjects(
+  companyId: string,
+  errors: SyncError[],
+): Promise<number> {
+  const db = createSupabaseServiceClient()
+  let matched = 0
+
+  // Load all projects with their lead info for matching
+  const { data: projects } = await db
+    .from('projects')
+    .select('id, title, lead_id, leads!inner(first_name, last_name, email)')
+    .eq('company_id', companyId)
+
+  if (!projects || projects.length === 0) return 0
+
+  // Build lookup maps from project leads
+  const projectByName = new Map<string, string>()
+  const projectByLastName = new Map<string, string>()
+
+  for (const p of projects as Row[]) {
+    const pid = p['id'] as string
+    const leads = p['leads'] as Row | null
+    if (!leads) continue
+    const firstName = (leads['first_name'] as string) ?? ''
+    const lastName = (leads['last_name'] as string) ?? ''
+    const fullName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase()
+    if (fullName) projectByName.set(fullName, pid)
+    if (lastName) projectByLastName.set(lastName.toLowerCase(), pid)
+  }
+
+  // Match unlinked incoming invoices by sender_name
+  const { data: unlinked } = await db
+    .from('invoices_incoming')
+    .select('id, sender_name')
+    .eq('company_id', companyId)
+    .is('project_id', null)
+    .not('sender_name', 'is', null)
+
+  const updates: Array<{ id: string; project_id: string }> = []
+
+  for (const inv of (unlinked ?? []) as Row[]) {
+    const name = ((inv['sender_name'] as string) ?? '').toLowerCase().trim()
+    if (!name || name === 'unbekannt' || name === 'bexio kreditor') continue
+
+    // Try exact full name match
+    let pid = projectByName.get(name)
+    // Try last name match
+    if (!pid) {
+      const parts = name.split(' ')
+      const lastName = parts[parts.length - 1]
+      if (lastName && lastName.length > 2) {
+        pid = projectByLastName.get(lastName)
+      }
+    }
+    if (pid) {
+      updates.push({ id: inv['id'] as string, project_id: pid })
+    }
+  }
+
+  // Batch-update matched expenses
+  for (const upd of updates) {
+    const { error } = await db
+      .from('invoices_incoming')
+      .update({ project_id: upd.project_id })
+      .eq('id', upd.id)
+      .is('project_id', null)
+    if (!error) matched++
+  }
+
+  if (matched > 0) {
+    console.log(`[bexio-sync] Matched ${matched} incoming invoices (expenses) to projects`)
+  }
+
+  return matched
+}
+
+// ---------------------------------------------------------------------------
 // Main Bexio sync function
 // ---------------------------------------------------------------------------
 
@@ -516,6 +596,17 @@ export async function syncBexio(
     } catch (err) {
       errors.push({
         code: 'BEXIO_MATCH_PROJECTS',
+        message: err instanceof Error ? err.message : String(err),
+        context: {},
+      })
+    }
+
+    // ── 5b. Auto-match expenses (invoices_incoming) to projects ─────
+    try {
+      await matchExpensesToProjects(companyId, errors)
+    } catch (err) {
+      errors.push({
+        code: 'BEXIO_MATCH_EXPENSES',
         message: err instanceof Error ? err.message : String(err),
         context: {},
       })
