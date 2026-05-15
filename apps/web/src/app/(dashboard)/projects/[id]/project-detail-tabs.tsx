@@ -19,19 +19,8 @@ interface Props {
   calendarEvents: Array<Record<string, unknown>>
 }
 
-type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'guv' | 'setter' | 'berater' | 'dokumente' | 'prozesse'
+type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'guv' | 'dokumente' | 'prozesse'
 type SelectedEvent = { evt: Record<string, unknown>; invoice: Record<string, unknown> | null } | null
-
-const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'uebersicht', label: 'Übersicht' },
-  { id: 'zeitachse', label: 'Zeitachse' },
-  { id: 'finanzen', label: 'Finanzen' },
-  { id: 'guv', label: 'GuV Projekt' },
-  { id: 'setter', label: 'Setter' },
-  { id: 'berater', label: 'Berater' },
-  { id: 'dokumente', label: 'Dokumente' },
-  { id: 'prozesse', label: 'Prozesse' },
-]
 
 function fmtDate(d: string | null): string {
   if (!d) return '—'
@@ -44,6 +33,19 @@ function fmtCHF(n: number | null | undefined): string {
 }
 
 export function ProjectDetailTabs({ project, lead, offer, berater, setter, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents, calls, calendarEvents }: Props) {
+  // Build tabs dynamically — only show tabs that have data (Übersicht + Dokumente always shown)
+  const hasTimeline = phaseHistory.length > 0 || liqEvents.length > 0
+  const hasFinancials = liqEvents.length > 0
+  const hasProcesses = processInstances.length > 0
+
+  const visibleTabs: Array<{ id: Tab; label: string }> = [
+    { id: 'uebersicht', label: 'Übersicht' },
+    ...(hasTimeline ? [{ id: 'zeitachse' as Tab, label: 'Zeitachse' }] : []),
+    ...(hasFinancials ? [{ id: 'finanzen' as Tab, label: 'Finanzen' }, { id: 'guv' as Tab, label: 'GuV Projekt' }] : []),
+    { id: 'dokumente', label: `Dokumente${documents.length > 0 ? ` (${documents.length})` : ''}` },
+    ...(hasProcesses ? [{ id: 'prozesse' as Tab, label: 'Prozesse' }] : []),
+  ]
+
   const [activeTab, setActiveTab] = useState<Tab>('uebersicht')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
 
@@ -57,14 +59,14 @@ export function ProjectDetailTabs({ project, lead, offer, berater, setter, phase
 
   return (
     <div>
-      {/* Tab navigation */}
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
-        {TABS.map((tab) => (
+      {/* Tab navigation — only tabs with data */}
+      <div className="flex gap-1 border-b border-gray-200 mb-6 overflow-x-auto">
+        {visibleTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -77,106 +79,173 @@ export function ProjectDetailTabs({ project, lead, offer, berater, setter, phase
 
       {/* Tab content */}
       {activeTab === 'uebersicht' && (
-        <div className="space-y-6">
-          {/* Project info */}
-          <div className="rounded-lg border border-gray-200 bg-white p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Projektdaten</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div><span className="text-gray-500">Projekttitel:</span> <span className="font-medium">{project['title'] as string}</span></div>
-              <div><span className="text-gray-500">Kunde:</span> <span className="font-medium">{project['customer_name'] as string}</span></div>
-              <div><span className="text-gray-500">Status:</span> <span className="font-medium">{project['status'] as string}</span></div>
-              <div><span className="text-gray-500">Projektwert:</span> <span className="font-medium">{fmtCHF(project['project_value'] as number | null)}</span></div>
-              <div><span className="text-gray-500">PV-Anlage:</span> <span className="font-medium">{project['system_size_kwp'] ? `${project['system_size_kwp']} kWp` : '—'}</span></div>
-              <div><span className="text-gray-500">Wechselrichter:</span> <span className="font-medium">{project['inverter_size_kw'] ? `${project['inverter_size_kw']} kW` : '—'}</span></div>
-              <div><span className="text-gray-500">Wärmepumpe:</span> <span className="font-medium">{project['heatpump_size_kw'] ? `${project['heatpump_size_kw']} kW` : '—'}</span></div>
-              <div><span className="text-gray-500">Projektstart:</span> <span className="font-medium">{fmtDate(project['project_start_date'] as string | null)}</span></div>
-              <div><span className="text-gray-500">Installationsdatum:</span> <span className="font-medium">{fmtDate(project['installation_date'] as string | null)}</span></div>
-              <div><span className="text-gray-500">Abschlussdatum:</span> <span className="font-medium">{fmtDate(project['completion_date'] as string | null)}</span></div>
-              <div><span className="text-gray-500">Erstellt:</span> <span className="font-medium">{fmtDate(project['created_at'] as string)}</span></div>
-              <div><span className="text-gray-500">Externe ID:</span> <span className="font-medium font-mono">{(project['external_id'] as string) || '—'}</span></div>
-            </div>
-            {(project['description'] as string | null) ? (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-500 mb-1">Beschreibung</p>
-                <p className="text-sm text-gray-700">{project['description'] as string}</p>
-              </div>
-            ) : null}
-            {(project['notes'] as string | null) ? (
-              <div className="mt-3">
-                <p className="text-xs text-gray-500 mb-1">Notizen</p>
-                <p className="text-sm text-gray-700">{project['notes'] as string}</p>
-              </div>
-            ) : null}
-          </div>
-
+        <div className="space-y-5">
           {/* Berater & Setter side by side */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-5">
-              <h3 className="text-sm font-semibold text-indigo-900 mb-3 flex items-center gap-2">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                Berater
-              </h3>
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="h-4 w-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Berater</h3>
+              </div>
               {berater ? (
-                <div className="space-y-1.5 text-sm">
-                  <p className="font-semibold text-indigo-900">{String(berater['first_name'] ?? '')} {String(berater['last_name'] ?? '')}</p>
-                  {berater['email'] ? <p className="text-indigo-700 text-xs">{String(berater['email'])}</p> : null}
-                  {berater['phone'] ? <p className="text-indigo-700 text-xs font-mono">{String(berater['phone'])}</p> : null}
-                  {berater['role'] ? <p className="text-indigo-600 text-xs">{String(berater['role'])}</p> : null}
+                <div>
+                  <p className="text-base font-bold text-indigo-900">{String(berater['first_name'] ?? '')} {String(berater['last_name'] ?? '')}</p>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                    {berater['email'] ? <span className="text-xs text-indigo-700">{String(berater['email'])}</span> : null}
+                    {berater['phone'] ? <span className="text-xs text-indigo-700 font-mono">{String(berater['phone'])}</span> : null}
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-indigo-600">Nicht zugeordnet</p>
+                <p className="text-sm text-indigo-500 italic">Nicht zugeordnet</p>
               )}
             </div>
-            <div className="rounded-lg border border-teal-200 bg-teal-50 p-5">
-              <h3 className="text-sm font-semibold text-teal-900 mb-3 flex items-center gap-2">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Setter
-              </h3>
+            <div className="rounded-lg border border-teal-200 bg-teal-50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="h-4 w-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <h3 className="text-xs font-semibold text-teal-600 uppercase tracking-wide">Setter</h3>
+              </div>
               {setter ? (
-                <div className="space-y-1.5 text-sm">
-                  <p className="font-semibold text-teal-900">{String(setter['first_name'] ?? '')} {String(setter['last_name'] ?? '')}</p>
-                  {setter['email'] ? <p className="text-teal-700 text-xs">{String(setter['email'])}</p> : null}
-                  {setter['phone'] ? <p className="text-teal-700 text-xs font-mono">{String(setter['phone'])}</p> : null}
-                  {setter['role'] ? <p className="text-teal-600 text-xs">{String(setter['role'])}</p> : null}
+                <div>
+                  <p className="text-base font-bold text-teal-900">{String(setter['first_name'] ?? '')} {String(setter['last_name'] ?? '')}</p>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                    {setter['email'] ? <span className="text-xs text-teal-700">{String(setter['email'])}</span> : null}
+                    {setter['phone'] ? <span className="text-xs text-teal-700 font-mono">{String(setter['phone'])}</span> : null}
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-teal-600">Nicht zugeordnet</p>
+                <p className="text-sm text-teal-500 italic">Nicht zugeordnet</p>
               )}
             </div>
           </div>
 
-          {/* Lead info */}
-          {lead && (
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Lead / Kunde
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div><span className="text-gray-500">Name:</span> <span className="font-medium">{String(lead['first_name'] ?? '')} {String(lead['last_name'] ?? '')}</span></div>
-                <div><span className="text-gray-500">E-Mail:</span> <span className="font-medium">{String(lead['email'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Telefon:</span> <span className="font-medium font-mono">{String(lead['phone'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Adresse:</span> <span className="font-medium">{[lead['address_street'], lead['address_zip'], lead['address_city']].filter(Boolean).join(', ') || '—'}</span></div>
-                <div><span className="text-gray-500">Quelle:</span> <span className="font-medium">{String(lead['source'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Status:</span> <span className="font-medium">{String(lead['status'] ?? '—')}</span></div>
+          {/* Lead + Offer side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Lead / Kunde */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Kunde / Lead</h3>
+              {lead ? (
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold text-gray-900">{String(lead['first_name'] ?? '')} {String(lead['last_name'] ?? '')}</p>
+                  {lead['email'] ? <p className="text-gray-600 text-xs">{String(lead['email'])}</p> : null}
+                  {lead['phone'] ? <p className="text-gray-600 text-xs font-mono">{String(lead['phone'])}</p> : null}
+                  {(lead['address_street'] || lead['address_city']) ? (
+                    <p className="text-gray-500 text-xs">{[lead['address_street'], lead['address_zip'], lead['address_city']].filter(Boolean).join(', ')}</p>
+                  ) : null}
+                  <div className="flex items-center gap-2 pt-1">
+                    {lead['source'] ? <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">{String(lead['source'])}</span> : null}
+                    {lead['status'] ? <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">{String(lead['status'])}</span> : null}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic">Kein Lead verknüpft</p>
+              )}
+            </div>
+
+            {/* Angebot */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Angebot</h3>
+              {offer ? (
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold text-gray-900">{String(offer['title'] ?? '—')}</p>
+                  <p className="text-xl font-bold text-gray-900 font-mono">{fmtCHF(offer['amount_chf'] as number | null)}</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                      offer['status'] === 'won' ? 'bg-green-100 text-green-700' :
+                      offer['status'] === 'lost' ? 'bg-red-100 text-red-700' :
+                      offer['status'] === 'sent' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {offer['status'] === 'won' ? 'Gewonnen' : offer['status'] === 'sent' ? 'Versendet' : offer['status'] === 'draft' ? 'Entwurf' : offer['status'] === 'lost' ? 'Verloren' : String(offer['status'] ?? '—')}
+                    </span>
+                    {offer['sent_at'] ? <span className="text-xs text-gray-400">Gesendet: {fmtDate(offer['sent_at'] as string)}</span> : null}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic">Kein Angebot verknüpft</p>
+              )}
+            </div>
+          </div>
+
+          {/* Project technical details — only show fields that have values */}
+          {(() => {
+            const fields: Array<{ label: string; value: string | null }> = [
+              { label: 'PV-Anlage', value: project['system_size_kwp'] ? `${project['system_size_kwp']} kWp` : null },
+              { label: 'Wechselrichter', value: project['inverter_size_kw'] ? `${project['inverter_size_kw']} kW` : null },
+              { label: 'Wärmepumpe', value: project['heatpump_size_kw'] ? `${project['heatpump_size_kw']} kW` : null },
+              { label: 'Projektstart', value: project['project_start_date'] ? fmtDate(project['project_start_date'] as string) : null },
+              { label: 'Installationsdatum', value: project['installation_date'] ? fmtDate(project['installation_date'] as string) : null },
+              { label: 'Abschlussdatum', value: project['completion_date'] ? fmtDate(project['completion_date'] as string) : null },
+              { label: 'Erstellt', value: fmtDate(project['created_at'] as string) },
+            ]
+            const filledFields = fields.filter(f => f.value)
+            if (filledFields.length === 0) return null
+            return (
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Projektdaten</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                  {filledFields.map((f) => (
+                    <div key={f.label}>
+                      <p className="text-xs text-gray-400">{f.label}</p>
+                      <p className="font-medium text-gray-900">{f.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {(project['description'] as string | null) ? (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-400 mb-1">Beschreibung</p>
+                    <p className="text-sm text-gray-700">{project['description'] as string}</p>
+                  </div>
+                ) : null}
+                {(project['notes'] as string | null) ? (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-400 mb-1">Notizen</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-line">{project['notes'] as string}</p>
+                  </div>
+                ) : null}
+              </div>
+            )
+          })()}
+
+          {/* Calls linked to this project */}
+          {calls.length > 0 && (
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Anrufe ({calls.length})</h3>
+              <div className="divide-y divide-gray-100">
+                {calls.slice(0, 5).map((call, i) => (
+                  <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${call['direction'] === 'inbound' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {call['direction'] === 'inbound' ? '↓ Ein' : '↑ Aus'}
+                      </span>
+                      <span className="text-gray-900">{fmtDate(call['started_at'] as string)}</span>
+                      <span className={`text-xs ${call['status'] === 'answered' ? 'text-green-600' : 'text-red-500'}`}>
+                        {call['status'] === 'answered' ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-400 font-mono">
+                      {call['duration_seconds'] ? `${Math.floor(Number(call['duration_seconds']) / 60)}:${String(Number(call['duration_seconds']) % 60).padStart(2, '0')}` : '—'}
+                    </span>
+                  </div>
+                ))}
+                {calls.length > 5 && <div className="px-4 py-2 text-xs text-gray-400 text-center">+ {calls.length - 5} weitere Anrufe</div>}
               </div>
             </div>
           )}
 
-          {/* Offer info */}
-          {offer && (
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                Angebot
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div><span className="text-gray-500">Titel:</span> <span className="font-medium">{String(offer['title'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Betrag:</span> <span className="font-medium font-mono">{fmtCHF(offer['amount_chf'] as number | null)}</span></div>
-                <div><span className="text-gray-500">Status:</span> <span className={`font-medium ${offer['status'] === 'won' ? 'text-green-700' : offer['status'] === 'lost' ? 'text-red-600' : 'text-gray-900'}`}>{offer['status'] === 'won' ? 'Gewonnen' : offer['status'] === 'sent' ? 'Versendet' : offer['status'] === 'draft' ? 'Entwurf' : offer['status'] === 'lost' ? 'Verloren' : String(offer['status'] ?? '—')}</span></div>
-                <div><span className="text-gray-500">Gesendet:</span> <span className="font-medium">{fmtDate(offer['sent_at'] as string | null)}</span></div>
-                {offer['valid_until'] ? <div><span className="text-gray-500">Gültig bis:</span> <span className="font-medium">{fmtDate(offer['valid_until'] as string)}</span></div> : null}
-                {offer['created_at'] ? <div><span className="text-gray-500">Erstellt:</span> <span className="font-medium">{fmtDate(offer['created_at'] as string)}</span></div> : null}
+          {/* Calendar events linked to this project */}
+          {calendarEvents.length > 0 && (
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Termine ({calendarEvents.length})</h3>
+              <div className="divide-y divide-gray-100">
+                {calendarEvents.slice(0, 5).map((evt, i) => (
+                  <div key={i} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                    <div>
+                      <span className="text-gray-900 font-medium">{String(evt['title'] ?? '—')}</span>
+                      {evt['location'] ? <span className="text-xs text-gray-400 ml-2">· {String(evt['location'])}</span> : null}
+                    </div>
+                    <span className="text-xs text-gray-500">{fmtDate(evt['starts_at'] as string)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -426,229 +495,6 @@ export function ProjectDetailTabs({ project, lead, offer, berater, setter, phase
           </div>
         )
       })()}
-
-      {/* Setter tab */}
-      {activeTab === 'setter' && (
-        <div>
-          {/* Setter info card */}
-          <div className="mb-4 rounded-lg bg-teal-50 border border-teal-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-teal-600 mb-1">Zugeordneter Setter</p>
-                {setter ? (
-                  <div>
-                    <p className="text-sm font-semibold text-teal-900">{String(setter['first_name'] ?? '')} {String(setter['last_name'] ?? '')}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      {setter['email'] ? <span className="text-xs text-teal-700">{String(setter['email'])}</span> : null}
-                      {setter['phone'] ? <span className="text-xs text-teal-700 font-mono">{String(setter['phone'])}</span> : null}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm font-medium text-teal-700">Nicht zugeordnet</p>
-                )}
-              </div>
-              {lead?.['phone'] ? (
-                <div className="text-right">
-                  <p className="text-xs text-teal-600">Kunden-Telefon</p>
-                  <p className="text-sm font-mono text-teal-900">{String(lead['phone'])}</p>
-                </div>
-              ) : null}
-            </div>
-          </div>
-          {calls.length === 0 && calendarEvents.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-              <p className="text-sm text-gray-500">Keine Setter-Kommunikation zu diesem Projekt.</p>
-              <p className="text-xs text-gray-400 mt-1">Anrufe und Termine werden automatisch aus den Integrationen geladen.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Calls */}
-              {calls.length > 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                  <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Anrufe ({calls.length})</h3>
-                  <table className="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Richtung</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Dauer</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Nummer</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {calls.map((call, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 text-gray-900">{fmtDate(call['started_at'] as string)}</td>
-                          <td className="px-4 py-2">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['direction'] === 'inbound' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                              {call['direction'] === 'inbound' ? 'Eingehend' : 'Ausgehend'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['status'] === 'answered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                              {call['status'] === 'answered' ? 'Beantwortet' : call['status'] === 'missed' ? 'Verpasst' : String(call['status'])}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-right font-mono text-gray-500">
-                            {call['duration_seconds'] ? `${Math.floor(Number(call['duration_seconds']) / 60)}:${String(Number(call['duration_seconds']) % 60).padStart(2, '0')}` : '—'}
-                          </td>
-                          <td className="px-4 py-2 text-gray-500 font-mono text-xs">
-                            {String(call['direction'] === 'inbound' ? call['caller_number'] ?? '' : call['callee_number'] ?? '')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Calendar events */}
-              {calendarEvents.length > 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                  <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Termine ({calendarEvents.length})</h3>
-                  <table className="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Titel</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ort</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {calendarEvents.map((evt, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 text-gray-900">{fmtDate(evt['starts_at'] as string)}</td>
-                          <td className="px-4 py-2 text-gray-900">{String(evt['title'] ?? '—')}</td>
-                          <td className="px-4 py-2 text-gray-500">{String(evt['location'] ?? '—')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Berater tab */}
-      {activeTab === 'berater' && (
-        <div>
-          {/* Berater info card */}
-          <div className="mb-4 rounded-lg bg-indigo-50 border border-indigo-200 p-4">
-            <p className="text-xs text-indigo-600 mb-1">Zugeordneter Berater</p>
-            {berater ? (
-              <div>
-                <p className="text-sm font-semibold text-indigo-900">{String(berater['first_name'] ?? '')} {String(berater['last_name'] ?? '')}</p>
-                <div className="flex items-center gap-3 mt-1">
-                  {berater['email'] ? <span className="text-xs text-indigo-700">{String(berater['email'])}</span> : null}
-                  {berater['phone'] ? <span className="text-xs text-indigo-700 font-mono">{String(berater['phone'])}</span> : null}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm font-medium text-indigo-700">Nicht zugeordnet</p>
-            )}
-          </div>
-          <div className="space-y-6">
-            {/* Berater calls */}
-            {calls.length > 0 && (
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Anrufe ({calls.length})</h3>
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Richtung</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Dauer</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {calls.map((call, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 text-gray-900">{fmtDate(call['started_at'] as string)}</td>
-                        <td className="px-4 py-2">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['direction'] === 'inbound' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                            {call['direction'] === 'inbound' ? 'Eingehend' : 'Ausgehend'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${call['status'] === 'answered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {call['status'] === 'answered' ? 'Beantwortet' : call['status'] === 'missed' ? 'Verpasst' : String(call['status'])}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono text-gray-500">
-                          {call['duration_seconds'] ? `${Math.floor(Number(call['duration_seconds']) / 60)}:${String(Number(call['duration_seconds']) % 60).padStart(2, '0')}` : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Berater calendar events */}
-            {calendarEvents.length > 0 && (
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Termine ({calendarEvents.length})</h3>
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Datum</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Titel</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ort</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {calendarEvents.map((evt, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 text-gray-900">{fmtDate(evt['starts_at'] as string)}</td>
-                        <td className="px-4 py-2 text-gray-900">{String(evt['title'] ?? '—')}</td>
-                        <td className="px-4 py-2 text-gray-500">{String(evt['location'] ?? '—')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Offers */}
-            {offer ? (
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <h3 className="text-sm font-semibold text-gray-900 px-4 py-3 border-b border-gray-200">Angebote</h3>
-                <div className="p-4">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-gray-500">Titel</p>
-                      <p className="font-medium">{String(offer['title'] ?? '—')}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Betrag</p>
-                      <p className="font-mono font-medium">{fmtCHF(offer['amount_chf'] as number)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Status</p>
-                      <p className="font-medium">{String(offer['status'] ?? '—')}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Gesendet</p>
-                      <p>{fmtDate(offer['sent_at'] as string | null)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {calls.length === 0 && calendarEvents.length === 0 && !offer && (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-                <p className="text-sm text-gray-500">Keine Berater-Kommunikation zu diesem Projekt.</p>
-                <p className="text-xs text-gray-400 mt-1">Anrufe, Termine und Angebote werden automatisch aus den Integrationen geladen.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {activeTab === 'dokumente' && (
         <DocumentsTab projectId={project['id'] as string} documents={documents} />
