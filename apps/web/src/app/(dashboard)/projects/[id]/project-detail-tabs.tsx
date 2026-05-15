@@ -10,6 +10,7 @@ interface Props {
   berater: Record<string, unknown> | null
   setter: Record<string, unknown> | null
   phaseHistory: Array<Record<string, unknown>>
+  timelineMilestones: Array<Record<string, unknown>>
   processInstances: Array<Record<string, unknown>>
   liqEvents: Array<Record<string, unknown>>
   incomingInvoices: Array<Record<string, unknown>>
@@ -22,6 +23,15 @@ interface Props {
 type Tab = 'uebersicht' | 'zeitachse' | 'finanzen' | 'guv' | 'dokumente' | 'prozesse'
 type SelectedEvent = { evt: Record<string, unknown>; invoice: Record<string, unknown> | null } | null
 
+const ALL_TABS: Array<{ id: Tab; label: string }> = [
+  { id: 'uebersicht', label: 'Übersicht' },
+  { id: 'zeitachse', label: 'Zeitachse' },
+  { id: 'finanzen', label: 'Finanzen' },
+  { id: 'guv', label: 'GuV Projekt' },
+  { id: 'dokumente', label: 'Dokumente' },
+  { id: 'prozesse', label: 'Prozesse' },
+]
+
 function fmtDate(d: string | null): string {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -32,20 +42,7 @@ function fmtCHF(n: number | null | undefined): string {
   return `CHF ${Number(n).toLocaleString('de-CH', { minimumFractionDigits: 2 })}`
 }
 
-export function ProjectDetailTabs({ project, lead, offer, berater, setter, phaseHistory, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents, calls, calendarEvents }: Props) {
-  // Build tabs dynamically — only show tabs that have data (Übersicht + Dokumente always shown)
-  const hasTimeline = phaseHistory.length > 0 || liqEvents.length > 0
-  const hasFinancials = liqEvents.length > 0
-  const hasProcesses = processInstances.length > 0
-
-  const visibleTabs: Array<{ id: Tab; label: string }> = [
-    { id: 'uebersicht', label: 'Übersicht' },
-    ...(hasTimeline ? [{ id: 'zeitachse' as Tab, label: 'Zeitachse' }] : []),
-    ...(hasFinancials ? [{ id: 'finanzen' as Tab, label: 'Finanzen' }, { id: 'guv' as Tab, label: 'GuV Projekt' }] : []),
-    { id: 'dokumente', label: `Dokumente${documents.length > 0 ? ` (${documents.length})` : ''}` },
-    ...(hasProcesses ? [{ id: 'prozesse' as Tab, label: 'Prozesse' }] : []),
-  ]
-
+export function ProjectDetailTabs({ project, lead, offer, berater, setter, phaseHistory, timelineMilestones, processInstances, liqEvents, incomingInvoices, outgoingInvoices, documents, calls, calendarEvents }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('uebersicht')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
 
@@ -59,9 +56,9 @@ export function ProjectDetailTabs({ project, lead, offer, berater, setter, phase
 
   return (
     <div>
-      {/* Tab navigation — only tabs with data */}
+      {/* Tab navigation */}
       <div className="flex gap-1 border-b border-gray-200 mb-6 overflow-x-auto">
-        {visibleTabs.map((tab) => (
+        {ALL_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -254,10 +251,26 @@ export function ProjectDetailTabs({ project, lead, offer, berater, setter, phase
 
       {activeTab === 'zeitachse' && (
         <div className="space-y-3">
-          {phaseHistory.length === 0 && liqEvents.length === 0 ? (
+          {timelineMilestones.length === 0 && phaseHistory.length === 0 && liqEvents.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-8">Noch keine Ereignisse aufgezeichnet.</p>
           ) : (
             <div className="relative border-l-2 border-gray-200 pl-6 space-y-4">
+              {/* Milestone events from integrations (lead, offer, project) */}
+              {timelineMilestones.map((ms, i) => {
+                const color = (ms['_color'] as string) ?? 'gray'
+                const colorMap: Record<string, string> = {
+                  teal: 'bg-teal-500', blue: 'bg-blue-500', indigo: 'bg-indigo-500',
+                  green: 'bg-green-500', gray: 'bg-gray-400', red: 'bg-red-500',
+                }
+                return (
+                  <div key={`ms-${i}`} className="relative">
+                    <div className={`absolute -left-[31px] top-1 h-4 w-4 rounded-full border-2 border-white ${colorMap[color] ?? 'bg-gray-400'}`} />
+                    <p className="text-sm font-medium text-gray-900">{String(ms['label'])}</p>
+                    {ms['detail'] ? <p className="text-xs text-gray-500">{String(ms['detail'])}</p> : null}
+                    <p className="text-xs text-gray-400">{fmtDate(ms['date'] as string)}</p>
+                  </div>
+                )
+              })}
               {/* Phase transitions */}
               {phaseHistory.map((ph, i) => (
                 <div key={`ph-${i}`} className="relative">
@@ -278,9 +291,9 @@ export function ProjectDetailTabs({ project, lead, offer, berater, setter, phase
                     </span>
                   </p>
                   {(evt['actual_amount'] as number | null) ? (
-                    <p className="text-xs text-gray-500">Ist: {fmtCHF(evt['actual_amount'] as number)} (Δ {fmtCHF(evt['amount_deviation'] as number)})</p>
+                    <p className="text-xs text-gray-500">Ist: {fmtCHF(evt['actual_amount'] as number)}</p>
                   ) : null}
-                  <p className="text-xs text-gray-400">Budget: {fmtDate(evt['budget_date'] as string | null)} {(evt['actual_date'] as string | null) ? `· Ist: ${fmtDate(evt['actual_date'] as string)}` : ''}</p>
+                  <p className="text-xs text-gray-400">{fmtDate(evt['budget_date'] as string | null)}</p>
                 </div>
               ))}
             </div>

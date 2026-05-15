@@ -49,13 +49,134 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
     p['setter_id'] ? db.from('team_members').select('id, first_name, last_name, email, phone, role').eq('id', p['setter_id'] as string).single() : Promise.resolve({ data: null }),
   ])
 
-  // Compute financial summary
-  const liqEvents = (liqEventsRes.data ?? []) as Array<Record<string, unknown>>
+  // Compute financial events — use real liquidity events, or generate from offer/invoice data
+  const realLiqEvents = (liqEventsRes.data ?? []) as Array<Record<string, unknown>>
+  const offerRaw = offerRes.data as Record<string, unknown> | null
+  const outInvoices = (outgoingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+  const inInvoices = (incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+
+  // Generate synthetic financial events from integration data when no real liq events exist
+  let liqEvents: Array<Record<string, unknown>>
+  if (realLiqEvents.length > 0) {
+    liqEvents = realLiqEvents
+  } else {
+    const syntheticEvents: Array<Record<string, unknown>> = []
+
+    // 1) Offer = budget income (Kundenauftrag)
+    if (offerRaw && Number(offerRaw['amount_chf'] ?? 0) > 0) {
+      const isWon = offerRaw['status'] === 'won'
+      syntheticEvents.push({
+        id: `syn-offer-${offerRaw['id']}`,
+        step_name: 'Kundenauftrag (Angebot)',
+        direction: 'income',
+        budget_amount: Number(offerRaw['amount_chf']),
+        budget_date: (offerRaw['sent_at'] ?? offerRaw['created_at']) as string,
+        actual_amount: isWon ? Number(offerRaw['amount_chf']) : null,
+        actual_date: isWon ? (offerRaw['updated_at'] ?? offerRaw['created_at']) as string : null,
+        amount_deviation: isWon ? 0 : null,
+        marker_type: 'event',
+        _synthetic: true,
+      })
+    }
+
+    // 2) Outgoing invoices (Kundenrechnungen) = actual income
+    for (const inv of outInvoices) {
+      const amt = Number(inv['amount_chf'] ?? 0)
+      if (amt > 0) {
+        syntheticEvents.push({
+          id: `syn-inv-out-${inv['id']}`,
+          step_name: `Kundenrechnung ${inv['invoice_number'] ?? ''}`.trim(),
+          direction: 'income',
+          budget_amount: amt,
+          budget_date: (inv['issued_at'] ?? inv['created_at']) as string,
+          actual_amount: inv['paid_at'] ? amt : null,
+          actual_date: inv['paid_at'] as string | null,
+          amount_deviation: inv['paid_at'] ? 0 : null,
+          marker_type: 'event',
+          _synthetic: true,
+        })
+      }
+    }
+
+    // 3) Incoming invoices (Lieferantenrechnungen) = expenses
+    for (const inv of inInvoices) {
+      const amt = Number(inv['gross_amount'] ?? 0)
+      if (amt > 0) {
+        syntheticEvents.push({
+          id: `syn-inv-in-${inv['id']}`,
+          step_name: `${inv['sender_name'] ?? 'Lieferant'} (${inv['invoice_number'] ?? 'Rechnung'})`,
+          direction: 'expense',
+          budget_amount: amt,
+          budget_date: (inv['due_date'] ?? inv['created_at']) as string,
+          actual_amount: inv['status'] === 'paid' ? amt : null,
+          actual_date: inv['status'] === 'paid' ? (inv['created_at'] as string) : null,
+          amount_deviation: inv['status'] === 'paid' ? 0 : null,
+          marker_type: 'event',
+          invoice_id: inv['id'],
+          _synthetic: true,
+        })
+      }
+    }
+
+    liqEvents = syntheticEvents
+  }
+
+  // Generate timeline events from integration data
+  const realPhaseHistory = (phaseHistoryRes.data ?? []) as Array<Record<string, unknown>>
+  const syntheticTimeline: Array<Record<string, unknown>> = []
+  // Lead created
+  const leadData = leadRes.data as Record<string, unknown> | null
+  if (leadData?.['created_at']) {
+    syntheticTimeline.push({
+      _type: 'milestone', _color: 'teal',
+      label: 'Lead erstellt',
+      detail: `${leadData['first_name'] ?? ''} ${leadData['last_name'] ?? ''}`.trim() + (leadData['source'] ? ` (${leadData['source']})` : ''),
+      date: leadData['created_at'] as string,
+    })
+  }
+  // Offer created
+  if (offerRaw?.['created_at']) {
+    syntheticTimeline.push({
+      _type: 'milestone', _color: 'blue',
+      label: 'Angebot erstellt',
+      detail: `${offerRaw['title'] ?? ''} — CHF ${Number(offerRaw['amount_chf'] ?? 0).toLocaleString('de-CH')}`,
+      date: offerRaw['created_at'] as string,
+    })
+  }
+  // Offer sent
+  if (offerRaw?.['sent_at']) {
+    syntheticTimeline.push({
+      _type: 'milestone', _color: 'indigo',
+      label: 'Angebot versendet',
+      detail: String(offerRaw['title'] ?? ''),
+      date: offerRaw['sent_at'] as string,
+    })
+  }
+  // Offer won
+  if (offerRaw?.['status'] === 'won') {
+    syntheticTimeline.push({
+      _type: 'milestone', _color: 'green',
+      label: 'Auftrag gewonnen',
+      detail: `CHF ${Number(offerRaw['amount_chf'] ?? 0).toLocaleString('de-CH')}`,
+      date: (offerRaw['updated_at'] ?? offerRaw['created_at']) as string,
+    })
+  }
+  // Project created
+  if (p['created_at']) {
+    syntheticTimeline.push({
+      _type: 'milestone', _color: 'gray',
+      label: 'Projekt angelegt',
+      detail: p['title'] as string,
+      date: p['created_at'] as string,
+    })
+  }
+  // Sort timeline by date
+  syntheticTimeline.sort((a, b) => new Date(a['date'] as string).getTime() - new Date(b['date'] as string).getTime())
+
   const totalBudgetIncome = liqEvents.filter(e => e['direction'] === 'income').reduce((s, e) => s + Number(e['budget_amount'] ?? 0), 0)
   const totalBudgetExpense = liqEvents.filter(e => e['direction'] === 'expense').reduce((s, e) => s + Number(e['budget_amount'] ?? 0), 0)
   const totalActualIncome = liqEvents.filter(e => e['direction'] === 'income').reduce((s, e) => s + Number(e['actual_amount'] ?? 0), 0)
   const totalActualExpense = liqEvents.filter(e => e['direction'] === 'expense').reduce((s, e) => s + Number(e['actual_amount'] ?? 0), 0)
-  const hasFinancialData = liqEvents.length > 0
 
   // Resolve berater / setter names
   const berater = beraterRes.data as Record<string, unknown> | null
@@ -128,46 +249,25 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
         </div>
       </div>
 
-      {/* Summary cards — show integration data when no financial events exist */}
-      {hasFinancialData ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Budget Einnahmen</p>
-            <p className="text-lg font-bold text-green-700">CHF {totalBudgetIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Budget Ausgaben</p>
-            <p className="text-lg font-bold text-red-600">CHF {totalBudgetExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Ist Einnahmen</p>
-            <p className="text-lg font-bold text-green-700">CHF {totalActualIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Ist Ausgaben</p>
-            <p className="text-lg font-bold text-red-600">CHF {totalActualExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
-          </div>
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500">Budget Einnahmen</p>
+          <p className="text-lg font-bold text-green-700">CHF {totalBudgetIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Angebotswert</p>
-            <p className="text-lg font-bold text-gray-900">{offerAmount > 0 ? `CHF ${offerAmount.toLocaleString('de-CH', { minimumFractionDigits: 0 })}` : '—'}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Angebotsstatus</p>
-            <p className="text-lg font-bold text-gray-900">{offerStatus === 'won' ? '✓ Gewonnen' : offerStatus === 'sent' ? '📤 Versendet' : offerStatus === 'draft' ? '📝 Entwurf' : offerStatus === 'lost' ? '✗ Verloren' : offerStatus ?? '—'}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Berater</p>
-            <p className="text-base font-semibold text-gray-900 truncate">{beraterName || '—'}</p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">Setter</p>
-            <p className="text-base font-semibold text-gray-900 truncate">{setterName || '—'}</p>
-          </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500">Budget Ausgaben</p>
+          <p className="text-lg font-bold text-red-600">CHF {totalBudgetExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
         </div>
-      )}
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500">Ist Einnahmen</p>
+          <p className="text-lg font-bold text-green-700">CHF {totalActualIncome.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500">Ist Ausgaben</p>
+          <p className="text-lg font-bold text-red-600">CHF {totalActualExpense.toLocaleString('de-CH', { minimumFractionDigits: 0 })}</p>
+        </div>
+      </div>
 
       {/* Tabs */}
       <ProjectDetailTabs
@@ -176,7 +276,8 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
         offer={offerRes.data as Record<string, unknown> | null}
         berater={berater}
         setter={setter}
-        phaseHistory={(phaseHistoryRes.data ?? []) as Array<Record<string, unknown>>}
+        phaseHistory={realPhaseHistory}
+        timelineMilestones={syntheticTimeline}
         processInstances={(processInstancesRes.data ?? []) as Array<Record<string, unknown>>}
         liqEvents={liqEvents}
         incomingInvoices={(incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>}
