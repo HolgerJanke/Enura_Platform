@@ -94,10 +94,12 @@ export default async function BotsPage() {
   const session = await getSession()
   if (!session) return null
 
-  const [bots, health] = await Promise.all([
-    listBotsSafe(),
-    getBotHealthSafe(),
-  ])
+  // If no Bot API URL is configured, show a clean "coming soon" state
+  const botApiConfigured = !!process.env.ENURA_BOTS_API_URL
+
+  const [bots, health] = botApiConfigured
+    ? await Promise.all([listBotsSafe(), getBotHealthSafe()])
+    : [[] as BotManifestInfo[], null]
 
   const apiOnline = health !== null
   const grouped = {
@@ -105,6 +107,16 @@ export default async function BotsPage() {
     tier2: bots.filter((b) => b.tier === 'tier2'),
     tier3: bots.filter((b) => b.tier === 'tier3'),
   }
+
+  // Preview bots to show in "coming soon" state
+  const previewBots = [
+    { name: 'Rechnungsprüfer', description: 'Prüft eingehende Rechnungen automatisch auf Vollständigkeit, Duplikate und Abweichungen.', tier: 'tier1', connectors: ['Bexio'] },
+    { name: 'Cashflow-Prognose', description: 'Erstellt wöchentliche Cashflow-Prognosen basierend auf offenen Rechnungen und geplanten Ausgaben.', tier: 'tier1', connectors: ['Bexio'] },
+    { name: 'Lead-Qualifizierer', description: 'Bewertet eingehende Leads automatisch anhand von Kriterien wie PLZ, Dachfläche und Energieverbrauch.', tier: 'tier2', connectors: ['Reonic', 'LeadNotes'] },
+    { name: 'Angebots-Nachfasser', description: 'Erkennt unbeantwortete Angebote und erstellt personalisierte Follow-up-Vorschläge.', tier: 'tier2', connectors: ['Bexio', '3CX'] },
+    { name: 'Anomalie-Wächter', description: 'Überwacht KPIs und meldet ungewöhnliche Abweichungen in Echtzeit an das Team.', tier: 'tier1', connectors: [] },
+    { name: 'Montage-Planer', description: 'Optimiert Montagetermine basierend auf Teamverfügbarkeit, Standort und Materiallager.', tier: 'tier3', connectors: ['Google Calendar'] },
+  ]
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -116,29 +128,85 @@ export default async function BotsPage() {
             Automatisierungen testen und steuern
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${apiOnline ? 'bg-green-400' : 'bg-red-400'}`} />
-          <span className="text-xs font-medium text-brand-text-secondary">
-            {apiOnline ? 'Bot API online' : 'Bot API offline'}
-          </span>
-          {apiOnline && health && (
-            <span className="text-xs text-brand-text-secondary">
-              &middot; {health.bots} Bots registriert
+        {botApiConfigured && (
+          <div className="flex items-center gap-2">
+            <span className={`h-2.5 w-2.5 rounded-full ${apiOnline ? 'bg-green-400' : 'bg-red-400'}`} />
+            <span className="text-xs font-medium text-brand-text-secondary">
+              {apiOnline ? 'Bot API online' : 'Bot API offline'}
             </span>
-          )}
-        </div>
+            {apiOnline && health && (
+              <span className="text-xs text-brand-text-secondary">
+                &middot; {health.bots} Bots registriert
+              </span>
+            )}
+          </div>
+        )}
+        {!botApiConfigured && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            In Entwicklung
+          </span>
+        )}
       </div>
 
-      {/* Offline banner */}
-      {!apiOnline && (
+      {/* Coming soon state — show preview cards */}
+      {!botApiConfigured && (
+        <>
+          <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-1.46 1.46a3.375 3.375 0 01-4.78 0L12 15.2l-.76.76a3.375 3.375 0 01-4.78 0L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Intelligente Automatisierungen</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Bots automatisieren wiederkehrende Aufgaben wie Rechnungsprüfung, Lead-Qualifizierung und Cashflow-Prognosen.
+                  Sie nutzen Ihre verbundenen Connectoren und lernen aus Ihren Daten.
+                </p>
+                <p className="text-xs text-blue-600 font-medium mt-3">
+                  Verfügbar im nächsten Release
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {previewBots.map((bot) => (
+              <div
+                key={bot.name}
+                className="rounded-xl bg-white p-5 shadow-brand-sm border border-gray-100 opacity-75"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-400">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5" />
+                    </svg>
+                  </div>
+                  <TierBadge tier={bot.tier} />
+                </div>
+                <h3 className="text-sm font-semibold text-brand-text-primary">{bot.name}</h3>
+                <p className="text-xs text-brand-text-secondary mt-1 line-clamp-2">{bot.description}</p>
+                <div className="mt-3 pt-3 border-t border-gray-50">
+                  <p className="text-[10px] font-medium text-brand-text-secondary uppercase tracking-wide mb-1">Connectoren</p>
+                  <ConnectorPills required={bot.connectors} optional={[]} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Offline banner — only show when API is configured but unreachable */}
+      {botApiConfigured && !apiOnline && (
         <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
           <div className="flex items-start gap-3">
             <span className="text-yellow-600 text-lg mt-0.5">&#9888;</span>
             <div>
               <p className="text-sm font-medium text-yellow-800">Bot API nicht erreichbar</p>
               <p className="text-xs text-yellow-700 mt-1">
-                Die Bot API unter <code className="rounded bg-yellow-100 px-1.5 py-0.5 text-[11px]">{process.env.ENURA_BOTS_API_URL ?? 'http://localhost:4000'}</code> antwortet nicht.
-                Stellen Sie sicher, dass der Service läuft.
+                Die Bot API antwortet nicht. Stellen Sie sicher, dass der Service läuft.
               </p>
             </div>
           </div>
