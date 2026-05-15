@@ -178,9 +178,34 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
   const totalActualIncome = liqEvents.filter(e => e['direction'] === 'income').reduce((s, e) => s + Number(e['actual_amount'] ?? 0), 0)
   const totalActualExpense = liqEvents.filter(e => e['direction'] === 'expense').reduce((s, e) => s + Number(e['actual_amount'] ?? 0), 0)
 
-  // Resolve berater / setter names
-  const berater = beraterRes.data as Record<string, unknown> | null
-  const setter = setterRes.data as Record<string, unknown> | null
+  // Resolve berater / setter — fallback from offer/lead if project fields are empty
+  let berater = beraterRes.data as Record<string, unknown> | null
+  let setter = setterRes.data as Record<string, unknown> | null
+  const offerForFallback = offerRes.data as Record<string, unknown> | null
+  const leadForFallback = leadRes.data as Record<string, unknown> | null
+
+  // Fallback: if project has no berater but offer does, resolve from offer
+  if (!berater && offerForFallback?.['berater_id']) {
+    const { data: offerBerater } = await db.from('team_members')
+      .select('id, first_name, last_name, email, phone, role')
+      .eq('id', offerForFallback['berater_id'] as string).single()
+    if (offerBerater) {
+      berater = offerBerater as Record<string, unknown>
+      // Persist to project so future loads are instant
+      await db.from('projects').update({ berater_id: offerForFallback['berater_id'] }).eq('id', id)
+    }
+  }
+  // Fallback: if project has no setter but lead does, resolve from lead
+  if (!setter && leadForFallback?.['setter_id']) {
+    const { data: leadSetter } = await db.from('team_members')
+      .select('id, first_name, last_name, email, phone, role')
+      .eq('id', leadForFallback['setter_id'] as string).single()
+    if (leadSetter) {
+      setter = leadSetter as Record<string, unknown>
+      await db.from('projects').update({ setter_id: leadForFallback['setter_id'] }).eq('id', id)
+    }
+  }
+
   const beraterName = berater ? `${berater['first_name'] ?? ''} ${berater['last_name'] ?? ''}`.trim() : null
   const setterName = setter ? `${setter['first_name'] ?? ''} ${setter['last_name'] ?? ''}`.trim() : null
 
