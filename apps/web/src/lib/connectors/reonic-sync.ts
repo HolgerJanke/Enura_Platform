@@ -240,7 +240,10 @@ function normaliseLead(
   const assignedExtId = lead['assignedUserId'] ?? lead['assigned_to'] ?? null
   const setterId = assignedExtId ? (memberMap.get(String(assignedExtId)) ?? null) : null
 
-  return {
+  const rawStatus = lead['status'] as string | null | undefined
+  const mappedStatus = mapLeadStatus(rawStatus)
+
+  const row: Row = {
     company_id: companyId,
     external_id: String(lead['id']),
     first_name: firstName,
@@ -251,12 +254,18 @@ function normaliseLead(
     address_zip: zip,
     address_city: (lead['city'] as string) ?? null,
     address_canton: (lead['canton'] as string) ?? null,
-    status: mapLeadStatus(lead['status'] as string),
     source: mapLeadSource(lead['source'] as string),
-    setter_id: setterId,
     created_at: createdAt,
     updated_at: updatedAt,
   }
+
+  // Only set status if Reonic actually provided one — don't overwrite manual changes with 'new'
+  if (rawStatus) row.status = mappedStatus
+
+  // Only set setter_id if we resolved one — don't overwrite back-propagated assignments with null
+  if (setterId) row.setter_id = setterId
+
+  return row
 }
 
 function normaliseOffer(
@@ -285,7 +294,15 @@ function normaliseOffer(
   const beraterId = beraterExtId ? (memberMap.get(String(beraterExtId)) ?? null) : null
 
   const customer = offer['customer'] as { id: string } | null
-  const contactExtId = (customer?.id ?? offer['contactId'] ?? offer['lead_id'] ?? null) as string | null
+  const contactExtId = (
+    customer?.id ??
+    offer['contactId'] ??
+    offer['customerId'] ??
+    offer['requestCustomerId'] ??
+    offer['requestId'] ??
+    offer['lead_id'] ??
+    null
+  ) as string | null
   const leadId = contactExtId ? (leadMap.get(String(contactExtId)) ?? null) : null
 
   return {
