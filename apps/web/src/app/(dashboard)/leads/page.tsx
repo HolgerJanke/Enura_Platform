@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
+import { createSupabaseServiceClient } from '@/lib/supabase-service'
 import { formatDate } from '@enura/types'
 import type { LeadRow, TeamMemberRow } from '@enura/types'
 import Link from 'next/link'
@@ -104,18 +105,21 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   const db = getDataAccess()
 
+  const svc = createSupabaseServiceClient()
+
   // Parallel: paginated leads + counts + team members
-  const [result, totalLeads, contactedLeads, qualifiedLeads, wonLeads, lostLeads, teamMembers] = await Promise.all([
+  const [result, totalLeads, wonLeads, lostLeads, teamMembers, assignedResult, withOfferResult] = await Promise.all([
     db.leads.findPaginated(session.companyId, { page, pageSize }),
     db.leads.count(session.companyId),
-    db.leads.count(session.companyId, { status: 'contacted' }),
-    db.leads.count(session.companyId, { status: 'qualified' }),
     db.leads.count(session.companyId, { status: 'won' }),
     db.leads.count(session.companyId, { status: 'lost' }),
     db.teamMembers.findByCompanyId(session.companyId),
+    svc.from('leads').select('*', { count: 'exact', head: true }).eq('company_id', session.companyId).not('setter_id', 'is', null),
+    svc.from('offers').select('lead_id', { count: 'exact', head: true }).eq('company_id', session.companyId).not('lead_id', 'is', null),
   ])
-  // Active pipeline leads = total minus terminal states (won, lost)
   const openLeads = totalLeads - wonLeads - lostLeads
+  const assignedLeads = assignedResult.count ?? 0
+  const leadsWithOffer = withOfferResult.count ?? 0
 
   const { data: leads, totalPages } = result
   const memberMap = new Map(teamMembers.map((m: TeamMemberRow) => [m.id, m]))
@@ -134,8 +138,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Offene Leads', value: openLeads, color: '--brand-kpi-1' },
-          { label: 'Kontaktiert', value: contactedLeads, color: '--brand-kpi-2' },
-          { label: 'Qualifiziert', value: qualifiedLeads, color: '--brand-kpi-3' },
+          { label: 'Zugewiesen', value: assignedLeads, color: '--brand-kpi-2' },
+          { label: 'Mit Angebot', value: leadsWithOffer, color: '--brand-kpi-3' },
           { label: 'Total Leads', value: totalLeads, color: '--brand-kpi-1' },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-xl bg-white p-5 shadow-brand-sm border border-gray-100">
