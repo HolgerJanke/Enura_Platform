@@ -405,7 +405,11 @@ export async function syncBexio(
       errors.push(...r.errors)
 
       // 2b. Payments for synced invoices
-      for (const inv of invoices) {
+      // Skip per-invoice payment fetching during full sync (500+ API calls would timeout).
+      // Payments will be fetched on the next incremental sync.
+      const isFullSync = cutoff === 0
+      const invoicesToFetchPayments = isFullSync ? [] : invoices
+      for (const inv of invoicesToFetchPayments) {
         try {
           const payments = await bexioFetch<Row[]>(token, `/kb_invoice/${inv['id']}/payment`)
           if (payments.length === 0) { await sleep(RATE_LIMIT_DELAY_MS); continue }
