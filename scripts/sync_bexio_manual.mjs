@@ -86,7 +86,7 @@ const BILL_STATUS_MAP = {
   11: 'paid',      // Bezahlt
 }
 
-function normaliseBill(b, supplierMap) {
+function normaliseBill(b, supplierMap, holdingId) {
   const supplierId = supplierMap.get(String(b.contact_id)) || null
   const bexioStatus = BILL_STATUS_MAP[b.kb_item_status_id] || 'received'
 
@@ -97,17 +97,22 @@ function normaliseBill(b, supplierMap) {
 
   return {
     company_id: COMPANY_ID,
+    holding_id: holdingId,
     external_id: String(b.id),
     supplier_id: supplierId,
     invoice_number: b.document_nr || `BEXIO-${b.id}`,
     invoice_date: b.is_valid_from || new Date().toISOString().slice(0, 10),
     due_date: b.is_valid_to || null,
-    total_gross: b.total_gross ? parseFloat(b.total_gross) : 0,
-    total_net: b.total_net ? parseFloat(b.total_net) : 0,
-    total_tax: b.total_taxes ? parseFloat(b.total_taxes) : 0,
+    sender_name: b.title || 'Bexio Kreditor',
+    net_amount: b.total_net ? parseFloat(b.total_net) : 0,
+    vat_amount: b.total_taxes ? parseFloat(b.total_taxes) : 0,
+    gross_amount: b.total_gross ? parseFloat(b.total_gross) : 0,
     currency: 'CHF',
     status: workflowStatus,
-    source: 'bexio',
+    extraction_status: 'completed',
+    incomer_type: 'webhook',
+    raw_storage_path: `bexio/bills/${b.id}`,
+    raw_filename: `${b.document_nr || b.id}.pdf`,
   }
 }
 
@@ -173,7 +178,7 @@ async function main() {
   const bills = await bexioPaginate(token, '/kb_bill?order_by=updated_at&order=DESC')
   console.log(`Fetched ${bills.length} bills from Bexio`)
 
-  const invoiceRows = bills.map(b => normaliseBill(b, supplierMap))
+  const invoiceRows = bills.map(b => normaliseBill(b, supplierMap, holdingId))
   console.log(`Normalised ${invoiceRows.length} invoice rows`)
 
   if (!DRY_RUN && invoiceRows.length > 0) {
