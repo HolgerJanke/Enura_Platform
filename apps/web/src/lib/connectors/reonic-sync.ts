@@ -105,7 +105,7 @@ type ResultsResponse<T> = { results: T[]; hasNextPage?: boolean; totalPages?: nu
 function unwrapPaged<T>(
   raw: T[] | PagedResponse<T> | ResultsResponse<T>,
 ): { data: T[]; totalPages: number; hasNextPage?: boolean } {
-  if (Array.isArray(raw)) return { data: raw, totalPages: 1 }
+  if (Array.isArray(raw)) return { data: raw, totalPages: Infinity, hasNextPage: raw.length >= PAGE_SIZE }
   if ('results' in raw) {
     const r = raw as ResultsResponse<T>
     return { data: r.results ?? [], totalPages: r.totalPages ?? 1, hasNextPage: r.hasNextPage }
@@ -385,7 +385,7 @@ export async function syncReonic(
         written += lr.written
         errors.push(...lr.errors)
 
-        if (page + 1 >= totalPages) hasMoreLeads = false
+        if (leads.length < PAGE_SIZE) hasMoreLeads = false
         else page++
         await sleep(RATE_LIMIT_DELAY_MS)
       } catch (err) {
