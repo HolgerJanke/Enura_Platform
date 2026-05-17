@@ -117,6 +117,7 @@ export default async function BotsPage() {
     { name: 'Ticket-Bot', description: 'Multi-Channel Ticket-System: Tag-Auswahl, Beschreibung, Auto-Routing an zuständige Person. Tickets landen in Vikunja.', tier: 'tier2', connectors: ['Telegram', 'WhatsApp', 'Vikunja'], status: 'active' },
     { name: 'Telegram-Bot', description: 'Worker für Berater-Benachrichtigungen, Compliance-Resultate, Approve/Stop-Buttons und Callback-Handling.', tier: 'tier1', connectors: ['Telegram'], status: 'active' },
     { name: 'WhatsApp-Bot', description: 'Webhook-Handler für eingehende WhatsApp-Nachrichten. Leitet Kundenanfragen an den Ticket-Flow weiter.', tier: 'tier2', connectors: ['WhatsApp'], status: 'planned' },
+    { name: 'Route-Bot', description: 'Routenoptimierung für Vertriebler: Clustert offene Leads nach Nähe zu Calendly-Terminen. Spart Fahrzeit, maximiert Termindichte.', tier: 'tier2', connectors: ['Calendly', 'Bexio', 'Reonic'], status: 'planned' },
   ]
 
   // Fetch live bot protocol data from Supabase
