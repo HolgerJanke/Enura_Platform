@@ -87,6 +87,7 @@ export const navigationSections: NavigationSection[] = [
     title: 'AUTOMATION',
     items: [
       { key: 'bots', label: 'Bots', href: '/bots', icon: 'bot', requiredPermission: 'module:bots:read' },
+      { key: 'routes', label: 'Routen', href: '/routes', icon: 'route', requiredPermission: 'module:bots:read' },
     ],
   },
   {
