@@ -202,6 +202,60 @@ export class ReonicConnector implements ConnectorBase {
         page++
         await delay(200)
       }
+
+      // -----------------------------------------------------------------------
+      // 4. Derive lead statuses from their best offer
+      //    Reonic /contacts has no pipeline status — only offers have state.
+      //    Priority: won > sent > draft > lost > new
+      // -----------------------------------------------------------------------
+      const { data: allOffers } = await db
+        .from('offers')
+        .select('lead_id, status')
+        .eq('company_id', companyId)
+        .not('lead_id', 'is', null)
+
+      const offerStatusPriority: Record<string, number> = {
+        won: 5, sent: 4, negotiating: 3, draft: 2, lost: 1, expired: 0,
+      }
+      const offerToLead: Record<string, string> = {
+        won: 'won', sent: 'qualified', negotiating: 'qualified',
+        draft: 'contacted', lost: 'lost', expired: 'lost',
+      }
+
+      // Find the best offer status per lead
+      const bestPerLead = new Map<string, string>()
+      for (const o of (allOffers ?? [])) {
+        if (!o.lead_id) continue
+        const current = bestPerLead.get(o.lead_id)
+        const currentPrio = current ? (offerStatusPriority[current] ?? -1) : -1
+        const newPrio = offerStatusPriority[o.status] ?? -1
+        if (newPrio > currentPrio) {
+          bestPerLead.set(o.lead_id, o.status)
+        }
+      }
+
+      // Batch-update lead statuses (only where they differ from 'new')
+      let leadStatusUpdates = 0
+      for (const [leadId, offerStatus] of bestPerLead) {
+        const leadStatus = offerToLead[offerStatus] ?? 'new'
+        if (leadStatus === 'new') continue // skip — already default
+        const { error: updateErr } = await db
+          .from('leads')
+          .update({ status: leadStatus, updated_at: new Date().toISOString() })
+          .eq('id', leadId)
+          .eq('company_id', companyId)
+        if (updateErr) {
+          errors.push({
+            code: 'LEAD_STATUS',
+            message: `Failed to update lead ${leadId} status: ${updateErr.message}`,
+            context: { leadId, targetStatus: leadStatus },
+          })
+        } else {
+          leadStatusUpdates++
+        }
+      }
+      written += leadStatusUpdates
+
     } catch (err) {
       errors.push({
         code: 'SYNC_FATAL',
