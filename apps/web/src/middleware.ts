@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   defaultBrandTokens,
   buildCSSVarString,
+  defaultExtendedTokens,
+  buildExtendedCSSVarString,
   type BrandTokens,
+  type ExtendedBrandTokens,
 } from '@enura/types'
 
 // ---------------------------------------------------------------------------
@@ -105,6 +108,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const subdomain = getSubdomain(hostname)
 
   let resolvedBrandCSS = buildCSSVarString(defaultBrandTokens)
+  // Extended design tokens (shadows/spacing/etc) are always emitted — defaults
+  // unless the company overrides them. Resolved via a separate, independently
+  // guarded request so a missing column never breaks core branding (see below).
+  let resolvedExtendedCSS = buildExtendedCSSVarString(defaultExtendedTokens)
   let resolvedCompanyId = ''
   let resolvedCompanyName = subdomain ?? 'Platform'
   let resolvedCustomCSSPath = ''
@@ -164,6 +171,35 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
               resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
             }
           }
+
+          // Extended tokens live in a JSONB column (migration 022) that may not
+          // be applied in every environment. Fetch them separately so a 400 on
+          // the column never falls back the core branding above to defaults.
+          try {
+            const extRes = await fetch(
+              `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=extended_tokens&limit=1`,
+              {
+                headers: {
+                  apikey: supabaseKey,
+                  Authorization: `Bearer ${supabaseKey}`,
+                  Accept: 'application/json',
+                },
+              },
+            )
+            if (extRes.ok) {
+              const rows = (await extRes.json()) as Array<{ extended_tokens: Partial<ExtendedBrandTokens> | null }>
+              const overrides = rows[0]?.extended_tokens
+              if (overrides) {
+                resolvedExtendedCSS = buildExtendedCSSVarString({
+                  ...defaultExtendedTokens,
+                  ...overrides,
+                })
+              }
+            }
+          } catch (err) {
+            // Keep default extended tokens — never block the request
+            console.error('[middleware] Extended-token fetch error:', err)
+          }
         }
       }
     } catch (err) {
@@ -178,7 +214,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     companySlug: subdomain ?? 'default',
     companyName: resolvedCompanyName,
     isHolding: isAdminHost(hostname),
-    brandCSS: resolvedBrandCSS,
+    brandCSS: `${resolvedBrandCSS};${resolvedExtendedCSS}`,
     customCSSPath: resolvedCustomCSSPath,
   })
   return response
