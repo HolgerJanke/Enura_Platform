@@ -12,6 +12,18 @@ async function requireEnuraSession() {
   return session
 }
 
+/**
+ * The mock-auth session id (e.g. "mock-janke-holger") is not a UUID and has no
+ * backing auth.users/profiles row. Audit columns like created_by/invited_by are
+ * UUID foreign keys, so we only attribute the acting user when the session id is
+ * a real UUID (real Supabase auth). In mock mode this resolves to null.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function toUuidOrNull(id: string | null | undefined): string | null {
+  return id && UUID_RE.test(id) ? id : null
+}
+
 export async function checkSlugAvailability(
   slug: string,
 ): Promise<{ available: boolean }> {
@@ -108,6 +120,9 @@ export async function completeWizard(
     return { success: false, error: `Service-Client-Fehler: ${err instanceof Error ? err.message : String(err)}` }
   }
 
+  // Acting user for audit columns — null under mock auth (id is not a real UUID).
+  const actingUserId = toUuidOrNull(session.profile.id)
+
   // 1. Create the holding
   const { data: holding, error: holdingError } = await serviceClient
     .from('holdings')
@@ -116,7 +131,7 @@ export async function completeWizard(
       slug: input.holdingSlug,
       status: 'active',
       branding: input.branding,
-      created_by: session.profile.id,
+      created_by: actingUserId,
     })
     .select('id')
     .single()
@@ -135,7 +150,7 @@ export async function completeWizard(
       name: input.companyName,
       slug: input.companySlug,
       status: 'active',
-      created_by: session.profile.id,
+      created_by: actingUserId,
     })
 
   if (companyError) {
@@ -301,7 +316,9 @@ export async function completeWizard(
       company_id: companyId,
       email: input.adminEmail,
       role_name: 'holding_admin',
-      invited_by: session.profile.id,
+      // invited_by is NOT NULL → fall back to the created admin's own profile when
+      // the acting user has no real UUID (mock auth).
+      invited_by: actingUserId ?? userId,
     })
 
   // TODO: Send invitation email with temp password via Resend
