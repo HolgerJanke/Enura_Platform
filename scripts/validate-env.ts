@@ -9,6 +9,7 @@ const ProductionEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   PLATFORM_ROOT_DOMAIN: z.string().min(1),
+  NEXT_PUBLIC_PLATFORM_ROOT_DOMAIN: z.string().min(1),
   REDIS_URL: z.string().url(),
   ANTHROPIC_API_KEY: z.string().startsWith('sk-ant-'),
   OPENAI_API_KEY: z.string().startsWith('sk-'),
