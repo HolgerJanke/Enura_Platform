@@ -112,7 +112,7 @@ export async function acceptInvitation(
     holding_id: holdingId,
     first_name: input.firstName.trim(),
     last_name: input.lastName.trim(),
-    display_name: `${input.firstName.trim()} ${input.lastName.trim()}`,
+    // display_name is a generated column (first_name || ' ' || last_name) — never set it
     must_reset_password: false,
     totp_enabled: false,
     is_active: true,

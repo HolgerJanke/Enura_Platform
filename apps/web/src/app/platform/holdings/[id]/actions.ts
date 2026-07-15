@@ -259,7 +259,7 @@ export async function inviteUserToCompany(input: {
         company_id: input.companyId,
         first_name: firstName,
         last_name: lastName,
-        display_name: email,
+        // display_name is a generated column (first_name || ' ' || last_name) — never set it
         must_reset_password: true,
         totp_enabled: false,
         is_active: true,

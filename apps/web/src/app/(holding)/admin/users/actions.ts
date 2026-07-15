@@ -261,7 +261,7 @@ export async function inviteUser(data: {
     holding_id: holdingId,
     first_name: data.firstName,
     last_name: data.lastName,
-    display_name: data.email,
+    // display_name is a generated column (first_name || ' ' || last_name) — never set it
     must_reset_password: true,
     totp_enabled: false,
   })
