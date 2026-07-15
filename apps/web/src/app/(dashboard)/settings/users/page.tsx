@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { requirePermission } from '@/lib/permissions'
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createAdminReadClient } from '@/lib/supabase/read-client'
 import { UserListClient } from './user-list-client'
 import { Require2faToggle } from './require-2fa-toggle'
 
@@ -13,7 +13,9 @@ export default async function UsersSettingsPage() {
   const session = await getSession()
   if (!session) return null
 
-  const supabase = createSupabaseServerClient()
+  // All queries below are scoped by the verified session.companyId — required
+  // because under mock auth this client bypasses RLS (see createAdminReadClient).
+  const supabase = createAdminReadClient()
   const companyId = session.companyId ?? ''
 
   // Fetch users in this tenant (exclude anonymised/deleted tombstones)
