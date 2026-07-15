@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { getSession } from '@/lib/session'
+import { getSession, authGateRedirect } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
 import { getDataAccess } from '@/lib/data-access'
 import { DashboardShellV2 } from '@/components/dashboard-shell-v2'
@@ -21,6 +21,32 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <p className="text-brand-text-secondary mb-4">Weiterleitung zur Anmeldung...</p>
             <a href="/login" className="text-brand-primary underline text-sm">
               Zur Anmeldung
+            </a>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Auth gates (CLAUDE.md §4.2): force temp-password reset, then 2FA enrolment,
+  // before any dashboard content renders. We return early with only a redirect
+  // — no protected content is served — matching the no-session branch above and
+  // avoiding redirect() (which 404s in Server Component layouts on Vercel).
+  const gate = authGateRedirect(session)
+  if (gate) {
+    const target = gate === '/reset-password' ? '/reset-password' : '/enrol-2fa'
+    const message =
+      gate === '/reset-password'
+        ? 'Bitte legen Sie zuerst ein neues Passwort fest...'
+        : 'Bitte richten Sie zuerst die Zwei-Faktor-Authentifizierung ein...'
+    return (
+      <>
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href=${JSON.stringify(target)}` }} />
+        <div className="min-h-screen flex items-center justify-center bg-brand-background">
+          <div className="text-center">
+            <p className="text-brand-text-secondary mb-4">{message}</p>
+            <a href={target} className="text-brand-primary underline text-sm">
+              Weiter
             </a>
           </div>
         </div>

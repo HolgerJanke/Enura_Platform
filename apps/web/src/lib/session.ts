@@ -144,3 +144,21 @@ async function _getSession(): Promise<UserSession | null> {
 
 /** Cached per-request session resolver. Safe to call multiple times in a render cycle. */
 export const getSession = cache(_getSession)
+
+/**
+ * Auth-gate check (CLAUDE.md §4.2). A fully-authenticated user must have both
+ * (b) reset their temporary password and (c) enrolled 2FA before reaching any
+ * protected surface. Returns the path the user must be routed to first, or null
+ * when they clear every gate.
+ *
+ * Under mock auth the session always reports `must_reset_password = false` /
+ * `totp_enabled = true`, so this is a no-op there and only bites under real
+ * Supabase auth — which is exactly when a temp-password login needs enforcing.
+ */
+export function authGateRedirect(
+  session: UserSession,
+): '/reset-password' | '/enrol-2fa' | null {
+  if (session.profile.must_reset_password) return '/reset-password'
+  if (!session.profile.totp_enabled) return '/enrol-2fa'
+  return null
+}
