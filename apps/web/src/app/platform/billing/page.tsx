@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export default async function PlatformBillingPage() {
   const session = await getSession()
@@ -12,7 +12,7 @@ export default async function PlatformBillingPage() {
   let subscriptions: Array<Record<string, unknown>> = []
 
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseServiceClient()
     const { data } = await supabase
       .from('holding_subscriptions')
       .select('*, holdings(name, slug)')

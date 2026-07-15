@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export default async function PlatformReportsPage() {
   const session = await getSession()
@@ -14,7 +14,7 @@ export default async function PlatformReportsPage() {
   let reportCount = 0
 
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseServiceClient()
     const { count: hc } = await supabase.from('holdings').select('id', { count: 'exact', head: true })
     holdingCount = hc ?? 0
     const { count: cc } = await supabase.from('companies').select('id', { count: 'exact', head: true })
