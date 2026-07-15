@@ -4,6 +4,7 @@
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { PLATFORM_ROOT_DOMAIN, tenantUrl } from '@/lib/platform'
 import { createTenantAction } from './actions'
 
 type Step = 1 | 2 | 3 | 4
@@ -222,7 +223,7 @@ export default function NewTenantPage() {
                     }`}
                     placeholder="solar-solutions"
                   />
-                  <span className="flex-shrink-0 text-sm text-gray-500">.platform.com</span>
+                  <span className="flex-shrink-0 text-sm text-gray-500">.{PLATFORM_ROOT_DOMAIN}</span>
                 </div>
                 {form.slug.length > 0 && !SLUG_REGEX.test(form.slug) && (
                   <p className="mt-1 text-xs text-red-600">
@@ -231,7 +232,7 @@ export default function NewTenantPage() {
                 )}
                 {form.slug.length > 0 && SLUG_REGEX.test(form.slug) && (
                   <p className="mt-1 text-xs text-gray-500">
-                    Vorschau: <span className="font-mono font-medium">{form.slug}.platform.com</span>
+                    Vorschau: <span className="font-mono font-medium">{tenantUrl(form.slug)}</span>
                   </p>
                 )}
               </div>
@@ -560,7 +561,7 @@ export default function NewTenantPage() {
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-sm text-gray-500">Subdomain</dt>
-                    <dd className="text-sm font-mono text-gray-900">{form.slug}.platform.com</dd>
+                    <dd className="text-sm font-mono text-gray-900">{tenantUrl(form.slug)}</dd>
                   </div>
                 </dl>
               </div>

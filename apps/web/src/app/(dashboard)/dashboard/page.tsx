@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { formatDate } from '@enura/types'
@@ -39,6 +40,9 @@ function KpiCard({
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const _sp = await searchParams
   const session = await getSession()
+  if (!session) redirect('/login')
+  if (session.isEnuraAdmin) redirect('/platform')
+  if (session.isHoldingAdmin) redirect('/admin')
   if (!session?.companyId) return null
 
   const db = getDataAccess()

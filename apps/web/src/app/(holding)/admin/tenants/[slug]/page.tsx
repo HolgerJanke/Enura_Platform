@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { tenantUrl } from '@/lib/platform'
 import type { CompanyRow, CompanyBrandingRow, ProfileRow, ConnectorRow } from '@enura/types'
 import { TenantDetailTabs } from './tenant-detail-tabs'
 
@@ -129,7 +130,7 @@ export default async function TenantDetailPage({ params }: { params: { slug: str
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">{typedTenant.name}</h1>
-          <p className="text-gray-500 mt-1 font-mono text-sm">{typedTenant.slug}.platform.com</p>
+          <p className="text-gray-500 mt-1 font-mono text-sm">{tenantUrl(typedTenant.slug)}</p>
         </div>
         <span className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${badge.classes}`}>
           {badge.label}

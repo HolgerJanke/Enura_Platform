@@ -412,7 +412,7 @@ function StepDomain({
   onVerify: () => void
   isPending: boolean
 }) {
-  const rootDomain = process.env.NEXT_PUBLIC_PLATFORM_ROOT_DOMAIN ?? 'platform.enura.ch'
+  const rootDomain = process.env.NEXT_PUBLIC_PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
 
   return (
     <div className="space-y-5">
