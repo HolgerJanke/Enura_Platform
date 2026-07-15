@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { getSession } from '@/lib/session'
 import { generateTemporaryPassword } from '@/lib/password'
+import { sendInviteEmail } from '@/lib/email'
+import { tenantUrl } from '@/lib/platform'
 
 async function requireEnuraSession() {
   const session = await getSession()
@@ -173,19 +175,21 @@ export async function removeHoldingAdmin(
 // User & role management within a holding (Enura Admin only)
 // ---------------------------------------------------------------------------
 
-/** Confirm a company belongs to the given holding. */
+type CompanyLookup = { id: string; slug: string; name: string }
+
+/** Return the company iff it belongs to the given holding, else null. */
 async function companyInHolding(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   companyId: string,
   holdingId: string,
-): Promise<boolean> {
+): Promise<CompanyLookup | null> {
   const { data } = await supabase
     .from('companies')
-    .select('id')
+    .select('id, slug, name')
     .eq('id', companyId)
     .eq('holding_id', holdingId)
     .maybeSingle()
-  return Boolean(data)
+  return (data as CompanyLookup | null) ?? null
 }
 
 /**
@@ -200,7 +204,7 @@ export async function inviteUserToCompany(input: {
   lastName: string
   email: string
   roleId: string | null
-}): Promise<{ success: boolean; error?: string; tempPassword?: string }> {
+}): Promise<{ success: boolean; error?: string; tempPassword?: string; emailSent?: boolean; emailError?: string }> {
   await requireEnuraSession()
   const supabase = createSupabaseServiceClient()
 
@@ -211,7 +215,8 @@ export async function inviteUserToCompany(input: {
   if (!email.includes('@')) return { success: false, error: 'Gültige E-Mail-Adresse erforderlich.' }
   if (!firstName || !lastName) return { success: false, error: 'Vor- und Nachname sind erforderlich.' }
 
-  if (!(await companyInHolding(supabase, input.companyId, input.holdingId))) {
+  const company = await companyInHolding(supabase, input.companyId, input.holdingId)
+  if (!company) {
     return { success: false, error: 'Ungültiges Unternehmen.' }
   }
 
@@ -279,11 +284,72 @@ export async function inviteUserToCompany(input: {
     if (roleError) return { success: false, error: roleError.message }
   }
 
-  // TODO: send invitation email with temp password via Resend.
-  // Until then, return the temp password for newly created accounts so the
-  // admin can hand it over. Reused existing accounts keep their own password.
   revalidatePath(`/platform/holdings/${input.holdingId}`)
-  return createdNew ? { success: true, tempPassword } : { success: true }
+
+  // Reused existing accounts keep their own password — nothing to email.
+  if (!createdNew) return { success: true }
+
+  // Email the new account its temporary credentials + a branded login link.
+  // If mail fails (or Resend is unconfigured) the account still exists, so we
+  // also return the temp password as a manual-handover fallback for the admin.
+  const loginUrl = `https://${tenantUrl(company.slug)}/login`
+  const emailResult = await sendInviteEmail({
+    to: email,
+    firstName,
+    companyName: company.name,
+    loginUrl,
+    tempPassword,
+  })
+
+  return {
+    success: true,
+    tempPassword,
+    emailSent: emailResult.sent,
+    emailError: emailResult.error,
+  }
+}
+
+/**
+ * Set a fresh temporary password for an existing user and flag them for reset
+ * on next login. This is the manual-handover path when invite email is not
+ * configured (or the user lost their credentials): the admin gets a one-time
+ * password to give the user, who signs in and then sets their own.
+ */
+export async function resetUserTempPassword(input: {
+  holdingId: string
+  profileId: string
+}): Promise<{ success: boolean; error?: string; tempPassword?: string; email?: string }> {
+  await requireEnuraSession()
+  const supabase = createSupabaseServiceClient()
+
+  // Scope check: the profile must belong to a company in this holding.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('company_id')
+    .eq('id', input.profileId)
+    .maybeSingle()
+  const companyId = (profile as { company_id: string | null } | null)?.company_id ?? null
+  if (!companyId || !(await companyInHolding(supabase, companyId, input.holdingId))) {
+    return { success: false, error: 'Benutzer gehört nicht zu dieser Holding.' }
+  }
+
+  const tempPassword = generateTemporaryPassword()
+  const { data: updated, error: updateError } = await supabase.auth.admin.updateUserById(
+    input.profileId,
+    { password: tempPassword },
+  )
+  if (updateError) {
+    return { success: false, error: `Passwort konnte nicht gesetzt werden: ${updateError.message}` }
+  }
+
+  // Force a password change on next login (flag exists even if not yet enforced).
+  await supabase
+    .from('profiles')
+    .update({ must_reset_password: true })
+    .eq('id', input.profileId)
+
+  revalidatePath(`/platform/holdings/${input.holdingId}`)
+  return { success: true, tempPassword, email: updated?.user?.email ?? undefined }
 }
 
 /**

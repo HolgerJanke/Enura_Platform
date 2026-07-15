@@ -7,6 +7,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { writeAuditLog } from '@/lib/audit'
 import { generateTemporaryPassword } from '@/lib/password'
+import { sendInviteEmail } from '@/lib/email'
+import { tenantUrl } from '@/lib/platform'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -208,7 +210,7 @@ export async function inviteUser(data: {
   roleLabel: string
   firstName: string
   lastName: string
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; tempPassword?: string; emailSent?: boolean; emailError?: string }> {
   const { holdingId, userId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
   const serviceClient = createSupabaseServiceClient()
@@ -216,7 +218,7 @@ export async function inviteUser(data: {
   // Validate company belongs to holding
   const { data: company } = await supabase
     .from('companies')
-    .select('id, name')
+    .select('id, name, slug')
     .eq('id', data.companyId)
     .eq('holding_id', holdingId)
     .single()
@@ -300,10 +302,17 @@ export async function inviteUser(data: {
     profile_id: authUser.user.id,
   })
 
-  // Log temp password in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[DEV] User invite: ${data.email} / ${tempPassword}`)
-  }
+  // Email the invited user their temporary credentials + branded login link.
+  // A failed send never fails the invite (the account already exists); the temp
+  // password is returned so the caller can offer a manual-handover fallback.
+  const loginUrl = `https://${tenantUrl((company as { slug: string }).slug)}/login`
+  const emailResult = await sendInviteEmail({
+    to: data.email,
+    firstName: data.firstName,
+    companyName: company.name,
+    loginUrl,
+    tempPassword,
+  })
 
   await writeAuditLog({
     companyId: data.companyId,
@@ -311,11 +320,11 @@ export async function inviteUser(data: {
     action: 'user.invited',
     tableName: 'profiles',
     recordId: authUser.user.id,
-    newValues: { email: data.email, role: data.roleKey, company: company.name },
+    newValues: { email: data.email, role: data.roleKey, company: company.name, email_sent: emailResult.sent },
   })
 
   revalidatePath('/admin/users')
-  return { success: true }
+  return { success: true, tempPassword, emailSent: emailResult.sent, emailError: emailResult.error }
 }
 
 // ---------------------------------------------------------------------------
