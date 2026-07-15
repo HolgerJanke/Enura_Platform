@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireEnuraAdmin } from '@/lib/permissions'
 import { HoldingDetailClient } from './holding-detail-client'
 import { HoldingAdminManager } from './holding-admin-manager'
@@ -23,7 +23,10 @@ type HoldingSubscription = {
 }
 
 async function getHoldingDetail(holdingId: string) {
-  const supabase = createSupabaseServerClient()
+  // Enura super-admin console reads above tenant RLS. Access is enforced by
+  // requireEnuraAdmin() in the page; under mock auth the anon/RLS client carries
+  // no JWT and would return nothing, so we use the service client here.
+  const supabase = createSupabaseServiceClient()
 
   const { data: holding } = await supabase
     .from('holdings')
@@ -85,7 +88,9 @@ export default async function HoldingDetailPage({
 }: {
   params: { id: string }
 }) {
-  await requireEnuraAdmin()
+  if (!(await requireEnuraAdmin())) {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Zugriff verweigert.</p></div>)
+  }
 
   const detail = await getHoldingDetail(params.id)
   if (!detail) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurück</a></div>)

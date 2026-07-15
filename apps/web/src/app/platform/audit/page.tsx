@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export default async function AuditLogPage() {
   const session = await getSession()
@@ -14,7 +14,7 @@ export default async function AuditLogPage() {
   let auditEntries: Array<Record<string, unknown>> = []
 
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseServiceClient()
     const { data } = await supabase
       .from('audit_log')
       .select('id, company_id, actor_id, action, table_name, record_id, created_at')

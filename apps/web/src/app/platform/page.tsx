@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireEnuraAdmin } from '@/lib/permissions'
 import type { HoldingRow } from '@enura/types'
 
@@ -12,7 +12,8 @@ type HoldingWithCounts = HoldingRow & {
 }
 
 async function getMetrics() {
-  const supabase = createSupabaseServerClient()
+  // Enura super-admin console — read above tenant RLS (see getHoldingDetail note).
+  const supabase = createSupabaseServiceClient()
 
   const { data: metrics } = await supabase
     .from('platform_metrics')
@@ -30,7 +31,8 @@ async function getMetrics() {
 }
 
 async function getHoldings(): Promise<HoldingWithCounts[]> {
-  const supabase = createSupabaseServerClient()
+  // Enura super-admin console — read above tenant RLS (see getHoldingDetail note).
+  const supabase = createSupabaseServiceClient()
 
   const { data: holdings } = await supabase
     .from('holdings')
@@ -99,7 +101,9 @@ const PLAN_LABELS: Record<string, string> = {
 }
 
 export default async function PlatformOverviewPage() {
-  await requireEnuraAdmin()
+  if (!(await requireEnuraAdmin())) {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Zugriff verweigert.</p></div>)
+  }
 
   const [metrics, holdings] = await Promise.all([getMetrics(), getHoldings()])
 

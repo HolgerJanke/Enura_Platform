@@ -1,6 +1,5 @@
 'use server'
 
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { getSession } from '@/lib/session'
 
@@ -29,7 +28,9 @@ export async function checkSlugAvailability(
 ): Promise<{ available: boolean }> {
   if (!slug || slug.length < 3) return { available: false }
 
-  const supabase = createSupabaseServerClient()
+  // Service client: holdings RLS hides all rows under mock auth (no JWT), which
+  // would make every slug look available and defeat the uniqueness check.
+  const supabase = createSupabaseServiceClient()
 
   const { data } = await supabase
     .from('holdings')

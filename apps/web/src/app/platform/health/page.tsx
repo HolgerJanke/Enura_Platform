@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireEnuraAdmin } from '@/lib/permissions'
 
 type PlatformMetric = {
@@ -44,7 +44,7 @@ const STATUS_CONFIG: Record<string, { label: string; dotClass: string; bgClass: 
 }
 
 async function getMetricsHistory(): Promise<PlatformMetric[]> {
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -59,7 +59,9 @@ async function getMetricsHistory(): Promise<PlatformMetric[]> {
 }
 
 export default async function HealthPage() {
-  await requireEnuraAdmin()
+  if (!(await requireEnuraAdmin())) {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Zugriff verweigert.</p></div>)
+  }
 
   const metricsHistory = await getMetricsHistory()
 

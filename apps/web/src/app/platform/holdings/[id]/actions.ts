@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { getSession } from '@/lib/session'
 
 async function requireEnuraSession() {
@@ -18,7 +18,7 @@ export async function updateHolding(formData: FormData): Promise<{ success: bool
   const holdingId = formData.get('holdingId') as string
   if (!holdingId) return { success: false, error: 'Holding-ID fehlt' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const updates: Record<string, string> = {}
   const name = formData.get('name') as string | null
@@ -51,7 +51,7 @@ export async function suspendHolding(formData: FormData): Promise<{ success: boo
   const holdingId = formData.get('holdingId') as string
   if (!holdingId) return { success: false, error: 'Holding-ID fehlt' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const { error } = await supabase
     .from('holdings')
@@ -73,7 +73,7 @@ export async function updateSubscription(formData: FormData): Promise<{ success:
   const holdingId = formData.get('holdingId') as string
   if (!holdingId) return { success: false, error: 'Holding-ID fehlt' }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   const updates = {
     plan: formData.get('plan') as string,
@@ -108,7 +108,7 @@ export async function promoteToHoldingAdmin(
 ): Promise<{ success: boolean; error?: string }> {
   await requireEnuraSession()
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Verify user belongs to this holding
   const { data: profile } = await supabase
@@ -149,7 +149,7 @@ export async function removeHoldingAdmin(
 ): Promise<{ success: boolean; error?: string }> {
   await requireEnuraSession()
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServiceClient()
 
   // Remove from holding_admins_v2
   await supabase
