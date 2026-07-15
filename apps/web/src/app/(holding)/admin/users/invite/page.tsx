@@ -30,6 +30,7 @@ export default function InviteUserPage() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [fallback, setFallback] = useState<{ email: string; password: string; error?: string } | null>(null)
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -92,7 +93,13 @@ export default function InviteUserPage() {
       })
 
       if (result.success) {
-        router.push('/admin/users')
+        if (result.emailSent === false && result.tempPassword) {
+          // Account created but the email could not be sent — keep the admin on
+          // the page and show the credentials so they can be handed over manually.
+          setFallback({ email: email.trim(), password: result.tempPassword, error: result.emailError })
+        } else {
+          router.push('/admin/users')
+        }
       } else {
         setError(result.error ?? 'Ein unbekannter Fehler ist aufgetreten.')
       }
@@ -125,6 +132,34 @@ export default function InviteUserPage() {
         {error && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
             <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {fallback && (
+          <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+            <p className="text-sm font-semibold text-amber-900">Benutzer erstellt — E-Mail nicht versendet</p>
+            <p className="mt-1 text-xs text-amber-800">
+              Die Einladungs-E-Mail konnte nicht versendet werden
+              {fallback.error ? ` (${fallback.error})` : ''}. Geben Sie diese Zugangsdaten sicher an{' '}
+              <span className="font-medium">{fallback.email}</span> weiter — sie werden nur einmal angezeigt.
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <code className="flex-1 rounded border border-amber-300 bg-white px-3 py-2 font-mono text-sm text-gray-900">
+                {fallback.password}
+              </code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(fallback.password)}
+                className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
+              >
+                Kopieren
+              </button>
+            </div>
+            <div className="mt-3">
+              <Link href="/admin/users" className="text-sm font-medium text-blue-600 hover:underline">
+                Weiter zur Benutzerverwaltung
+              </Link>
+            </div>
           </div>
         )}
 

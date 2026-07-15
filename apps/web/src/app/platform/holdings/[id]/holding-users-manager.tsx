@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { inviteUserToCompany, setUserCompanyAndRoles } from './actions'
+import { inviteUserToCompany, resetUserTempPassword, setUserCompanyAndRoles } from './actions'
 
 interface Company {
   id: string
@@ -32,7 +32,7 @@ interface Props {
 }
 
 type Feedback = { type: 'success' | 'error'; message: string } | null
-type TempPassword = { email: string; password: string } | null
+type TempPassword = { email: string; password: string; error?: string } | null
 
 function userName(u: User): string {
   return `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.display_name
@@ -129,6 +129,19 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
     })
   }
 
+  function resetPassword(user: User) {
+    startTransition(async () => {
+      setFeedback(null)
+      const result = await resetUserTempPassword({ holdingId, profileId: user.id })
+      if (result.success && result.tempPassword) {
+        setFeedback({ type: 'success', message: `Neues temporäres Passwort für ${userName(user)} erstellt.` })
+        setTempPassword({ email: result.email ?? userName(user), password: result.tempPassword })
+      } else {
+        setFeedback({ type: 'error', message: result.error ?? 'Fehler.' })
+      }
+    })
+  }
+
   // ---- Invite form --------------------------------------------------------
   const [invite, setInvite] = useState({
     companyId: companies[0]?.id ?? '',
@@ -160,9 +173,20 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
         roleId: invite.roleId || null,
       })
       if (result.success) {
-        setFeedback({ type: 'success', message: `${invitedEmail} eingeladen. Seite neu laden, um den Benutzer zu sehen.` })
         setInvite((prev) => ({ ...prev, firstName: '', lastName: '', email: '', roleId: '' }))
-        setTempPassword(result.tempPassword ? { email: invitedEmail, password: result.tempPassword } : null)
+        if (result.emailSent) {
+          // New account, credentials delivered by email — no manual handover needed.
+          setFeedback({ type: 'success', message: `${invitedEmail} eingeladen. Zugangsdaten wurden per E-Mail gesendet. Seite neu laden, um den Benutzer zu sehen.` })
+          setTempPassword(null)
+        } else if (result.tempPassword) {
+          // New account, but the email did not go out — surface the temp password to hand over manually.
+          setFeedback({ type: 'success', message: `${invitedEmail} eingeladen, aber die E-Mail konnte nicht versendet werden. Seite neu laden, um den Benutzer zu sehen.` })
+          setTempPassword({ email: invitedEmail, password: result.tempPassword, error: result.emailError })
+        } else {
+          // Existing account reused / reassigned — nothing to hand over.
+          setFeedback({ type: 'success', message: `${invitedEmail} eingeladen. Seite neu laden, um den Benutzer zu sehen.` })
+          setTempPassword(null)
+        }
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler.' })
       }
@@ -177,6 +201,42 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
       <p className="mb-6 text-sm text-gray-500">
         Benutzer einem Unternehmen dieser Holding zuweisen und ihre Rollen festlegen.
       </p>
+
+      {tempPassword && (
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">Temporäres Passwort</p>
+          <p className="mt-1 text-xs text-amber-800">
+            {tempPassword.error
+              ? `Die Einladungs-E-Mail konnte nicht versendet werden (${tempPassword.error}). `
+              : ''}
+            Geben Sie diese Zugangsdaten sicher an{' '}
+            <span className="font-medium">{tempPassword.email}</span> weiter — sie werden nur einmal angezeigt.
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 rounded border border-amber-300 bg-white px-3 py-2 font-mono text-sm text-gray-900">
+              {tempPassword.password}
+            </code>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(tempPassword.password)}
+              className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
+            >
+              Kopieren
+            </button>
+            <button
+              type="button"
+              onClick={() => setTempPassword(null)}
+              className="rounded-lg px-2 py-2 text-xs font-medium text-amber-700 hover:text-amber-900"
+              aria-label="Ausblenden"
+            >
+              Ausblenden
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-amber-700">
+            Der Benutzer muss das Passwort beim ersten Login ändern und 2FA einrichten.
+          </p>
+        </div>
+      )}
 
       {noCompanies ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
@@ -259,39 +319,6 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
                 {isPending ? 'Wird eingeladen...' : 'Einladen'}
               </button>
             </div>
-
-            {tempPassword && (
-              <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
-                <p className="text-sm font-semibold text-amber-900">Temporäres Passwort</p>
-                <p className="mt-1 text-xs text-amber-800">
-                  Es wird noch keine E-Mail versendet. Geben Sie diese Zugangsdaten sicher an{' '}
-                  <span className="font-medium">{tempPassword.email}</span> weiter — sie werden nur einmal angezeigt.
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <code className="flex-1 rounded border border-amber-300 bg-white px-3 py-2 font-mono text-sm text-gray-900">
-                    {tempPassword.password}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard?.writeText(tempPassword.password)}
-                    className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
-                  >
-                    Kopieren
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTempPassword(null)}
-                    className="rounded-lg px-2 py-2 text-xs font-medium text-amber-700 hover:text-amber-900"
-                    aria-label="Ausblenden"
-                  >
-                    Ausblenden
-                  </button>
-                </div>
-                <p className="mt-2 text-xs text-amber-700">
-                  Der Benutzer muss das Passwort beim ersten Login ändern und 2FA einrichten.
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Existing users */}
@@ -309,14 +336,25 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
                         <p className="text-sm font-medium text-gray-900">{userName(user)}</p>
                         <p className="text-xs text-gray-500">{user.display_name}</p>
                       </div>
-                      <button
-                        type="button"
-                        disabled={isPending || !isDirty(user.id)}
-                        onClick={() => saveUser(user)}
-                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        Speichern
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => resetPassword(user)}
+                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                          title="Neues temporäres Passwort erstellen und anzeigen"
+                        >
+                          Temp-Passwort
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isPending || !isDirty(user.id)}
+                          onClick={() => saveUser(user)}
+                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          Speichern
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
