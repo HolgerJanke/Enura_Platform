@@ -200,7 +200,7 @@ export async function inviteUserToCompany(input: {
   lastName: string
   email: string
   roleId: string | null
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; tempPassword?: string }> {
   await requireEnuraSession()
   const supabase = createSupabaseServiceClient()
 
@@ -236,6 +236,7 @@ export async function inviteUserToCompany(input: {
   })
 
   let userId: string
+  let createdNew = false
   if (authError || !created?.user) {
     const { data: list } = await supabase.auth.admin.listUsers()
     const existing = list?.users?.find((u) => u.email === email)
@@ -245,6 +246,7 @@ export async function inviteUserToCompany(input: {
     userId = existing.id
   } else {
     userId = created.user.id
+    createdNew = true
   }
 
   // Upsert profile → this is the company assignment
@@ -277,9 +279,11 @@ export async function inviteUserToCompany(input: {
     if (roleError) return { success: false, error: roleError.message }
   }
 
-  // TODO: send invitation email with temp password via Resend
+  // TODO: send invitation email with temp password via Resend.
+  // Until then, return the temp password for newly created accounts so the
+  // admin can hand it over. Reused existing accounts keep their own password.
   revalidatePath(`/platform/holdings/${input.holdingId}`)
-  return { success: true }
+  return createdNew ? { success: true, tempPassword } : { success: true }
 }
 
 /**

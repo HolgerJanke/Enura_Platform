@@ -32,6 +32,7 @@ interface Props {
 }
 
 type Feedback = { type: 'success' | 'error'; message: string } | null
+type TempPassword = { email: string; password: string } | null
 
 function userName(u: User): string {
   return `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || u.display_name
@@ -40,6 +41,7 @@ function userName(u: User): string {
 export function HoldingUsersManager({ holdingId, companies, users, roles }: Props) {
   const [isPending, startTransition] = useTransition()
   const [feedback, setFeedback] = useState<Feedback>(null)
+  const [tempPassword, setTempPassword] = useState<TempPassword>(null)
 
   // roles grouped by company for the row/invite selectors
   const rolesByCompany = useMemo(() => {
@@ -146,6 +148,7 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
 
   function submitInvite() {
     if (!canInvite) return
+    const invitedEmail = invite.email.trim().toLowerCase()
     startTransition(async () => {
       setFeedback(null)
       const result = await inviteUserToCompany({
@@ -157,8 +160,9 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
         roleId: invite.roleId || null,
       })
       if (result.success) {
-        setFeedback({ type: 'success', message: `${invite.email} eingeladen. Seite neu laden, um den Benutzer zu sehen.` })
+        setFeedback({ type: 'success', message: `${invitedEmail} eingeladen. Seite neu laden, um den Benutzer zu sehen.` })
         setInvite((prev) => ({ ...prev, firstName: '', lastName: '', email: '', roleId: '' }))
+        setTempPassword(result.tempPassword ? { email: invitedEmail, password: result.tempPassword } : null)
       } else {
         setFeedback({ type: 'error', message: result.error ?? 'Fehler.' })
       }
@@ -255,6 +259,39 @@ export function HoldingUsersManager({ holdingId, companies, users, roles }: Prop
                 {isPending ? 'Wird eingeladen...' : 'Einladen'}
               </button>
             </div>
+
+            {tempPassword && (
+              <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">Temporäres Passwort</p>
+                <p className="mt-1 text-xs text-amber-800">
+                  Es wird noch keine E-Mail versendet. Geben Sie diese Zugangsdaten sicher an{' '}
+                  <span className="font-medium">{tempPassword.email}</span> weiter — sie werden nur einmal angezeigt.
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <code className="flex-1 rounded border border-amber-300 bg-white px-3 py-2 font-mono text-sm text-gray-900">
+                    {tempPassword.password}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard?.writeText(tempPassword.password)}
+                    className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                  >
+                    Kopieren
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTempPassword(null)}
+                    className="rounded-lg px-2 py-2 text-xs font-medium text-amber-700 hover:text-amber-900"
+                    aria-label="Ausblenden"
+                  >
+                    Ausblenden
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-amber-700">
+                  Der Benutzer muss das Passwort beim ersten Login ändern und 2FA einrichten.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Existing users */}
