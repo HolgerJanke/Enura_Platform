@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { getSession } from '@/lib/session'
+import { getSession, authGateRedirect } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { HoldingShell } from '@/components/holding-shell'
 import { AdminBar } from '@/components/AdminBar'
@@ -32,6 +32,28 @@ export default async function HoldingAdminLayout({ children }: { children: React
           <div className="text-center">
             <p className="text-gray-500 mb-4">Weiterleitung zur Anmeldung...</p>
             <a href="/login" className="text-blue-600 underline text-sm">Zur Anmeldung</a>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Auth gates (CLAUDE.md §4.2): force temp-password reset, then 2FA
+  // enrolment, before any console content renders. Script-based redirect —
+  // redirect() in Server Component layouts causes 404 on Vercel.
+  const gate = authGateRedirect(session)
+  if (gate) {
+    const message =
+      gate === '/reset-password'
+        ? 'Bitte legen Sie zuerst ein neues Passwort fest...'
+        : 'Bitte richten Sie zuerst die Zwei-Faktor-Authentifizierung ein...'
+    return (
+      <>
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href=${JSON.stringify(gate)}` }} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">{message}</p>
+            <a href={gate} className="text-blue-600 underline text-sm">Weiter</a>
           </div>
         </div>
       </>

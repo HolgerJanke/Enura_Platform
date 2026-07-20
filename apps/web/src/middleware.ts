@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import {
   defaultBrandTokens,
   buildCSSVarString,
@@ -16,6 +17,9 @@ import {
 const DEFAULT_TENANT_SLUG = process.env.DEV_DEFAULT_TENANT_SLUG ?? 'demo'
 
 const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/', '/manifest.json', '/icon-']
+
+/** Routes reachable while the §4.2 auth gates are still pending */
+const AUTH_GATE_EXEMPT = ['/login', '/reset-password', '/enrol-2fa', '/not-found']
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -67,6 +71,79 @@ function getSubdomain(hostname: string): string | null {
   return null
 }
 
+function isAuthGateExempt(pathname: string): boolean {
+  return AUTH_GATE_EXEMPT.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  )
+}
+
+/**
+ * Auth gates (CLAUDE.md §4.2): a signed-in user with a pending temp-password
+ * reset or missing 2FA enrolment may not reach any route except the gate pages
+ * themselves. Layout-level gates alone are not enough — Next.js renders page
+ * and layout in parallel, so page content still ends up in the RSC payload
+ * even when the layout returns a redirect screen. Only a middleware redirect
+ * prevents protected content from being served at all.
+ *
+ * Returns the gate path to redirect to, or null when the request may proceed.
+ * Fails open on lookup errors — the layout gates remain as visual backstop.
+ */
+async function resolveAuthGate(request: NextRequest): Promise<string | null> {
+  // Mock auth: gate flags live in the mock-session cookie
+  if (process.env.MOCK_AUTH !== 'false') {
+    const raw = request.cookies.get('mock-session')?.value
+    if (raw) {
+      try {
+        const mock = JSON.parse(raw) as {
+          mustResetPassword?: boolean
+          totpEnabled?: boolean
+        }
+        if (mock.mustResetPassword) return '/reset-password'
+        if (mock.totpEnabled === false) return '/enrol-2fa'
+        return null
+      } catch {
+        // Unreadable mock cookie — fall through to real auth below
+      }
+    }
+  }
+
+  // Real Supabase auth — skip entirely for unauthenticated visitors
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
+  if (!hasAuthCookie) return null
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseKey) return null
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        // Read-only check — session refresh is handled by the server client
+        setAll: () => {},
+      },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('must_reset_password, totp_enabled')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (!profile) return null
+
+    if (profile.must_reset_password) return '/reset-password'
+    if (!profile.totp_enabled) return '/enrol-2fa'
+  } catch (err) {
+    console.error('[middleware] Auth-gate check error:', err)
+  }
+  return null
+}
+
 function setTenantHeaders(
   response: NextResponse,
   opts: {
@@ -102,6 +179,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // API routes — pass through without branding
   if (pathname.startsWith('/api/')) {
     return NextResponse.next({ request })
+  }
+
+  // Enforce §4.2 auth gates before any protected content is served
+  if (!isAuthGateExempt(pathname)) {
+    const gate = await resolveAuthGate(request)
+    if (gate) {
+      return NextResponse.redirect(new URL(gate, request.url))
+    }
   }
 
   // Resolve tenant subdomain
