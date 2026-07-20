@@ -164,7 +164,7 @@ function setTenantHeaders(
 }
 
 // ---------------------------------------------------------------------------
-// Main middleware — branding resolution only, no auth blocking
+// Main middleware — §4.2 auth-gate enforcement + tenant branding resolution
 // ---------------------------------------------------------------------------
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
@@ -191,6 +191,15 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // Resolve tenant subdomain
   const subdomain = getSubdomain(hostname)
+
+  // Holding/platform consoles are brand-neutral (CLAUDE.md §7): they must
+  // never carry a company's branding or custom CSS. Company resolution still
+  // runs (the headers feed metadata), but brand tokens stay at defaults.
+  // Path-based on purpose — isAdminHost() is true for ALL of localhost when
+  // DEV_HOLDING_ADMIN is set, which would strip tenant pages of branding.
+  const isConsole =
+    pathname === '/admin' || pathname.startsWith('/admin/') ||
+    pathname === '/platform' || pathname.startsWith('/platform/')
 
   let resolvedBrandCSS = buildCSSVarString(defaultBrandTokens)
   // Extended design tokens (shadows/spacing/etc) are always emitted — defaults
@@ -224,45 +233,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
           resolvedCompanyId = company.id
           resolvedCompanyName = company.name
 
-          // Fetch branding
-          const brandRes = await fetch(
-            `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
-            {
-              headers: {
-                apikey: supabaseKey,
-                Authorization: `Bearer ${supabaseKey}`,
-                Accept: 'application/json',
-              },
-            },
-          )
-          if (brandRes.ok) {
-            const brandings = (await brandRes.json()) as Array<Record<string, unknown>>
-            const branding = brandings[0]
-            if (branding) {
-              const tokens: BrandTokens = {
-                ...defaultBrandTokens,
-                primary:       (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
-                secondary:     (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
-                accent:        (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
-                background:    (branding['background_color'] as string) ?? defaultBrandTokens.background,
-                surface:       (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
-                textPrimary:   (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
-                textSecondary: (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
-                font:          (branding['font_family'] as string) ?? defaultBrandTokens.font,
-                fontUrl:       (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
-                radius:        (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
-              }
-              resolvedBrandCSS = buildCSSVarString(tokens)
-              resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
-            }
-          }
-
-          // Extended tokens live in a JSONB column (migration 022) that may not
-          // be applied in every environment. Fetch them separately so a 400 on
-          // the column never falls back the core branding above to defaults.
-          try {
-            const extRes = await fetch(
-              `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=extended_tokens&limit=1`,
+          // Branding fetches are skipped on consoles — the result would be
+          // discarded (consoles always render with default tokens).
+          if (!isConsole) {
+            const brandRes = await fetch(
+              `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
               {
                 headers: {
                   apikey: supabaseKey,
@@ -271,19 +246,56 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
                 },
               },
             )
-            if (extRes.ok) {
-              const rows = (await extRes.json()) as Array<{ extended_tokens: Partial<ExtendedBrandTokens> | null }>
-              const overrides = rows[0]?.extended_tokens
-              if (overrides) {
-                resolvedExtendedCSS = buildExtendedCSSVarString({
-                  ...defaultExtendedTokens,
-                  ...overrides,
-                })
+            if (brandRes.ok) {
+              const brandings = (await brandRes.json()) as Array<Record<string, unknown>>
+              const branding = brandings[0]
+              if (branding) {
+                const tokens: BrandTokens = {
+                  ...defaultBrandTokens,
+                  primary:       (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
+                  secondary:     (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
+                  accent:        (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
+                  background:    (branding['background_color'] as string) ?? defaultBrandTokens.background,
+                  surface:       (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
+                  textPrimary:   (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
+                  textSecondary: (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
+                  font:          (branding['font_family'] as string) ?? defaultBrandTokens.font,
+                  fontUrl:       (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
+                  radius:        (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
+                }
+                resolvedBrandCSS = buildCSSVarString(tokens)
+                resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
               }
             }
-          } catch (err) {
-            // Keep default extended tokens — never block the request
-            console.error('[middleware] Extended-token fetch error:', err)
+
+            // Extended tokens live in a JSONB column (migration 022) that may not
+            // be applied in every environment. Fetch them separately so a 400 on
+            // the column never falls back the core branding above to defaults.
+            try {
+              const extRes = await fetch(
+                `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=extended_tokens&limit=1`,
+                {
+                  headers: {
+                    apikey: supabaseKey,
+                    Authorization: `Bearer ${supabaseKey}`,
+                    Accept: 'application/json',
+                  },
+                },
+              )
+              if (extRes.ok) {
+                const rows = (await extRes.json()) as Array<{ extended_tokens: Partial<ExtendedBrandTokens> | null }>
+                const overrides = rows[0]?.extended_tokens
+                if (overrides) {
+                  resolvedExtendedCSS = buildExtendedCSSVarString({
+                    ...defaultExtendedTokens,
+                    ...overrides,
+                  })
+                }
+              }
+            } catch (err) {
+              // Keep default extended tokens — never block the request
+              console.error('[middleware] Extended-token fetch error:', err)
+            }
           }
         }
       }
@@ -299,8 +311,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     companySlug: subdomain ?? 'default',
     companyName: resolvedCompanyName,
     isHolding: isAdminHost(hostname),
-    brandCSS: `${resolvedBrandCSS};${resolvedExtendedCSS}`,
-    customCSSPath: resolvedCustomCSSPath,
+    brandCSS: isConsole
+      ? `${buildCSSVarString(defaultBrandTokens)};${buildExtendedCSSVarString(defaultExtendedTokens)}`
+      : `${resolvedBrandCSS};${resolvedExtendedCSS}`,
+    customCSSPath: isConsole ? '' : resolvedCustomCSSPath,
   })
   return response
 }
