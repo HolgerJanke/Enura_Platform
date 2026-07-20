@@ -1,16 +1,22 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export async function GET(request: NextRequest) {
-  const q = request.nextUrl.searchParams.get('q')?.trim() ?? ''
-  const companyId = request.nextUrl.searchParams.get('companyId') ?? ''
+  const session = await getSession()
+  if (!session?.companyId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-  if (!q || q.length < 2 || !companyId) {
+  const q = request.nextUrl.searchParams.get('q')?.trim() ?? ''
+  if (!q || q.length < 2) {
     return NextResponse.json({ results: [] })
   }
 
+  // Tenant scope comes from the verified session, never client input.
+  const companyId = session.companyId
   const supabase = createSupabaseServiceClient()
   const pattern = `%${q}%`
 
