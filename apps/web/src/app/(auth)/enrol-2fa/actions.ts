@@ -27,6 +27,16 @@ export async function initiateEnrolmentAction(): Promise<EnrolmentResult> {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // An interrupted enrolment leaves an unverified factor behind. Supabase
+  // rejects a new factor whose friendly name duplicates an existing one, which
+  // would permanently block re-enrolment — so clear any stale (unverified)
+  // factors before creating a fresh one.
+  const { data: existing } = await supabase.auth.mfa.listFactors()
+  const stale = (existing?.all ?? []).filter((f) => f.status !== 'verified')
+  for (const f of stale) {
+    await supabase.auth.mfa.unenroll({ factorId: f.id })
+  }
+
   const { data, error } = await supabase.auth.mfa.enroll({
     factorType: 'totp',
     friendlyName: 'Authenticator App',
