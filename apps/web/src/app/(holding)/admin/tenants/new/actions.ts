@@ -62,6 +62,10 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
   if (!session?.isHoldingAdmin) {
     return { error: 'Nicht autorisiert.' }
   }
+  if (!session.holdingId) {
+    return { error: 'Kein Holding zugewiesen.' }
+  }
+  const holdingId = session.holdingId
 
   const validationError = validateInput(data)
   if (validationError) {
@@ -85,6 +89,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
   const { data: tenant, error: tenantError } = await serviceClient
     .from('companies')
     .insert({
+      holding_id: holdingId,
       name: data.name,
       slug: data.slug,
       created_by: session.profile.id,

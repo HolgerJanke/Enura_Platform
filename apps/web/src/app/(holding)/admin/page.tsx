@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { requireHoldingAdmin } from '@/lib/permissions'
+import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDate } from '@enura/types'
 import { AdminTabs } from './admin-tabs'
@@ -48,15 +49,24 @@ const WHISPER_COST_PER_CALL_CHF = 0.024
 export default async function HoldingAdminPage() {
   await requireHoldingAdmin()
 
+  const session = await getSession()
+  const holdingId = session?.holdingId ?? null
+
   const supabase = createSupabaseServerClient()
 
   // -----------------------------------------------------------------------
-  // Fetch all tenants
+  // Fetch the companies of THIS holding only. A holding admin must never see
+  // another holding's tenants (§4.1). The companies table has a permissive
+  // select policy (needed for login-page tenant resolution), so this
+  // holding_id filter is the actual isolation boundary for this view.
+  // (An Enura admin has no holding_id and uses /platform instead.)
   // -----------------------------------------------------------------------
-  const { data: tenants, error: tenantsError } = await supabase
+  let tenantsQuery = supabase
     .from('companies')
     .select('id, name, slug, status, created_at')
     .order('name')
+  if (holdingId) tenantsQuery = tenantsQuery.eq('holding_id', holdingId)
+  const { data: tenants, error: tenantsError } = await tenantsQuery
 
   if (tenantsError) {
     return (

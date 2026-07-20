@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { requireHoldingAdmin } from '@/lib/permissions'
+import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDate } from '@enura/types'
 
@@ -26,7 +26,20 @@ export default async function ProcessListPage({
 }: {
   searchParams: Promise<{ company?: string }>
 }) {
-  await requireHoldingAdmin()
+  const session = await getSession()
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
+
+  const holdingId = session.holdingId
+  if (!holdingId) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-700">Kein Holding zugewiesen. Bitte kontaktieren Sie den Support.</p>
+        </div>
+      </div>
+    )
+  }
 
   const supabase = createSupabaseServerClient()
   const params = await searchParams
@@ -36,9 +49,20 @@ export default async function ProcessListPage({
   if (selectedCompanyId) {
     const { data: company } = await supabase
       .from('companies')
-      .select('id, name')
+      .select('id, name, holding_id')
       .eq('id', selectedCompanyId)
       .single()
+
+    const companyRow = company as Record<string, unknown> | null
+    if (!companyRow || companyRow['holding_id'] !== holdingId) {
+      return (
+        <div className="p-6">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-700">Unternehmen nicht gefunden.</p>
+          </div>
+        </div>
+      )
+    }
 
     const { data: processes } = await supabase
       .from('process_definitions')
@@ -46,7 +70,7 @@ export default async function ProcessListPage({
       .eq('company_id', selectedCompanyId)
       .order('house_sort_order')
 
-    const companyName = company ? (company as Record<string, unknown>)['name'] as string : 'Unbekannt'
+    const companyName = companyRow['name'] as string
 
     // Sort by process_type (M → P → S → null) then by house_sort_order
     const typeOrder: Record<string, number> = { M: 0, P: 1, S: 2 }
@@ -137,6 +161,7 @@ export default async function ProcessListPage({
   const { data: companies, error: companiesError } = await supabase
     .from('companies')
     .select('id, name, slug, status')
+    .eq('holding_id', holdingId)
     .eq('status', 'active')
     .order('name')
 

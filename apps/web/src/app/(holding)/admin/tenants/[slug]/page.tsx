@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/session'
 import { tenantUrl } from '@/lib/platform'
 import type { CompanyRow, CompanyBrandingRow, ProfileRow, ConnectorRow } from '@enura/types'
 import { TenantDetailTabs } from './tenant-detail-tabs'
@@ -60,14 +60,41 @@ function connectorStatusBadge(status: string): { label: string; classes: string 
 export default async function TenantDetailPage({ params }: { params: { slug: string } }) {
   try {
   const { slug } = params
+
+  const session = await getSession()
+  if (!session) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Nicht autorisiert.</p>
+        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurück</a>
+      </div>
+    )
+  }
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Nicht autorisiert.</p>
+        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurück</a>
+      </div>
+    )
+  }
+  if (!session.isEnuraAdmin && !session.holdingId) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Unternehmen nicht gefunden.</p>
+        <a href="/admin" className="text-blue-600 underline text-sm mt-2 block">Zurück</a>
+      </div>
+    )
+  }
+  const holdingId = session.holdingId
+
   const supabase = createSupabaseServerClient()
 
-  // Fetch tenant with branding
-  const { data: tenant } = await supabase
-    .from('companies')
-    .select('*, company_branding(*)')
-    .eq('slug', slug)
-    .single()
+  // Fetch tenant with branding, scoped to the admin's holding (Enura admins bypass the holding scope)
+  const tenantQuery = supabase.from('companies').select('*, company_branding(*)').eq('slug', slug)
+  const { data: tenant } = await (
+    session.isEnuraAdmin ? tenantQuery : tenantQuery.eq('holding_id', holdingId ?? '')
+  ).single()
 
   if (!tenant) {
     return (

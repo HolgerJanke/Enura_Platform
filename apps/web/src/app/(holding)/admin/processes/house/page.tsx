@@ -43,7 +43,10 @@ export default async function ProcessHouseEditorPage({
     .order('name')
 
   const companyList = (companies ?? []) as Array<{ id: string; name: string }>
-  const selectedCompanyId = params.company ?? companyList[0]?.id ?? null
+  const selectedCompanyId =
+    params.company && companyList.some((c) => c.id === params.company)
+      ? params.company
+      : (companyList[0]?.id ?? null)
 
   // Fetch all processes for selected company
   let processes: ProcessRow[] = []
