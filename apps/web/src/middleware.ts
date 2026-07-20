@@ -37,35 +37,54 @@ function isAdminHost(hostname: string): boolean {
   return false
 }
 
-function getSubdomain(hostname: string): string | null {
-  // Localhost development — use env default
+/**
+ * The actual tenant subdomain of the hostname, or null when the host has no
+ * real tenant subdomain (localhost, Vercel previews, root domain, www/admin).
+ */
+function getRealTenantSlug(hostname: string): string | null {
   if (
     hostname.startsWith('localhost') ||
-    hostname.startsWith('127.0.0.1')
+    hostname.startsWith('127.0.0.1') ||
+    hostname.includes('.vercel.app')
   ) {
-    return DEFAULT_TENANT_SLUG
-  }
-
-  // Vercel preview/production URLs — use env default
-  if (hostname.includes('.vercel.app')) {
-    return DEFAULT_TENANT_SLUG
+    return null
   }
 
   const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
-
-  // Root domain (with or without www) — use env default
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
-    return DEFAULT_TENANT_SLUG
+    return null
   }
 
   // Extract subdomain: e.g. acme-solar.enura-group.com → acme-solar
   const parts = hostname.split('.')
   if (parts.length >= 3) {
     const sub = parts[0]
-    if (sub === 'www' || sub === 'admin') {
-      return DEFAULT_TENANT_SLUG
-    }
-    return sub ?? null
+    if (!sub || sub === 'www' || sub === 'admin') return null
+    return sub
+  }
+
+  return null
+}
+
+function getSubdomain(hostname: string): string | null {
+  const real = getRealTenantSlug(hostname)
+  if (real) return real
+
+  // Localhost, Vercel previews, root domain, www/admin hosts — use env default
+  if (
+    hostname.startsWith('localhost') ||
+    hostname.startsWith('127.0.0.1') ||
+    hostname.includes('.vercel.app')
+  ) {
+    return DEFAULT_TENANT_SLUG
+  }
+  const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
+  if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
+    return DEFAULT_TENANT_SLUG
+  }
+  const parts = hostname.split('.')
+  if (parts.length >= 3) {
+    return DEFAULT_TENANT_SLUG
   }
 
   return null
@@ -77,6 +96,13 @@ function isAuthGateExempt(pathname: string): boolean {
   )
 }
 
+type SessionContext = {
+  /** §4.2 gate path the user must be redirected to, or null when clear */
+  gate: '/reset-password' | '/enrol-2fa' | null
+  /** The signed-in user's own company, or null (unauthenticated / no company) */
+  companyId: string | null
+}
+
 /**
  * Auth gates (CLAUDE.md §4.2): a signed-in user with a pending temp-password
  * reset or missing 2FA enrolment may not reach any route except the gate pages
@@ -85,11 +111,12 @@ function isAuthGateExempt(pathname: string): boolean {
  * even when the layout returns a redirect screen. Only a middleware redirect
  * prevents protected content from being served at all.
  *
- * Returns the gate path to redirect to, or null when the request may proceed.
+ * Also resolves the session's own company_id (from the same profile lookup) so
+ * branding can be aligned to the signed-in user (§4.4).
  * Fails open on lookup errors — the layout gates remain as visual backstop.
  */
-async function resolveAuthGate(request: NextRequest): Promise<string | null> {
-  // Mock auth: gate flags live in the mock-session cookie
+async function resolveSessionContext(request: NextRequest): Promise<SessionContext> {
+  // Mock auth: gate flags and company live in the mock-session cookie
   if (process.env.MOCK_AUTH !== 'false') {
     const raw = request.cookies.get('mock-session')?.value
     if (raw) {
@@ -97,10 +124,12 @@ async function resolveAuthGate(request: NextRequest): Promise<string | null> {
         const mock = JSON.parse(raw) as {
           mustResetPassword?: boolean
           totpEnabled?: boolean
+          companyId?: string | null
         }
-        if (mock.mustResetPassword) return '/reset-password'
-        if (mock.totpEnabled === false) return '/enrol-2fa'
-        return null
+        const companyId = mock.companyId ?? null
+        if (mock.mustResetPassword) return { gate: '/reset-password', companyId }
+        if (mock.totpEnabled === false) return { gate: '/enrol-2fa', companyId }
+        return { gate: null, companyId }
       } catch {
         // Unreadable mock cookie — fall through to real auth below
       }
@@ -111,11 +140,11 @@ async function resolveAuthGate(request: NextRequest): Promise<string | null> {
   const hasAuthCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
-  if (!hasAuthCookie) return null
+  if (!hasAuthCookie) return { gate: null, companyId: null }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseKey) return null
+  if (!supabaseUrl || !supabaseKey) return { gate: null, companyId: null }
 
   try {
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -127,21 +156,46 @@ async function resolveAuthGate(request: NextRequest): Promise<string | null> {
     })
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return null
+    if (!user) return { gate: null, companyId: null }
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('must_reset_password, totp_enabled')
+      .select('must_reset_password, totp_enabled, company_id')
       .eq('id', user.id)
       .maybeSingle()
-    if (!profile) return null
+    if (!profile) return { gate: null, companyId: null }
 
-    if (profile.must_reset_password) return '/reset-password'
-    if (!profile.totp_enabled) return '/enrol-2fa'
+    const companyId = profile.company_id ?? null
+    if (profile.must_reset_password) return { gate: '/reset-password', companyId }
+    if (!profile.totp_enabled) return { gate: '/enrol-2fa', companyId }
+    return { gate: null, companyId }
   } catch (err) {
     console.error('[middleware] Auth-gate check error:', err)
   }
-  return null
+  return { gate: null, companyId: null }
+}
+
+type CompanyRow = { id: string; name: string; slug: string }
+
+/** Fetch a single company row via REST (Edge-compatible). Null when absent. */
+async function fetchCompany(
+  supabaseUrl: string,
+  supabaseKey: string,
+  filter: string,
+): Promise<CompanyRow | null> {
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/companies?${filter}&select=id,name,slug&limit=1`,
+    {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        Accept: 'application/json',
+      },
+    },
+  )
+  if (!res.ok) return null
+  const rows = (await res.json()) as CompanyRow[]
+  return rows[0] ?? null
 }
 
 function setTenantHeaders(
@@ -181,12 +235,15 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next({ request })
   }
 
-  // Enforce §4.2 auth gates before any protected content is served
+  // Enforce §4.2 auth gates before any protected content is served. The same
+  // lookup yields the session's own company for branding alignment below.
+  let sessionCompanyId: string | null = null
   if (!isAuthGateExempt(pathname)) {
-    const gate = await resolveAuthGate(request)
+    const { gate, companyId } = await resolveSessionContext(request)
     if (gate) {
       return NextResponse.redirect(new URL(gate, request.url))
     }
+    sessionCompanyId = companyId
   }
 
   // Resolve tenant subdomain
@@ -207,6 +264,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // guarded request so a missing column never breaks core branding (see below).
   let resolvedExtendedCSS = buildExtendedCSSVarString(defaultExtendedTokens)
   let resolvedCompanyId = ''
+  let resolvedCompanySlug = subdomain ?? 'default'
   let resolvedCompanyName = subdomain ?? 'Platform'
   let resolvedCustomCSSPath = ''
 
@@ -216,26 +274,40 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // Fetch tenant branding from Supabase via REST (Edge-compatible)
   if (supabaseUrl && supabaseKey && subdomain) {
     try {
-      const companyRes = await fetch(
-        `${supabaseUrl}/rest/v1/companies?slug=eq.${subdomain}&select=id,name&limit=1`,
-        {
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            Accept: 'application/json',
-          },
-        },
-      )
-      if (companyRes.ok) {
-        const companies = (await companyRes.json()) as Array<{ id: string; name: string }>
-        const company = companies[0]
-        if (company) {
-          resolvedCompanyId = company.id
-          resolvedCompanyName = company.name
+      let company = await fetchCompany(supabaseUrl, supabaseKey, `slug=eq.${subdomain}`)
 
-          // Branding fetches are skipped on consoles — the result would be
-          // discarded (consoles always render with default tokens).
-          if (!isConsole) {
+      // Session/tenant alignment (§4.4): a tenant surface must carry the
+      // signed-in user's own company, never another tenant's. On a real
+      // production subdomain that isn't theirs, redirect to their own
+      // subdomain. On fallback hosts (localhost, previews, root domain) no
+      // tenant subdomain exists, so resolve branding from the session's
+      // company instead of the DEV_DEFAULT_TENANT_SLUG fallback.
+      if (!isConsole && sessionCompanyId && sessionCompanyId !== (company?.id ?? null)) {
+        const ownCompany = await fetchCompany(
+          supabaseUrl,
+          supabaseKey,
+          `id=eq.${sessionCompanyId}`,
+        )
+        if (ownCompany) {
+          const realSlug = getRealTenantSlug(hostname)
+          if (realSlug && company) {
+            const url = request.nextUrl.clone()
+            const hostParts = (hostname.split(':')[0] ?? hostname).split('.')
+            url.hostname = [ownCompany.slug, ...hostParts.slice(1)].join('.')
+            return NextResponse.redirect(url)
+          }
+          company = ownCompany
+        }
+      }
+
+      if (company) {
+        resolvedCompanyId = company.id
+        resolvedCompanySlug = company.slug
+        resolvedCompanyName = company.name
+
+        // Branding fetches are skipped on consoles — the result would be
+        // discarded (consoles always render with default tokens).
+        if (!isConsole) {
             const brandRes = await fetch(
               `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
               {
@@ -296,7 +368,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
               // Keep default extended tokens — never block the request
               console.error('[middleware] Extended-token fetch error:', err)
             }
-          }
         }
       }
     } catch (err) {
