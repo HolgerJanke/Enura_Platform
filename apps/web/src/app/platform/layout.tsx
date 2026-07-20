@@ -30,8 +30,14 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
+  // "← Dashboard" leads to the company dashboard — only meaningful for
+  // admins who also belong to a company.
+  const navItems = session.companyId
+    ? PLATFORM_NAV_ITEMS
+    : PLATFORM_NAV_ITEMS.filter((item) => item.href !== '/dashboard')
+
   return (
-    <PlatformShell navItems={PLATFORM_NAV_ITEMS} userName={displayName}>
+    <PlatformShell navItems={navItems} userName={displayName}>
       {children}
     </PlatformShell>
   )

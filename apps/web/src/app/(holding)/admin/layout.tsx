@@ -68,8 +68,14 @@ export default async function HoldingAdminLayout({ children }: { children: React
     if (holding) holdingName = (holding as { name: string }).name
   }
 
+  // "← Dashboard" leads to the company dashboard — only meaningful for
+  // admins who also belong to a company.
+  const navItems = session.companyId
+    ? HOLDING_NAV_ITEMS
+    : HOLDING_NAV_ITEMS.filter((item) => item.href !== '/dashboard')
+
   return (
-    <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName} holdingName={holdingName}>
+    <HoldingShell navItems={navItems} userName={displayName} holdingName={holdingName}>
       {children}
     </HoldingShell>
   )

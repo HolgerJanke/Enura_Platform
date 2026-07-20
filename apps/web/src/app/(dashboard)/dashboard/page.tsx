@@ -41,9 +41,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const _sp = await searchParams
   const session = await getSession()
   if (!session) redirect('/login')
-  if (session.isEnuraAdmin) redirect('/platform')
-  if (session.isHoldingAdmin) redirect('/admin')
-  if (!session?.companyId) return null
+  // Admins who also belong to a company may view that company's dashboard.
+  // Only admins without a company context are sent to their console — for
+  // them there is no tenant dashboard to render.
+  if (!session.companyId) {
+    if (session.isEnuraAdmin) redirect('/platform')
+    if (session.isHoldingAdmin) redirect('/admin')
+    return null
+  }
 
   const db = getDataAccess()
   const cid = session.companyId
