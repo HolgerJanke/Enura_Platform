@@ -2,58 +2,74 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
+import { getDataAccess } from '@/lib/data-access'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import {
+  KPI_SNAPSHOT_TYPES,
+  parseTenantSummaryMetrics,
+  parseFinanceDailyMetrics,
+} from '@enura/types'
 import { FinanceCashflowChart } from './finance-chart'
 
 // ---------------------------------------------------------------------------
 // Offer-based revenue overview when no Bexio data is available
 // ---------------------------------------------------------------------------
 async function OfferRevenueOverview({ companyId }: { companyId: string }) {
-  const serviceDb = createSupabaseServiceClient()
-
-  // Fetch won offers with amount and date
-  const { data: wonOffers } = await serviceDb
-    .from('offers')
-    .select('amount_chf, created_at, status')
-    .eq('company_id', companyId)
-    .eq('status', 'won')
-    .order('created_at', { ascending: true })
-
-  const { count: totalOfferCount } = await serviceDb
-    .from('offers')
-    .select('id', { count: 'exact', head: true })
-    .eq('company_id', companyId)
-
-  const { count: openOfferCount } = await serviceDb
-    .from('offers')
-    .select('id', { count: 'exact', head: true })
-    .eq('company_id', companyId)
-    .not('status', 'in', '("won","lost","expired")')
-
-  // Pipeline value
-  const { data: pipelineRows } = await serviceDb
-    .from('offers')
-    .select('amount_chf')
-    .eq('company_id', companyId)
-    .not('status', 'in', '("won","lost","expired")')
-
-  const pipelineValue = (pipelineRows ?? []).reduce(
-    (sum, r: Record<string, unknown>) => sum + (Number(r.amount_chf) || 0), 0
+  // Offer aggregates come from the pre-computed snapshot (CLAUDE.md §8)
+  const snapshot = await getDataAccess().kpis.findLatest(
+    companyId,
+    KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY,
   )
+  const summary = parseTenantSummaryMetrics(snapshot?.metrics)
 
-  const offers = (wonOffers ?? []) as Array<{ amount_chf: number; created_at: string }>
-  const totalRevenue = offers.reduce((sum, o) => sum + (Number(o.amount_chf) || 0), 0)
+  let totalRevenue: number
+  let wonOfferCount: number
+  let pipelineValue: number
+  let openOfferCount: number
+  let totalOfferCount: number
+  let sortedMonths: Array<[string, number]>
 
-  // Monthly revenue
-  const monthlyRevenue: Record<string, number> = {}
-  for (const o of offers) {
-    const d = new Date(o.created_at)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + (Number(o.amount_chf) || 0)
+  if (summary) {
+    const { offers } = summary
+    totalRevenue = offers.won_revenue
+    wonOfferCount = offers.won
+    pipelineValue = offers.pipeline_value
+    openOfferCount = offers.open
+    totalOfferCount = offers.total
+    sortedMonths = Object.entries(offers.won_revenue_by_month)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-12)
+  } else {
+    // No snapshot yet (fresh environment / pre-cron) — compute live once
+    const serviceDb = createSupabaseServiceClient()
+    const { data: allOffers } = await serviceDb
+      .from('offers')
+      .select('amount_chf, created_at, status')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: true })
+
+    const offers = (allOffers ?? []) as Array<{ amount_chf: number; created_at: string; status: string }>
+    const wonOffers = offers.filter((o) => o.status === 'won')
+    const openOffers = offers.filter((o) => !['won', 'lost', 'expired'].includes(o.status))
+
+    totalRevenue = wonOffers.reduce((sum, o) => sum + (Number(o.amount_chf) || 0), 0)
+    wonOfferCount = wonOffers.length
+    pipelineValue = openOffers.reduce((sum, o) => sum + (Number(o.amount_chf) || 0), 0)
+    openOfferCount = openOffers.length
+    totalOfferCount = offers.length
+
+    // Monthly revenue
+    const monthlyRevenue: Record<string, number> = {}
+    for (const o of wonOffers) {
+      const d = new Date(o.created_at)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + (Number(o.amount_chf) || 0)
+    }
+    sortedMonths = Object.entries(monthlyRevenue)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-12)
   }
-  const sortedMonths = Object.entries(monthlyRevenue)
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .slice(-12)
+
   const maxMonthRev = Math.max(...sortedMonths.map(([, v]) => v), 1)
 
   const monthNames: Record<string, string> = {
@@ -83,21 +99,21 @@ async function OfferRevenueOverview({ companyId }: { companyId: string }) {
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Gewonnener Umsatz</p>
           <p className="text-xl font-bold text-green-700 mt-1">{fmtCHF(totalRevenue)}</p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">{offers.length} Abschlüsse</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{wonOfferCount} Abschlüsse</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Pipeline-Wert</p>
           <p className="text-xl font-bold text-blue-700 mt-1">{fmtCHF(pipelineValue)}</p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">{openOfferCount ?? 0} offene Angebote</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{openOfferCount} offene Angebote</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Angebote Total</p>
-          <p className="text-xl font-bold text-brand-text-primary mt-1">{totalOfferCount ?? 0}</p>
+          <p className="text-xl font-bold text-brand-text-primary mt-1">{totalOfferCount}</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Ø pro Abschluss</p>
           <p className="text-xl font-bold text-brand-text-primary mt-1">
-            {offers.length > 0 ? fmtCHF(Math.round(totalRevenue / offers.length)) : 'CHF 0'}
+            {wonOfferCount > 0 ? fmtCHF(Math.round(totalRevenue / wonOfferCount)) : 'CHF 0'}
           </p>
         </div>
       </div>
@@ -163,75 +179,137 @@ export default async function FinancePage() {
   if (!session?.companyId) return null
 
   const db = createSupabaseServiceClient()
+  const cid = session.companyId
   const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]!
 
-  // Fetch from BOTH invoice tables + payments + liquidity events
-  const [
-    bexioInvoicesRes,
-    bexioPaymentsRes,
-    incomingInvoicesRes,
-    liqEventsRes,
-    currencyRes,
-  ] = await Promise.all([
-    // Bexio outgoing invoices (synced to 'invoices' table)
+  // Aggregates come from the pre-computed finance_daily snapshot (CLAUDE.md
+  // §8) — only row-level widgets stay live: the recent-invoices table, the
+  // cashflow chart events and the currency setting.
+  const [financeSnap, recentInvoicesRes, liqEventsRes, currencyRes] = await Promise.all([
+    getDataAccess().kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.FINANCE_DAILY),
     db.from('invoices')
       .select('id, invoice_number, customer_name, amount_chf, tax_chf, total_chf, status, issued_at, due_at, paid_at')
-      .eq('company_id', session.companyId)
-      .order('issued_at', { ascending: false }),
-    // Bexio payments
-    db.from('payments')
-      .select('id, invoice_id, amount_chf, payment_date, reference, notes')
-      .eq('company_id', session.companyId)
-      .order('payment_date', { ascending: false }),
-    // Incoming invoices (manual upload / OCR)
-    db.from('invoices_incoming')
-      .select('id, gross_amount, currency, status, due_date')
-      .eq('company_id', session.companyId),
-    // Liquidity events
+      .eq('company_id', cid)
+      .order('issued_at', { ascending: false })
+      .limit(15),
+    // Liquidity events (chart + forecast)
     db.from('liquidity_event_instances')
       .select('id, direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date, marker_type')
-      .eq('company_id', session.companyId)
+      .eq('company_id', cid)
       .eq('marker_type', 'event')
       .order('budget_date')
       .range(0, 4999),
     db.from('company_currency_settings')
       .select('base_currency')
-      .eq('company_id', session.companyId)
+      .eq('company_id', cid)
       .single(),
   ])
 
-  const bexioInvoices = (bexioInvoicesRes.data ?? []) as Array<Record<string, unknown>>
-  const bexioPayments = (bexioPaymentsRes.data ?? []) as Array<Record<string, unknown>>
-  const incomingInvoices = (incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+  const finance = parseFinanceDailyMetrics(financeSnap?.metrics)
   const liqEvents = (liqEventsRes.data ?? []) as Array<Record<string, unknown>>
   const currency = (currencyRes.data as Record<string, unknown> | null)?.['base_currency'] as string ?? 'CHF'
 
-  // --- Bexio outgoing invoice KPIs ---
-  const bexioPaid = bexioInvoices.filter(i => i['status'] === 'paid')
-  const bexioOpen = bexioInvoices.filter(i => ['sent', 'overdue', 'partially_paid'].includes(i['status'] as string))
-  const bexioOverdue = bexioInvoices.filter(i => {
-    if (i['status'] === 'overdue') return true
-    const due = i['due_at'] as string | null
-    return due && new Date(due) < today && ['sent', 'partially_paid'].includes(i['status'] as string)
-  })
-  const bexioDraft = bexioInvoices.filter(i => i['status'] === 'draft')
+  let invoiceCount: number
+  let totalInvoiced: number
+  let paidCount: number
+  let totalPaid: number
+  let openCount: number
+  let totalOpen: number
+  let overdueCount: number
+  let totalOverdue: number
+  let statusCounts: Record<string, number>
+  let paymentCount: number
+  let totalPayments: number
+  let incomingCount: number
+  let incomingOpenCount: number
+  let incomingOpenAmount: number
+  let recentInvoices: Array<Record<string, unknown>>
+  // Raw rows for the chart fallback (only populated when actually needed)
+  let chartInvoices: Array<Record<string, unknown>> = []
+  let chartPayments: Array<Record<string, unknown>> = []
 
-  const totalInvoiced = bexioInvoices.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-  const totalPaid = bexioPaid.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-  const totalOpen = bexioOpen.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-  const totalOverdue = bexioOverdue.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-  const totalPayments = bexioPayments.reduce((s, i) => s + Number(i['amount_chf'] ?? 0), 0)
+  if (finance) {
+    const { bexio, incoming } = finance
+    invoiceCount = bexio.invoice_count
+    totalInvoiced = bexio.total_invoiced
+    paidCount = bexio.paid_count
+    totalPaid = bexio.total_paid
+    openCount = bexio.open_count
+    totalOpen = bexio.total_open
+    overdueCount = bexio.overdue_count
+    totalOverdue = bexio.total_overdue
+    statusCounts = bexio.by_status
+    paymentCount = bexio.payment_count
+    totalPayments = bexio.total_payments
+    incomingCount = incoming.count
+    incomingOpenCount = incoming.open_count
+    incomingOpenAmount = incoming.open_amount
+    recentInvoices = (recentInvoicesRes.data ?? []) as Array<Record<string, unknown>>
 
-  // --- Incoming invoice KPIs (for comparison) ---
-  const incomingOpen = incomingInvoices.filter(i => !['paid', 'returned_formal', 'returned_sender'].includes(i['status'] as string))
-  const incomingOverdue = incomingOpen.filter(i => {
-    const due = i['due_date'] as string | null
-    return due && new Date(due) < today
-  })
-  const incomingOpenAmount = incomingOpen.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+    // The chart falls back to invoice/payment rows when there are no
+    // liquidity events — fetch only the two columns it needs, only then.
+    if (liqEvents.length === 0 && invoiceCount > 0) {
+      const [invRes, payRes] = await Promise.all([
+        db.from('invoices').select('issued_at, total_chf').eq('company_id', cid),
+        db.from('payments').select('payment_date, amount_chf').eq('company_id', cid),
+      ])
+      chartInvoices = (invRes.data ?? []) as Array<Record<string, unknown>>
+      chartPayments = (payRes.data ?? []) as Array<Record<string, unknown>>
+    }
+  } else {
+    // No snapshot yet (fresh environment / pre-cron) — compute live once
+    const [bexioInvoicesRes, bexioPaymentsRes, incomingInvoicesRes] = await Promise.all([
+      db.from('invoices')
+        .select('id, invoice_number, customer_name, amount_chf, tax_chf, total_chf, status, issued_at, due_at, paid_at')
+        .eq('company_id', cid)
+        .order('issued_at', { ascending: false }),
+      db.from('payments')
+        .select('id, invoice_id, amount_chf, payment_date, reference, notes')
+        .eq('company_id', cid)
+        .order('payment_date', { ascending: false }),
+      db.from('invoices_incoming')
+        .select('id, gross_amount, currency, status, due_date')
+        .eq('company_id', cid),
+    ])
 
-  // --- Liquidity forecast ---
+    const bexioInvoices = (bexioInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+    const bexioPayments = (bexioPaymentsRes.data ?? []) as Array<Record<string, unknown>>
+    const incomingInvoices = (incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+
+    const bexioPaid = bexioInvoices.filter(i => i['status'] === 'paid')
+    const bexioOpen = bexioInvoices.filter(i => ['sent', 'overdue', 'partially_paid'].includes(i['status'] as string))
+    const bexioOverdue = bexioInvoices.filter(i => {
+      if (i['status'] === 'overdue') return true
+      const due = i['due_at'] as string | null
+      return due && new Date(due) < today && ['sent', 'partially_paid'].includes(i['status'] as string)
+    })
+
+    const incomingOpen = incomingInvoices.filter(i => !['paid', 'returned_formal', 'returned_sender'].includes(i['status'] as string))
+
+    invoiceCount = bexioInvoices.length
+    totalInvoiced = bexioInvoices.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    paidCount = bexioPaid.length
+    totalPaid = bexioPaid.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    openCount = bexioOpen.length
+    totalOpen = bexioOpen.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    overdueCount = bexioOverdue.length
+    totalOverdue = bexioOverdue.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    statusCounts = bexioInvoices.reduce<Record<string, number>>((acc, i) => {
+      const s = String(i['status'] ?? 'unknown')
+      acc[s] = (acc[s] ?? 0) + 1
+      return acc
+    }, {})
+    paymentCount = bexioPayments.length
+    totalPayments = bexioPayments.reduce((s, i) => s + Number(i['amount_chf'] ?? 0), 0)
+    incomingCount = incomingInvoices.length
+    incomingOpenCount = incomingOpen.length
+    incomingOpenAmount = incomingOpen.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+    recentInvoices = bexioInvoices.slice(0, 15)
+    chartInvoices = bexioInvoices
+    chartPayments = bexioPayments
+  }
+
+  // --- Liquidity forecast (from the fetched events — fresher than snapshot) ---
   function forecastDays(days: number): number {
     const cutoff = new Date(today)
     cutoff.setDate(cutoff.getDate() + days)
@@ -240,7 +318,7 @@ export default async function FinancePage() {
       const d = (evt['actual_date'] ?? evt['scheduled_date'] ?? evt['budget_date']) as string | null
       if (!d) continue
       const evtDate = new Date(d)
-      if (evtDate > cutoff) break
+      if (evtDate > cutoff) continue
       const amt = Number(evt['actual_amount'] ?? evt['scheduled_amount'] ?? evt['budget_amount'] ?? 0)
       cumulative += (evt['direction'] === 'income' ? amt : -amt)
     }
@@ -260,8 +338,8 @@ export default async function FinancePage() {
   })).filter(e => e.date)
 
   // If no liquidity events but we have Bexio data, build chart from invoices
-  if (chartEvents.length === 0 && bexioInvoices.length > 0) {
-    for (const inv of bexioInvoices) {
+  if (chartEvents.length === 0 && (chartInvoices.length > 0 || chartPayments.length > 0)) {
+    for (const inv of chartInvoices) {
       const date = (inv['issued_at'] as string) ?? ''
       const amount = Number(inv['total_chf'] ?? 0)
       if (date && amount > 0) {
@@ -269,7 +347,7 @@ export default async function FinancePage() {
       }
     }
     // Add payments as expense events (money received reduces receivables)
-    for (const p of bexioPayments) {
+    for (const p of chartPayments) {
       const date = (p['payment_date'] as string) ?? ''
       const amount = Number(p['amount_chf'] ?? 0)
       if (date && amount > 0) {
@@ -277,9 +355,6 @@ export default async function FinancePage() {
       }
     }
   }
-
-  // Recent invoices for the table (top 15)
-  const recentInvoices = bexioInvoices.slice(0, 15)
 
   function fmtCHF(n: number): string {
     return `${currency} ${n.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
@@ -309,27 +384,27 @@ export default async function FinancePage() {
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Gesamtvolumen</p>
           <p className="text-xl font-bold text-brand-text-primary mt-1">{fmtCHF(totalInvoiced)}</p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">{bexioInvoices.length} Rechnungen (Bexio)</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{invoiceCount} Rechnungen (Bexio)</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Bezahlt</p>
           <p className="text-xl font-bold text-green-700 mt-1">{fmtCHF(totalPaid)}</p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">{bexioPaid.length} Rechnungen</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{paidCount} Rechnungen</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Offene Forderungen</p>
           <p className="text-xl font-bold text-blue-700 mt-1">{fmtCHF(totalOpen)}</p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">{bexioOpen.length} Rechnungen</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{openCount} Rechnungen</p>
         </div>
-        <div className={`rounded-brand p-4 border ${bexioOverdue.length > 0 ? 'bg-red-50 border-red-200' : 'bg-brand-surface border-gray-200'}`}>
-          <p className={`text-xs ${bexioOverdue.length > 0 ? 'text-red-600' : 'text-brand-text-secondary'}`}>Überfällig</p>
-          <p className={`text-xl font-bold mt-1 ${bexioOverdue.length > 0 ? 'text-red-700' : 'text-brand-text-primary'}`}>{fmtCHF(totalOverdue)}</p>
-          <p className={`text-xs mt-0.5 ${bexioOverdue.length > 0 ? 'text-red-500' : 'text-brand-text-secondary'}`}>{bexioOverdue.length} Rechnungen</p>
+        <div className={`rounded-brand p-4 border ${overdueCount > 0 ? 'bg-red-50 border-red-200' : 'bg-brand-surface border-gray-200'}`}>
+          <p className={`text-xs ${overdueCount > 0 ? 'text-red-600' : 'text-brand-text-secondary'}`}>Überfällig</p>
+          <p className={`text-xl font-bold mt-1 ${overdueCount > 0 ? 'text-red-700' : 'text-brand-text-primary'}`}>{fmtCHF(totalOverdue)}</p>
+          <p className={`text-xs mt-0.5 ${overdueCount > 0 ? 'text-red-500' : 'text-brand-text-secondary'}`}>{overdueCount} Rechnungen</p>
         </div>
         <div className="bg-brand-surface rounded-brand p-4 border border-gray-200">
           <p className="text-xs text-brand-text-secondary">Zahlungseingänge</p>
           <p className="text-xl font-bold text-brand-text-primary mt-1">{fmtCHF(totalPayments)}</p>
-          <p className="text-xs text-brand-text-secondary mt-0.5">{bexioPayments.length} Zahlungen</p>
+          <p className="text-xs text-brand-text-secondary mt-0.5">{paymentCount} Zahlungen</p>
         </div>
       </div>
 
@@ -339,7 +414,7 @@ export default async function FinancePage() {
           <h2 className="text-sm font-semibold text-brand-text-primary">Rechnungsstatus</h2>
           <div className="flex items-center gap-4 text-sm flex-wrap">
             {(['draft', 'sent', 'paid', 'overdue', 'partially_paid', 'cancelled'] as const).map(status => {
-              const count = bexioInvoices.filter(i => i['status'] === status).length
+              const count = statusCounts[status] ?? 0
               if (count === 0) return null
               const info = statusLabel[status]!
               return (
@@ -353,12 +428,12 @@ export default async function FinancePage() {
       </div>
 
       {/* Incoming invoices info (if any exist) */}
-      {incomingInvoices.length > 0 && (
+      {incomingCount > 0 && (
         <div className="bg-purple-50 rounded-brand p-4 border border-purple-200 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-purple-900">Eingangsrechnungen</h2>
-              <p className="text-xs text-purple-700 mt-0.5">{incomingInvoices.length} Rechnungen · {incomingOpen.length} offen · {fmtCHF(incomingOpenAmount)}</p>
+              <p className="text-xs text-purple-700 mt-0.5">{incomingCount} Rechnungen · {incomingOpenCount} offen · {fmtCHF(incomingOpenAmount)}</p>
             </div>
             <Link href="/finanzplanung/eingang" className="text-xs font-medium text-purple-700 hover:underline">
               Zur Rechnungsverarbeitung →
@@ -388,11 +463,11 @@ export default async function FinancePage() {
       )}
 
       {/* Overdue warning */}
-      {bexioOverdue.length > 0 && (
+      {overdueCount > 0 && (
         <div className="rounded-brand bg-red-50 border border-red-200 p-4 mb-6">
           <p className="text-sm font-medium text-red-800">Zahlungswarnung</p>
           <p className="text-sm text-red-700 mt-1">
-            {bexioOverdue.length} Rechnungen im Wert von {fmtCHF(totalOverdue)} sind überfällig. Bitte mahnen Sie offene Posten zeitnah an.
+            {overdueCount} Rechnungen im Wert von {fmtCHF(totalOverdue)} sind überfällig. Bitte mahnen Sie offene Posten zeitnah an.
           </p>
         </div>
       )}
@@ -402,7 +477,7 @@ export default async function FinancePage() {
         <div className="bg-brand-surface rounded-brand border border-gray-200 mb-6 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-base font-semibold text-brand-text-primary">Rechnungen (Bexio)</h2>
-            <span className="text-xs text-brand-text-secondary">{bexioInvoices.length} total</span>
+            <span className="text-xs text-brand-text-secondary">{invoiceCount} total</span>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -445,9 +520,9 @@ export default async function FinancePage() {
               </tbody>
             </table>
           </div>
-          {bexioInvoices.length > 15 && (
+          {invoiceCount > 15 && (
             <div className="px-5 py-3 border-t border-gray-100 text-center">
-              <span className="text-xs text-brand-text-secondary">Zeigt 15 von {bexioInvoices.length} Rechnungen</span>
+              <span className="text-xs text-brand-text-secondary">Zeigt 15 von {invoiceCount} Rechnungen</span>
             </div>
           )}
         </div>
@@ -462,7 +537,7 @@ export default async function FinancePage() {
       )}
 
       {/* Empty state — show offer-based revenue when no Bexio data */}
-      {bexioInvoices.length === 0 && incomingInvoices.length === 0 && (
+      {invoiceCount === 0 && incomingCount === 0 && (
         <OfferRevenueOverview companyId={session.companyId} />
       )}
     </div>

@@ -17,11 +17,9 @@ export const maxDuration = 60
  *   - leads_daily            — per-tenant lead counts/funnel
  *   - projects_daily         — per-tenant project counts and portfolio
  *   - berater_daily          — per-team-member offer pipeline (entity_id = team_member.id)
- *   - tenant_daily_summary   — combined snapshot for the tenant overview
- *
- * `setter_daily` and `finance_monthly` are NOT computed here yet — those
- * depend on telephony call data and accounting aggregation,
- * which are scheduled to follow once the connectors are wired up.
+ *   - setter_daily           — per-setter call/appointment KPIs
+ *   - finance_daily          — invoice/payment/liquidity aggregates (/finance, /controlling)
+ *   - tenant_daily_summary   — combined snapshot (/dashboard, /analytics)
  */
 
 type Row = Record<string, unknown>
@@ -132,6 +130,7 @@ export async function GET(request: NextRequest) {
 
     const allMembers = (members ?? []) as Row[]
     let beraterSnapshotsWritten = 0
+    const topSellers: Array<{ id: string; name: string; won: number }> = []
 
     for (const b of allMembers) {
       const memberId = b['id'] as string
@@ -175,7 +174,16 @@ export async function GET(request: NextRequest) {
       }, { onConflict: 'company_id,snapshot_type,entity_id,period_date' })
 
       beraterSnapshotsWritten++
+
+      if (won.length > 0) {
+        topSellers.push({
+          id: memberId,
+          name: (b['display_name'] as string | null) ?? '',
+          won: won.length,
+        })
+      }
     }
+    topSellers.sort((a, b) => b.won - a.won)
 
     // ----- SETTER DAILY (calls & appointments) -----
     const thirtyDaysAgo = new Date(now)
@@ -236,52 +244,56 @@ export async function GET(request: NextRequest) {
       setterSnapshotsWritten++
     }
 
-    // ----- OFFERS AGGREGATE (company-wide, using COUNT queries) -----
-    const [
-      { count: offersTotal },
-      { count: offersWon },
-      { count: offersLost },
-      { count: offersOpen },
-    ] = await Promise.all([
-      db.from('offers').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
-      db.from('offers').select('id', { count: 'exact', head: true }).eq('company_id', companyId).eq('status', 'won'),
-      db.from('offers').select('id', { count: 'exact', head: true }).eq('company_id', companyId).eq('status', 'lost'),
-      db.from('offers').select('id', { count: 'exact', head: true }).eq('company_id', companyId).not('status', 'in', '("won","lost","expired")'),
-    ])
-
-    // Fetch amounts for pipeline and won revenue (these need actual values)
-    const { data: pipelineAmounts } = await db
+    // ----- OFFERS AGGREGATE (company-wide, one pull instead of 6 queries) -----
+    const { data: allOffers } = await db
       .from('offers')
-      .select('amount_chf')
+      .select('status, amount_chf, created_at')
       .eq('company_id', companyId)
-      .not('status', 'in', '("won","lost","expired")')
-      .limit(5000)
+      .limit(10000)
 
-    const { data: wonAmounts } = await db
-      .from('offers')
-      .select('amount_chf')
-      .eq('company_id', companyId)
-      .eq('status', 'won')
-      .limit(5000)
+    const offersList = (allOffers ?? []) as Row[]
+    const wonOffers = offersList.filter((o) => o['status'] === 'won')
+    const openOffers = offersList.filter(
+      (o) => !['won', 'lost', 'expired'].includes(String(o['status'])),
+    )
 
-    const pipelineVal = sumBy((pipelineAmounts ?? []) as Row[], 'amount_chf')
-    const wonRev = sumBy((wonAmounts ?? []) as Row[], 'amount_chf')
+    const monthKeyOf = (iso: unknown): string | null => {
+      if (typeof iso !== 'string' || !iso) return null
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return null
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    }
+    const offersByMonth: Record<string, number> = {}
+    const wonRevenueByMonth: Record<string, number> = {}
+    for (const o of offersList) {
+      const key = monthKeyOf(o['created_at'])
+      if (key) offersByMonth[key] = (offersByMonth[key] ?? 0) + 1
+    }
+    for (const o of wonOffers) {
+      const key = monthKeyOf(o['created_at'])
+      const amount = Number(o['amount_chf'])
+      if (key && Number.isFinite(amount)) {
+        wonRevenueByMonth[key] = (wonRevenueByMonth[key] ?? 0) + amount
+      }
+    }
 
-    const oTotal = offersTotal ?? 0
-    const oWon = offersWon ?? 0
-    const oLost = offersLost ?? 0
-    const oOpen = offersOpen ?? 0
+    const oTotal = offersList.length
+    const oWon = wonOffers.length
+    const oLost = countBy(offersList, 'status')['lost'] ?? 0
 
     const offersMetrics = {
       total: oTotal,
       won: oWon,
       lost: oLost,
-      open: oOpen,
-      pipeline_value: pipelineVal,
-      won_revenue: wonRev,
+      open: openOffers.length,
+      pipeline_value: sumBy(openOffers, 'amount_chf'),
+      won_revenue: sumBy(wonOffers, 'amount_chf'),
       win_rate: (oWon + oLost) > 0
         ? Math.round((oWon / (oWon + oLost)) * 1000) / 10
         : 0,
+      by_status: countBy(offersList, 'status'),
+      by_month: offersByMonth,
+      won_revenue_by_month: wonRevenueByMonth,
     }
 
     // ----- CALLS AGGREGATE -----
@@ -299,6 +311,105 @@ export async function GET(request: NextRequest) {
       total_duration_sec: sumBy(allCallsList, 'duration_seconds'),
     }
 
+    // ----- FINANCE DAILY (read by /finance and /controlling) -----
+    const [invoicesRes, paymentsRes, incomingRes, liqRes] = await Promise.all([
+      db.from('invoices')
+        .select('total_chf, status, due_at')
+        .eq('company_id', companyId)
+        .limit(10000),
+      db.from('payments')
+        .select('amount_chf')
+        .eq('company_id', companyId)
+        .limit(10000),
+      db.from('invoices_incoming')
+        .select('gross_amount, status, due_date')
+        .eq('company_id', companyId)
+        .limit(10000),
+      db.from('liquidity_event_instances')
+        .select('direction, budget_amount, budget_date, scheduled_amount, scheduled_date, actual_amount, actual_date')
+        .eq('company_id', companyId)
+        .eq('marker_type', 'event')
+        .order('budget_date')
+        .range(0, 4999),
+    ])
+
+    const invoicesList = (invoicesRes.data ?? []) as Row[]
+    const paymentsList = (paymentsRes.data ?? []) as Row[]
+    const incomingList = (incomingRes.data ?? []) as Row[]
+    const liqEvents = (liqRes.data ?? []) as Row[]
+
+    const bexioPaid = invoicesList.filter((i) => i['status'] === 'paid')
+    const bexioOpen = invoicesList.filter((i) =>
+      ['sent', 'overdue', 'partially_paid'].includes(String(i['status'])),
+    )
+    const bexioOverdue = invoicesList.filter((i) => {
+      if (i['status'] === 'overdue') return true
+      const due = i['due_at'] as string | null
+      return Boolean(
+        due && new Date(due) < now &&
+        ['sent', 'partially_paid'].includes(String(i['status'])),
+      )
+    })
+
+    const incomingOpen = incomingList.filter(
+      (i) => !['paid', 'returned_formal', 'returned_sender'].includes(String(i['status'])),
+    )
+    const incomingOverdue = incomingOpen.filter((i) => {
+      const due = i['due_date'] as string | null
+      return Boolean(due && new Date(due) < now)
+    })
+
+    const liquidityForecast = (days: number): number => {
+      const cutoff = new Date(now)
+      cutoff.setDate(cutoff.getDate() + days)
+      let cumulative = 0
+      for (const evt of liqEvents) {
+        const d = (evt['actual_date'] ?? evt['scheduled_date'] ?? evt['budget_date']) as string | null
+        if (!d) continue
+        if (new Date(d) > cutoff) continue
+        const amt = Number(evt['actual_amount'] ?? evt['scheduled_amount'] ?? evt['budget_amount'] ?? 0)
+        cumulative += evt['direction'] === 'income' ? amt : -amt
+      }
+      return cumulative
+    }
+
+    const financeMetrics = {
+      bexio: {
+        invoice_count: invoicesList.length,
+        total_invoiced: sumBy(invoicesList, 'total_chf'),
+        paid_count: bexioPaid.length,
+        total_paid: sumBy(bexioPaid, 'total_chf'),
+        open_count: bexioOpen.length,
+        total_open: sumBy(bexioOpen, 'total_chf'),
+        overdue_count: bexioOverdue.length,
+        total_overdue: sumBy(bexioOverdue, 'total_chf'),
+        by_status: countBy(invoicesList, 'status'),
+        payment_count: paymentsList.length,
+        total_payments: sumBy(paymentsList, 'amount_chf'),
+      },
+      incoming: {
+        count: incomingList.length,
+        open_count: incomingOpen.length,
+        open_amount: sumBy(incomingOpen, 'gross_amount'),
+        overdue_count: incomingOverdue.length,
+        overdue_amount: sumBy(incomingOverdue, 'gross_amount'),
+      },
+      liquidity: {
+        event_count: liqEvents.length,
+        forecast_30: liquidityForecast(30),
+        forecast_60: liquidityForecast(60),
+        forecast_90: liquidityForecast(90),
+      },
+    }
+
+    await db.from('kpi_snapshots').upsert({
+      company_id: companyId,
+      snapshot_type: 'finance_daily',
+      entity_id: null,
+      period_date: today,
+      metrics: financeMetrics,
+    }, { onConflict: 'company_id,snapshot_type,entity_id,period_date' })
+
     // ----- TENANT DAILY SUMMARY -----
     await db.from('kpi_snapshots').upsert({
       company_id: companyId,
@@ -310,6 +421,7 @@ export async function GET(request: NextRequest) {
         projects: projectsMetrics,
         offers: offersMetrics,
         calls: callsMetrics,
+        top_sellers: topSellers.slice(0, 10),
         beraters_active: beraterSnapshotsWritten,
         setters_active: setterSnapshotsWritten,
       },

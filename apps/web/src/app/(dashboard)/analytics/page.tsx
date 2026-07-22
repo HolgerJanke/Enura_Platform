@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
-import { KPI_SNAPSHOT_TYPES } from '@enura/types'
+import { KPI_SNAPSHOT_TYPES, parseTenantSummaryMetrics } from '@enura/types'
 import type { OfferRow, TeamMemberRow } from '@enura/types'
 
 // ---------------------------------------------------------------------------
@@ -50,28 +50,114 @@ export default async function AnalyticsPage() {
   const db = getDataAccess()
   const cid = session.companyId
 
-  // Parallel optimized queries — use counts instead of fetching all rows
-  const [
-    snapshot,
-    totalOffers,
-    wonCount,
-    lostCount,
-    draftCount,
-    sentCount,
-    pipelineTotal,
-    teamMembers,
-  ] = await Promise.all([
-    db.kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY),
-    db.offers.count(cid),
-    db.offers.count(cid, { status: 'won' }),
-    db.offers.count(cid, { status: 'lost' }),
-    db.offers.count(cid, { status: 'draft' }),
-    db.offers.count(cid, { status: 'sent' }),
-    db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
-    db.teamMembers.findByCompanyId(cid),
-  ])
+  // KPIs, monthly trends and top sellers come from the pre-computed
+  // snapshot (CLAUDE.md §8) — one query instead of ten raw-table scans.
+  const snapshot = await db.kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY)
+  const summary = parseTenantSummaryMetrics(snapshot?.metrics)
 
-  const metrics = (snapshot?.metrics ?? {}) as Record<string, unknown>
+  let totalOffers: number
+  let wonCount: number
+  let lostCount: number
+  let draftCount: number
+  let sentCount: number
+  let pipelineTotal: number
+  let totalWonRevenue: number
+  let sortedMonths: Array<[string, number]>
+  let sortedRevenueMonths: Array<[string, number]>
+  let topSellers: Array<{ id: string; name: string; won: number }>
+
+  if (summary) {
+    const { offers } = summary
+    totalOffers = offers.total
+    wonCount = offers.won
+    lostCount = offers.lost
+    draftCount = offers.by_status['draft'] ?? 0
+    sentCount = offers.by_status['sent'] ?? 0
+    pipelineTotal = offers.pipeline_value
+    totalWonRevenue = offers.won_revenue
+    sortedMonths = Object.entries(offers.by_month)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-12)
+    sortedRevenueMonths = Object.entries(offers.won_revenue_by_month)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-12)
+    topSellers = summary.top_sellers.slice(0, 5)
+  } else {
+    // No snapshot yet (fresh environment / pre-cron) — compute live once
+    const [liveTotal, liveWon, liveLost, liveDraft, liveSent, livePipeline, teamMembers] =
+      await Promise.all([
+        db.offers.count(cid),
+        db.offers.count(cid, { status: 'won' }),
+        db.offers.count(cid, { status: 'lost' }),
+        db.offers.count(cid, { status: 'draft' }),
+        db.offers.count(cid, { status: 'sent' }),
+        db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
+        db.teamMembers.findByCompanyId(cid),
+      ])
+    totalOffers = liveTotal
+    wonCount = liveWon
+    lostCount = liveLost
+    draftCount = liveDraft
+    sentCount = liveSent
+    pipelineTotal = livePipeline
+
+    // Top sellers by number of won offers
+    const wonOffersResult = await db.offers.findPaginated(cid, {
+      page: 1,
+      pageSize: 500,
+      status: 'won',
+    })
+    const sellerCounts: Record<string, number> = {}
+    for (const o of wonOffersResult.data) {
+      const bid = (o as OfferRow).berater_id
+      if (bid) sellerCounts[bid] = (sellerCounts[bid] ?? 0) + 1
+    }
+    const memberMap = new Map(teamMembers.map((m: TeamMemberRow) => [m.id, m]))
+    topSellers = Object.entries(sellerCounts)
+      .filter(([id]) => {
+        const m = memberMap.get(id)
+        if (!m) return false // Unknown member — skip
+        return m.is_active !== false
+      })
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([id, count]) => {
+        const m = memberMap.get(id)
+        return {
+          id,
+          name: m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : '',
+          won: count,
+        }
+      })
+
+    // Monthly offer counts + won revenue trend
+    const serviceDb = createSupabaseServiceClient()
+    const { data: offerDates } = await serviceDb
+      .from('offers')
+      .select('amount_chf, created_at, status')
+      .eq('company_id', cid)
+
+    const monthCounts: Record<string, number> = {}
+    const monthlyRevenue: Record<string, number> = {}
+    totalWonRevenue = 0
+    for (const o of offerDates ?? []) {
+      const row = o as { amount_chf: number; created_at: string; status: string }
+      const d = new Date(row.created_at)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      monthCounts[key] = (monthCounts[key] ?? 0) + 1
+      if (row.status === 'won') {
+        const amount = Number(row.amount_chf) || 0
+        monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + amount
+        totalWonRevenue += amount
+      }
+    }
+    sortedMonths = Object.entries(monthCounts)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-12)
+    sortedRevenueMonths = Object.entries(monthlyRevenue)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-12)
+  }
 
   // KPI values
   const pipelineValue = pipelineTotal > 1_000_000
@@ -85,70 +171,8 @@ export default async function AnalyticsPage() {
     ? `${Math.round((wonCount / (wonCount + lostCount)) * 100)}%`
     : '--'
 
-  // Top sellers by number of won offers — fetch won offers directly
-  const wonOffersResult = await db.offers.findPaginated(cid, {
-    page: 1,
-    pageSize: 500,
-    status: 'won',
-  })
-  const wonOffers = wonOffersResult.data
-  const sellerCounts: Record<string, number> = {}
-  for (const o of wonOffers) {
-    const bid = (o as OfferRow).berater_id
-    if (bid) sellerCounts[bid] = (sellerCounts[bid] ?? 0) + 1
-  }
-
-  const memberMap = new Map(teamMembers.map((m: TeamMemberRow) => [m.id, m]))
-
-  // Filter out inactive/system accounts from top sellers
-  const topSellerIds = Object.entries(sellerCounts)
-    .filter(([id]) => {
-      const m = memberMap.get(id)
-      if (!m) return false // Unknown member — skip
-      return m.is_active !== false
-    })
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-
-  // Monthly offer counts — fetch all dates (lightweight: only created_at column)
-  const serviceDb = createSupabaseServiceClient()
-  const { data: offerDates } = await serviceDb
-    .from('offers')
-    .select('created_at')
-    .eq('company_id', cid)
-
-  const monthCounts: Record<string, number> = {}
-  for (const o of offerDates ?? []) {
-    const d = new Date((o as { created_at: string }).created_at)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    monthCounts[key] = (monthCounts[key] ?? 0) + 1
-  }
-  const sortedMonths = Object.entries(monthCounts).sort((a, b) => a[0].localeCompare(b[0])).slice(-12)
   const maxMonthCount = Math.max(...sortedMonths.map(([, v]) => v), 1)
-
-  // Revenue trend from won offers — monthly
-  const { data: wonOfferDates } = await serviceDb
-    .from('offers')
-    .select('amount_chf, created_at')
-    .eq('company_id', cid)
-    .eq('status', 'won')
-
-  const monthlyRevenue: Record<string, number> = {}
-  for (const o of wonOfferDates ?? []) {
-    const row = o as { amount_chf: number; created_at: string }
-    const d = new Date(row.created_at)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + (Number(row.amount_chf) || 0)
-  }
-  const sortedRevenueMonths = Object.entries(monthlyRevenue)
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .slice(-12)
   const maxMonthlyRevenue = Math.max(...sortedRevenueMonths.map(([, v]) => v), 1)
-
-  // Total revenue
-  const totalWonRevenue = (wonOfferDates ?? []).reduce(
-    (sum, o) => sum + (Number((o as { amount_chf: number }).amount_chf) || 0), 0
-  )
 
   // Pipeline funnel from counts
   const phaseCounts = [
@@ -362,7 +386,7 @@ export default async function AnalyticsPage() {
         {/* Top Verkäufer */}
         <div className="rounded-xl bg-white p-6 shadow-brand-sm border border-gray-100">
           <h2 className="text-base font-semibold text-brand-text-primary mb-4">Top Verkäufer</h2>
-          {topSellerIds.length > 0 ? (
+          {topSellers.length > 0 ? (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-brand-text-secondary border-b border-gray-100">
@@ -371,22 +395,19 @@ export default async function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {topSellerIds.map(([id, count], idx) => {
-                  const member = memberMap.get(id)
-                  return (
-                    <tr key={id} className="border-b border-gray-50 last:border-0">
-                      <td className="py-2.5 text-brand-text-primary">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-semibold text-brand-primary">
-                            {idx + 1}
-                          </span>
-                          {member ? `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() : id.slice(0, 8)}
-                        </div>
-                      </td>
-                      <td className="py-2.5 text-right font-semibold text-brand-text-primary">{count}</td>
-                    </tr>
-                  )
-                })}
+                {topSellers.map((seller, idx) => (
+                  <tr key={seller.id} className="border-b border-gray-50 last:border-0">
+                    <td className="py-2.5 text-brand-text-primary">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-semibold text-brand-primary">
+                          {idx + 1}
+                        </span>
+                        {seller.name || seller.id.slice(0, 8)}
+                      </div>
+                    </td>
+                    <td className="py-2.5 text-right font-semibold text-brand-text-primary">{seller.won}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           ) : (
