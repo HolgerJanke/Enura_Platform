@@ -45,8 +45,20 @@ async function requireAdmin() {
 export async function getRolesWithPermissions(
   companyId: string,
 ): Promise<{ roles: RoleWithPermissions[]; permissions: PermissionItem[] }> {
-  await requireAdmin()
+  const session = await requireAdmin()
   const supabase = createSupabaseServerClient()
+
+  if (!session.isEnuraAdmin) {
+    const { data: company } = await supabase
+      .from('companies')
+      .select('holding_id')
+      .eq('id', companyId)
+      .maybeSingle()
+
+    if (!company || (company as Record<string, unknown>)['holding_id'] !== session.holdingId) {
+      return { roles: [], permissions: [] }
+    }
+  }
 
   // Fetch all roles for this company
   const { data: roles } = await supabase
@@ -134,6 +146,10 @@ export async function createCustomRole(
 
   const holdingId = (company as Record<string, unknown>)['holding_id'] as string
 
+  if (!session.isEnuraAdmin && holdingId !== session.holdingId) {
+    return { success: false, error: 'Unternehmen gehört nicht zu dieser Holding.' }
+  }
+
   // Create role
   const { data: role, error: roleError } = await supabase
     .from('roles')
@@ -173,8 +189,19 @@ export async function updateRolePermissions(
   roleId: string,
   permissionIds: string[],
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdmin()
+  const session = await requireAdmin()
   const supabase = createSupabaseServerClient()
+
+  const { data: role } = await supabase
+    .from('roles')
+    .select('holding_id, company_id')
+    .eq('id', roleId)
+    .maybeSingle()
+
+  if (!role) return { success: false, error: 'Rolle nicht gefunden.' }
+  if (!session.isEnuraAdmin && (role as Record<string, unknown>)['holding_id'] !== session.holdingId) {
+    return { success: false, error: 'Rolle gehört nicht zu dieser Holding.' }
+  }
 
   // Get current permissions
   const { data: current } = await supabase
@@ -218,17 +245,20 @@ export async function updateRolePermissions(
 export async function deleteCustomRole(
   roleId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdmin()
+  const session = await requireAdmin()
   const supabase = createSupabaseServerClient()
 
   // Verify it's not a system role
   const { data: role } = await supabase
     .from('roles')
-    .select('is_system, key')
+    .select('is_system, key, holding_id')
     .eq('id', roleId)
     .single()
 
   if (!role) return { success: false, error: 'Rolle nicht gefunden.' }
+  if (!session.isEnuraAdmin && (role as Record<string, unknown>)['holding_id'] !== session.holdingId) {
+    return { success: false, error: 'Rolle gehört nicht zu dieser Holding.' }
+  }
   if ((role as Record<string, unknown>)['is_system']) {
     return { success: false, error: 'Systemrollen können nicht gelöscht werden.' }
   }

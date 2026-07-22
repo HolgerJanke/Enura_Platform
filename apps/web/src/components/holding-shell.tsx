@@ -90,9 +90,16 @@ export function HoldingShell({ navItems, userName, holdingName = 'Holding', chil
                   ? pathname === '/admin'
                   : pathname === item.href || (pathname.startsWith(item.href + '/') && !navItems.some(other => other.href !== item.href && other.href.startsWith(item.href + '/') && pathname.startsWith(other.href)))
 
+              // Links leaving the console surface must be full page loads:
+              // branding (brand vars + custom CSS) is injected by the root
+              // layout, which client-side navigation does not re-render.
+              const isCrossSurface =
+                !item.href.startsWith('/admin') && !item.href.startsWith('/platform')
+              const NavLink = (isCrossSurface ? 'a' : Link) as React.ElementType
+
               return (
                 <li key={item.href}>
-                  <Link
+                  <NavLink
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
                     className={`
@@ -108,7 +115,7 @@ export function HoldingShell({ navItems, userName, holdingName = 'Holding', chil
                   >
                     <NavIcon icon={item.icon} />
                     <span>{item.label}</span>
-                  </Link>
+                  </NavLink>
                 </li>
               )
             })}

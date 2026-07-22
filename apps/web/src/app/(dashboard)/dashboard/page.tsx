@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
-import { getDataAccess } from '@/lib/data-access'
-import { formatDate } from '@enura/types'
+import { getDataAccess, getCompanyConnectors } from '@/lib/data-access'
+import { formatDate, KPI_SNAPSHOT_TYPES, parseTenantSummaryMetrics } from '@enura/types'
 import type { ConnectorRow, LeadRow } from '@enura/types'
 import Link from 'next/link'
 
@@ -41,44 +41,79 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const _sp = await searchParams
   const session = await getSession()
   if (!session) redirect('/login')
-  if (session.isEnuraAdmin) redirect('/platform')
-  if (session.isHoldingAdmin) redirect('/admin')
-  if (!session?.companyId) return null
+  // Admins who also belong to a company may view that company's dashboard.
+  // Only admins without a company context are sent to their console — for
+  // them there is no tenant dashboard to render.
+  if (!session.companyId) {
+    if (session.isEnuraAdmin) redirect('/platform')
+    if (session.isHoldingAdmin) redirect('/admin')
+    return null
+  }
 
   const db = getDataAccess()
   const cid = session.companyId
 
-  // Parallel data fetch — use counts instead of fetching all rows
-  const [
-    connectors,
-    recentLeadsResult,
-    totalLeads,
-    wonLeadsCount,
-    lostLeadsCount,
-    pipelineTotal,
-    wonCount,
-    draftCount,
-    sentCount,
-    lostCount,
-    expiredCount,
-  ] = await Promise.all([
-    db.connectors.findByCompanyId(cid),
+  // KPIs come from the pre-computed snapshot (CLAUDE.md §8) — only the
+  // row-level widgets (recent leads, connector status) stay live.
+  const [connectors, recentLeadsResult, snapshot] = await Promise.all([
+    getCompanyConnectors(cid),
     db.leads.findPaginated(cid, { page: 1, pageSize: 5 }),
-    db.leads.count(cid),
-    db.leads.count(cid, { status: 'won' }),
-    db.leads.count(cid, { status: 'lost' }),
-    db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
-    db.offers.count(cid, { status: 'won' }),
-    db.offers.count(cid, { status: 'draft' }),
-    db.offers.count(cid, { status: 'sent' }),
-    db.offers.count(cid, { status: 'lost' }),
-    db.offers.count(cid, { status: 'expired' }),
+    db.kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY),
   ])
+  const summary = parseTenantSummaryMetrics(snapshot?.metrics)
 
-  // Open leads = total minus terminal states (won, lost)
-  const openLeads = totalLeads - wonLeadsCount - lostLeadsCount
+  let pipelineTotal: number
+  let openLeads: number
+  let activeOffers: number
+  let wonCount: number
+  let phaseCounts: Record<string, number>
 
-  const activeOffers = draftCount + sentCount
+  if (summary) {
+    const { offers, leads } = summary
+    pipelineTotal = offers.pipeline_value
+    // Open leads = total minus terminal states (won, lost)
+    openLeads = Math.max(
+      0,
+      leads.total - (leads.by_status['won'] ?? 0) - (leads.by_status['lost'] ?? 0),
+    )
+    activeOffers = (offers.by_status['draft'] ?? 0) + (offers.by_status['sent'] ?? 0)
+    wonCount = offers.won
+    phaseCounts = offers.by_status
+  } else {
+    // No snapshot yet (fresh environment / pre-cron) — compute live once
+    const [
+      totalLeads,
+      wonLeadsCount,
+      lostLeadsCount,
+      livePipeline,
+      liveWon,
+      draftCount,
+      sentCount,
+      lostCount,
+      expiredCount,
+    ] = await Promise.all([
+      db.leads.count(cid),
+      db.leads.count(cid, { status: 'won' }),
+      db.leads.count(cid, { status: 'lost' }),
+      db.offers.sumAmountChf(cid, { excludeStatus: ['won', 'lost', 'expired'] }),
+      db.offers.count(cid, { status: 'won' }),
+      db.offers.count(cid, { status: 'draft' }),
+      db.offers.count(cid, { status: 'sent' }),
+      db.offers.count(cid, { status: 'lost' }),
+      db.offers.count(cid, { status: 'expired' }),
+    ])
+    pipelineTotal = livePipeline
+    openLeads = totalLeads - wonLeadsCount - lostLeadsCount
+    activeOffers = draftCount + sentCount
+    wonCount = liveWon
+    phaseCounts = {
+      draft: draftCount,
+      sent: sentCount,
+      won: liveWon,
+      lost: lostCount,
+      expired: expiredCount,
+    }
+  }
 
   const displayName = session.profile.first_name ?? session.profile.display_name ?? 'Benutzer'
 
@@ -93,15 +128,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       : 'CHF 0'
 
   const recentLeads = recentLeadsResult.data
-
-  // Pipeline summary from counts
-  const phaseCounts: Record<string, number> = {
-    draft: draftCount,
-    sent: sentCount,
-    won: wonCount,
-    lost: lostCount,
-    expired: expiredCount,
-  }
 
   // Map connector types to display names (real service names)
   const CONNECTOR_LABELS: Record<string, string> = {

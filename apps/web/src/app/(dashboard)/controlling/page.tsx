@@ -4,6 +4,11 @@ import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import {
+  KPI_SNAPSHOT_TYPES,
+  parseTenantSummaryMetrics,
+  parseFinanceDailyMetrics,
+} from '@enura/types'
 import { FinanceAIChat } from './finance-ai-chat'
 
 export default async function ControllingLandingPage() {
@@ -17,74 +22,125 @@ export default async function ControllingLandingPage() {
   }
 
   const db = getDataAccess()
-  const serviceDb = createSupabaseServiceClient()
   const cid = session.companyId
 
-  // Fetch summary data for the AI context
-  const [
-    wonCount,
-    sentCount,
-    draftCount,
-    lostCount,
-    pipelineTotal,
-    incomingInvoicesRes,
-    bexioInvoicesRes,
-    bexioPaymentsRes,
-  ] = await Promise.all([
-    db.offers.count(cid, { status: 'won' }),
-    db.offers.count(cid, { status: 'sent' }),
-    db.offers.count(cid, { status: 'draft' }),
-    db.offers.count(cid, { status: 'lost' }),
-    db.offers.sumAmountChf(cid, { excludeStatus: ['lost', 'expired'] }),
-    serviceDb
-      .from('invoices_incoming')
-      .select('id, gross_amount, status, due_date')
-      .eq('company_id', cid),
-    // Bexio outgoing invoices
-    serviceDb
-      .from('invoices')
-      .select('id, total_chf, status, due_at')
-      .eq('company_id', cid),
-    // Bexio payments
-    serviceDb
-      .from('payments')
-      .select('id, amount_chf')
-      .eq('company_id', cid),
+  // KPIs come from the pre-computed snapshots (CLAUDE.md §8)
+  const [summarySnap, financeSnap] = await Promise.all([
+    db.kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.TENANT_DAILY_SUMMARY),
+    db.kpis.findLatest(cid, KPI_SNAPSHOT_TYPES.FINANCE_DAILY),
   ])
+  const summary = parseTenantSummaryMetrics(summarySnap?.metrics)
+  const finance = parseFinanceDailyMetrics(financeSnap?.metrics)
 
-  // Incoming invoices (supplier bills)
-  const incomingInvoices = (incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
-  const incomingOpen = incomingInvoices.filter(
-    (i) => !['paid', 'returned_formal', 'returned_sender'].includes(i['status'] as string),
-  )
-  const incomingOverdue = incomingOpen.filter((i) => {
-    const due = i['due_date'] as string | null
-    return due && new Date(due) < new Date()
-  })
+  let wonCount: number
+  let sentCount: number
+  let draftCount: number
+  let lostCount: number
+  let pipelineTotal: number
+  let openReceivables: number
+  let overdueAmount: number
+  let overdueCount: number
+  let openInvoicesCount: number
+  let totalInvoicesCount: number
+  let totalRevenue: number
+  let totalPaymentsReceived: number
+  let bexioInvoiceCount: number
+  let bexioPaymentCount: number
 
-  // Bexio outgoing invoices (customer invoices)
-  const bexioInvoices = (bexioInvoicesRes.data ?? []) as Array<Record<string, unknown>>
-  const bexioPayments = (bexioPaymentsRes.data ?? []) as Array<Record<string, unknown>>
-  const bexioOpen = bexioInvoices.filter(i => ['sent', 'overdue', 'partially_paid'].includes(i['status'] as string))
-  const bexioOverdue = bexioInvoices.filter(i => {
-    if (i['status'] === 'overdue') return true
-    const due = i['due_at'] as string | null
-    return due && new Date(due) < new Date() && ['sent', 'partially_paid'].includes(i['status'] as string)
-  })
-  const bexioPaid = bexioInvoices.filter(i => i['status'] === 'paid')
+  if (summary && finance) {
+    const { offers } = summary
+    wonCount = offers.won
+    sentCount = offers.by_status['sent'] ?? 0
+    draftCount = offers.by_status['draft'] ?? 0
+    lostCount = offers.lost
+    // Everything except lost/expired = open pipeline + won revenue
+    pipelineTotal = offers.pipeline_value + offers.won_revenue
 
-  // Combined receivables: use Bexio data if available, else incoming
-  const openReceivables = bexioOpen.length > 0
-    ? bexioOpen.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-    : incomingOpen.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
-  const overdueAmount = bexioOverdue.length > 0
-    ? bexioOverdue.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-    : incomingOverdue.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
-  const overdueCount = bexioOverdue.length > 0 ? bexioOverdue.length : incomingOverdue.length
-  const openInvoicesCount = bexioOpen.length > 0 ? bexioOpen.length : incomingOpen.length
-  const totalInvoicesCount = bexioInvoices.length > 0 ? bexioInvoices.length : incomingInvoices.length
-  const totalRevenue = bexioPaid.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
-  const totalPaymentsReceived = bexioPayments.reduce((s, i) => s + Number(i['amount_chf'] ?? 0), 0)
+    // Combined receivables: use Bexio data if available, else incoming
+    const { bexio, incoming } = finance
+    openReceivables = bexio.open_count > 0 ? bexio.total_open : incoming.open_amount
+    overdueAmount = bexio.overdue_count > 0 ? bexio.total_overdue : incoming.overdue_amount
+    overdueCount = bexio.overdue_count > 0 ? bexio.overdue_count : incoming.overdue_count
+    openInvoicesCount = bexio.open_count > 0 ? bexio.open_count : incoming.open_count
+    totalInvoicesCount = bexio.invoice_count > 0 ? bexio.invoice_count : incoming.count
+    totalRevenue = bexio.total_paid
+    totalPaymentsReceived = bexio.total_payments
+    bexioInvoiceCount = bexio.invoice_count
+    bexioPaymentCount = bexio.payment_count
+  } else {
+    // No snapshot yet (fresh environment / pre-cron) — compute live once
+    const serviceDb = createSupabaseServiceClient()
+    const [
+      liveWon,
+      liveSent,
+      liveDraft,
+      liveLost,
+      livePipeline,
+      incomingInvoicesRes,
+      bexioInvoicesRes,
+      bexioPaymentsRes,
+    ] = await Promise.all([
+      db.offers.count(cid, { status: 'won' }),
+      db.offers.count(cid, { status: 'sent' }),
+      db.offers.count(cid, { status: 'draft' }),
+      db.offers.count(cid, { status: 'lost' }),
+      db.offers.sumAmountChf(cid, { excludeStatus: ['lost', 'expired'] }),
+      serviceDb
+        .from('invoices_incoming')
+        .select('id, gross_amount, status, due_date')
+        .eq('company_id', cid),
+      serviceDb
+        .from('invoices')
+        .select('id, total_chf, status, due_at')
+        .eq('company_id', cid),
+      serviceDb
+        .from('payments')
+        .select('id, amount_chf')
+        .eq('company_id', cid),
+    ])
+
+    // Incoming invoices (supplier bills)
+    const incomingInvoices = (incomingInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+    const incomingOpen = incomingInvoices.filter(
+      (i) => !['paid', 'returned_formal', 'returned_sender'].includes(i['status'] as string),
+    )
+    const incomingOverdue = incomingOpen.filter((i) => {
+      const due = i['due_date'] as string | null
+      return due && new Date(due) < new Date()
+    })
+
+    // Bexio outgoing invoices (customer invoices)
+    const bexioInvoices = (bexioInvoicesRes.data ?? []) as Array<Record<string, unknown>>
+    const bexioPayments = (bexioPaymentsRes.data ?? []) as Array<Record<string, unknown>>
+    const bexioOpen = bexioInvoices.filter(i => ['sent', 'overdue', 'partially_paid'].includes(i['status'] as string))
+    const bexioOverdue = bexioInvoices.filter(i => {
+      if (i['status'] === 'overdue') return true
+      const due = i['due_at'] as string | null
+      return due && new Date(due) < new Date() && ['sent', 'partially_paid'].includes(i['status'] as string)
+    })
+    const bexioPaid = bexioInvoices.filter(i => i['status'] === 'paid')
+
+    wonCount = liveWon
+    sentCount = liveSent
+    draftCount = liveDraft
+    lostCount = liveLost
+    pipelineTotal = livePipeline
+
+    // Combined receivables: use Bexio data if available, else incoming
+    openReceivables = bexioOpen.length > 0
+      ? bexioOpen.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+      : incomingOpen.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+    overdueAmount = bexioOverdue.length > 0
+      ? bexioOverdue.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+      : incomingOverdue.reduce((s, i) => s + Number(i['gross_amount'] ?? 0), 0)
+    overdueCount = bexioOverdue.length > 0 ? bexioOverdue.length : incomingOverdue.length
+    openInvoicesCount = bexioOpen.length > 0 ? bexioOpen.length : incomingOpen.length
+    totalInvoicesCount = bexioInvoices.length > 0 ? bexioInvoices.length : incomingInvoices.length
+    totalRevenue = bexioPaid.reduce((s, i) => s + Number(i['total_chf'] ?? 0), 0)
+    totalPaymentsReceived = bexioPayments.reduce((s, i) => s + Number(i['amount_chf'] ?? 0), 0)
+    bexioInvoiceCount = bexioInvoices.length
+    bexioPaymentCount = bexioPayments.length
+  }
 
   // Prepare context summary for AI
   const aiContext = {
@@ -100,8 +156,8 @@ export default async function ControllingLandingPage() {
     total_invoices: totalInvoicesCount,
     total_revenue_paid: totalRevenue,
     total_payments_received: totalPaymentsReceived,
-    bexio_invoices_count: bexioInvoices.length,
-    bexio_payments_count: bexioPayments.length,
+    bexio_invoices_count: bexioInvoiceCount,
+    bexio_payments_count: bexioPaymentCount,
   }
 
   const tools = [

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { requireHoldingAdmin } from '@/lib/permissions'
+import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDate } from '@enura/types'
 import { AdminTabs } from './admin-tabs'
@@ -48,15 +49,24 @@ const WHISPER_COST_PER_CALL_CHF = 0.024
 export default async function HoldingAdminPage() {
   await requireHoldingAdmin()
 
+  const session = await getSession()
+  const holdingId = session?.holdingId ?? null
+
   const supabase = createSupabaseServerClient()
 
   // -----------------------------------------------------------------------
-  // Fetch all tenants
+  // Fetch the companies of THIS holding only. A holding admin must never see
+  // another holding's tenants (§4.1). The companies table has a permissive
+  // select policy (needed for login-page tenant resolution), so this
+  // holding_id filter is the actual isolation boundary for this view.
+  // (An Enura admin has no holding_id and uses /platform instead.)
   // -----------------------------------------------------------------------
-  const { data: tenants, error: tenantsError } = await supabase
+  let tenantsQuery = supabase
     .from('companies')
     .select('id, name, slug, status, created_at')
     .order('name')
+  if (holdingId) tenantsQuery = tenantsQuery.eq('holding_id', holdingId)
+  const { data: tenants, error: tenantsError } = await tenantsQuery
 
   if (tenantsError) {
     return (
@@ -77,8 +87,12 @@ export default async function HoldingAdminPage() {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const tenantStats: TenantStats[] = await Promise.all(
-    ((tenants ?? []) as Record<string, unknown>[]).map(async (tenant) => {
+  const tenantsList = (tenants ?? []) as Record<string, unknown>[]
+
+  // Per-tenant stats and AI usage are independent — run both fan-outs
+  // concurrently instead of as two serial waves.
+  const tenantStatsPromise: Promise<TenantStats[]> = Promise.all(
+    tenantsList.map(async (tenant) => {
       const companyId = tenant['id'] as string
 
       const [userCount, projectCount, invoiceData, connectorsData, anomalyData, lastActivityData] =
@@ -154,8 +168,8 @@ export default async function HoldingAdminPage() {
   // -----------------------------------------------------------------------
   // AI usage data (transcription_usage + daily_reports)
   // -----------------------------------------------------------------------
-  const aiUsage: AIUsageRow[] = await Promise.all(
-    ((tenants ?? []) as Record<string, unknown>[]).map(async (tenant) => {
+  const aiUsagePromise: Promise<AIUsageRow[]> = Promise.all(
+    tenantsList.map(async (tenant) => {
       const companyId = tenant['id'] as string
       const companyName = tenant['name'] as string
 
@@ -188,6 +202,8 @@ export default async function HoldingAdminPage() {
       }
     }),
   )
+
+  const [tenantStats, aiUsage] = await Promise.all([tenantStatsPromise, aiUsagePromise])
 
   // -----------------------------------------------------------------------
   // Summary stats

@@ -24,6 +24,9 @@ export async function updateTenantBrandingAction(
   if (!session?.isHoldingAdmin) {
     return { error: 'Nicht autorisiert.' }
   }
+  if (!session.isEnuraAdmin && !session.holdingId) {
+    return { error: 'Kein Holding zugewiesen.' }
+  }
 
   if (!HEX_COLOR_REGEX.test(branding.primary_color)) {
     return { error: 'Ungültige Primärfarbe.' }
@@ -40,12 +43,11 @@ export async function updateTenantBrandingAction(
 
   const serviceClient = createSupabaseServiceClient()
 
-  // Verify tenant exists
-  const { data: tenant } = await serviceClient
-    .from('companies')
-    .select('id, slug')
-    .eq('id', companyId)
-    .single()
+  // Verify tenant exists and belongs to the admin's holding (Enura admins bypass the holding scope)
+  const brandingTenantQuery = serviceClient.from('companies').select('id, slug').eq('id', companyId)
+  const { data: tenant } = await (
+    session.isEnuraAdmin ? brandingTenantQuery : brandingTenantQuery.eq('holding_id', session.holdingId ?? '')
+  ).single()
 
   if (!tenant) {
     return { error: 'Unternehmen nicht gefunden.' }
@@ -96,6 +98,9 @@ export async function updateTenantStatusAction(
   if (!session?.isHoldingAdmin) {
     return { error: 'Nicht autorisiert.' }
   }
+  if (!session.isEnuraAdmin && !session.holdingId) {
+    return { error: 'Kein Holding zugewiesen.' }
+  }
 
   const validStatuses: TenantStatus[] = ['active', 'suspended', 'archived']
   if (!validStatuses.includes(status)) {
@@ -104,12 +109,12 @@ export async function updateTenantStatusAction(
 
   const serviceClient = createSupabaseServiceClient()
 
-  // Fetch current tenant for audit log
-  const { data: tenant } = await serviceClient
-    .from('companies')
-    .select('id, slug, status')
-    .eq('id', companyId)
-    .single()
+  // Fetch current tenant for audit log; also verifies it belongs to the admin's holding
+  // (Enura admins bypass the holding scope)
+  const statusTenantQuery = serviceClient.from('companies').select('id, slug, status').eq('id', companyId)
+  const { data: tenant } = await (
+    session.isEnuraAdmin ? statusTenantQuery : statusTenantQuery.eq('holding_id', session.holdingId ?? '')
+  ).single()
 
   if (!tenant) {
     return { error: 'Unternehmen nicht gefunden.' }

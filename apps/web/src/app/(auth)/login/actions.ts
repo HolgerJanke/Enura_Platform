@@ -20,7 +20,7 @@ const KNOWN_USERS: Record<string, { firstName: string; lastName: string; roles: 
 
 export async function loginAction(
   formData: FormData
-): Promise<{ error: string } | { success: true }> {
+): Promise<{ error: string } | { success: true; redirectTo: string }> {
   const parsed = LoginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -69,12 +69,19 @@ export async function loginAction(
       maxAge: 60 * 60 * 24 * 7, // 7 days
     })
 
-    return { success: true }
+    return {
+      success: true,
+      redirectTo: mockSession.isEnuraAdmin
+        ? '/platform'
+        : mockSession.isHoldingAdmin
+          ? '/admin'
+          : '/dashboard',
+    }
   }
 
   // ── Real Supabase Auth ────────────────────────────────────────────────
   const supabase = createSupabaseServerClient()
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
   })
@@ -83,5 +90,32 @@ export async function loginAction(
     return { error: 'E-Mail-Adresse oder Passwort ist falsch.' }
   }
 
-  return { success: true }
+  // Resolve the landing target server-side: auth gates (CLAUDE.md §4.2)
+  // first, then admins land on their console, everyone else on /dashboard.
+  let redirectTo = '/dashboard'
+  const userId = data.user?.id
+  if (userId) {
+    const [profileResult, enuraResult, holdingResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('must_reset_password, totp_enabled')
+        .eq('id', userId)
+        .maybeSingle(),
+      supabase.from('enura_admins').select('id').eq('profile_id', userId).maybeSingle(),
+      supabase.from('holding_admins').select('id').eq('profile_id', userId).maybeSingle(),
+    ])
+
+    const profile = profileResult.data
+    if (profile?.must_reset_password) {
+      redirectTo = '/reset-password'
+    } else if (profile && !profile.totp_enabled) {
+      redirectTo = '/enrol-2fa'
+    } else if (enuraResult.data) {
+      redirectTo = '/platform'
+    } else if (holdingResult.data) {
+      redirectTo = '/admin'
+    }
+  }
+
+  return { success: true, redirectTo }
 }

@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { UserSession, RoleRow, ProfileRow } from '@enura/types'
 
@@ -90,19 +90,27 @@ async function _getSession(): Promise<UserSession | null> {
   try {
     const supabase = createSupabaseServerClient()
 
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error || !user) return null
+    // The middleware already verified the JWT via auth.getUser() and forwards
+    // the user id on a sanitized request header (it strips any client-supplied
+    // value). When present, skip the duplicate Auth round trip — all queries
+    // below still run under the user's own JWT, so RLS scoping is unchanged.
+    let userId = headers().get('x-auth-user-id')
+    if (!userId) {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) return null
+      userId = user.id
+    }
 
     // Run ALL queries in parallel instead of sequentially
     // This cuts ~1200ms down to ~400ms (1 round-trip instead of 5)
     const [profileResult, rolesResult, holdingAdminResult, enuraAdminResult] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('profiles').select('*').eq('id', userId).single(),
       supabase.from('profile_roles').select(`
         role_id,
         roles ( id, company_id, holding_id, key, label, description, is_system, created_at, updated_at )
-      `).eq('profile_id', user.id),
-      supabase.from('holding_admins').select('id').eq('profile_id', user.id).maybeSingle(),
-      supabase.from('enura_admins').select('id').eq('profile_id', user.id).maybeSingle(),
+      `).eq('profile_id', userId),
+      supabase.from('holding_admins').select('id').eq('profile_id', userId).maybeSingle(),
+      supabase.from('enura_admins').select('id').eq('profile_id', userId).maybeSingle(),
     ])
 
     const profile = profileResult.data

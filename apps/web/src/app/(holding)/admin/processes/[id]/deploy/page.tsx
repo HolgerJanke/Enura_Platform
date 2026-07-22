@@ -17,6 +17,17 @@ export default async function DeployPage({
   const session = await getSession()
   if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
+  const holdingId = session.holdingId
+  if (!holdingId) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-700">Kein Holding zugewiesen. Bitte kontaktieren Sie den Support.</p>
+        </div>
+      </div>
+    )
+  }
+
   const supabase = createSupabaseServerClient()
   const processId = params.id
 
@@ -29,7 +40,7 @@ export default async function DeployPage({
     .eq('id', processId)
     .single()
 
-  if (!process) {
+  if (!process || (process as Record<string, unknown>)['holding_id'] !== holdingId) {
     return (
       <div className="p-6">
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -45,6 +56,7 @@ export default async function DeployPage({
   const { data: companies } = await supabase
     .from('companies')
     .select('id, name, slug, status')
+    .eq('holding_id', holdingId)
     .eq('status', 'active')
     .order('name')
 

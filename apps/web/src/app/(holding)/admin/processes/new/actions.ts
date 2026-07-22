@@ -35,7 +35,7 @@ export async function createProcessAction(
   formData: FormData,
 ): Promise<CreateProcessResult | never> {
   const session = await getSession()
-  if (!session || !session.isHoldingAdmin) {
+  if (!session || (!session.isHoldingAdmin && !session.isEnuraAdmin)) {
     return { error: 'Nicht autorisiert' }
   }
 
@@ -68,7 +68,7 @@ export async function createProcessAction(
 
   const supabase = createSupabaseServerClient()
 
-  // Resolve holding_id from company
+  // Resolve holding_id from company — never trust a client-supplied holding_id
   const { data: company, error: companyError } = await supabase
     .from('companies')
     .select('holding_id')
@@ -80,6 +80,11 @@ export async function createProcessAction(
   }
 
   const holdingId = (company as { holding_id: string }).holding_id
+
+  // A holding admin may only create processes for companies in their own holding.
+  if (!session.isEnuraAdmin && holdingId !== session.holdingId) {
+    return { error: 'Nicht autorisiert' }
+  }
 
   const { data: newProcess, error: insertError } = await supabase
     .from('process_definitions')

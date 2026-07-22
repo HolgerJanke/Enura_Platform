@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { requireHoldingAdmin } from '@/lib/permissions'
+import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NewProcessForm } from './new-process-form'
 
@@ -29,7 +29,20 @@ export default async function NewProcessPage({
 }: {
   searchParams: { company?: string }
 }) {
-  await requireHoldingAdmin()
+  const session = await getSession()
+  if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
+  if (!session.isHoldingAdmin && !session.isEnuraAdmin) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
+
+  const holdingId = session.holdingId
+  if (!holdingId) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-700">Kein Holding zugewiesen. Bitte kontaktieren Sie den Support.</p>
+        </div>
+      </div>
+    )
+  }
 
   const supabase = createSupabaseServerClient()
 
@@ -37,6 +50,7 @@ export default async function NewProcessPage({
     supabase
       .from('companies')
       .select('id, name')
+      .eq('holding_id', holdingId)
       .eq('status', 'active')
       .order('name'),
     supabase

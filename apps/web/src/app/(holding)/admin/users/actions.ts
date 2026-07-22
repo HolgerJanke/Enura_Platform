@@ -25,6 +25,45 @@ async function requireHoldingSession() {
 }
 
 // ---------------------------------------------------------------------------
+// Holding-scope guards — verify a target belongs to the caller's holding
+// before a mutation. Reads use the service client so they resolve reliably
+// regardless of auth mode / RLS (companies SELECT is public; profiles are not).
+// ---------------------------------------------------------------------------
+
+async function companyInHolding(companyId: string, holdingId: string): Promise<boolean> {
+  const supabase = createSupabaseServiceClient()
+  const { data } = await supabase
+    .from('companies')
+    .select('id')
+    .eq('id', companyId)
+    .eq('holding_id', holdingId)
+    .maybeSingle()
+  return Boolean(data)
+}
+
+async function profileInHolding(profileId: string, holdingId: string): Promise<boolean> {
+  const supabase = createSupabaseServiceClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('company_id')
+    .eq('id', profileId)
+    .maybeSingle()
+  const companyId = (data as { company_id: string | null } | null)?.company_id ?? null
+  return companyId ? companyInHolding(companyId, holdingId) : false
+}
+
+async function invitationInHolding(invitationId: string, holdingId: string): Promise<boolean> {
+  const supabase = createSupabaseServiceClient()
+  const { data } = await supabase
+    .from('user_invitations')
+    .select('company_id')
+    .eq('id', invitationId)
+    .maybeSingle()
+  const companyId = (data as { company_id: string | null } | null)?.company_id ?? null
+  return companyId ? companyInHolding(companyId, holdingId) : false
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -334,8 +373,12 @@ export async function inviteUser(data: {
 export async function deactivateUser(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await profileInHolding(profileId, holdingId))) {
+    return { success: false, error: 'Benutzer gehört nicht zu dieser Holding.' }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -365,8 +408,12 @@ export async function deactivateUser(
 export async function reactivateUser(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await profileInHolding(profileId, holdingId))) {
+    return { success: false, error: 'Benutzer gehört nicht zu dieser Holding.' }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -396,8 +443,12 @@ export async function reactivateUser(
 export async function resetUser2fa(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await profileInHolding(profileId, holdingId))) {
+    return { success: false, error: 'Benutzer gehört nicht zu dieser Holding.' }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -430,8 +481,12 @@ export async function resetUser2fa(
 export async function resendInvitation(
   invitationId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await invitationInHolding(invitationId, holdingId))) {
+    return { success: false, error: 'Einladung gehört nicht zu dieser Holding.' }
+  }
 
   const newExpiry = new Date()
   newExpiry.setDate(newExpiry.getDate() + 7)
@@ -470,8 +525,12 @@ export async function resendInvitation(
 export async function revokeInvitation(
   invitationId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await invitationInHolding(invitationId, holdingId))) {
+    return { success: false, error: 'Einladung gehört nicht zu dieser Holding.' }
+  }
 
   const { error } = await supabase
     .from('user_invitations')
@@ -503,8 +562,15 @@ export async function promoteToCompanySuperUser(
   companyId: string,
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireHoldingSession()
+  const { holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await companyInHolding(companyId, holdingId))) {
+    return { success: false, error: 'Unternehmen gehört nicht zu dieser Holding.' }
+  }
+  if (!(await profileInHolding(profileId, holdingId))) {
+    return { success: false, error: 'Benutzer gehört nicht zu dieser Holding.' }
+  }
 
   const { data: role } = await supabase
     .from('roles')
@@ -536,8 +602,12 @@ export async function removeCompanySuperUser(
   companyId: string,
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireHoldingSession()
+  const { holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await companyInHolding(companyId, holdingId))) {
+    return { success: false, error: 'Unternehmen gehört nicht zu dieser Holding.' }
+  }
 
   const { data: role } = await supabase
     .from('roles')
