@@ -87,8 +87,12 @@ export default async function HoldingAdminPage() {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const tenantStats: TenantStats[] = await Promise.all(
-    ((tenants ?? []) as Record<string, unknown>[]).map(async (tenant) => {
+  const tenantsList = (tenants ?? []) as Record<string, unknown>[]
+
+  // Per-tenant stats and AI usage are independent — run both fan-outs
+  // concurrently instead of as two serial waves.
+  const tenantStatsPromise: Promise<TenantStats[]> = Promise.all(
+    tenantsList.map(async (tenant) => {
       const companyId = tenant['id'] as string
 
       const [userCount, projectCount, invoiceData, connectorsData, anomalyData, lastActivityData] =
@@ -164,8 +168,8 @@ export default async function HoldingAdminPage() {
   // -----------------------------------------------------------------------
   // AI usage data (transcription_usage + daily_reports)
   // -----------------------------------------------------------------------
-  const aiUsage: AIUsageRow[] = await Promise.all(
-    ((tenants ?? []) as Record<string, unknown>[]).map(async (tenant) => {
+  const aiUsagePromise: Promise<AIUsageRow[]> = Promise.all(
+    tenantsList.map(async (tenant) => {
       const companyId = tenant['id'] as string
       const companyName = tenant['name'] as string
 
@@ -198,6 +202,8 @@ export default async function HoldingAdminPage() {
       }
     }),
   )
+
+  const [tenantStats, aiUsage] = await Promise.all([tenantStatsPromise, aiUsagePromise])
 
   // -----------------------------------------------------------------------
   // Summary stats

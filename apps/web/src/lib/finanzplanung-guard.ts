@@ -1,24 +1,31 @@
+import { cache } from 'react'
 import { getSession } from './session'
 import { createSupabaseServiceClient } from './supabase/service'
 
 /**
  * Check if the current company has the Finanzplanung module enabled.
  * Uses service client to bypass RLS (works with mock auth).
+ *
+ * Request-cached: pages routinely call requireFinanzplanung() plus one or
+ * more hasFinanzplanungPermission() checks — without the cache each call
+ * repeated the same feature-flag query.
  */
-export async function checkFinanzplanungActive(
-  session: { companyId: string | null; holdingId: string | null } | null,
-): Promise<boolean> {
-  if (!session?.companyId) return false
+export const checkFinanzplanungActive = cache(
+  async (
+    session: { companyId: string | null; holdingId: string | null } | null,
+  ): Promise<boolean> => {
+    if (!session?.companyId) return false
 
-  const supabase = createSupabaseServiceClient()
-  const { data } = await supabase
-    .from('company_feature_flags')
-    .select('finanzplanung_enabled')
-    .eq('company_id', session.companyId)
-    .single()
+    const supabase = createSupabaseServiceClient()
+    const { data } = await supabase
+      .from('company_feature_flags')
+      .select('finanzplanung_enabled')
+      .eq('company_id', session.companyId)
+      .single()
 
-  return data?.finanzplanung_enabled === true
-}
+    return data?.finanzplanung_enabled === true
+  },
+)
 
 /**
  * Require Finanzplanung module to be active for the current company.

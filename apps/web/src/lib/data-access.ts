@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createSupabaseDataAccess, createMockDataAccess } from '@enura/types'
-import type { DataAccess } from '@enura/types'
+import type { ConnectorRow, DataAccess } from '@enura/types'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 /**
@@ -30,3 +30,13 @@ export const getDataAccess = cache((): DataAccess => {
     return createMockDataAccess()
   }
 })
+
+/**
+ * Request-deduped connectors lookup. The dashboard layout (sidebar status
+ * dots) and the dashboard page both need it — without the cache the same
+ * query ran twice per navigation.
+ */
+export const getCompanyConnectors = cache(
+  async (companyId: string): Promise<ConnectorRow[]> =>
+    getDataAccess().connectors.findByCompanyId(companyId),
+)

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { getSession, authGateRedirect } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
-import { getDataAccess } from '@/lib/data-access'
+import { getCompanyConnectors } from '@/lib/data-access'
 import { DashboardShellV2 } from '@/components/dashboard-shell-v2'
 import type { ConnectorRow } from '@enura/types'
 
@@ -89,8 +89,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
   let connectorInfos: { name: string; status: 'connected' | 'warning' | 'disconnected' }[] = []
   if (session.companyId) {
-    const db = getDataAccess()
-    const connectors = await db.connectors.findByCompanyId(session.companyId)
+    const connectors = await getCompanyConnectors(session.companyId)
     connectorInfos = connectors.map((c: ConnectorRow) => ({
       name: CONNECTOR_LABELS[c.type] ?? c.name,
       status: c.status === 'active'
