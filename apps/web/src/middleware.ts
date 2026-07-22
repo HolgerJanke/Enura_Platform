@@ -96,11 +96,41 @@ function isAuthGateExempt(pathname: string): boolean {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Tenant/branding cache (CLAUDE.md §5.1 — tenant config cached, TTL 5 min)
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-isolate TTL cache for company + branding lookups. Without it every
+ * navigation paid 2–4 Supabase round trips for data that changes rarely.
+ * Redis is the documented target; this in-memory map is per runtime instance,
+ * which already collapses repeat navigations onto one fetch per 5 minutes.
+ * Branding/slug changes therefore take up to 5 minutes to propagate.
+ */
+const TENANT_CACHE_TTL_MS = 5 * 60 * 1000
+const tenantCache = new Map<string, { value: unknown; expiresAt: number }>()
+
+function cacheGet<T>(key: string): { hit: boolean; value: T | undefined } {
+  const entry = tenantCache.get(key)
+  if (!entry) return { hit: false, value: undefined }
+  if (Date.now() > entry.expiresAt) {
+    tenantCache.delete(key)
+    return { hit: false, value: undefined }
+  }
+  return { hit: true, value: entry.value as T }
+}
+
+function cacheSet(key: string, value: unknown): void {
+  tenantCache.set(key, { value, expiresAt: Date.now() + TENANT_CACHE_TTL_MS })
+}
+
 type SessionContext = {
   /** §4.2 gate path the user must be redirected to, or null when clear */
   gate: '/reset-password' | '/enrol-2fa' | null
   /** The signed-in user's own company, or null (unauthenticated / no company) */
   companyId: string | null
+  /** Verified auth user id, forwarded to the render on a sanitized header */
+  userId: string | null
 }
 
 /**
@@ -122,14 +152,16 @@ async function resolveSessionContext(request: NextRequest): Promise<SessionConte
     if (raw) {
       try {
         const mock = JSON.parse(raw) as {
+          userId?: string
           mustResetPassword?: boolean
           totpEnabled?: boolean
           companyId?: string | null
         }
         const companyId = mock.companyId ?? null
-        if (mock.mustResetPassword) return { gate: '/reset-password', companyId }
-        if (mock.totpEnabled === false) return { gate: '/enrol-2fa', companyId }
-        return { gate: null, companyId }
+        const userId = mock.userId ?? null
+        if (mock.mustResetPassword) return { gate: '/reset-password', companyId, userId }
+        if (mock.totpEnabled === false) return { gate: '/enrol-2fa', companyId, userId }
+        return { gate: null, companyId, userId }
       } catch {
         // Unreadable mock cookie — fall through to real auth below
       }
@@ -140,11 +172,11 @@ async function resolveSessionContext(request: NextRequest): Promise<SessionConte
   const hasAuthCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
-  if (!hasAuthCookie) return { gate: null, companyId: null }
+  if (!hasAuthCookie) return { gate: null, companyId: null, userId: null }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseKey) return { gate: null, companyId: null }
+  if (!supabaseUrl || !supabaseKey) return { gate: null, companyId: null, userId: null }
 
   try {
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -156,46 +188,135 @@ async function resolveSessionContext(request: NextRequest): Promise<SessionConte
     })
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { gate: null, companyId: null }
+    if (!user) return { gate: null, companyId: null, userId: null }
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('must_reset_password, totp_enabled, company_id')
       .eq('id', user.id)
       .maybeSingle()
-    if (!profile) return { gate: null, companyId: null }
+    if (!profile) return { gate: null, companyId: null, userId: user.id }
 
     const companyId = profile.company_id ?? null
-    if (profile.must_reset_password) return { gate: '/reset-password', companyId }
-    if (!profile.totp_enabled) return { gate: '/enrol-2fa', companyId }
-    return { gate: null, companyId }
+    if (profile.must_reset_password) return { gate: '/reset-password', companyId, userId: user.id }
+    if (!profile.totp_enabled) return { gate: '/enrol-2fa', companyId, userId: user.id }
+    return { gate: null, companyId, userId: user.id }
   } catch (err) {
     console.error('[middleware] Auth-gate check error:', err)
   }
-  return { gate: null, companyId: null }
+  return { gate: null, companyId: null, userId: null }
 }
 
 type CompanyRow = { id: string; name: string; slug: string }
 
-/** Fetch a single company row via REST (Edge-compatible). Null when absent. */
+function supabaseRestHeaders(supabaseKey: string): Record<string, string> {
+  return {
+    apikey: supabaseKey,
+    Authorization: `Bearer ${supabaseKey}`,
+    Accept: 'application/json',
+  }
+}
+
+/**
+ * Fetch a single company row via REST (Edge-compatible). Null when absent.
+ * Cached for 5 min — misses are cached too (unknown subdomains would
+ * otherwise pay the round trip on every request).
+ */
 async function fetchCompany(
   supabaseUrl: string,
   supabaseKey: string,
   filter: string,
 ): Promise<CompanyRow | null> {
+  const cacheKey = `company:${filter}`
+  const cached = cacheGet<CompanyRow | null>(cacheKey)
+  if (cached.hit) return cached.value ?? null
+
   const res = await fetch(
     `${supabaseUrl}/rest/v1/companies?${filter}&select=id,name,slug&limit=1`,
-    {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-        Accept: 'application/json',
-      },
-    },
+    { headers: supabaseRestHeaders(supabaseKey) },
   )
   if (!res.ok) return null
   const rows = (await res.json()) as CompanyRow[]
-  return rows[0] ?? null
+  const company = rows[0] ?? null
+  cacheSet(cacheKey, company)
+  return company
+}
+
+type ResolvedBranding = {
+  brandCSS: string
+  extendedCSS: string
+  customCSSPath: string
+}
+
+const BRANDING_CORE_COLUMNS =
+  'primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path'
+
+/**
+ * Resolve a company's brand + extended CSS in a single REST request, cached
+ * for 5 min. The extended_tokens column (migration 022) may be missing in
+ * some environments — a 400 there must never cost the core branding, so the
+ * combined select falls back to core columns only.
+ */
+async function fetchBranding(
+  supabaseUrl: string,
+  supabaseKey: string,
+  companyId: string,
+): Promise<ResolvedBranding> {
+  const cacheKey = `branding:${companyId}`
+  const cached = cacheGet<ResolvedBranding>(cacheKey)
+  if (cached.hit && cached.value) return cached.value
+
+  const resolved: ResolvedBranding = {
+    brandCSS: buildCSSVarString(defaultBrandTokens),
+    extendedCSS: buildExtendedCSSVarString(defaultExtendedTokens),
+    customCSSPath: '',
+  }
+
+  const restHeaders = supabaseRestHeaders(supabaseKey)
+  let res = await fetch(
+    `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${companyId}&select=${BRANDING_CORE_COLUMNS},extended_tokens&limit=1`,
+    { headers: restHeaders },
+  )
+  if (!res.ok) {
+    res = await fetch(
+      `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${companyId}&select=${BRANDING_CORE_COLUMNS}&limit=1`,
+      { headers: restHeaders },
+    )
+  }
+  if (!res.ok) return resolved // transient failure — serve defaults, do not cache
+
+  const rows = (await res.json()) as Array<Record<string, unknown>>
+  const branding = rows[0]
+  if (branding) {
+    const tokens: BrandTokens = {
+      ...defaultBrandTokens,
+      primary:       (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
+      secondary:     (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
+      accent:        (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
+      background:    (branding['background_color'] as string) ?? defaultBrandTokens.background,
+      surface:       (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
+      textPrimary:   (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
+      textSecondary: (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
+      font:          (branding['font_family'] as string) ?? defaultBrandTokens.font,
+      fontUrl:       (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
+      radius:        (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
+    }
+    resolved.brandCSS = buildCSSVarString(tokens)
+    resolved.customCSSPath = (branding['custom_css_path'] as string) ?? ''
+
+    const overrides = branding['extended_tokens'] as
+      | Partial<ExtendedBrandTokens>
+      | null
+      | undefined
+    if (overrides) {
+      resolved.extendedCSS = buildExtendedCSSVarString({
+        ...defaultExtendedTokens,
+        ...overrides,
+      })
+    }
+  }
+  cacheSet(cacheKey, resolved)
+  return resolved
 }
 
 function setTenantHeaders(
@@ -225,25 +346,30 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
   const hostname = request.headers.get('host') ?? 'localhost:3000'
 
-  // Skip static assets entirely
-  if (isStaticAsset(pathname)) {
-    return NextResponse.next()
-  }
+  // The render and API routes trust x-auth-user-id as the verified identity —
+  // strip any client-supplied value BEFORE any pass-through (including the
+  // static/API short-circuit below); middleware is the only legitimate writer.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.delete('x-auth-user-id')
 
-  // API routes — pass through without branding
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.next({ request })
+  // Skip static assets (and API routes — they pass through without branding)
+  if (isStaticAsset(pathname) || pathname.startsWith('/api/')) {
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // Enforce §4.2 auth gates before any protected content is served. The same
-  // lookup yields the session's own company for branding alignment below.
+  // lookup yields the session's own company for branding alignment below, and
+  // the verified user id so the render can skip a duplicate auth round trip.
   let sessionCompanyId: string | null = null
   if (!isAuthGateExempt(pathname)) {
-    const { gate, companyId } = await resolveSessionContext(request)
+    const { gate, companyId, userId } = await resolveSessionContext(request)
     if (gate) {
       return NextResponse.redirect(new URL(gate, request.url))
     }
     sessionCompanyId = companyId
+    if (userId) {
+      requestHeaders.set('x-auth-user-id', userId)
+    }
   }
 
   // Resolve tenant subdomain
@@ -260,8 +386,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   let resolvedBrandCSS = buildCSSVarString(defaultBrandTokens)
   // Extended design tokens (shadows/spacing/etc) are always emitted — defaults
-  // unless the company overrides them. Resolved via a separate, independently
-  // guarded request so a missing column never breaks core branding (see below).
+  // unless the company overrides them (see fetchBranding).
   let resolvedExtendedCSS = buildExtendedCSSVarString(defaultExtendedTokens)
   let resolvedCompanyId = ''
   let resolvedCompanySlug = subdomain ?? 'default'
@@ -308,66 +433,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
         // Branding fetches are skipped on consoles — the result would be
         // discarded (consoles always render with default tokens).
         if (!isConsole) {
-            const brandRes = await fetch(
-              `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
-              {
-                headers: {
-                  apikey: supabaseKey,
-                  Authorization: `Bearer ${supabaseKey}`,
-                  Accept: 'application/json',
-                },
-              },
-            )
-            if (brandRes.ok) {
-              const brandings = (await brandRes.json()) as Array<Record<string, unknown>>
-              const branding = brandings[0]
-              if (branding) {
-                const tokens: BrandTokens = {
-                  ...defaultBrandTokens,
-                  primary:       (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
-                  secondary:     (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
-                  accent:        (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
-                  background:    (branding['background_color'] as string) ?? defaultBrandTokens.background,
-                  surface:       (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
-                  textPrimary:   (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
-                  textSecondary: (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
-                  font:          (branding['font_family'] as string) ?? defaultBrandTokens.font,
-                  fontUrl:       (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
-                  radius:        (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
-                }
-                resolvedBrandCSS = buildCSSVarString(tokens)
-                resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
-              }
-            }
-
-            // Extended tokens live in a JSONB column (migration 022) that may not
-            // be applied in every environment. Fetch them separately so a 400 on
-            // the column never falls back the core branding above to defaults.
-            try {
-              const extRes = await fetch(
-                `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=extended_tokens&limit=1`,
-                {
-                  headers: {
-                    apikey: supabaseKey,
-                    Authorization: `Bearer ${supabaseKey}`,
-                    Accept: 'application/json',
-                  },
-                },
-              )
-              if (extRes.ok) {
-                const rows = (await extRes.json()) as Array<{ extended_tokens: Partial<ExtendedBrandTokens> | null }>
-                const overrides = rows[0]?.extended_tokens
-                if (overrides) {
-                  resolvedExtendedCSS = buildExtendedCSSVarString({
-                    ...defaultExtendedTokens,
-                    ...overrides,
-                  })
-                }
-              }
-            } catch (err) {
-              // Keep default extended tokens — never block the request
-              console.error('[middleware] Extended-token fetch error:', err)
-            }
+          const branding = await fetchBranding(supabaseUrl, supabaseKey, company.id)
+          resolvedBrandCSS = branding.brandCSS
+          resolvedExtendedCSS = branding.extendedCSS
+          resolvedCustomCSSPath = branding.customCSSPath
         }
       }
     } catch (err) {
@@ -376,7 +445,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  const response = NextResponse.next({ request })
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
   setTenantHeaders(response, {
     companyId: resolvedCompanyId,
     companySlug: subdomain ?? 'default',
