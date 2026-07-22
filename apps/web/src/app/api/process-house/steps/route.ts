@@ -1,15 +1,37 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export async function GET(request: NextRequest) {
+  const session = await getSession()
+  if (!session?.companyId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const processId = request.nextUrl.searchParams.get('processId')
   if (!processId) {
     return NextResponse.json({ steps: [], phases: [], projects: [] })
   }
 
   const supabase = createSupabaseServiceClient()
+
+  // Verify the requested process belongs to the caller's company before
+  // returning any data. 404 (not 403) so other tenants' processes can't be
+  // probed for existence.
+  const { data: processDef } = await supabase
+    .from('process_definitions')
+    .select('company_id')
+    .eq('id', processId)
+    .single()
+
+  if (
+    !processDef ||
+    (processDef as Record<string, unknown>)['company_id'] !== session.companyId
+  ) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
   const [stepsRes, phasesRes, instancesRes] = await Promise.all([
     supabase
@@ -66,25 +88,17 @@ export async function GET(request: NextRequest) {
     proj['berater_name'] = bid ? (beraterNames.get(bid) ?? null) : null
   }
 
-  // Fetch base currency from company_currency_settings
-  // Need to get company_id from the process definition
+  // Fetch base currency from company_currency_settings.
+  // company_id is taken from the process definition verified above.
   let baseCurrency = 'EUR'
-  const { data: processDef } = await supabase
-    .from('process_definitions')
-    .select('company_id')
-    .eq('id', processId)
+  const companyId = (processDef as Record<string, unknown>)['company_id'] as string
+  const { data: currencyData } = await supabase
+    .from('company_currency_settings')
+    .select('base_currency')
+    .eq('company_id', companyId)
     .single()
-
-  if (processDef) {
-    const companyId = (processDef as Record<string, unknown>)['company_id'] as string
-    const { data: currencyData } = await supabase
-      .from('company_currency_settings')
-      .select('base_currency')
-      .eq('company_id', companyId)
-      .single()
-    if (currencyData) {
-      baseCurrency = (currencyData as Record<string, unknown>)['base_currency'] as string
-    }
+  if (currencyData) {
+    baseCurrency = (currencyData as Record<string, unknown>)['base_currency'] as string
   }
 
   // Distribute projects across steps (simple round-robin based on project age)

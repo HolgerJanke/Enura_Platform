@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/lib/session'
 import { runBot } from '@/lib/bot-client'
 
 /**
@@ -12,21 +13,26 @@ export async function POST(
 ) {
   const { botId } = await params
 
+  const session = await getSession()
+  if (!session?.companyId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
-    const { companyId, input } = body as {
-      companyId: string
+    const { input } = body as {
       input: Record<string, unknown>
     }
 
-    if (!companyId || !input) {
+    if (!input) {
       return NextResponse.json(
-        { error: 'companyId und input sind pflicht.' },
+        { error: 'input ist pflicht.' },
         { status: 400 },
       )
     }
 
-    const result = await runBot(botId, { companyId, input })
+    // Tenant scope comes from the verified session, never client input.
+    const result = await runBot(botId, { companyId: session.companyId, input })
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Fehler'
