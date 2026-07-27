@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { writeAuditLog } from '@/lib/audit'
 import { generateTemporaryPassword } from '@/lib/password'
+import { sendInviteCredentials } from '@/lib/email'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -20,6 +21,42 @@ async function requireHoldingSession() {
     throw new Error('Kein Holding zugewiesen.')
   }
   return { session, holdingId: session.holdingId, userId: session.profile.id }
+}
+
+/**
+ * Confirm a profile belongs to the caller's holding before mutating it.
+ *
+ * The profile id arrives from the client, so ownership must be proven here —
+ * otherwise a holding admin can deactivate, reactivate or reset 2FA for users
+ * belonging to a different holding.
+ */
+async function isProfileInHolding(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  holdingId: string,
+  profileId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', profileId)
+    .eq('holding_id', holdingId)
+    .maybeSingle()
+  return Boolean(data)
+}
+
+/** Same guard for a company id supplied by the client. */
+async function isCompanyInHolding(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  holdingId: string,
+  companyId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('companies')
+    .select('id')
+    .eq('id', companyId)
+    .eq('holding_id', holdingId)
+    .maybeSingle()
+  return Boolean(data)
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +245,7 @@ export async function inviteUser(data: {
   roleLabel: string
   firstName: string
   lastName: string
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; tempPassword?: string }> {
   const { holdingId, userId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
   const serviceClient = createSupabaseServiceClient()
@@ -216,7 +253,7 @@ export async function inviteUser(data: {
   // Validate company belongs to holding
   const { data: company } = await supabase
     .from('companies')
-    .select('id, name')
+    .select('id, name, slug')
     .eq('id', data.companyId)
     .eq('holding_id', holdingId)
     .single()
@@ -261,7 +298,8 @@ export async function inviteUser(data: {
     holding_id: holdingId,
     first_name: data.firstName,
     last_name: data.lastName,
-    display_name: data.email,
+    // display_name is GENERATED ALWAYS from first/last name — assigning it
+    // makes Postgres reject the whole insert.
     must_reset_password: true,
     totp_enabled: false,
   })
@@ -300,7 +338,16 @@ export async function inviteUser(data: {
     profile_id: authUser.user.id,
   })
 
-  // Log temp password in development
+  // Email the credentials. On failure (or no RESEND_API_KEY) the account still
+  // exists, so return the temp password for the admin to relay manually.
+  const emailResult = await sendInviteCredentials({
+    to: data.email,
+    firstName: data.firstName,
+    tempPassword,
+    companyName: (company as { name: string }).name,
+    companySlug: (company as { slug?: string | null }).slug ?? null,
+  })
+
   if (process.env.NODE_ENV === 'development') {
     console.log(`[DEV] User invite: ${data.email} / ${tempPassword}`)
   }
@@ -315,7 +362,9 @@ export async function inviteUser(data: {
   })
 
   revalidatePath('/admin/users')
-  return { success: true }
+  return emailResult.sent
+    ? { success: true }
+    : { success: true, tempPassword }
 }
 
 // ---------------------------------------------------------------------------
@@ -325,8 +374,12 @@ export async function inviteUser(data: {
 export async function deactivateUser(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await isProfileInHolding(supabase, holdingId, profileId))) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -356,8 +409,12 @@ export async function deactivateUser(
 export async function reactivateUser(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await isProfileInHolding(supabase, holdingId, profileId))) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -387,8 +444,12 @@ export async function reactivateUser(
 export async function resetUser2fa(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  if (!(await isProfileInHolding(supabase, holdingId, profileId))) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
 
   const { error } = await supabase
     .from('profiles')
@@ -421,7 +482,7 @@ export async function resetUser2fa(
 export async function resendInvitation(
   invitationId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
 
   const newExpiry = new Date()
@@ -434,6 +495,8 @@ export async function resendInvitation(
       invited_at: new Date().toISOString(),
     })
     .eq('id', invitationId)
+    // Scope to the caller's holding — the invitation id comes from the client.
+    .eq('holding_id', holdingId)
     .eq('status', 'pending')
 
   if (error) {
@@ -461,13 +524,15 @@ export async function resendInvitation(
 export async function revokeInvitation(
   invitationId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await requireHoldingSession()
+  const { userId, holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
 
   const { error } = await supabase
     .from('user_invitations')
     .update({ status: 'revoked' })
     .eq('id', invitationId)
+    // Scope to the caller's holding — the invitation id comes from the client.
+    .eq('holding_id', holdingId)
     .eq('status', 'pending')
 
   if (error) {
@@ -494,8 +559,16 @@ export async function promoteToCompanySuperUser(
   companyId: string,
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireHoldingSession()
+  const { holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  // company/profile ids come from the client — prove both are in this holding.
+  if (!(await isCompanyInHolding(supabase, holdingId, companyId))) {
+    return { success: false, error: 'Unternehmen nicht gefunden.' }
+  }
+  if (!(await isProfileInHolding(supabase, holdingId, profileId))) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
 
   const { data: role } = await supabase
     .from('roles')
@@ -527,8 +600,16 @@ export async function removeCompanySuperUser(
   companyId: string,
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireHoldingSession()
+  const { holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  // company/profile ids come from the client — prove both are in this holding.
+  if (!(await isCompanyInHolding(supabase, holdingId, companyId))) {
+    return { success: false, error: 'Unternehmen nicht gefunden.' }
+  }
+  if (!(await isProfileInHolding(supabase, holdingId, profileId))) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
 
   const { data: role } = await supabase
     .from('roles')
@@ -558,8 +639,14 @@ export async function removeCompanySuperUser(
 export async function promoteToHoldingAdminFromHolding(
   profileId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireHoldingSession()
+  const { holdingId } = await requireHoldingSession()
   const supabase = createSupabaseServerClient()
+
+  // This grants holding-admin rights, so the target must be proven to belong to
+  // the caller's own holding before promoting.
+  if (!(await isProfileInHolding(supabase, holdingId, profileId))) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
 
   await supabase
     .from('holding_admins')
@@ -568,7 +655,7 @@ export async function promoteToHoldingAdminFromHolding(
   const { error } = await supabase
     .from('holding_admins_v2')
     .upsert(
-      { holding_id: session.holdingId ?? '', profile_id: profileId, is_owner: false },
+      { holding_id: holdingId, profile_id: profileId, is_owner: false },
       { onConflict: 'holding_id,profile_id' },
     )
 

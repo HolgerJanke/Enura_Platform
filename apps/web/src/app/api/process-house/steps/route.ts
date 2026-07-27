@@ -2,14 +2,39 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { getSession } from '@/lib/session'
+import type { UserSession } from '@enura/types'
 
 export async function GET(request: NextRequest) {
+  // Middleware exempts /api/* from auth, so the session must be verified here.
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const processId = request.nextUrl.searchParams.get('processId')
   if (!processId) {
     return NextResponse.json({ steps: [], phases: [], projects: [] })
   }
 
   const supabase = createSupabaseServiceClient()
+
+  // Verify the requested process belongs to the caller before reading anything.
+  // The process id comes from the client, so ownership must be proven server-side.
+  const { data: processDef } = await supabase
+    .from('process_definitions')
+    .select('company_id')
+    .eq('id', processId)
+    .single()
+
+  const processCompanyId = (processDef as Record<string, unknown> | null)?.['company_id'] as
+    | string
+    | undefined
+
+  if (!processCompanyId || !(await canAccessCompany(supabase, session, processCompanyId))) {
+    // Do not distinguish "missing" from "forbidden" — that would leak existence.
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
   const [stepsRes, phasesRes, instancesRes] = await Promise.all([
     supabase
@@ -66,25 +91,16 @@ export async function GET(request: NextRequest) {
     proj['berater_name'] = bid ? (beraterNames.get(bid) ?? null) : null
   }
 
-  // Fetch base currency from company_currency_settings
-  // Need to get company_id from the process definition
+  // Fetch base currency from company_currency_settings.
+  // Reuses the company_id resolved during the ownership check above.
   let baseCurrency = 'EUR'
-  const { data: processDef } = await supabase
-    .from('process_definitions')
-    .select('company_id')
-    .eq('id', processId)
+  const { data: currencyData } = await supabase
+    .from('company_currency_settings')
+    .select('base_currency')
+    .eq('company_id', processCompanyId)
     .single()
-
-  if (processDef) {
-    const companyId = (processDef as Record<string, unknown>)['company_id'] as string
-    const { data: currencyData } = await supabase
-      .from('company_currency_settings')
-      .select('base_currency')
-      .eq('company_id', companyId)
-      .single()
-    if (currencyData) {
-      baseCurrency = (currencyData as Record<string, unknown>)['base_currency'] as string
-    }
+  if (currencyData) {
+    baseCurrency = (currencyData as Record<string, unknown>)['base_currency'] as string
   }
 
   // Distribute projects across steps (simple round-robin based on project age)
@@ -163,4 +179,31 @@ export async function GET(request: NextRequest) {
     baseCurrency,
     phaseKpis,
   })
+}
+
+/**
+ * Company access rules, mirroring the Enura Group → Holding → Company hierarchy:
+ *   - a company user may only read their own company
+ *   - a holding admin may read companies inside their own holding
+ *   - an Enura admin may read any company
+ */
+async function canAccessCompany(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  session: UserSession,
+  companyId: string,
+): Promise<boolean> {
+  if (session.companyId && session.companyId === companyId) return true
+  if (session.isEnuraAdmin) return true
+
+  if (session.isHoldingAdmin && session.holdingId) {
+    const { data } = await supabase
+      .from('companies')
+      .select('holding_id')
+      .eq('id', companyId)
+      .single()
+    const holdingId = (data as Record<string, unknown> | null)?.['holding_id'] as string | undefined
+    return holdingId === session.holdingId
+  }
+
+  return false
 }

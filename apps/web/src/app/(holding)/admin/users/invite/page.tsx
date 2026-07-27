@@ -30,6 +30,7 @@ export default function InviteUserPage() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [tempPassword, setTempPassword] = useState<string | null>(null)
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -92,7 +93,13 @@ export default function InviteUserPage() {
       })
 
       if (result.success) {
-        router.push('/admin/users')
+        // If email delivery was unavailable, the action returns the temp
+        // password so the admin can pass it on manually.
+        if (result.tempPassword) {
+          setTempPassword(result.tempPassword)
+        } else {
+          router.push('/admin/users')
+        }
       } else {
         setError(result.error ?? 'Ein unbekannter Fehler ist aufgetreten.')
       }
@@ -125,6 +132,25 @@ export default function InviteUserPage() {
         {error && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
             <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {tempPassword && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm text-amber-800 font-medium mb-1">
+              Benutzer erstellt — E-Mail konnte nicht versendet werden.
+            </p>
+            <p className="text-sm text-amber-700">
+              Bitte geben Sie dem Benutzer dieses temporäre Passwort weiter:
+              <span className="ml-2 font-mono font-semibold">{tempPassword}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/admin/users')}
+              className="mt-3 text-sm text-blue-600 underline"
+            >
+              Fertig — zur Benutzerverwaltung
+            </button>
           </div>
         )}
 

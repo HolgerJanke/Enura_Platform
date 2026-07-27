@@ -41,23 +41,13 @@ async function getHoldings(): Promise<HoldingWithCounts[]> {
 
   const holdingIds = holdings.map((h: HoldingRow) => h.id)
 
-  // Fetch company counts per holding
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id, holding_id')
-    .in('holding_id', holdingIds)
-
-  // Fetch user counts per holding
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, holding_id')
-    .in('holding_id', holdingIds)
-
-  // Fetch subscriptions
-  const { data: subscriptions } = await supabase
-    .from('holding_subscriptions')
-    .select('holding_id, plan')
-    .in('holding_id', holdingIds)
+  // These three lookups are independent — run them concurrently instead of in
+  // three sequential round trips.
+  const [{ data: companies }, { data: profiles }, { data: subscriptions }] = await Promise.all([
+    supabase.from('companies').select('id, holding_id').in('holding_id', holdingIds),
+    supabase.from('profiles').select('id, holding_id').in('holding_id', holdingIds),
+    supabase.from('holding_subscriptions').select('holding_id, plan').in('holding_id', holdingIds),
+  ])
 
   const companyCounts = new Map<string, number>()
   for (const c of companies ?? []) {

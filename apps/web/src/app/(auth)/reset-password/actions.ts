@@ -61,6 +61,14 @@ export async function resetPasswordAction(
     recordId: user.id,
   })
 
+  // Re-issue the token so the access-token hook (migration 047, once registered)
+  // rebuilds the must_reset_password claim; harmless no-op until the hook exists.
+  try {
+    await supabase.auth.refreshSession()
+  } catch {
+    /* non-fatal — the middleware gate also reads the DB */
+  }
+
   // Middleware will redirect to /enrol-2fa if totp_enabled is false
   redirect('/')
 }

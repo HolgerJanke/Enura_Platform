@@ -1,23 +1,31 @@
+import { cache } from 'react'
 import { getSession } from './session'
 import { createSupabaseServerClient } from './supabase/server'
 
 /**
+ * Cached per-request feature-flag read, keyed on the primitive company id so
+ * repeated guard calls within one render reuse a single query.
+ */
+const isFinanzplanungEnabled = cache(async (companyId: string): Promise<boolean> => {
+  const supabase = createSupabaseServerClient()
+  const { data } = await supabase
+    .from('company_feature_flags')
+    .select('finanzplanung_enabled')
+    .eq('company_id', companyId)
+    .single()
+
+  return data?.finanzplanung_enabled === true
+})
+
+/**
  * Check if the current company has the Finanzplanung module enabled.
- * Returns true only when both holding AND company flags are set.
+ * Returns true only when the company flag is set.
  */
 export async function checkFinanzplanungActive(
   session: { companyId: string | null; holdingId: string | null } | null,
 ): Promise<boolean> {
   if (!session?.companyId) return false
-
-  const supabase = createSupabaseServerClient()
-  const { data } = await supabase
-    .from('company_feature_flags')
-    .select('finanzplanung_enabled')
-    .eq('company_id', session.companyId)
-    .single()
-
-  return data?.finanzplanung_enabled === true
+  return isFinanzplanungEnabled(session.companyId)
 }
 
 /**

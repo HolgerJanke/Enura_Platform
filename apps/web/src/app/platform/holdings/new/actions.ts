@@ -12,6 +12,19 @@ async function requireEnuraSession() {
   return session
 }
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Audit columns are UUID-typed. A mock-auth session id is not a UUID, and
+ * passing one aborts the whole insert — which broke the wizard's final step.
+ * Attribute the acting user only when the id is genuinely a UUID.
+ */
+function asUuidOrNull(value: string | null | undefined): string | null {
+  if (!value) return null
+  return UUID_PATTERN.test(value) ? value : null
+}
+
 export async function checkSlugAvailability(
   slug: string,
 ): Promise<{ available: boolean }> {
@@ -116,7 +129,7 @@ export async function completeWizard(
       slug: input.holdingSlug,
       status: 'active',
       branding: input.branding,
-      created_by: session.profile.id,
+      created_by: asUuidOrNull(session.profile.id),
     })
     .select('id')
     .single()
@@ -135,7 +148,7 @@ export async function completeWizard(
       name: input.companyName,
       slug: input.companySlug,
       status: 'active',
-      created_by: session.profile.id,
+      created_by: asUuidOrNull(session.profile.id),
     })
 
   if (companyError) {
@@ -301,7 +314,9 @@ export async function completeWizard(
       company_id: companyId,
       email: input.adminEmail,
       role_name: 'holding_admin',
-      invited_by: session.profile.id,
+      // invited_by is NOT NULL, so fall back to the admin we just created
+      // rather than null when the acting session id is not a real UUID.
+      invited_by: asUuidOrNull(session.profile.id) ?? userId,
     })
 
   // TODO: Send invitation email with temp password via Resend

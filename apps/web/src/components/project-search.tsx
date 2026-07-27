@@ -12,11 +12,7 @@ interface SearchResult {
   project_value: number | null
 }
 
-interface Props {
-  companyId: string
-}
-
-export function ProjectSearch({ companyId }: Props) {
+export function ProjectSearch() {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -37,7 +33,8 @@ export function ProjectSearch({ companyId }: Props) {
     setLoading(true)
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/projects/search?q=${encodeURIComponent(query)}&companyId=${companyId}`)
+        // Tenant scope is derived from the session server-side — never sent by the client.
+        const res = await fetch(`/api/projects/search?q=${encodeURIComponent(query)}`)
         if (res.ok) {
           const data = await res.json()
           setResults(data.results ?? [])
@@ -48,7 +45,7 @@ export function ProjectSearch({ companyId }: Props) {
     }, 300)
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [query, companyId])
+  }, [query])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

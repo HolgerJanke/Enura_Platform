@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { requireHoldingAdmin } from '@/lib/permissions'
+import { requireHoldingSession } from '@/lib/permissions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatCHF, formatDate } from '@enura/types'
 
@@ -43,7 +43,10 @@ function healthLabel(percent: number): string {
 // ---------------------------------------------------------------------------
 
 export default async function HoldingFinancePage() {
-  await requireHoldingAdmin()
+  const holdingSession = await requireHoldingSession()
+  if (!holdingSession) {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Kein Zugriff.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
+  }
 
   const supabase = createSupabaseServerClient()
   const today = new Date()
@@ -57,12 +60,16 @@ export default async function HoldingFinancePage() {
   const fromStr = windowStart.toISOString().split('T')[0]!
   const toStr = windowEnd.toISOString().split('T')[0]!
 
-  // Fetch all companies
-  const { data: companiesRaw, error: compErr } = await supabase
+  // Fetch companies — scoped to the admin's own holding. Enura admins
+  // (holdingId === null) intentionally span all holdings.
+  let companiesQuery = supabase
     .from('companies')
     .select('id, name, slug')
     .eq('status', 'active')
-    .order('name')
+  if (holdingSession.holdingId) {
+    companiesQuery = companiesQuery.eq('holding_id', holdingSession.holdingId)
+  }
+  const { data: companiesRaw, error: compErr } = await companiesQuery.order('name')
 
   if (compErr) {
     return (

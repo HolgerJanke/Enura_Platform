@@ -3,10 +3,41 @@
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { writeAuditLog } from '@/lib/audit'
-import { getSession } from '@/lib/session'
+import { requireHoldingSession, type HoldingSession } from '@/lib/permissions'
 import type { TenantStatus } from '@enura/types'
 
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/
+
+/**
+ * Load a company only if the caller is allowed to administer it.
+ *
+ * The company id arrives from the client, so ownership must be proven before any
+ * mutation — otherwise a holding admin can rebrand or suspend companies in other
+ * holdings. Returns null when the company is missing OR out of scope; callers
+ * report both identically so existence is not leaked.
+ */
+async function loadAdministrableCompany(
+  serviceClient: ReturnType<typeof createSupabaseServiceClient>,
+  holdingSession: HoldingSession,
+  companyId: string,
+): Promise<Record<string, unknown> | null> {
+  const { data } = await serviceClient
+    .from('companies')
+    .select('id, slug, status, holding_id')
+    .eq('id', companyId)
+    .single()
+
+  if (!data) return null
+
+  const row = data as Record<string, unknown>
+  if (
+    holdingSession.holdingId &&
+    row['holding_id'] !== holdingSession.holdingId
+  ) {
+    return null
+  }
+  return row
+}
 
 type BrandingUpdate = {
   primary_color: string
@@ -20,8 +51,8 @@ export async function updateTenantBrandingAction(
   companyId: string,
   branding: BrandingUpdate,
 ): Promise<{ error?: string }> {
-  const session = await getSession()
-  if (!session?.isHoldingAdmin) {
+  const holdingSession = await requireHoldingSession()
+  if (!holdingSession) {
     return { error: 'Nicht autorisiert.' }
   }
 
@@ -40,12 +71,12 @@ export async function updateTenantBrandingAction(
 
   const serviceClient = createSupabaseServiceClient()
 
-  // Verify tenant exists
-  const { data: tenant } = await serviceClient
-    .from('companies')
-    .select('id, slug')
-    .eq('id', companyId)
-    .single()
+  // Verify the tenant exists AND belongs to the caller's holding.
+  const tenant = await loadAdministrableCompany(
+    serviceClient,
+    holdingSession,
+    companyId,
+  )
 
   if (!tenant) {
     return { error: 'Unternehmen nicht gefunden.' }
@@ -76,7 +107,7 @@ export async function updateTenantBrandingAction(
 
   await writeAuditLog({
     companyId,
-    actorId: session.profile.id,
+    actorId: holdingSession.session.profile.id,
     action: 'tenant_branding.updated',
     tableName: 'tenant_brandings',
     recordId: companyId,
@@ -84,7 +115,7 @@ export async function updateTenantBrandingAction(
     newValues: { ...branding },
   })
 
-  revalidatePath(`/admin/tenants/${tenant.slug}`)
+  revalidatePath(`/admin/tenants/${tenant['slug'] as string}`)
   return {}
 }
 
@@ -92,8 +123,8 @@ export async function updateTenantStatusAction(
   companyId: string,
   status: TenantStatus,
 ): Promise<{ error?: string }> {
-  const session = await getSession()
-  if (!session?.isHoldingAdmin) {
+  const holdingSession = await requireHoldingSession()
+  if (!holdingSession) {
     return { error: 'Nicht autorisiert.' }
   }
 
@@ -104,12 +135,12 @@ export async function updateTenantStatusAction(
 
   const serviceClient = createSupabaseServiceClient()
 
-  // Fetch current tenant for audit log
-  const { data: tenant } = await serviceClient
-    .from('companies')
-    .select('id, slug, status')
-    .eq('id', companyId)
-    .single()
+  // Fetch current tenant for the audit log, and confirm it is in scope.
+  const tenant = await loadAdministrableCompany(
+    serviceClient,
+    holdingSession,
+    companyId,
+  )
 
   if (!tenant) {
     return { error: 'Unternehmen nicht gefunden.' }
@@ -127,15 +158,15 @@ export async function updateTenantStatusAction(
 
   await writeAuditLog({
     companyId,
-    actorId: session.profile.id,
+    actorId: holdingSession.session.profile.id,
     action: 'tenant.status_changed',
     tableName: 'tenants',
     recordId: companyId,
-    oldValues: { status: tenant.status },
+    oldValues: { status: tenant['status'] as string },
     newValues: { status },
   })
 
-  revalidatePath(`/admin/tenants/${tenant.slug}`)
+  revalidatePath(`/admin/tenants/${tenant['slug'] as string}`)
   revalidatePath('/admin')
   return {}
 }

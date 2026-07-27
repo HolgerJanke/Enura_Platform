@@ -3,6 +3,7 @@
 import { useState, useTransition, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createCompany, sendSuperUserInvitation } from './actions'
+import { PLATFORM_ROOT_DOMAIN } from '@/lib/platform'
 
 type WizardStep = {
   number: number
@@ -412,7 +413,7 @@ function StepDomain({
   onVerify: () => void
   isPending: boolean
 }) {
-  const rootDomain = process.env.NEXT_PUBLIC_PLATFORM_ROOT_DOMAIN ?? 'platform.enura.ch'
+  const rootDomain = PLATFORM_ROOT_DOMAIN
 
   return (
     <div className="space-y-5">

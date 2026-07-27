@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { updateTenantBrandingAction, updateTenantStatusAction } from './actions'
+import { tenantHost } from '@/lib/platform'
 
 type Tab = 'overview' | 'branding' | 'users'
 
@@ -206,7 +207,7 @@ export function TenantDetailTabs({
               </div>
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Subdomain</dt>
-                <dd className="text-sm font-mono text-gray-900">{tenant.slug}.platform.com</dd>
+                <dd className="text-sm font-mono text-gray-900">{tenantHost(tenant.slug)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Status</dt>

@@ -56,6 +56,12 @@ export default async function HoldingAdminLayout({ children }: { children: React
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
+  // Hide the "← Dashboard" link for admins with no company — it would only
+  // bounce them straight back to this console.
+  const navItems = session.companyId
+    ? HOLDING_NAV_ITEMS
+    : HOLDING_NAV_ITEMS.filter((item) => item.href !== '/dashboard')
+
   // Fetch actual holding name
   let holdingName = 'Holding'
   if (session.holdingId) {
@@ -69,7 +75,7 @@ export default async function HoldingAdminLayout({ children }: { children: React
   }
 
   return (
-    <HoldingShell navItems={HOLDING_NAV_ITEMS} userName={displayName} holdingName={holdingName}>
+    <HoldingShell navItems={navItems} userName={displayName} holdingName={holdingName}>
       {children}
     </HoldingShell>
   )

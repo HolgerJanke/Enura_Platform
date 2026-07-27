@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { getSession } from '@/lib/session'
+import { generateTemporaryPassword } from '@/lib/password'
+import { sendInviteCredentials } from '@/lib/email'
 
 async function requireEnuraSession() {
   const session = await getSession()
@@ -10,6 +13,22 @@ async function requireEnuraSession() {
     throw new Error('Nicht autorisiert')
   }
   return session
+}
+
+/** Confirm a company belongs to the given holding (ids come from the client). */
+async function companyInHolding(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  holdingId: string,
+  companyId: string,
+): Promise<{ id: string; name: string; slug: string } | null> {
+  const { data } = await supabase
+    .from('companies')
+    .select('id, name, slug, holding_id')
+    .eq('id', companyId)
+    .single()
+  const row = data as Record<string, unknown> | null
+  if (!row || row['holding_id'] !== holdingId) return null
+  return { id: row['id'] as string, name: row['name'] as string, slug: row['slug'] as string }
 }
 
 export async function updateHolding(formData: FormData): Promise<{ success: boolean; error?: string }> {
@@ -165,5 +184,145 @@ export async function removeHoldingAdmin(
     .eq('profile_id', profileId)
 
   revalidatePath(`/platform/holdings/${holdingId}`)
+  return { success: true }
+}
+
+// ---------------------------------------------------------------------------
+// Per-holding user management (Enura Admin only)
+// ---------------------------------------------------------------------------
+
+/**
+ * Invite a user into one of the holding's companies with a role. The company
+ * and role are validated to belong to the holding before anything is created.
+ */
+export async function inviteUserToCompany(data: {
+  holdingId: string
+  companyId: string
+  email: string
+  firstName: string
+  lastName: string
+  roleId: string
+}): Promise<{ success: boolean; error?: string; tempPassword?: string }> {
+  await requireEnuraSession()
+
+  if (!data.email || !data.email.includes('@')) {
+    return { success: false, error: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.' }
+  }
+
+  const supabase = createSupabaseServerClient()
+  const serviceClient = createSupabaseServiceClient()
+
+  const company = await companyInHolding(supabase, data.holdingId, data.companyId)
+  if (!company) return { success: false, error: 'Ungültiges Unternehmen für diese Holding.' }
+
+  // Role must belong to the target company.
+  const { data: role } = await supabase
+    .from('roles')
+    .select('id, company_id')
+    .eq('id', data.roleId)
+    .single()
+  if (!role || (role as Record<string, unknown>)['company_id'] !== data.companyId) {
+    return { success: false, error: 'Ungültige Rolle für dieses Unternehmen.' }
+  }
+
+  const tempPassword = generateTemporaryPassword()
+  const { data: authUser, error: authError } = await serviceClient.auth.admin.createUser({
+    email: data.email,
+    password: tempPassword,
+    email_confirm: true,
+    user_metadata: { company_id: data.companyId },
+  })
+  if (authError || !authUser.user) {
+    return { success: false, error: `Benutzer konnte nicht erstellt werden: ${authError?.message ?? 'Unbekannter Fehler'}` }
+  }
+
+  const { error: profileError } = await serviceClient.from('profiles').insert({
+    id: authUser.user.id,
+    company_id: data.companyId,
+    holding_id: data.holdingId,
+    first_name: data.firstName,
+    last_name: data.lastName,
+    // display_name is GENERATED ALWAYS — assigning it rejects the insert.
+    must_reset_password: true,
+    totp_enabled: false,
+  })
+  if (profileError) {
+    await serviceClient.auth.admin.deleteUser(authUser.user.id)
+    return { success: false, error: `Profil konnte nicht erstellt werden: ${profileError.message}` }
+  }
+
+  await serviceClient.from('profile_roles').insert({
+    profile_id: authUser.user.id,
+    role_id: data.roleId,
+  })
+
+  const emailResult = await sendInviteCredentials({
+    to: data.email,
+    firstName: data.firstName,
+    tempPassword,
+    companyName: company.name,
+    companySlug: company.slug,
+  })
+
+  revalidatePath(`/platform/holdings/${data.holdingId}`)
+  return emailResult.sent ? { success: true } : { success: true, tempPassword }
+}
+
+/**
+ * Reassign a user to a different company within the holding and replace their
+ * roles. Company, profile and every role are validated against the holding.
+ */
+export async function setUserCompanyAndRoles(data: {
+  holdingId: string
+  profileId: string
+  companyId: string
+  roleIds: string[]
+}): Promise<{ success: boolean; error?: string }> {
+  await requireEnuraSession()
+
+  const supabase = createSupabaseServerClient()
+
+  const company = await companyInHolding(supabase, data.holdingId, data.companyId)
+  if (!company) return { success: false, error: 'Ungültiges Unternehmen für diese Holding.' }
+
+  // Profile must already belong to this holding.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, holding_id')
+    .eq('id', data.profileId)
+    .single()
+  if (!profile || (profile as Record<string, unknown>)['holding_id'] !== data.holdingId) {
+    return { success: false, error: 'Benutzer nicht gefunden.' }
+  }
+
+  // Every requested role must belong to the target company.
+  if (data.roleIds.length > 0) {
+    const { data: roles } = await supabase
+      .from('roles')
+      .select('id, company_id')
+      .in('id', data.roleIds)
+    const valid = (roles ?? []) as Array<{ id: string; company_id: string }>
+    if (valid.length !== data.roleIds.length || valid.some((r) => r.company_id !== data.companyId)) {
+      return { success: false, error: 'Eine oder mehrere Rollen gehören nicht zu diesem Unternehmen.' }
+    }
+  }
+
+  const serviceClient = createSupabaseServiceClient()
+
+  const { error: moveError } = await serviceClient
+    .from('profiles')
+    .update({ company_id: data.companyId })
+    .eq('id', data.profileId)
+  if (moveError) return { success: false, error: moveError.message }
+
+  // Replace role assignments.
+  await serviceClient.from('profile_roles').delete().eq('profile_id', data.profileId)
+  if (data.roleIds.length > 0) {
+    await serviceClient
+      .from('profile_roles')
+      .insert(data.roleIds.map((roleId) => ({ profile_id: data.profileId, role_id: roleId })))
+  }
+
+  revalidatePath(`/platform/holdings/${data.holdingId}`)
   return { success: true }
 }

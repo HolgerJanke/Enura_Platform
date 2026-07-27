@@ -19,7 +19,7 @@ export default function LoginPage() {
       setError(result.error)
       setIsPending(false)
     } else {
-      window.location.href = '/dashboard'
+      window.location.href = result.redirectTo
     }
   }
 

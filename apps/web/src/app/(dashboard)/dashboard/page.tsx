@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
+import { resolveLandingPath } from '@/lib/landing'
 import { ProcessHouseContainer } from '@/components/process-house/ProcessHouseContainer'
 import { ProjectSearch } from '@/components/project-search'
 import { getDataAccess } from '@/lib/data-access'
@@ -13,7 +14,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const openPhase = typeof sp['phase'] === 'string' ? sp['phase'] : undefined
   const session = await getSession()
 
-  if (!session?.companyId) return null
+  if (!session) return null
+
+  // An admin with no company has nothing to render here — send them to their own
+  // console instead of showing a blank page.
+  if (!session.companyId) {
+    const landing = resolveLandingPath(session)
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-500 mb-4">Weiterleitung...</p>
+        <a href={landing} className="text-blue-600 underline">Weiter</a>
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href="${landing}"` }} />
+      </div>
+    )
+  }
 
   const db = getDataAccess()
 
@@ -56,7 +70,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-secondary">
             Prozesshaus
           </h2>
-          <ProjectSearch companyId={session.companyId} />
+          <ProjectSearch />
         </div>
         <ProcessHouseContainer openProcess={openProcess} openPhase={openPhase} />
       </div>
