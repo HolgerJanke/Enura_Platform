@@ -2,12 +2,23 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { getSession } from '@/lib/session'
 
 export async function GET(request: NextRequest) {
-  const q = request.nextUrl.searchParams.get('q')?.trim() ?? ''
-  const companyId = request.nextUrl.searchParams.get('companyId') ?? ''
+  // Middleware exempts /api/* from auth, so the session must be verified here.
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-  if (!q || q.length < 2 || !companyId) {
+  // Tenant scope always comes from the verified session — never from the client.
+  const companyId = session.companyId
+  if (!companyId) {
+    return NextResponse.json({ results: [] })
+  }
+
+  const q = request.nextUrl.searchParams.get('q')?.trim() ?? ''
+  if (!q || q.length < 2) {
     return NextResponse.json({ results: [] })
   }
 

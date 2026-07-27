@@ -1,632 +1,432 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import {
   defaultBrandTokens,
   defaultExtendedTokens,
   buildCSSVarString,
   buildExtendedCSSVarString,
-  brandTokensFromRow,
   type ExtendedBrandTokens,
   type BrandTokens,
 } from '@enura/types'
-import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware'
 
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
 
-const MOCK_AUTH = process.env.MOCK_AUTH !== 'false'
+/**
+ * Header carrying the middleware-verified user id to the app. It is deleted
+ * from every INBOUND request (so a client cannot forge it) and re-set only
+ * after we have validated the session — see `buildRequestHeaders`.
+ */
+const AUTH_USER_HEADER = 'x-auth-user-id'
 
 const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/invite', '/privacy', '/help', '/debug']
-const STATIC_PATHS = ['/_next/', '/favicon.ico', '/api/', '/manifest.json', '/icon-']
+const STATIC_PREFIXES = ['/_next/', '/favicon.ico', '/manifest.json', '/icon-']
 
-/** Mock tenant data — only used when MOCK_AUTH=true */
-const MOCK_TENANTS: Record<
-  string,
-  { id: string; name: string; branding: typeof defaultBrandTokens }
-> = {
-  'alpen-energie': {
-    id: '00000000-0000-0000-0000-000000000001',
-    name: 'Alpen Energie GmbH',
-    branding: { ...defaultBrandTokens },
-  },
-  'test-company': {
-    id: '00000000-0000-0000-0000-000000000002',
-    name: 'Test Company AG',
-    branding: {
-      ...defaultBrandTokens,
-      primary: '#059669',
-      accent: '#D97706',
-    },
-  },
-}
+const BRANDING_TTL_MS = 5 * 60 * 1000
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Path / host helpers
 // ---------------------------------------------------------------------------
 
 function isPublicPath(pathname: string): boolean {
-  return (
-    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
-    STATIC_PATHS.some((p) => pathname.startsWith(p))
-  )
+  return PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 }
 
 function isStaticAsset(pathname: string): boolean {
-  return STATIC_PATHS.some((p) => pathname.startsWith(p))
+  return STATIC_PREFIXES.some((p) => pathname.startsWith(p))
 }
 
 function isAdminHost(hostname: string): boolean {
   if (hostname.startsWith('admin.')) return true
-  const isLocalhost =
-    hostname.startsWith('localhost') || hostname.startsWith('127.0.0.1')
-  if (isLocalhost && process.env.DEV_HOLDING_ADMIN === 'true') return true
-  return false
+  const isLocalhost = hostname.startsWith('localhost') || hostname.startsWith('127.0.0.1')
+  return isLocalhost && process.env.DEV_HOLDING_ADMIN === 'true'
 }
 
-function getSubdomain(hostname: string): string | null {
-  // Localhost development — use env default
-  if (
-    hostname.startsWith('localhost') ||
-    hostname.startsWith('127.0.0.1')
-  ) {
-    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
-  }
+type HostContext =
+  | { kind: 'admin' }
+  /** A real per-tenant subdomain, e.g. alpen-energie.enura-group.com. */
+  | { kind: 'tenant'; slug: string }
+  /** localhost / *.vercel.app / root domain — no tenant subdomain in the host. */
+  | { kind: 'fallback'; slug: string | null }
 
-  // Vercel preview/production URLs (e.g. enura-platform.vercel.app)
-  // These don't have a company subdomain — use the default tenant
+function resolveHost(hostname: string): HostContext {
+  if (isAdminHost(hostname)) return { kind: 'admin' }
+
+  const devDefault = process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+
+  if (hostname.startsWith('localhost') || hostname.startsWith('127.0.0.1')) {
+    return { kind: 'fallback', slug: devDefault }
+  }
   if (hostname.includes('.vercel.app')) {
-    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+    return { kind: 'fallback', slug: devDefault }
   }
 
   const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
-
-  // Root domain (with or without www) — use default tenant
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
-    return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+    return { kind: 'fallback', slug: devDefault }
   }
 
-  // Extract subdomain: e.g. alpen-energie.enura-group.com → alpen-energie
-  // But skip 'www' — it's not a tenant subdomain
   const parts = hostname.split('.')
   if (parts.length >= 3) {
     const sub = parts[0]
-    if (sub === 'www' || sub === 'admin') {
-      return process.env.DEV_DEFAULT_TENANT_SLUG ?? 'alpen-energie'
+    if (!sub || sub === 'www' || sub === 'admin') {
+      return { kind: 'fallback', slug: devDefault }
     }
-    return sub ?? null
+    return { kind: 'tenant', slug: sub }
   }
 
-  return null
-}
-
-function setTenantHeaders(
-  response: NextResponse,
-  opts: {
-    companyId: string
-    companySlug: string
-    companyName: string
-    isHolding: boolean
-    brandCSS: string
-    userId?: string
-    customCSSPath?: string
-  },
-): void {
-  response.headers.set('x-company-id', opts.companyId)
-  response.headers.set('x-company-slug', opts.companySlug)
-  response.headers.set('x-company-name', opts.companyName)
-  response.headers.set('x-is-holding', String(opts.isHolding))
-  response.headers.set('x-brand-css', opts.brandCSS)
-  response.headers.set('x-custom-css', opts.customCSSPath ?? '')
-  if (opts.userId) {
-    response.headers.set('x-user-id', opts.userId)
-  }
-}
-
-function redirectTo(request: NextRequest, path: string): NextResponse {
-  return NextResponse.redirect(new URL(path, request.url))
+  return { kind: 'fallback', slug: null }
 }
 
 // ---------------------------------------------------------------------------
-// Mock Auth Middleware (development without Supabase)
+// Branding resolution (anon REST + per-isolate TTL cache)
+//
+// Branding is public and changes rarely, so caching it removes a Supabase round
+// trip from every navigation. Staleness here is only cosmetic (never a security
+// boundary), so a short TTL is safe.
 // ---------------------------------------------------------------------------
 
-function handleMockAuth(request: NextRequest): NextResponse {
-  const { pathname } = request.nextUrl
-  const hostname = request.headers.get('host') ?? 'localhost:3000'
+interface ResolvedBrand {
+  companyId: string
+  companyName: string
+  companySlug: string
+  brandCSS: string
+  customCSSPath: string
+}
 
-  // Admin / holding portal
-  if (isAdminHost(hostname)) {
-    const response = NextResponse.next({ request })
-    setTenantHeaders(response, {
-      companyId: '',
-      companySlug: 'admin',
-      companyName: 'Enura Group',
-      isHolding: true,
-      brandCSS: buildCSSVarString(defaultBrandTokens),
-    })
+interface BrandCacheEntry extends ResolvedBrand {
+  expiresAt: number
+}
 
-    if (!isPublicPath(pathname)) {
-      const session = request.cookies.get('mock-session')?.value
-      if (!session) {
-        return redirectTo(request, '/login')
+const brandingBySlug = new Map<string, BrandCacheEntry>()
+const brandingByCompanyId = new Map<string, BrandCacheEntry>()
+
+function restHeaders(key: string): HeadersInit {
+  return { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }
+}
+
+function buildBrandCSS(branding: Record<string, unknown> | undefined, extended: Partial<ExtendedBrandTokens> | null): string {
+  const tokens: BrandTokens = branding
+    ? {
+        ...defaultBrandTokens,
+        primary: (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
+        secondary: (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
+        accent: (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
+        background: (branding['background_color'] as string) ?? defaultBrandTokens.background,
+        surface: (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
+        textPrimary: (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
+        textSecondary: (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
+        font: (branding['font_family'] as string) ?? defaultBrandTokens.font,
+        fontUrl: (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
+        radius: (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
       }
-      try {
-        const parsed = JSON.parse(session) as {
-          mustResetPassword?: boolean
-          totpEnabled?: boolean
-        }
-        if (parsed.mustResetPassword && pathname !== '/reset-password') {
-          return redirectTo(request, '/reset-password')
-        }
-        // 2FA gate skipped in mock auth — require_2fa defaults to false
-      } catch {
-        return redirectTo(request, '/login')
-      }
+    : defaultBrandTokens
+
+  // Extended tokens are always emitted (falling back to defaults) so
+  // --brand-shadow-* / --brand-spacing-* never resolve to browser defaults.
+  return (
+    buildCSSVarString(tokens) +
+    ';' +
+    buildExtendedCSSVarString({ ...defaultExtendedTokens, ...(extended ?? {}) })
+  )
+}
+
+async function fetchBrandForCompany(
+  companyId: string,
+  url: string,
+  key: string,
+): Promise<{ brandCSS: string; customCSSPath: string }> {
+  let brandingRow: Record<string, unknown> | undefined
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/company_branding?company_id=eq.${companyId}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
+      { headers: restHeaders(key) },
+    )
+    if (res.ok) brandingRow = ((await res.json()) as Array<Record<string, unknown>>)[0]
+  } catch {
+    /* fall back to defaults */
+  }
+
+  // Extended tokens fetched SEPARATELY and guarded: the column arrives with
+  // migration 022, and folding it into the request above would take the core
+  // brand colours down with it when the column is absent.
+  let extended: Partial<ExtendedBrandTokens> | null = null
+  try {
+    const extRes = await fetch(
+      `${url}/rest/v1/company_branding?company_id=eq.${companyId}&select=extended_tokens&limit=1`,
+      { headers: restHeaders(key) },
+    )
+    if (extRes.ok) {
+      extended = ((await extRes.json()) as Array<{ extended_tokens: Partial<ExtendedBrandTokens> | null }>)[0]?.extended_tokens ?? null
     }
-
-    return response
+  } catch {
+    /* core branding must never regress because of this */
   }
 
-  const subdomain = getSubdomain(hostname)
-
-  // No subdomain — redirect to login
-  if (!subdomain) {
-    return redirectTo(request, '/login')
+  return {
+    brandCSS: buildBrandCSS(brandingRow, extended),
+    customCSSPath: (brandingRow?.['custom_css_path'] as string) ?? '',
   }
+}
 
-  // Resolve mock tenant
-  const tenant = MOCK_TENANTS[subdomain]
-  if (!tenant) {
-    return NextResponse.rewrite(new URL('/not-found', request.url))
+function cacheBrand(entry: ResolvedBrand): BrandCacheEntry {
+  const cached: BrandCacheEntry = { ...entry, expiresAt: Date.now() + BRANDING_TTL_MS }
+  brandingBySlug.set(entry.companySlug, cached)
+  brandingByCompanyId.set(entry.companyId, cached)
+  return cached
+}
+
+async function resolveBrandBySlug(slug: string): Promise<ResolvedBrand | null> {
+  const cached = brandingBySlug.get(slug)
+  if (cached && cached.expiresAt > Date.now()) return cached
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) return null
+
+  try {
+    const companyRes = await fetch(
+      `${url}/rest/v1/companies?slug=eq.${slug}&select=id,name&limit=1`,
+      { headers: restHeaders(key) },
+    )
+    if (!companyRes.ok) return null
+    const company = ((await companyRes.json()) as Array<{ id: string; name: string }>)[0]
+    if (!company) return null
+
+    const { brandCSS, customCSSPath } = await fetchBrandForCompany(company.id, url, key)
+    return cacheBrand({ companyId: company.id, companyName: company.name, companySlug: slug, brandCSS, customCSSPath })
+  } catch {
+    return null
   }
+}
 
-  const response = NextResponse.next({ request })
-  setTenantHeaders(response, {
-    companyId: tenant.id,
-    companySlug: subdomain,
-    companyName: tenant.name,
-    isHolding: false,
-    brandCSS: buildCSSVarString(tenant.branding),
-  })
+async function resolveBrandByCompanyId(companyId: string): Promise<ResolvedBrand | null> {
+  const cached = brandingByCompanyId.get(companyId)
+  if (cached && cached.expiresAt > Date.now()) return cached
 
-  // Auth check (except public paths)
-  if (!isPublicPath(pathname)) {
-    const session = request.cookies.get('mock-session')?.value
-    if (!session) {
-      return redirectTo(request, '/login')
-    }
-    try {
-      const parsed = JSON.parse(session) as {
-        mustResetPassword?: boolean
-        totpEnabled?: boolean
-      }
-      if (parsed.mustResetPassword && pathname !== '/reset-password') {
-        return redirectTo(request, '/reset-password')
-      }
-      // 2FA gate skipped in mock auth — require_2fa defaults to false
-    } catch {
-      return redirectTo(request, '/login')
-    }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) return null
+
+  try {
+    const companyRes = await fetch(
+      `${url}/rest/v1/companies?id=eq.${companyId}&select=id,name,slug&limit=1`,
+      { headers: restHeaders(key) },
+    )
+    if (!companyRes.ok) return null
+    const company = ((await companyRes.json()) as Array<{ id: string; name: string; slug: string }>)[0]
+    if (!company) return null
+
+    const { brandCSS, customCSSPath } = await fetchBrandForCompany(company.id, url, key)
+    return cacheBrand({ companyId: company.id, companyName: company.name, companySlug: company.slug, brandCSS, customCSSPath })
+  } catch {
+    return null
   }
-
-  return response
 }
 
 // ---------------------------------------------------------------------------
-// Real Supabase Auth Middleware
+// Request header assembly
 // ---------------------------------------------------------------------------
 
-interface CompanyBrandingRow {
-  primary_color: string
-  secondary_color: string
-  accent_color: string
-  background_color: string
-  surface_color: string
-  text_primary: string
-  text_secondary: string
-  font_family: string
-  font_url: string | null
-  border_radius: string
-  dark_mode_enabled: boolean
-  extended_tokens: Partial<ExtendedBrandTokens> | null
-  custom_css_path: string | null
+interface TenantHeaderValues {
+  companyId: string
+  companySlug: string
+  companyName: string
+  isHolding: boolean
+  brandCSS: string
+  customCSSPath: string
+  userId: string | null
 }
 
-interface CompanyRow {
-  id: string
-  slug: string
-  name: string
-  status: string
+/**
+ * Build the request headers forwarded to the app. Always deletes any inbound
+ * auth header first (anti-forgery), then sets the middleware-verified values so
+ * `getCompanyContext()` / `getSession()` can read them via `headers()`.
+ */
+function buildRequestHeaders(request: NextRequest, values: TenantHeaderValues): Headers {
+  const h = new Headers(request.headers)
+  h.delete(AUTH_USER_HEADER)
+  h.set('x-company-id', values.companyId)
+  h.set('x-company-slug', values.companySlug)
+  h.set('x-company-name', values.companyName)
+  h.set('x-is-holding', String(values.isHolding))
+  h.set('x-brand-css', values.brandCSS)
+  h.set('x-custom-css', values.customCSSPath)
+  h.set('x-user-id', values.userId ?? '')
+  if (values.userId) h.set(AUTH_USER_HEADER, values.userId)
+  return h
 }
 
-interface ProfileRow {
+function applyResponseHeaders(response: NextResponse, values: TenantHeaderValues): void {
+  response.headers.set('x-company-id', values.companyId)
+  response.headers.set('x-company-slug', values.companySlug)
+  response.headers.set('x-company-name', values.companyName)
+  response.headers.set('x-is-holding', String(values.isHolding))
+  response.headers.set('x-brand-css', values.brandCSS)
+  response.headers.set('x-custom-css', values.customCSSPath)
+  response.headers.set('x-user-id', values.userId ?? '')
+}
+
+// ---------------------------------------------------------------------------
+// Auth gate + session profile
+// ---------------------------------------------------------------------------
+
+interface GateProfile {
   must_reset_password: boolean
   totp_enabled: boolean
   company_id: string | null
 }
 
-async function handleSupabaseAuth(request: NextRequest): Promise<NextResponse> {
-  const { pathname } = request.nextUrl
-  const hostname = request.headers.get('host') ?? 'localhost:3000'
-
-  // Create Supabase middleware client — this handles cookie forwarding
-  let supabase: ReturnType<typeof createSupabaseMiddlewareClient>['supabase']
-  let getResponse: ReturnType<typeof createSupabaseMiddlewareClient>['getResponse']
-  let user: { id: string } | null = null
-
-  try {
-    const client = createSupabaseMiddlewareClient(request)
-    supabase = client.supabase
-    getResponse = client.getResponse
-
-    const { data } = await supabase.auth.getUser()
-    user = data.user as { id: string } | null
-  } catch {
-    // Supabase client failed (e.g. missing env vars in Edge runtime)
-    // Continue with no user — public paths will still work
-    const fallbackResponse = NextResponse.next({ request })
-    const subdomain = getSubdomain(hostname)
-
-    setTenantHeaders(fallbackResponse, {
-      companyId: '',
-      companySlug: subdomain ?? 'default',
-      companyName: subdomain ?? 'Platform',
-      isHolding: isAdminHost(hostname),
-      brandCSS: buildCSSVarString(defaultBrandTokens),
-      customCSSPath: '',
-    })
-
-    if (!isPublicPath(pathname)) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-    return fallbackResponse
-  }
-
-  // -----------------------------------------------------------------------
-  // Admin / Holding portal
-  // -----------------------------------------------------------------------
-  if (isAdminHost(hostname)) {
-    const response = getResponse()
-    setTenantHeaders(response, {
-      companyId: '',
-      companySlug: 'admin',
-      companyName: 'Enura Group',
-      isHolding: true,
-      brandCSS: buildCSSVarString(defaultBrandTokens),
-      userId: user?.id,
-    })
-
-    if (!isPublicPath(pathname)) {
-      if (!user) {
-        return redirectTo(request, '/login')
-      }
-
-      // Fetch profile for auth gates
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('must_reset_password, totp_enabled, company_id')
-        .eq('id', user.id)
-        .single<ProfileRow>()
-
-      if (profile) {
-        if (profile.must_reset_password && pathname !== '/reset-password') {
-          return redirectTo(request, '/reset-password')
-        }
-        if (
-          !profile.totp_enabled &&
-          pathname !== '/enrol-2fa' &&
-          !profile.must_reset_password
-        ) {
-          // Check if company requires 2FA
-          if (profile.company_id) {
-            const { data: settings } = await supabase
-              .from('company_settings')
-              .select('require_2fa')
-              .eq('company_id', profile.company_id)
-              .single()
-            if ((settings as Record<string, unknown> | null)?.require_2fa) {
-              return redirectTo(request, '/enrol-2fa')
-            }
-          }
-          // 2FA not required — allow access without TOTP
-        }
-      }
-
-      // Check MFA assurance level (only if user has TOTP enabled)
-      if (profile?.totp_enabled) {
-        const mfaRedirect = await checkMfaLevel(supabase, pathname)
-        if (mfaRedirect) {
-          return redirectTo(request, mfaRedirect)
-        }
-      }
-    }
-
-    return response
-  }
-
-  // -----------------------------------------------------------------------
-  // Tenant resolution
-  // -----------------------------------------------------------------------
-  const subdomain = getSubdomain(hostname)
-
-  if (!subdomain) {
-    return redirectTo(request, '/login')
-  }
-
-  // Fetch tenant from Supabase — try direct REST API as fallback
-  let tenant: CompanyRow | null = null
-
-  // First try the Supabase client
-  const { data: tenantData } = await supabase
-    .from('companies')
-    .select('id, slug, name, status')
-    .eq('slug', subdomain)
-    .eq('status', 'active')
-    .single<CompanyRow>()
-
-  tenant = tenantData
-
-  // Fallback: direct REST fetch if client fails (Edge runtime compatibility)
-  if (!tenant && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/companies?slug=eq.${subdomain}&status=eq.active&select=id,slug,name,status&limit=1`,
-        {
-          headers: {
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-          },
-        },
-      )
-      if (res.ok) {
-        const rows = await res.json() as CompanyRow[]
-        tenant = rows[0] ?? null
-      }
-    } catch {
-      // Silently fall through
-    }
-  }
-
-  if (!tenant) {
-    // Tenant not found — fall through with default branding
-    // This handles cases where the Supabase Edge client fails
-    const response = getResponse()
-    setTenantHeaders(response, {
-      companyId: '',
-      companySlug: subdomain,
-      companyName: subdomain,
-      isHolding: false,
-      brandCSS: buildCSSVarString(defaultBrandTokens),
-      customCSSPath: '',
-    })
-
-    // For non-public paths, still require auth
-    if (!isPublicPath(pathname) && !user) {
-      return redirectTo(request, '/login')
-    }
-
-    return response
-  }
-
-  // Fetch branding
-  const { data: branding } = await supabase
-    .from('company_branding')
-    .select(
-      'primary_color, secondary_color, accent_color, background_color, surface_color, text_primary, text_secondary, font_family, font_url, border_radius, dark_mode_enabled, extended_tokens, custom_css_path',
-    )
-    .eq('company_id', tenant.id)
-    .single<CompanyBrandingRow>()
-
-  const brandTokens = branding
-    ? brandTokensFromRow(branding)
-    : defaultBrandTokens
-
-  // Build core brand CSS string
-  let brandCSS = buildCSSVarString(brandTokens)
-
-  // Merge extended tokens: holding defaults + company overrides
-  if (branding?.extended_tokens) {
-    const mergedExtended: Partial<ExtendedBrandTokens> = {
-      ...defaultExtendedTokens,
-      ...branding.extended_tokens,
-    }
-    brandCSS += ';' + buildExtendedCSSVarString(mergedExtended)
-  } else {
-    brandCSS += ';' + buildExtendedCSSVarString(defaultExtendedTokens)
-  }
-
-  const customCSSPath = branding?.custom_css_path ?? undefined
-
-  // Get the response AFTER all Supabase calls (cookies may have been updated)
-  const response = getResponse()
-  setTenantHeaders(response, {
-    companyId: tenant.id,
-    companySlug: tenant.slug,
-    companyName: tenant.name,
-    isHolding: false,
-    brandCSS,
-    userId: user?.id,
-    customCSSPath: customCSSPath,
-  })
-
-  // -----------------------------------------------------------------------
-  // Auth gates (except public paths)
-  // -----------------------------------------------------------------------
-  if (!isPublicPath(pathname)) {
-    if (!user) {
-      return redirectTo(request, '/login')
-    }
-
-    // Fetch profile for password-reset and TOTP gates
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('must_reset_password, totp_enabled, company_id')
-      .eq('id', user.id)
-      .single<ProfileRow>()
-
-    if (profile) {
-      // Gate 1: Password must be reset
-      if (profile.must_reset_password && pathname !== '/reset-password') {
-        return redirectTo(request, '/reset-password')
-      }
-
-      // Gate 2: TOTP must be enrolled (only if company requires 2FA)
-      if (
-        !profile.totp_enabled &&
-        pathname !== '/enrol-2fa' &&
-        !profile.must_reset_password
-      ) {
-        if (profile.company_id) {
-          const { data: settings } = await supabase
-            .from('company_settings')
-            .select('require_2fa')
-            .eq('company_id', profile.company_id)
-            .single()
-          if ((settings as Record<string, unknown> | null)?.require_2fa) {
-            return redirectTo(request, '/enrol-2fa')
-          }
-        }
-      }
-    }
-
-    // Gate 3: MFA assurance level (only if user has TOTP enabled)
-    if (profile?.totp_enabled) {
-      const mfaRedirect = await checkMfaLevel(supabase, pathname)
-      if (mfaRedirect) {
-        return redirectTo(request, mfaRedirect)
-      }
-    }
-  }
-
-  return response
-}
-
 /**
- * Checks if the user has verified TOTP factors but the current session
- * is only at AAL1 (i.e., they haven't completed the MFA challenge yet).
- * Returns the redirect path if MFA verification is needed, or null.
+ * CLAUDE.md §4.2 gates (b)/(c): a signed-in user with a pending temp-password
+ * reset or without 2FA must be redirected BEFORE the page renders. The layout
+ * gate (1.3) is a backstop; enforcing here stops gated content leaking into the
+ * RSC payload (Next renders page + layout in parallel).
  */
-async function checkMfaLevel(
-  supabase: ReturnType<typeof createSupabaseMiddlewareClient>['supabase'],
-  pathname: string,
-): Promise<string | null> {
-  if (pathname === '/verify-2fa') return null
-
-  try {
-    const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    if (!mfaData) return null
-
-    // User has enrolled TOTP factors but session is not AAL2
-    if (
-      mfaData.nextLevel === 'aal2' &&
-      mfaData.currentLevel !== 'aal2'
-    ) {
-      return '/verify-2fa'
-    }
-  } catch {
-    // MFA check failed — don't block, let other gates handle it
-  }
-
+function gateRedirectPath(profile: GateProfile, pathname: string): string | null {
+  if (isPublicPath(pathname)) return null
+  if (profile.must_reset_password) return '/reset-password'
+  if (!profile.totp_enabled) return '/enrol-2fa'
   return null
 }
 
 // ---------------------------------------------------------------------------
-// Main middleware export
+// Main middleware
 // ---------------------------------------------------------------------------
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
   const hostname = request.headers.get('host') ?? 'localhost:3000'
 
-  // Skip static assets entirely
+  // Static assets: strip any forged auth header, otherwise pass straight through.
   if (isStaticAsset(pathname)) {
-    return NextResponse.next()
+    const h = new Headers(request.headers)
+    h.delete(AUTH_USER_HEADER)
+    return NextResponse.next({ request: { headers: h } })
   }
 
-  // ── PUBLIC PATHS (API routes) — skip branding, pass through immediately
+  // API routes do their own session checks (see api/*/route.ts). We only strip
+  // the inbound auth header so a client can't forge identity to those routes.
   if (pathname.startsWith('/api/')) {
-    const response = NextResponse.next({ request })
+    const h = new Headers(request.headers)
+    h.delete(AUTH_USER_HEADER)
+    return NextResponse.next({ request: { headers: h } })
+  }
+
+  // Supabase client bound to request cookies; capture any cookie refreshes so
+  // we can replay them onto whichever response we ultimately return.
+  const cookieWrites: Array<{ name: string; value: string; options: CookieOptions }> = []
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(list: Array<{ name: string; value: string; options: CookieOptions }>) {
+          // Update the forwarded request cookies too, so downstream RLS queries
+          // in THIS request use the refreshed token (not a just-expired one),
+          // and stash them to replay onto the response the browser receives.
+          list.forEach((c) => {
+            request.cookies.set(c.name, c.value)
+            cookieWrites.push(c)
+          })
+        },
+      },
+    },
+  )
+
+  // Verify the session. Interim: getUser() (network). Graduation to full JWT
+  // claims replaces this with getClaims() (local verify, no round trip).
+  let userId: string | null = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    userId = data.user?.id ?? null
+  } catch {
+    userId = null
+  }
+
+  const host = resolveHost(hostname)
+
+  const withCookies = (response: NextResponse): NextResponse => {
+    cookieWrites.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
     return response
   }
+  const redirect = (path: string): NextResponse =>
+    withCookies(NextResponse.redirect(new URL(path, request.url)))
 
-  // ── ALL PATHS — resolve branding via direct REST, then pass through ──
-  // NO Supabase SDK. NO auth checks. Only branding resolution.
-  // If anything fails, fall back to defaults — NEVER block the request.
-  const subdomain = getSubdomain(hostname)
+  // -----------------------------------------------------------------------
+  // Signed-in users: enforce the reset-password / 2FA gate (1.4) and align
+  // branding + subdomain with their own company (1.5).
+  // -----------------------------------------------------------------------
+  let sessionCompanyId: string | null = null
+  if (userId) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('must_reset_password, totp_enabled, company_id')
+      .eq('id', userId)
+      .single<GateProfile>()
 
-  let resolvedBrandCSS = buildCSSVarString(defaultBrandTokens)
-  let resolvedCompanyId = ''
-  let resolvedCompanyName = subdomain ?? 'Platform'
-  let resolvedCustomCSSPath = ''
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (supabaseUrl && supabaseKey && subdomain) {
-    try {
-      // Fetch company by slug
-      const companyRes = await fetch(
-        `${supabaseUrl}/rest/v1/companies?slug=eq.${subdomain}&select=id,name&limit=1`,
-        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, Accept: 'application/json' } },
-      )
-      if (companyRes.ok) {
-        const companies = (await companyRes.json()) as Array<{ id: string; name: string }>
-        const company = companies[0]
-        if (company) {
-          resolvedCompanyId = company.id
-          resolvedCompanyName = company.name
-
-          // Fetch branding for this company
-          const brandRes = await fetch(
-            `${supabaseUrl}/rest/v1/company_branding?company_id=eq.${company.id}&select=primary_color,secondary_color,accent_color,background_color,surface_color,text_primary,text_secondary,font_family,font_url,border_radius,dark_mode_enabled,custom_css_path&limit=1`,
-            {
-              headers: {
-                apikey: supabaseKey,
-                Authorization: `Bearer ${supabaseKey}`,
-                Accept: 'application/json',
-              },
-                },
-          )
-          if (brandRes.ok) {
-            const brandings = (await brandRes.json()) as Array<Record<string, unknown>>
-            const branding = brandings[0]
-            if (branding) {
-              // Merge with defaults for any null/missing fields
-              const tokens: BrandTokens = {
-                ...defaultBrandTokens,
-                primary:        (branding['primary_color'] as string) ?? defaultBrandTokens.primary,
-                secondary:      (branding['secondary_color'] as string) ?? defaultBrandTokens.secondary,
-                accent:         (branding['accent_color'] as string) ?? defaultBrandTokens.accent,
-                background:     (branding['background_color'] as string) ?? defaultBrandTokens.background,
-                surface:        (branding['surface_color'] as string) ?? defaultBrandTokens.surface,
-                textPrimary:    (branding['text_primary'] as string) ?? defaultBrandTokens.textPrimary,
-                textSecondary:  (branding['text_secondary'] as string) ?? defaultBrandTokens.textSecondary,
-                font:           (branding['font_family'] as string) ?? defaultBrandTokens.font,
-                fontUrl:        (branding['font_url'] as string | null) ?? defaultBrandTokens.fontUrl,
-                radius:         (branding['border_radius'] as string) ?? defaultBrandTokens.radius,
-              }
-              resolvedBrandCSS = buildCSSVarString(tokens)
-              resolvedCustomCSSPath = (branding['custom_css_path'] as string) ?? ''
-            }
-          }
-        }
-      }
-    } catch (err) {
-      // Silently fall back to default branding — NEVER block the request
-      console.error('[middleware] Branding fetch error:', err)
+    if (profileData) {
+      sessionCompanyId = profileData.company_id
+      const gate = gateRedirectPath(profileData, pathname)
+      if (gate && pathname !== gate) return redirect(gate)
     }
   }
 
-  const response = NextResponse.next({ request })
-  setTenantHeaders(response, {
-    companyId: resolvedCompanyId,
-    companySlug: subdomain ?? 'default',
-    companyName: resolvedCompanyName,
-    isHolding: isAdminHost(hostname),
-    brandCSS: resolvedBrandCSS,
-    customCSSPath: resolvedCustomCSSPath,
-  })
-  return response
+  // -----------------------------------------------------------------------
+  // Resolve branding. Authenticated users are always shown THEIR OWN company's
+  // branding; anonymous visitors get the subdomain's branding.
+  // -----------------------------------------------------------------------
+  let brand: ResolvedBrand | null = null
+  const isHolding = host.kind === 'admin'
+
+  if (host.kind === 'admin') {
+    // Holding/Enura console — neutral branding.
+    brand = null
+  } else if (host.kind === 'tenant') {
+    const subdomainBrand = await resolveBrandBySlug(host.slug)
+
+    if (userId && sessionCompanyId && subdomainBrand && subdomainBrand.companyId !== sessionCompanyId) {
+      // 1.5: signed-in user on a foreign tenant subdomain → send them to their
+      // own subdomain so they never see another tenant's branding around their
+      // own data. Anonymous visitors are left on the subdomain they requested.
+      const own = await resolveBrandByCompanyId(sessionCompanyId)
+      if (own) {
+        const rootDomain = process.env.PLATFORM_ROOT_DOMAIN ?? 'enura-group.com'
+        return redirect(`https://${own.companySlug}.${rootDomain}${pathname}`)
+      }
+    }
+
+    brand = userId && sessionCompanyId
+      ? (await resolveBrandByCompanyId(sessionCompanyId)) ?? subdomainBrand
+      : subdomainBrand
+  } else {
+    // Fallback host (localhost / vercel / root): prefer the signed-in user's own
+    // company branding over the env default so they don't see a default shell.
+    if (userId && sessionCompanyId) {
+      brand = await resolveBrandByCompanyId(sessionCompanyId)
+    }
+    if (!brand && host.slug) {
+      brand = await resolveBrandBySlug(host.slug)
+    }
+  }
+
+  const values: TenantHeaderValues = {
+    companyId: brand?.companyId ?? '',
+    companySlug: host.kind === 'admin' ? 'admin' : brand?.companySlug ?? (host.kind === 'tenant' ? host.slug : host.slug ?? 'default'),
+    companyName: host.kind === 'admin' ? 'Enura Group' : brand?.companyName ?? 'Platform',
+    isHolding,
+    brandCSS: brand?.brandCSS ?? buildCSSVarString(defaultBrandTokens) + ';' + buildExtendedCSSVarString(defaultExtendedTokens),
+    customCSSPath: brand?.customCSSPath ?? '',
+    userId,
+  }
+
+  const response = NextResponse.next({ request: { headers: buildRequestHeaders(request, values) } })
+  applyResponseHeaders(response, values)
+  return withCookies(response)
 }
 
 export const config = {

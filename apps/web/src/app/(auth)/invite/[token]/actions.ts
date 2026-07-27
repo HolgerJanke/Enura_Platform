@@ -112,7 +112,8 @@ export async function acceptInvitation(
     holding_id: holdingId,
     first_name: input.firstName.trim(),
     last_name: input.lastName.trim(),
-    display_name: `${input.firstName.trim()} ${input.lastName.trim()}`,
+    // display_name is GENERATED ALWAYS from first/last name — assigning it
+    // makes Postgres reject the whole insert.
     must_reset_password: false,
     totp_enabled: false,
     is_active: true,

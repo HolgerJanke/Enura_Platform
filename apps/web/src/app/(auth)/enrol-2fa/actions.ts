@@ -27,6 +27,18 @@ export async function initiateEnrolmentAction(): Promise<EnrolmentResult> {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // An interrupted enrolment leaves an unverified TOTP factor behind. Because the
+  // friendlyName below is fixed, Supabase then rejects every retry as a duplicate,
+  // which permanently traps the user at the mandatory 2FA gate. Clear only the
+  // unverified leftovers first — verified factors must never be touched here.
+  const { data: factorsData } = await supabase.auth.mfa.listFactors()
+  const staleFactors = (factorsData?.all ?? []).filter(
+    (factor) => factor.factor_type === 'totp' && factor.status === 'unverified',
+  )
+  for (const factor of staleFactors) {
+    await supabase.auth.mfa.unenroll({ factorId: factor.id })
+  }
+
   const { data, error } = await supabase.auth.mfa.enroll({
     factorType: 'totp',
     friendlyName: 'Authenticator App',

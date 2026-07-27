@@ -1,15 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
-
-const MODULE_PRIORITY = [
-  { permission: 'module:setter:read', path: '/setter' },
-  { permission: 'module:berater:read', path: '/berater' },
-  { permission: 'module:leads:read', path: '/leads' },
-  { permission: 'module:innendienst:read', path: '/innendienst' },
-  { permission: 'module:bau:read', path: '/projects' },
-  { permission: 'module:finance:read', path: '/finance' },
-]
+import { resolveLandingPath } from '@/lib/landing'
 
 export default async function DashboardRootPage() {
   const session = await getSession()
@@ -17,9 +9,9 @@ export default async function DashboardRootPage() {
     return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
   }
 
-  // Find first permitted module for a direct link
-  const firstModule = MODULE_PRIORITY.find(mod => session.permissions.includes(mod.permission))
-  const targetPath = session.isHoldingAdmin ? '/dashboard' : (firstModule?.path ?? '/dashboard')
+  // Enura/holding admins have no company to render, so they belong on their own
+  // console rather than the company dashboard (which renders blank without one).
+  const targetPath = resolveLandingPath(session)
 
   return (
     <div className="p-8 text-center">

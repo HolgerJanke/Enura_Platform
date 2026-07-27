@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { requireHoldingAdmin } from '@/lib/permissions'
+import { requireHoldingSession } from '@/lib/permissions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDate } from '@enura/types'
 import { AdminTabs } from './admin-tabs'
@@ -46,17 +46,24 @@ interface AIUsageRow {
 const WHISPER_COST_PER_CALL_CHF = 0.024
 
 export default async function HoldingAdminPage() {
-  await requireHoldingAdmin()
+  const holdingSession = await requireHoldingSession()
+  if (!holdingSession) {
+    return (<div className="p-8 text-center"><p className="text-gray-500">Kein Zugriff.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
+  }
 
   const supabase = createSupabaseServerClient()
 
   // -----------------------------------------------------------------------
-  // Fetch all tenants
+  // Fetch tenants — scoped to the admin's own holding. Enura admins
+  // (holdingId === null) intentionally span all holdings.
   // -----------------------------------------------------------------------
-  const { data: tenants, error: tenantsError } = await supabase
+  let tenantsQuery = supabase
     .from('companies')
     .select('id, name, slug, status, created_at')
-    .order('name')
+  if (holdingSession.holdingId) {
+    tenantsQuery = tenantsQuery.eq('holding_id', holdingSession.holdingId)
+  }
+  const { data: tenants, error: tenantsError } = await tenantsQuery.order('name')
 
   if (tenantsError) {
     return (

@@ -4,7 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { redirect } from 'next/navigation'
 import { writeAuditLog } from '@/lib/audit'
 import { generateTemporaryPassword } from '@/lib/password'
-import { getSession } from '@/lib/session'
+import { requireHoldingSession } from '@/lib/permissions'
 
 type CreateTenantInput = {
   name: string
@@ -58,9 +58,20 @@ function validateInput(data: CreateTenantInput): string | null {
 }
 
 export async function createTenantAction(data: CreateTenantInput): Promise<{ error?: string }> {
-  const session = await getSession()
-  if (!session?.isHoldingAdmin) {
+  const holdingSession = await requireHoldingSession()
+  if (!holdingSession) {
     return { error: 'Nicht autorisiert.' }
+  }
+  const session = holdingSession.session
+
+  // Every company must belong to a holding — an insert without holding_id
+  // orphans the tenant and hides it from every holding-scoped query.
+  const holdingId = holdingSession.holdingId ?? session.holdingId
+  if (!holdingId) {
+    return {
+      error:
+        'Kein Holding-Kontext. Bitte legen Sie das Unternehmen über die Plattform-Konsole an.',
+    }
   }
 
   const validationError = validateInput(data)
@@ -87,6 +98,7 @@ export async function createTenantAction(data: CreateTenantInput): Promise<{ err
     .insert({
       name: data.name,
       slug: data.slug,
+      holding_id: holdingId,
       created_by: session.profile.id,
     })
     .select()

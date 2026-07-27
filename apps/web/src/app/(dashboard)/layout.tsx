@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { getSession } from '@/lib/session'
+import { getSession, authGateRedirect } from '@/lib/session'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DashboardShell } from '@/components/dashboard-shell'
@@ -29,6 +29,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <p className="text-brand-text-secondary mb-4">Weiterleitung zur Anmeldung...</p>
             <a href="/login" className="text-brand-primary underline text-sm">
               Zur Anmeldung
+            </a>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // CLAUDE.md §4.2 gates (b)/(c): temp password reset + 2FA enrolment must be
+  // complete before any dashboard content renders. Return the redirect ONLY —
+  // rendering children alongside it would still ship gated content to the client.
+  const gateRedirect = authGateRedirect(session)
+  if (gateRedirect) {
+    return (
+      <>
+        <script
+          dangerouslySetInnerHTML={{ __html: `window.location.href="${gateRedirect}"` }}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-brand-background">
+          <div className="text-center">
+            <p className="text-brand-text-secondary mb-4">Weiterleitung...</p>
+            <a href={gateRedirect} className="text-brand-primary underline text-sm">
+              Fortfahren
             </a>
           </div>
         </div>
