@@ -36,9 +36,6 @@ export function EnuraAdminBar() {
 
       if (!email) return
 
-      // Quick check: fetch the enura admin status from a lightweight API
-      fetch('/api/auth/login', { method: 'HEAD' }).catch(() => {})
-
       // For now, show the bar if the email is from enura-group.com
       // This is a client-side heuristic — the server enforces the real check
       if (email.includes('enura-group.com') || email.includes('enura-gruppe.com')) {

@@ -37,6 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="de-CH" style={cssStringToObject(brandCSS)}>
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        {/* Modern standard; the apple-prefixed variant below is kept for older iOS. */}
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         {customCSSUrl ? (
           <link rel="stylesheet" href={customCSSUrl} />
