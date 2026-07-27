@@ -17,7 +17,13 @@ Cost per navigation ≈ `getUser` (network) + one tiny indexed `profiles` read +
 
 ## Graduating to full JWT-claims (zero DB round trips on the hot path)
 
-Two Supabase config actions + two small code edits. Do them in this order.
+> **Status:** the code is already landed and self-activating. `middleware.ts` calls `getClaims()`
+> and uses the gate claims when the token carries them, else falls back to the DB read; the
+> `reset-password` / `enrol-2fa` actions already call `refreshSession()`; the hook lives in
+> `supabase/migrations/047_access_token_gate_claims.sql`. **All that remains is the two Supabase
+> dashboard actions below** — no further code changes are needed.
+
+Do them in this order.
 
 ### 1. Rotate to asymmetric JWT signing keys (dashboard)
 Supabase Dashboard → Project Settings → **JWT Keys** → migrate from the legacy shared secret to an

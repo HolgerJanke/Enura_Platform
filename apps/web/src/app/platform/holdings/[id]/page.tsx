@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireEnuraAdmin } from '@/lib/permissions'
 import { HoldingDetailClient } from './holding-detail-client'
 import { HoldingAdminManager } from './holding-admin-manager'
+import { HoldingUsersManager } from './holding-users-manager'
 import type { HoldingRow, CompanyRow } from '@enura/types'
 
 type HoldingSubscription = {
@@ -70,6 +71,27 @@ async function getHoldingDetail(holdingId: string) {
     ((adminsRes.data ?? []) as Array<{ profile_id: string }>).map((a) => a.profile_id),
   )
 
+  // Step 3: roles offered by the holding's companies + each user's current roles
+  const userIds = users.map((u) => u.id)
+  const [rolesRes, profileRolesRes] = await Promise.all([
+    companyIds.length > 0
+      ? supabase.from('roles').select('id, label, company_id').in('company_id', companyIds).order('label')
+      : Promise.resolve({ data: [] as Array<Record<string, unknown>> }),
+    userIds.length > 0
+      ? supabase.from('profile_roles').select('profile_id, role_id').in('profile_id', userIds)
+      : Promise.resolve({ data: [] as Array<Record<string, unknown>> }),
+  ])
+
+  const roles = ((rolesRes.data ?? []) as Array<{ id: string; label: string; company_id: string }>).map((r) => ({
+    id: r.id, label: r.label, companyId: r.company_id,
+  }))
+  const roleIdsByProfile = new Map<string, string[]>()
+  for (const pr of (profileRolesRes.data ?? []) as Array<{ profile_id: string; role_id: string }>) {
+    const list = roleIdsByProfile.get(pr.profile_id) ?? []
+    list.push(pr.role_id)
+    roleIdsByProfile.set(pr.profile_id, list)
+  }
+
   return {
     holding: holding as HoldingRow,
     companies: (companiesRes.data ?? []) as CompanyRow[],
@@ -77,6 +99,13 @@ async function getHoldingDetail(holdingId: string) {
     totalUsers: users.length,
     users,
     adminProfileIds: Array.from(adminProfileIds),
+    roles,
+    managedUsers: users.map((u) => ({
+      id: u.id,
+      name: [u.first_name, u.last_name].filter(Boolean).join(' ') || u.display_name,
+      companyId: u.company_id,
+      roleIds: roleIdsByProfile.get(u.id) ?? [],
+    })),
   }
 }
 
@@ -110,6 +139,16 @@ export default async function HoldingDetailPage({
           holdingId={detail.holding.id}
           users={detail.users}
           adminProfileIds={detail.adminProfileIds}
+        />
+      </div>
+
+      {/* User & role management per company */}
+      <div className="mt-8">
+        <HoldingUsersManager
+          holdingId={detail.holding.id}
+          companies={detail.companies.map((c) => ({ id: c.id, name: c.name }))}
+          roles={detail.roles}
+          users={detail.managedUsers}
         />
       </div>
     </div>

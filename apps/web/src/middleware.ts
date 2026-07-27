@@ -338,14 +338,37 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     },
   )
 
-  // Verify the session. Interim: getUser() (network). Graduation to full JWT
-  // claims replaces this with getClaims() (local verify, no round trip).
+  // Verify the session. `getClaims()` verifies the JWT LOCALLY once the project
+  // is on asymmetric signing keys (no Auth-server round trip); until then it
+  // transparently falls back to a network verify. When the access-token hook
+  // (migration 047) is registered, the gate state rides on the token and we skip
+  // the profiles read below entirely.
   let userId: string | null = null
+  let claimGate: GateProfile | null = null
   try {
-    const { data } = await supabase.auth.getUser()
-    userId = data.user?.id ?? null
+    const { data } = await supabase.auth.getClaims()
+    const claims = (data?.claims ?? null) as Record<string, unknown> | null
+    if (claims?.['sub']) {
+      userId = claims['sub'] as string
+      if ('must_reset_password' in claims || 'totp_enabled' in claims) {
+        claimGate = {
+          must_reset_password: Boolean(claims['must_reset_password']),
+          totp_enabled: Boolean(claims['totp_enabled']),
+          company_id: (claims['company_id'] as string | null) ?? null,
+        }
+      }
+    }
   } catch {
     userId = null
+  }
+  // Fallback if getClaims could not resolve a session (e.g. transient decode issue).
+  if (!userId) {
+    try {
+      const { data } = await supabase.auth.getUser()
+      userId = data.user?.id ?? null
+    } catch {
+      userId = null
+    }
   }
 
   const host = resolveHost(hostname)
@@ -363,15 +386,21 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // -----------------------------------------------------------------------
   let sessionCompanyId: string | null = null
   if (userId) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('must_reset_password, totp_enabled, company_id')
-      .eq('id', userId)
-      .single<GateProfile>()
+    // Fast path: gate state already on the token. Otherwise read it fresh from
+    // the DB (always current, so a completed reset/2FA clears the gate at once).
+    let gateProfile = claimGate
+    if (!gateProfile) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('must_reset_password, totp_enabled, company_id')
+        .eq('id', userId)
+        .single<GateProfile>()
+      gateProfile = profileData ?? null
+    }
 
-    if (profileData) {
-      sessionCompanyId = profileData.company_id
-      const gate = gateRedirectPath(profileData, pathname)
+    if (gateProfile) {
+      sessionCompanyId = gateProfile.company_id
+      const gate = gateRedirectPath(gateProfile, pathname)
       if (gate && pathname !== gate) return redirect(gate)
     }
   }

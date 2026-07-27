@@ -104,5 +104,13 @@ export async function verifyEnrolmentAction(
     recordId: user.id,
   })
 
+  // Re-issue the token so the access-token hook (migration 047, once registered)
+  // rebuilds the totp_enabled claim; harmless no-op until the hook exists.
+  try {
+    await supabase.auth.refreshSession()
+  } catch {
+    /* non-fatal — the middleware gate also reads the DB */
+  }
+
   redirect('/')
 }
