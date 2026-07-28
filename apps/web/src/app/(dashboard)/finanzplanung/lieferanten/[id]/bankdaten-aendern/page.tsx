@@ -12,7 +12,7 @@ interface PageProps {
 }
 
 export default async function BankdatenAendernPage({ params }: PageProps) {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const canManage = await hasFinanzplanungPermission('module:finanzplanung:manage_suppliers')
   if (!canManage) {
     return (

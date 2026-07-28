@@ -8,7 +8,7 @@ import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 import { PlanungTabs } from './planung-tabs'
 
 export default async function PlanungPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const canPlan = await hasFinanzplanungPermission('module:finanzplanung:plan_cashout')
   if (!canPlan) {
     return (

@@ -5,7 +5,7 @@ import { enforceModule } from '@/lib/authz/enforce'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
 
 export default async function InvoiceUploadPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

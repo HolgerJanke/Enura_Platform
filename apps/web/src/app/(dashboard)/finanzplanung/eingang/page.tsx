@@ -8,7 +8,7 @@ import { InvoiceKanban } from './invoice-kanban'
 export const dynamic = 'force-dynamic'
 
 export default async function EingangPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

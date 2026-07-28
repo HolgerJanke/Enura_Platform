@@ -55,7 +55,7 @@ interface LineItem {
 }
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const { id } = await params
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {

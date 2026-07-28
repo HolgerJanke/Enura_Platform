@@ -177,7 +177,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/finance', tier: 'company', anyOf: ['module:finance:read'] },
   { prefix: '/cashflow-gantt', tier: 'company', anyOf: ['module:finance:read'] },
   { prefix: '/liquidity', tier: 'company', anyOf: ['module:finance:read'] },
-  { prefix: '/finanzplanung', tier: 'company', anyOf: ['module:finance:read'] },
+  { prefix: '/finanzplanung', tier: 'company', anyOf: ['module:finanzplanung:read'], note: 'Finanzplanung module (migration 028): the dedicated finanzplanung roles + super_user + gf (via seed module:%:read) hold finanzplanung:read; buchhaltung does NOT (it holds finance:read for /finance). Fixes Phase-3 mis-key that locked the dedicated roles out. Page-internal actions gate further via requireFinanzplanung/hasFinanzplanungPermission.' },
   { prefix: '/controlling', tier: 'company', anyOf: ['module:finance:read'] },
   { prefix: '/reports', tier: 'company', anyOf: ['module:reports:read'] },
   { prefix: '/analytics', tier: 'company', anyOf: ['module:reports:read'] },

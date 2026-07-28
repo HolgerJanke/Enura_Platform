@@ -9,7 +9,7 @@ import { ApprovalsKpiCard } from './finanzplanung-approvals-popup'
 export const dynamic = 'force-dynamic'
 
 export default async function FinanzplanungPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

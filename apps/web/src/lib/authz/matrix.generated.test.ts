@@ -29,7 +29,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'module:bau:read', 'module:bau:write', 'module:bau:export', 'module:bau:admin',
     'module:finance:read', 'module:finance:write', 'module:finance:export', 'module:finance:admin',
     'module:reports:read', 'module:reports:write', 'module:reports:export', 'module:reports:admin',
-    'module:anomalies:read',
+    'module:anomalies:read', 'module:finanzplanung:read',
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
@@ -39,6 +39,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'module:setter:read', 'module:berater:read', 'module:leads:read',
     'module:innendienst:read', 'module:bau:read', 'module:finance:read',
     'module:reports:read', 'module:ai:read', 'module:admin:read', 'module:anomalies:read',
+    'module:finanzplanung:read',
   ],
   teamleiter: [
     'module:setter:read', 'module:berater:read', 'module:leads:read', 'module:reports:read',
@@ -49,6 +50,12 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   bau: ['module:bau:read', 'module:bau:write'],
   buchhaltung: ['module:finance:read', 'module:finance:write'],
   leadkontrolle: ['module:leads:read', 'module:leads:write'],
+  // Finanzplanung roles (migration 028) — finanzplanung:read gates /finanzplanung;
+  // the granular keys gate page-internal actions (not routes).
+  validator: ['module:finanzplanung:read', 'module:finanzplanung:validate'],
+  invoice_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_invoice'],
+  cashout_planner: ['module:finanzplanung:read', 'module:finanzplanung:plan_cashout', 'module:finanzplanung:export_payment', 'module:finanzplanung:manage_suppliers'],
+  financial_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_payment'],
 }
 const ROLES = Object.keys(ROLE_PERMISSIONS)
 

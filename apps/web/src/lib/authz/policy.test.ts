@@ -29,7 +29,7 @@ const ROLE_PERMS: Record<string, string[]> = {
     'module:bau:read', 'module:bau:write', 'module:bau:export', 'module:bau:admin',
     'module:finance:read', 'module:finance:write', 'module:finance:export', 'module:finance:admin',
     'module:reports:read', 'module:reports:write', 'module:reports:export', 'module:reports:admin',
-    'module:anomalies:read',
+    'module:anomalies:read', 'module:finanzplanung:read',
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
@@ -41,6 +41,7 @@ const ROLE_PERMS: Record<string, string[]> = {
     'module:setter:read', 'module:berater:read', 'module:leads:read',
     'module:innendienst:read', 'module:bau:read', 'module:finance:read',
     'module:reports:read', 'module:ai:read', 'module:admin:read', 'module:anomalies:read',
+    'module:finanzplanung:read',
   ],
   teamleiter: [
     'module:setter:read', 'module:berater:read', 'module:leads:read', 'module:reports:read',
@@ -51,6 +52,11 @@ const ROLE_PERMS: Record<string, string[]> = {
   bau: ['module:bau:read', 'module:bau:write'],
   buchhaltung: ['module:finance:read', 'module:finance:write'],
   leadkontrolle: ['module:leads:read', 'module:leads:write'],
+  // Finanzplanung roles (migration 028).
+  validator: ['module:finanzplanung:read', 'module:finanzplanung:validate'],
+  invoice_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_invoice'],
+  cashout_planner: ['module:finanzplanung:read', 'module:finanzplanung:plan_cashout', 'module:finanzplanung:export_payment', 'module:finanzplanung:manage_suppliers'],
+  financial_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_payment'],
 }
 
 const BASE_PROFILE: ProfileRow = {
@@ -176,14 +182,14 @@ describe('public paths', () => {
 
 // route → set of role keys that SHOULD be granted (derived from ROLE_PERMS)
 const EXPECTED: Record<string, string[]> = {
-  '/dashboard': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'setter', 'berater', 'innendienst', 'bau', 'buchhaltung', 'leadkontrolle'],
+  '/dashboard': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'setter', 'berater', 'innendienst', 'bau', 'buchhaltung', 'leadkontrolle', 'validator', 'invoice_approver', 'cashout_planner', 'financial_approver'],
   '/setter': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'setter'],
   '/berater': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'berater'],
   '/leads': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'leadkontrolle'],
   '/innendienst': ['super_user', 'geschaeftsfuehrung', 'innendienst'],
   '/projects': ['super_user', 'geschaeftsfuehrung', 'innendienst', 'bau'],
   '/finance': ['super_user', 'geschaeftsfuehrung', 'buchhaltung'],
-  '/finanzplanung': ['super_user', 'geschaeftsfuehrung', 'buchhaltung'],
+  '/finanzplanung': ['super_user', 'geschaeftsfuehrung', 'validator', 'invoice_approver', 'cashout_planner', 'financial_approver'],
   '/cashflow-gantt': ['super_user', 'geschaeftsfuehrung', 'buchhaltung'],
   '/liquidity': ['super_user', 'geschaeftsfuehrung', 'buchhaltung'],
   '/controlling': ['super_user', 'geschaeftsfuehrung', 'buchhaltung'],
@@ -195,7 +201,7 @@ const EXPECTED: Record<string, string[]> = {
   '/settings/branding': ['super_user'],
   '/settings/connectors': ['super_user'],
   // /processes and /dashboard have no anyOf → any authenticated company user
-  '/processes': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'setter', 'berater', 'innendienst', 'bau', 'buchhaltung', 'leadkontrolle'],
+  '/processes': ['super_user', 'geschaeftsfuehrung', 'teamleiter', 'setter', 'berater', 'innendienst', 'bau', 'buchhaltung', 'leadkontrolle', 'validator', 'invoice_approver', 'cashout_planner', 'financial_approver'],
 }
 
 const ALL_ROLES = Object.keys(ROLE_PERMS)

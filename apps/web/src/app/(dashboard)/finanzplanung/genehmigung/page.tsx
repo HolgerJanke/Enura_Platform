@@ -40,7 +40,7 @@ interface PaymentRunRow {
 }
 
 export default async function GenehmigungPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

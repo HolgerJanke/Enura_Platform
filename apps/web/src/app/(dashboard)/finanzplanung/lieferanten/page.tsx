@@ -21,7 +21,7 @@ interface SupplierRow {
 }
 
 export default async function LieferantenPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const canManage = await hasFinanzplanungPermission('module:finanzplanung:manage_suppliers')
   if (!canManage) {
     return (

@@ -504,6 +504,33 @@ link (access is correct; nav is a UX nicety). (b) SEPARATE larger gap: migration
 roles + a `module:finanzplanung:*` scheme NOT represented in the matrix at all — a distinct reconciliation
 needing its own pass (relates to F-P4).
 
+### Leftovers #1 + #2 — DONE (operator: tackle both)
+**#2 (nav for gf's settings):** dashboard-shell "Admin Konsole" button + Company-Admin section now gate on
+`companyAdminNavItems.length > 0` (policy-derived) instead of `isSuperUser` — so gf (which holds admin:read →
+Leitfaden + Berichte) gets the button + its 2 links; super_user still sees all 5. Removed the now-unused
+`isSuperUser` prop (dashboard-shell + (dashboard)/layout). visible ⇔ accessible restored for this case.
+
+**#1 (finanzplanung roles):** ROOT CAUSE found — the 4 dedicated finanzplanung roles (validator,
+invoice_approver, cashout_planner, financial_approver; migration 028) hold only `module:finanzplanung:*`, NOT
+`module:finance:read`. But Phase 3 gated /finanzplanung on `module:finance:read`, so **the dedicated roles were
+locked out of their own module** (failed enforceModule before requireFinanzplanung ran). Fixed:
+- Changed all 11 /finanzplanung pages' `enforceModule` + the ROUTE_RULES prefix to `module:finanzplanung:read`
+  (matches the existing `requireFinanzplanung` guard). /finance, /cashflow-gantt, /liquidity, /controlling keep
+  `module:finance:read`.
+- Added the 4 finanzplanung roles to BOTH test fixtures with their 028 permissions; added `finanzplanung:read`
+  to super_user + gf (gf holds it via seed `module:%:read`). Generated matrix now covers 13 roles. **549 tests pass.**
+- /finanzplanung = {super_user, gf, validator, invoice_approver, cashout_planner, financial_approver}.
+- **F-P4 RESOLVED:** the key IS seeded (028); Phase 3 just used the wrong one. requireFinanzplanung works for
+  the seeded holders. 
+- **Notes:** (i) buchhaltung is NOT in /finanzplanung (028 gave it finance:read, not finanzplanung:read) — it
+  never saw finanzplanung CONTENT before either (requireFinanzplanung blocked it); this matches the dedicated-
+  roles design. architecture.md §8 calls buchhaltung "Planer", but 028 created cashout_planner for that — a
+  doc-vs-code point; grant buchhaltung finanzplanung:read via migration if you want it in. (ii) The MOCK
+  seed-data does not model the finanzplanung module at all (pre-existing) — DB + test fixtures are authoritative.
+  (iii) F-P6-adjacent: lieferanten/[id] references `module:finanzplanung:review_bank_data`/`approve_bank_data`
+  keys that 028 does NOT seed → canReview/canApprove false for non-holding-admins (separate finanzplanung-perms pass).
+Gates: web typecheck 0 / test 549 / build green ✅.
+
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
 - F-P4: `finanzplanung-guard` uses non-seeded key `module:finanzplanung:read` — Phase 6.

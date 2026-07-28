@@ -37,7 +37,7 @@ interface RunItemRow {
 }
 
 export default async function PaymentRunDetailPage({ params }: { params: Promise<{ runId: string }> }) {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const { runId } = await params
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {

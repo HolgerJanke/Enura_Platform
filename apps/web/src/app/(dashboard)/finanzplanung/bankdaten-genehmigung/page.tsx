@@ -9,7 +9,7 @@ import { formatDate } from '@enura/types'
 import { BankApprovalActions } from './bank-approval-actions'
 
 export default async function BankdatenGenehmigungPage() {
-  await enforceModule(['module:finance:read'])
+  await enforceModule(['module:finanzplanung:read'])
   const canReview = await hasFinanzplanungPermission('module:finanzplanung:review_bank_data')
   const canApprove = await hasFinanzplanungPermission('module:finanzplanung:approve_bank_data')
 
