@@ -1,13 +1,13 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { CompanySettingsRow } from '@enura/types'
 import { ReportSettingsForm } from './report-settings-form'
 
 export default async function ReportSettingsPage() {
-  await requirePermission('module:admin:write')
+  await enforceModule(['module:admin:read'])
 
   const session = await getSession()
   if (!session?.companyId) return null

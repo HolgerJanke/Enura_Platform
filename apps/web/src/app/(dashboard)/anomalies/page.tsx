@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import {
@@ -70,7 +70,7 @@ function formatNumber(value: number): string {
 // ---------------------------------------------------------------------------
 
 export default async function AnomaliesPage() {
-  await requirePermission('module:admin:read')
+  await enforceModule(['module:reports:read'])
   const session = await getSession()
   if (!session?.companyId) return null
 

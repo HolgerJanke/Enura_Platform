@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { DailyReportRow } from '@enura/types'
@@ -35,7 +35,7 @@ function formatDateTime(dateString: string | null): string {
 }
 
 export default async function ReportsArchivePage() {
-  await requirePermission('module:reports:read')
+  await enforceModule(['module:reports:read'])
 
   const session = await getSession()
   if (!session?.companyId) return null

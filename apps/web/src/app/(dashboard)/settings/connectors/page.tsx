@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ConnectorListClient } from './connector-list-client'
@@ -16,7 +16,7 @@ const CONNECTOR_TYPES = [
 export type ConnectorTypeInfo = (typeof CONNECTOR_TYPES)[number]
 
 export default async function ConnectorsPage() {
-  await requirePermission('module:admin:read')
+  await enforceModule(['module:admin:connectors'])
   const session = await getSession()
   if (!session?.companyId) return null
 

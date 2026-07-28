@@ -284,7 +284,45 @@ middleware; layout backstops) ✅; `/debug` gated to Enura admins ✅ (C3); C6 b
 replaced ✅ (C4). Two adversarial passes: V3 (no bypass/loops) + V4 (C6 defused, OD-2 strict, no lockout)
 — both resolved; V4's write-layer gap FIXED; V3's F-P3 FIXED per operator. Gates: web typecheck 0 ✅ /
 test 200 ✅ / build green ✅. **CONFIRMED.** Committing on `feat/nav-redesign-phase-2` (folds operator's
-nav edit per D-003).
+nav edit per D-003). Phase 2 committed: `f1a89dd`.
+
+### Phase 3 — Company-tier RBAC + data scoping: IN PROGRESS (branch will be `feat/nav-redesign-phase-3`)
+- **Per-page RBAC** (sonnet implementer, orchestrator-specced): `await enforceModule([key])` added as first
+  statement to 31 (dashboard) pages, key per ROUTE_RULES. Fixed C1 no-op (`requirePermission` result was
+  discarded). Implementer also CORRECTED several pages checking the WRONG key (anomalies, settings/connectors
+  were `module:admin:read`; call-script, settings/reports were `module:admin:write`). finanzplanung group (12
+  pages): kept the real `requireFinanzplanung()` feature-flag gate, added `enforceModule(['module:finance:read'])`
+  as defense-in-depth.
+- **Company-tier layout gate** (orchestrator): `(dashboard)/layout.tsx` now redirects non-company-tier sessions
+  (holding/enura admins, no-tier) via `canEnterTier(session,'company')` + `homeFor` — enforces OD-1 (admins
+  routed to their own console). Entry-time check (tier can't change on soft-nav within the group).
+- **C2 IDOR fix** (orchestrator): `projects/[id]/page.tsx` — added `enforceModule(['module:bau:read'])` +
+  `.eq('company_id', session.companyId)` on the service-client project fetch. Cross-tenant read closed
+  (foreign project → null → "nicht gefunden"). `projects.company_id` confirmed present.
+- **liquidity/[companyId]/upload** (orchestrator): was a `'use client'` page (couldn't call server-only
+  enforceModule). Restructured: client body → `upload-client.tsx`; new server `page.tsx` enforces
+  `module:finance:read` then renders `<BankUploadClient/>`.
+- Finding F-P4 (note): `lib/finanzplanung-guard.ts` references non-seeded key `module:finanzplanung:read` →
+  `requireFinanzplanung` likely false for all non-admins (pre-existing; separate from Phase 3 RBAC). Log for later.
+Gates: web **typecheck 0 ✅ / test 200 ✅ / build green ✅**.
+
+**Adversarial verification (2 passes):**
+- V5 (RBAC wiring): all 30 gated pages carry the CORRECT key before any fetch; layout tier-gate correct;
+  upload mutation re-validates session+company; no redirect loops; NO cross-role/cross-tenant leak. One
+  convention nit — projects/[id] gated after `await params` (verified NOT a leak) — **FIXED** (moved gate first).
+- V6 (IDOR/data-scoping): **C2 IDOR CONFIRMED CLOSED**; full 13-file service-client sweep CLEAN (every query
+  scoped by company_id or verified parent); liquidity/[companyId] verifies URL param vs session (not trusted).
+  Finding: 2 lieferanten/[id] detail pages fetched suppliers via RLS client with no company_id belt (only
+  pages lacking it; not exploitable today — suppliers RLS gates by company_id per mig 029) — **FIXED** (belt added).
+  Logged (not tenant-isolation, out of Phase 3 scope): F-P5 finanzplanung updateInvoiceMatch same-tenant
+  over-broad write (RLS-covered cross-tenant); F-P6 reviewBankDataChange/approve likely no-op (no company UPDATE
+  policy on supplier_bank_change_requests) — both for Phase 6 review.
+
+### Phase 3 — SIGN-OFF ✅
+Acceptance (runbook §8 Phase 3): every (dashboard) route enforces its module permission server-side (C1
+no-op fixed) ✅; company-tier layout gate (OD-1) ✅; projects/[id] IDOR closed with company_id scope (C2) ✅;
+both adversarial passes confirm no cross-role/cross-tenant leak ✅. Gates: web typecheck 0 / test 200 / build
+green ✅. **CONFIRMED.** Committing on `feat/nav-redesign-phase-3`.
 
 ### Decision D-003 — operator's uncommitted layout edit
 Operator chose "Fold it into the redesign." Their `(holding)/admin/layout.tsx` nav edit is preserved; Phase 2

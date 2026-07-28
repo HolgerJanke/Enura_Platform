@@ -1,12 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
 import { PlanungTabs } from './planung-tabs'
 
 export default async function PlanungPage() {
+  await enforceModule(['module:finance:read'])
   const canPlan = await hasFinanzplanungPermission('module:finanzplanung:plan_cashout')
   if (!canPlan) {
     return (

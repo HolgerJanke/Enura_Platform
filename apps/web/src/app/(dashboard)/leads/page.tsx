@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import {
@@ -13,7 +13,7 @@ import {
 import type { LeadsDailyMetrics } from '@enura/types'
 
 export default async function LeadsPage() {
-  await requirePermission('module:leads:read')
+  await enforceModule(['module:leads:read'])
   const session = await getSession()
   if (!session?.companyId) return null
 

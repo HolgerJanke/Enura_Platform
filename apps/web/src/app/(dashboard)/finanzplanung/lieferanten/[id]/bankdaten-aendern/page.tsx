@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
@@ -11,6 +12,7 @@ interface PageProps {
 }
 
 export default async function BankdatenAendernPage({ params }: PageProps) {
+  await enforceModule(['module:finance:read'])
   const canManage = await hasFinanzplanungPermission('module:finanzplanung:manage_suppliers')
   if (!canManage) {
     return (
@@ -21,14 +23,16 @@ export default async function BankdatenAendernPage({ params }: PageProps) {
     )
   }
 
+  const session = await getSession()
   const supabase = createSupabaseServerClient()
   const { id } = params
 
-  // Fetch supplier name
+  // Fetch supplier name — belt-and-suspenders company_id scope on top of RLS (V6).
   const { data: supplierRaw } = await supabase
     .from('suppliers')
     .select('id, name, iban, bic, bank_name')
     .eq('id', id)
+    .eq('company_id', session?.companyId ?? '')
     .single()
 
   if (!supplierRaw) {

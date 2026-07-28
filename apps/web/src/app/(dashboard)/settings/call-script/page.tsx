@@ -1,13 +1,13 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { CallScriptRow } from '@enura/types'
 import { ScriptEditor } from './script-editor'
 
 export default async function CallScriptPage() {
-  await requirePermission('module:admin:write')
+  await enforceModule(['module:admin:read'])
 
   const session = await getSession()
   if (!session?.companyId) return null

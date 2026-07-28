@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { GanttClient } from './gantt-client'
 
 export default async function CashflowGanttPage() {
+  await enforceModule(['module:finance:read'])
   const session = await getSession()
   if (!session?.companyId) {
     return <div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p></div>

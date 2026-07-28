@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
@@ -8,6 +9,7 @@ import { formatDate } from '@enura/types'
 import { BankApprovalActions } from './bank-approval-actions'
 
 export default async function BankdatenGenehmigungPage() {
+  await enforceModule(['module:finance:read'])
   const canReview = await hasFinanzplanungPermission('module:finanzplanung:review_bank_data')
   const canApprove = await hasFinanzplanungPermission('module:finanzplanung:approve_bank_data')
 

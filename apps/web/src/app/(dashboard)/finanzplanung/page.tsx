@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
@@ -8,6 +9,7 @@ import { ApprovalsKpiCard } from './finanzplanung-approvals-popup'
 export const dynamic = 'force-dynamic'
 
 export default async function FinanzplanungPage() {
+  await enforceModule(['module:finance:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

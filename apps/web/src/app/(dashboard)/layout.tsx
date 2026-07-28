@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession, authGateRedirect } from '@/lib/session'
+import { canEnterTier, homeFor } from '@/lib/authz/policy'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DashboardShell } from '@/components/dashboard-shell'
@@ -52,6 +53,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <a href={gateRedirect} className="text-brand-primary underline text-sm">
               Fortfahren
             </a>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Company-tier gate (OD-1 / finding C1). Only Company users belong in the
+  // (dashboard) shell. A holding/enura admin is NOT a Company user (sessionTiers
+  // excludes them even with a stray company_id) and is routed to their own
+  // console. Middleware gates /admin and /platform; this gates the company section
+  // on entry (tier cannot change on soft-nav within the (dashboard) group, so an
+  // entry-time check is sufficient for the tier boundary — per-module RBAC is
+  // enforced per page).
+  if (!canEnterTier(session, 'company')) {
+    const target = homeFor(session)
+    return (
+      <>
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href="${target}"` }} />
+        <div className="min-h-screen flex items-center justify-center bg-brand-background">
+          <div className="text-center">
+            <p className="text-brand-text-secondary mb-4">Weiterleitung...</p>
+            <a href={target} className="text-brand-primary underline text-sm">Fortfahren</a>
           </div>
         </div>
       </>

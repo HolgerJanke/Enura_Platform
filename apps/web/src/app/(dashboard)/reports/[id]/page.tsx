@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -70,7 +70,7 @@ export default async function ReportDetailPage({
 }: {
   params: { id: string }
 }) {
-  await requirePermission('module:reports:read')
+  await enforceModule(['module:reports:read'])
 
   const session = await getSession()
   if (!session?.companyId) return (<div className="p-8 text-center"><a href="/login" className="text-blue-600 underline">Weiter</a></div>)
