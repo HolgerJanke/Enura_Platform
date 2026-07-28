@@ -257,6 +257,28 @@ export function canAccessRoute(session: UserSession | null, pathname: string): b
   return decideAccess(session, pathname).ok
 }
 
+/** The minimal set of flags needed to compute tier membership / home surface. */
+export interface TierFlags {
+  isEnuraAdmin: boolean
+  isHoldingAdmin: boolean
+  companyId: string | null
+}
+
+/**
+ * Home surface from raw tier flags. Shared by the full-session `homeFor` and by
+ * the edge middleware (which knows the flags but not the full `UserSession`), so
+ * both agree on where a denied user is sent. Honors the OD-1 invariant: an admin
+ * (holding/enura) is not a Company user, so a stray `companyId` never routes an
+ * admin to the tenant dashboard.
+ */
+export function homeForFlags(f: TierFlags): string {
+  const isAdmin = f.isEnuraAdmin || f.isHoldingAdmin
+  if (!isAdmin && f.companyId) return '/dashboard'
+  if (f.isHoldingAdmin) return '/admin'
+  if (f.isEnuraAdmin) return '/platform'
+  return '/login'
+}
+
 /**
  * Where to send a user who lacks access to the requested path: their own
  * home surface, chosen by the highest tier they can enter. An authenticated
@@ -264,9 +286,9 @@ export function canAccessRoute(session: UserSession | null, pathname: string): b
  */
 export function homeFor(session: UserSession | null): string {
   if (!session) return '/login'
-  const tiers = sessionTiers(session)
-  if (tiers.has('company')) return '/dashboard'
-  if (tiers.has('holding')) return '/admin'
-  if (tiers.has('enura')) return '/platform'
-  return '/login'
+  return homeForFlags({
+    isEnuraAdmin: session.isEnuraAdmin,
+    isHoldingAdmin: session.isHoldingAdmin,
+    companyId: session.companyId,
+  })
 }

@@ -213,4 +213,80 @@ Acceptance (runbook §8 Phase 1): policy + primitive exist ✅, unit-tested ✅ 
 typecheck ✅ / build ✅ green, no route behavior changed ✅ (additive-only proven). Lint = F-B1
 broken-at-baseline (deferred, not a regression). Both adversarial passes resolved (V2 confirmed; V1's
 sole real finding fixed+tested). Will be re-attacked in Phase 8's final two-pass. **CONFIRMED.**
-Committing on `feat/nav-redesign-phase-1`.
+Committing on `feat/nav-redesign-phase-1`. Phase 1 committed: `a3e0ea3` (branch `feat/nav-redesign-phase-1`).
+
+### Phase 2 — server-side tier & auth gates: IN PROGRESS (branch will be `feat/nav-redesign-phase-2`)
+Approach decision: architecture.md §12 puts auth gates at the EDGE, and middleware already has a clean
+`NextResponse.redirect` (proper 307, no content shipped, no Vercel layout-404 issue). So the AUTHORITATIVE
+tier gate is in middleware; layouts are backstops. Company per-module RBAC stays for Phase 3.
+Changes:
+- `middleware.ts`: (a) removed `/debug` from `PUBLIC_PATHS`; (b) added edge tier-gate after the reset/2FA
+  gate, before branding — `/platform`⇒isEnuraAdmin, `/admin`⇒isHoldingAdmin (OD-2 strict). Unauth on those
+  tiers ⇒ /login; wrong-tier ⇒ `homeForFlags` (no loop). **Defuses C6**: a pure Enura admin is 307'd away
+  before reaching /admin/secrets|tools|compliance. Reads enura_admins/holding_admins under the user client
+  — parity with `lib/session.ts` (same table/query/JWT), so no lockout regression.
+- `debug/page.tsx` (C3): `notFound()` unless `session.isEnuraAdmin`; stopped printing the anon-key prefix.
+- `platform/layout.tsx` (C4): inert 200 "Zugriff verweigert" dead-end ⇒ real backstop redirect to `homeFor`.
+- `(holding)/admin/layout.tsx`: backstop now routes denials via `homeFor` (was always `/dashboard`, wrong
+  for a denied Enura admin). **Preserves operator's uncommitted nav edit** (removed cross-tier `/dashboard`
+  back-link, added enura `→ /platform` up-link) — folded per D-003 below.
+- `policy.ts`: added `homeForFlags` (edge-friendly, agrees with `homeFor`) + tests.
+Gates: web **typecheck 0 ✅ / test 200 pass ✅ / build green ✅** (middleware edge-compiles, 113 kB, no warnings).
+
+**Adversarial verification (2 passes):**
+- V4 (C6/OD-2 tier-isolation): C6 defused for all page navigation ✅, OD-2 strict at tier-entry ✅,
+  no holding/enura admin lockout in the LOGIC ✅, no redirect loops ✅. **Found: write-layer gap** — admin
+  Server Actions still gated `isHoldingAdmin || isEnuraAdmin`; middleware is pathname-based and Server
+  Actions POST to the current path, so the gate doesn't cover them (latent, not live). **FIXED**: tightened
+  8 holding-tier action files to `isHoldingAdmin` only (compliance, processes/house, processes/[id]/kpis,
+  secrets/new, secrets/[id]×3, tools/[id]×2, tools/new, roles). Deferred: addons actions (Enura+holding
+  dual → Phase 5 relocation). Noted for Phase 5/6: processes/templates gates `isHoldingAdmin || isSuperUser`
+  (company-super_user↔holding cross-tier, separate concern).
+- V3 (bypass/redirect-loop): path-matching clean ✅, no redirect loops ✅, order-of-ops correct (no
+  wrong-tier content/header leak) ✅, /debug fully closed ✅, admin /api routes self-gate ✅. **Found:
+  F-P3 (CRITICAL, pre-existing).**
+
+### F-P3 — holding-tier flag reads the wrong table; RLS blocks self-read (CRITICAL, PRE-EXISTING)
+`lib/session.ts:42` (and my mirrored middleware read) query the **legacy** `holding_admins` table under the
+user's JWT. VERIFIED in migrations: `013_update_rls_policies.sql` drops ALL policies (lines 37-47) and
+re-adds for legacy `holding_admins` ONLY `USING is_enura_admin()` (§12) — **no `profile_id = auth.uid()`
+self-read**. Same migration redefines `is_holding_admin()` to check **`holding_admins_v2`** and gives v2 a
+proper self-read policy (`holding_admin_own_admins`), calling legacy the "old table, kept for backward compat."
+⇒ a **pure** holding admin (not also enura) gets 0 rows from the legacy read ⇒ `session.isHoldingAdmin` is
+**always false** for them ⇒ they cannot reach `/admin` (via the existing layout gate today, and via my edge
+gate now — same outcome). Also: invite flow writes `holding_admins_v2` ONLY (not legacy); `removeHoldingAdmin`
+deletes the global legacy row. **Consequence:** the holding console is effectively broken for pure holding
+admins in the current code — independent of this redesign.
+- **My Phase 2 change is PARITY-SAFE**: it mirrors `session.ts`'s existing read, so no NEW regression; the
+  gate LOGIC is verified correct by both passes. The unreliable *signal* is the pre-existing bug.
+- **Recommended fix:** read `holding_admins_v2` in `session.ts` + middleware (strictly better under real
+  auth: v2's self-read policy is permissive where legacy's is absent; every grant path writes v2). BUT
+  v2 data-completeness for already-provisioned admins is unverifiable without DB access, and prod-auth-mode
+  is uncertain (memory [[mock-auth-rls-service-client]] MOCK_AUTH vs INV-B "cutover complete") — so this is
+  a §9-class structural tier-identity decision. **ESCALATED to operator (see below).**
+- Bonus (V3, latent): `014` `is_holding_admin()` ORs legacy (global, not holding-scoped) with v2 — a latent
+  cross-holding risk if `profiles.holding_id` is ever reassigned without a matching v2 write. Note for §4.1.
+
+**Phase 2 status:** gate LOGIC complete + double-verified + gates green; NOT committed pending F-P3.
+
+### Decision D-004 — F-P3 resolution (operator)
+Operator chose **"Switch to holding_admins_v2"** + **"Fold the F-P3 fix into Phase 2, commit once."**
+Applied: `session.ts:42` and `middleware.ts:431` now read `holding_admins_v2` (the reads only; legacy
+dual-write paths in holdings/new, holdings/[id], users/actions left untouched — harmless backward-compat).
+Residual duality (legacy vs v2 tables, `014` is_holding_admin ORs both) noted for a later consolidation
+(Phase 6 candidate). Pre-011 historical admins were moved to `enura_admins` by migration 011 (so covered
+via isEnuraAdmin, or re-provisioned into v2) — accepted per operator decision.
+
+### Phase 2 — SIGN-OFF ✅
+Acceptance (runbook §8 Phase 2): Enura/Holding/Company entry enforced by REAL redirect (edge 307 in
+middleware; layout backstops) ✅; `/debug` gated to Enura admins ✅ (C3); C6 bomb defused — pure Enura admin
+307'd before /admin/* at BOTH read (page) and write (Server Action) layers ✅; inert /platform 200 denial
+replaced ✅ (C4). Two adversarial passes: V3 (no bypass/loops) + V4 (C6 defused, OD-2 strict, no lockout)
+— both resolved; V4's write-layer gap FIXED; V3's F-P3 FIXED per operator. Gates: web typecheck 0 ✅ /
+test 200 ✅ / build green ✅. **CONFIRMED.** Committing on `feat/nav-redesign-phase-2` (folds operator's
+nav edit per D-003).
+
+### Decision D-003 — operator's uncommitted layout edit
+Operator chose "Fold it into the redesign." Their `(holding)/admin/layout.tsx` nav edit is preserved; Phase 2
+gate fix layered on top; will be credited in the Phase 2 commit. Their tsbuildinfo + backlog .md files remain
+untouched/unstaged.

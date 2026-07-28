@@ -8,6 +8,7 @@ import {
   matchRouteRule,
   isPublicPath,
   homeFor,
+  homeForFlags,
   isCapabilityAllowed,
   hasModulePermission,
 } from './policy'
@@ -265,6 +266,28 @@ describe('homeFor', () => {
     expect(homeFor(HOLDING_ADMIN)).toBe('/admin')
     expect(homeFor(ENURA_ADMIN)).toBe('/platform')
     expect(homeFor(null)).toBe('/login')
+  })
+  it('dual-identity admin (F-P2) goes to /admin, not /dashboard', () => {
+    expect(homeFor(DUAL_IDENTITY_ADMIN)).toBe('/admin')
+  })
+})
+
+describe('homeForFlags (edge/middleware form, must agree with homeFor)', () => {
+  it('non-admin company user → /dashboard', () => {
+    expect(homeForFlags({ isEnuraAdmin: false, isHoldingAdmin: false, companyId: 'c-1' })).toBe('/dashboard')
+  })
+  it('holding admin → /admin (even with stray companyId, OD-1)', () => {
+    expect(homeForFlags({ isEnuraAdmin: false, isHoldingAdmin: true, companyId: null })).toBe('/admin')
+    expect(homeForFlags({ isEnuraAdmin: false, isHoldingAdmin: true, companyId: 'c-1' })).toBe('/admin')
+  })
+  it('enura admin → /platform', () => {
+    expect(homeForFlags({ isEnuraAdmin: true, isHoldingAdmin: false, companyId: null })).toBe('/platform')
+  })
+  it('dual enura+holding → /admin (holding wins for a landing surface)', () => {
+    expect(homeForFlags({ isEnuraAdmin: true, isHoldingAdmin: true, companyId: null })).toBe('/admin')
+  })
+  it('no tier → /login', () => {
+    expect(homeForFlags({ isEnuraAdmin: false, isHoldingAdmin: false, companyId: null })).toBe('/login')
   })
 })
 

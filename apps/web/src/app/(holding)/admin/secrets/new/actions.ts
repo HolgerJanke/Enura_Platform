@@ -66,7 +66,8 @@ export async function createSecret(input: CreateSecretInput): Promise<CreateSecr
   // 1. Auth check
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  // OD-2: holding-tier credential mutation — isHoldingAdmin only (pure Enura admin excluded).
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff')
 
   const holdingId = session.holdingId
   if (!holdingId) {

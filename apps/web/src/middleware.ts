@@ -8,6 +8,7 @@ import {
   type ExtendedBrandTokens,
   type BrandTokens,
 } from '@enura/types'
+import { homeForFlags } from '@/lib/authz/policy'
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -20,7 +21,9 @@ import {
  */
 const AUTH_USER_HEADER = 'x-auth-user-id'
 
-const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/invite', '/privacy', '/help', '/debug']
+// NOTE: `/debug` is deliberately NOT public — it discloses env/DB diagnostics and
+// is gated at the page itself (Enura-admin / dev only). See finding C3.
+const PUBLIC_PATHS = ['/login', '/reset-password', '/enrol-2fa', '/verify-2fa', '/invite', '/privacy', '/help']
 const STATIC_PREFIXES = ['/_next/', '/favicon.ico', '/manifest.json', '/icon-']
 
 const BRANDING_TTL_MS = 5 * 60 * 1000
@@ -402,6 +405,43 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       sessionCompanyId = gateProfile.company_id
       const gate = gateRedirectPath(gateProfile, pathname)
       if (gate && pathname !== gate) return redirect(gate)
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Tier routing (Phase 2 / finding C4 + C6). The two admin tiers are gated at
+  // the edge with a REAL 307 redirect, so a wrong-tier user never reaches the
+  // tier's layout or its content. This is the authoritative tier boundary; the
+  // layouts keep a backstop check. Company-tier per-module RBAC is enforced in
+  // the (dashboard) layer (Phase 3), not here.
+  //
+  // Per OD-2 the boundaries are strict: `/platform` requires isEnuraAdmin,
+  // `/admin` requires isHoldingAdmin — an Enura admin does NOT implicitly enter
+  // `/admin` (this defuses the C6 "ticking bomb": a pure Enura admin is bounced
+  // before reaching /admin/secrets, /tools, /compliance).
+  // -----------------------------------------------------------------------
+  const wantsPlatform = pathname === '/platform' || pathname.startsWith('/platform/')
+  const wantsAdmin = pathname === '/admin' || pathname.startsWith('/admin/')
+  if (wantsPlatform || wantsAdmin) {
+    if (!userId) return redirect('/login')
+    // Same queries getSession() uses (a user CAN read their own admin rows under
+    // RLS — the app already relies on this in lib/session.ts).
+    const [enuraRes, holdingRes] = await Promise.all([
+      supabase.from('enura_admins').select('id').eq('profile_id', userId).maybeSingle(),
+      // F-P3: holding_admins_v2, not the legacy table (no self-read RLS since 013).
+      supabase.from('holding_admins_v2').select('id').eq('profile_id', userId).maybeSingle(),
+    ])
+    const flags = {
+      isEnuraAdmin: Boolean(enuraRes.data),
+      isHoldingAdmin: Boolean(holdingRes.data),
+      companyId: sessionCompanyId,
+    }
+    const allowed = wantsPlatform ? flags.isEnuraAdmin : flags.isHoldingAdmin
+    if (!allowed) {
+      // homeForFlags never returns the denied tier for the denying identity, so
+      // no redirect loop is possible (holding→/admin, enura→/platform, else
+      // /dashboard or /login — all outside or permitted for that identity).
+      return redirect(homeForFlags(flags))
     }
   }
 

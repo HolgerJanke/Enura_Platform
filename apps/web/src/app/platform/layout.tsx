@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
+import { homeFor } from '@/lib/authz/policy'
 import { PlatformShell } from '@/components/platform-shell'
 
 const PLATFORM_NAV_ITEMS = [
@@ -15,14 +15,24 @@ const PLATFORM_NAV_ITEMS = [
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
+  // Backstop to the authoritative edge tier-gate in middleware.ts (finding C4:
+  // this branch used to render an inert 200 "Zugriff verweigert" dead-end that
+  // never actually redirected). Now it redirects the wrong-tier user to their own
+  // home surface. Uses the codebase's client-script redirect pattern (the tier
+  // layouts avoid next/navigation redirect() due to a documented Vercel layout
+  // 404); the real 307 has already happened at the edge before this renders.
   if (!session || !session.isEnuraAdmin) {
+    const target = homeFor(session)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">Zugriff verweigert</p>
-          <a href="/login" className="text-blue-600 underline text-sm">Zur Anmeldung</a>
+      <>
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href="${target}"` }} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">Kein Zugriff. Weiterleitung...</p>
+            <a href={target} className="text-blue-600 underline text-sm">Fortfahren</a>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 

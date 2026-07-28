@@ -79,7 +79,7 @@ export async function createTool(input: CreateToolInput): Promise<CreateToolResu
   // 1. Auth check
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff') // OD-2: holding-tier only (pure Enura excluded)
 
   const holdingId = session.holdingId
   if (!holdingId) {

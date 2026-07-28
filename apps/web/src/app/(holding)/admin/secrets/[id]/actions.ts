@@ -24,7 +24,7 @@ export async function rotateSecret(
 ): Promise<SecretActionResult> {
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff') // OD-2: holding-tier only (pure Enura excluded)
 
   const holdingId = session.holdingId
   if (!holdingId) {
@@ -95,7 +95,7 @@ export async function rotateSecret(
 export async function deactivateSecret(secretId: string): Promise<SecretActionResult> {
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff') // OD-2: holding-tier only (pure Enura excluded)
 
   const holdingId = session.holdingId
   if (!holdingId) {
@@ -149,7 +149,7 @@ export async function deactivateSecret(secretId: string): Promise<SecretActionRe
 export async function reactivateSecret(secretId: string): Promise<SecretActionResult> {
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff') // OD-2: holding-tier only (pure Enura excluded)
 
   const holdingId = session.holdingId
   if (!holdingId) {

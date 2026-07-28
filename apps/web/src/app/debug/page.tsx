@@ -1,9 +1,17 @@
 export const dynamic = 'force-dynamic'
 
 import { headers } from 'next/headers'
+import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/session'
 
 export default async function DebugPage() {
+  // Finding C3: this page discloses environment/DB diagnostics. It is restricted
+  // to Enura platform admins; everyone else (incl. unauthenticated visitors and
+  // ordinary tenant users) gets a 404 with no signal that the page exists.
+  const session = await getSession()
+  if (!session?.isEnuraAdmin) notFound()
+
   const headerStore = headers()
   const tenantId = headerStore.get('x-tenant-id') ?? 'none'
   const tenantSlug = headerStore.get('x-tenant-slug') ?? 'none'
@@ -19,7 +27,8 @@ export default async function DebugPage() {
   // Test direct REST fetch (same as middleware does)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  envStatus = `URL=${supabaseUrl ? 'set' : 'MISSING'}, KEY=${supabaseKey ? supabaseKey.slice(0, 15) + '...' : 'MISSING'}`
+  // Never print any portion of the key material, even to an Enura admin.
+  envStatus = `URL=${supabaseUrl ? 'set' : 'MISSING'}, KEY=${supabaseKey ? 'set' : 'MISSING'}`
 
   try {
     const res = await fetch(

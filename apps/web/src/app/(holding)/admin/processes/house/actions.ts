@@ -6,7 +6,8 @@ import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
   const session = await getSession()
-  if (!session?.isHoldingAdmin && !session?.isEnuraAdmin) throw new Error('Nicht autorisiert')
+  // OD-2: holding-tier mutation — isHoldingAdmin only (pure Enura admin excluded).
+  if (!session?.isHoldingAdmin) throw new Error('Nicht autorisiert')
   return session
 }
 

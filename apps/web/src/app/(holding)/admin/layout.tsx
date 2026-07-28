@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
+import { homeFor } from '@/lib/authz/policy'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { HoldingShell } from '@/components/holding-shell'
 import { AdminBar } from '@/components/AdminBar'
 
 const HOLDING_NAV_ITEMS = [
-  { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
   { label: 'Unternehmen', href: '/admin', icon: 'building' },
   { label: 'Hilfe', href: '/help', icon: 'help-circle' },
 ]
@@ -38,14 +38,19 @@ export default async function HoldingAdminLayout({ children }: { children: React
     )
   }
 
+  // Backstop to the edge tier-gate in middleware.ts. OD-2: entry is isHoldingAdmin
+  // ONLY (a pure Enura admin is NOT admitted here and is sent to /platform). The
+  // denied user is routed to their own home surface, not unconditionally to
+  // /dashboard (which was wrong for an Enura admin — finding C4/C6).
   if (!session.isHoldingAdmin) {
+    const target = homeFor(session)
     return (
       <>
-        <script dangerouslySetInnerHTML={{ __html: 'window.location.href="/dashboard"' }} />
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href="${target}"` }} />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <p className="text-gray-500 mb-4">Kein Zugriff. Weiterleitung...</p>
-            <a href="/dashboard" className="text-blue-600 underline text-sm">Zum Dashboard</a>
+            <a href={target} className="text-blue-600 underline text-sm">Fortfahren</a>
           </div>
         </div>
       </>
@@ -56,11 +61,15 @@ export default async function HoldingAdminLayout({ children }: { children: React
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
-  // Hide the "← Dashboard" link for admins with no company — it would only
-  // bounce them straight back to this console.
-  const navItems = session.companyId
-    ? HOLDING_NAV_ITEMS
-    : HOLDING_NAV_ITEMS.filter((item) => item.href !== '/dashboard')
+  // The "← Dashboard" back-link is only meaningful as a step UP to a higher
+  // tier. An Enura (group) admin belongs at the platform overview, which lists
+  // every holding, so we send them there. A holding admin is already at the top
+  // of their world: the holding console itself is their overview (reached via
+  // "Unternehmen"), and there is no higher dashboard to return to — so we omit
+  // the link rather than drop them into an unrelated company Prozesshaus.
+  const navItems = session.isEnuraAdmin
+    ? [{ label: '← Dashboard', href: '/platform', icon: 'arrow-left' }, ...HOLDING_NAV_ITEMS]
+    : HOLDING_NAV_ITEMS
 
   // Fetch actual holding name
   let holdingName = 'Holding'

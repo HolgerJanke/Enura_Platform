@@ -82,7 +82,7 @@ export async function updateTool(
 ): Promise<ToolActionResult> {
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff') // OD-2: holding-tier only (pure Enura excluded)
 
   const holdingId = session.holdingId
   if (!holdingId) {
@@ -169,7 +169,7 @@ export type TestConnectionResult = {
 export async function testConnection(toolId: string): Promise<TestConnectionResult> {
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff') // OD-2: holding-tier only (pure Enura excluded)
 
   const holdingId = session.holdingId
   if (!holdingId) {
