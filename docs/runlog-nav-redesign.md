@@ -405,7 +405,21 @@ tier gate) — cleanup debt for Phase 6.
   needs a finanzplanung-permission-model pass); F-P5/F-P6 (finanzplanung write-granularity / no-op review action);
   ~30 dead `isHoldingAdmin` branches in (dashboard) code; legacy/v2 holding_admins table consolidation. These
   are cleanup/robustness items, not security gaps in the redesigned surface.
-Committing on `feat/nav-redesign-phase-6`.
+Committing on `feat/nav-redesign-phase-6`. Phase 6 committed: `04a54a6`.
+
+### Phase 7 — generated authz-matrix test + a11y: SIGN-OFF ✅ (branch `feat/nav-redesign-phase-7`)
+- **Generated Role×Route matrix test** (`lib/authz/matrix.generated.test.ts`): iterates EVERY `ROUTE_RULES`
+  entry (drift-proof — a new route can't escape coverage), deriving expected access from `anyOf ∩ role-perms`;
+  asserts each cell's `decideAccess` (denials proven as `ok:false` + a redirect target, not a hidden nav item),
+  cross-tier denials, a tier-coverage guard, and the §6.3 canonical probes. **195 generated tests; 397 total, all pass.**
+  Scope: proves the POLICY decision for every cell; the HTTP-level proof (direct URL → 307) is the e2e (below).
+- **Axe a11y scan** (`docs/a11y-shell-scan.md`): authored as an activate-ready Playwright+axe scaffold for the
+  three shells. **Environment-gated** — needs `@axe-core/playwright` installed + a running app + Supabase auth;
+  cannot run in this sandbox (same class as e2e/db; no a11y baseline existed at Phase 0). NOT claimed green;
+  documented with exact activation steps. Committed as docs (not a live spec — would break `**/*.ts` typecheck
+  without the dep).
+Gates: web typecheck 0 / test 397 / build green. **CONFIRMED** (matrix test executable+passing; a11y authored/gated).
+Committing on `feat/nav-redesign-phase-7`.
 
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
