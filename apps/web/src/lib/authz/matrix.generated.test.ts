@@ -30,6 +30,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'module:finance:read', 'module:finance:write', 'module:finance:export', 'module:finance:admin',
     'module:reports:read', 'module:reports:write', 'module:reports:export', 'module:reports:admin',
     'module:anomalies:read', 'module:finanzplanung:read',
+    'module:finanzplanung:review_bank_data', 'module:finanzplanung:approve_bank_data',
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
@@ -48,14 +49,16 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   berater: ['module:berater:read'],
   innendienst: ['module:innendienst:read', 'module:innendienst:write', 'module:bau:read'],
   bau: ['module:bau:read', 'module:bau:write'],
-  buchhaltung: ['module:finance:read', 'module:finance:write'],
+  // buchhaltung = the Finanzplanung "Planer" (architecture.md §8) — migration 050.
+  buchhaltung: ['module:finance:read', 'module:finance:write', 'module:finanzplanung:read', 'module:finanzplanung:plan_cashout', 'module:finanzplanung:export_payment', 'module:finanzplanung:manage_suppliers'],
   leadkontrolle: ['module:leads:read', 'module:leads:write'],
-  // Finanzplanung roles (migration 028) — finanzplanung:read gates /finanzplanung;
-  // the granular keys gate page-internal actions (not routes).
-  validator: ['module:finanzplanung:read', 'module:finanzplanung:validate'],
+  // Finanzplanung roles (migration 028 + 050) — finanzplanung:read gates /finanzplanung;
+  // granular keys gate page-internal actions (validator reviews / financial_approver
+  // approves bank-data changes — 4-eyes with the requester).
+  validator: ['module:finanzplanung:read', 'module:finanzplanung:validate', 'module:finanzplanung:review_bank_data'],
   invoice_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_invoice'],
   cashout_planner: ['module:finanzplanung:read', 'module:finanzplanung:plan_cashout', 'module:finanzplanung:export_payment', 'module:finanzplanung:manage_suppliers'],
-  financial_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_payment'],
+  financial_approver: ['module:finanzplanung:read', 'module:finanzplanung:approve_payment', 'module:finanzplanung:approve_bank_data'],
 }
 const ROLES = Object.keys(ROLE_PERMISSIONS)
 

@@ -531,6 +531,25 @@ locked out of their own module** (failed enforceModule before requireFinanzplanu
   keys that 028 does NOT seed → canReview/canApprove false for non-holding-admins (separate finanzplanung-perms pass).
 Gates: web typecheck 0 / test 549 / build green ✅.
 
+### Follow-ups #1 (buchhaltung) + #2 (bank-data keys) — DONE (operator: fix both) — migration 050
+- **#1:** buchhaltung is now the Finanzplanung "Planer" (architecture.md §8) — granted the cashout-planner set
+  (`finanzplanung:read`, `plan_cashout`, `export_payment`, `manage_suppliers`). So buchhaltung is back in
+  /finanzplanung (EXPECTED updated).
+- **#2 (F-P6):** seeded the two bank-data-workflow keys that were used in code but never seeded
+  (`module:finanzplanung:review_bank_data`, `…:approve_bank_data`) and assigned them for clean 4-eyes:
+  requester = cashout_planner/buchhaltung (manage_suppliers) → reviewer = validator (review_bank_data) →
+  approver = financial_approver (approve_bank_data); super_user holds both. **Also added the missing RLS**
+  `sbd_company_review_approve` FOR UPDATE policy on `supplier_bank_change_requests` (company + review/approve
+  perm, WITH CHECK same company) — the review/approve actions use the RLS client, so without it their update
+  silently no-op'd. The actions already gate on the permission + enforce reviewer≠requester (4-eyes).
+- **BUG FIXED (introduced by me in 049):** migration 049's rebuilt `seed_company_roles()` was based on 026
+  (9 roles) and DROPPED the 4 finanzplanung roles that 028 had added — so NEW companies would not get them.
+  050 rebuilds the trigger with ALL 13 roles + every accumulated change (innendienst bau:read, buchhaltung
+  planner set, validator review_bank_data, financial_approver approve_bank_data).
+- Fixtures updated (buchhaltung, validator, financial_approver, super_user); /finanzplanung EXPECTED now
+  includes buchhaltung. Gates: web typecheck 0 / test 549 / build green ✅. Migration 050 structurally verified
+  (13 roles, balanced $$). RLS not runnable here (test:db unwired) — operator applies 050.
+
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
 - F-P4: `finanzplanung-guard` uses non-seeded key `module:finanzplanung:read` — Phase 6.
