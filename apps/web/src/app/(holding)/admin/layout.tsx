@@ -2,24 +2,9 @@ export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
 import { homeFor } from '@/lib/authz/policy'
+import { NAV_CONFIG, filterNav } from '@/lib/nav/nav-config'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { HoldingShell } from '@/components/holding-shell'
-import { AdminBar } from '@/components/AdminBar'
-
-const HOLDING_NAV_ITEMS = [
-  { label: 'Unternehmen', href: '/admin', icon: 'building' },
-  { label: 'Hilfe', href: '/help', icon: 'help-circle' },
-]
-
-const HOLDING_ADMIN_BAR_NAV = [
-  { label: 'Prozesse', href: '/admin/processes' },
-  { label: 'Integrationen', href: '/admin/tools' },
-  { label: 'Benutzer', href: '/admin/users' },
-  { label: 'Branding', href: '/admin/settings/branding' },
-  { label: 'Berichte', href: '/admin/analytics' },
-  { label: 'Abrechnung', href: '/admin/billing' },
-  { label: '+ Unternehmen', href: '/admin/companies/new' },
-]
 
 export default async function HoldingAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -61,15 +46,18 @@ export default async function HoldingAdminLayout({ children }: { children: React
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
-  // The "← Dashboard" back-link is only meaningful as a step UP to a higher
-  // tier. An Enura (group) admin belongs at the platform overview, which lists
-  // every holding, so we send them there. A holding admin is already at the top
-  // of their world: the holding console itself is their overview (reached via
-  // "Unternehmen"), and there is no higher dashboard to return to — so we omit
-  // the link rather than drop them into an unrelated company Prozesshaus.
-  const navItems = session.isEnuraAdmin
-    ? [{ label: '← Dashboard', href: '/platform', icon: 'arrow-left' }, ...HOLDING_NAV_ITEMS]
-    : HOLDING_NAV_ITEMS
+  // Policy-filtered: "visible ⇔ accessible" (see lib/nav/nav-config.ts). The
+  // "← Dashboard" back-link is only meaningful as a step UP to a higher tier:
+  // it's encoded with `tier: 'enura'`, so it shows iff the session is ALSO an
+  // Enura (group) admin — reproducing the original `session.isEnuraAdmin`
+  // check exactly. A holding admin is already at the top of their world: the
+  // holding console itself is their overview (reached via "Unternehmen"), and
+  // there is no higher dashboard to return to — so the link is absent for them.
+  const navItems = filterNav(NAV_CONFIG.holding, session).map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: item.icon ?? 'default',
+  }))
 
   // Fetch actual holding name
   let holdingName = 'Holding'

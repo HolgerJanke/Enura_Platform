@@ -322,7 +322,39 @@ Gates: web **typecheck 0 ✅ / test 200 ✅ / build green ✅**.
 Acceptance (runbook §8 Phase 3): every (dashboard) route enforces its module permission server-side (C1
 no-op fixed) ✅; company-tier layout gate (OD-1) ✅; projects/[id] IDOR closed with company_id scope (C2) ✅;
 both adversarial passes confirm no cross-role/cross-tenant leak ✅. Gates: web typecheck 0 / test 200 / build
-green ✅. **CONFIRMED.** Committing on `feat/nav-redesign-phase-3`.
+green ✅. **CONFIRMED.** Committing on `feat/nav-redesign-phase-3`. Phase 3 committed: `1c4514b`.
+
+### Phase 4 — Navigation unification: IN PROGRESS (branch will be `feat/nav-redesign-phase-4`)
+Nav is now cosmetic (server-side enforcement complete in Phases 2-3), so this is a UX/consistency phase
+(visible ⇔ accessible), delegated to a sonnet implementer with lighter verification. Spec: single
+`lib/nav/nav-config.ts` keyed to the policy; `filterNav(items, session)` using `canAccessRoute`/
+`hasModulePermission`; remove dead arrays (HOLDING_ADMIN_BAR_NAV + unused AdminBar import; SUPER_USER_NAV);
+policy-filter the dashboard-shell company super-user links. EXCLUDED (Phase 5): EnuraAdminBar heuristic,
+Add-ons relocation, dashboard-shell Holding-admin section. Constraint: no change to any server-side access
+check. Awaiting implementer + orchestrator verification.
+
+### Phase 4 — SIGN-OFF ✅ (branch `feat/nav-redesign-phase-4`)
+Implemented (sonnet implementer + orchestrator review): `lib/nav/nav-config.ts` — single per-shell config
+(PLATFORM_NAV, HOLDING_NAV, COMPANY_ADMIN_NAV) + pure `filterNav(items, session)` using the SAME policy
+functions as enforcement (`hasModulePermission`/`canEnterTier`/`canAccessRoute`) → visible ⇔ accessible by
+construction. Layouts (platform/holding/dashboard) + dashboard-shell now render policy-filtered nav.
+Removed dead arrays: `HOLDING_ADMIN_BAR_NAV` + unused `AdminBar` import, `SUPER_USER_NAV`.
+Verification (PROPORTIONATE — nav is cosmetic; server-side enforcement unchanged & already double-verified in
+P2/P3): reviewed nav-config (correct policy use), confirmed dead arrays gone, gates web typecheck 0 ✅ /
+test 200 ✅ / build green ✅. No server-side access check altered (confirmed: middleware/enforce/ROUTE_RULES
+untouched). Known deferred: Add-ons item is `always:true` and still points at the Holding route (visible to
+Enura admins but middleware-blocked) — Phase 5 relocates it; EnuraAdminBar + dashboard-shell Holding-admin
+section untouched (Phase 5). Behavioral correction: platform "← Dashboard" no longer shows for Enura admins
+(OD-1-consistent). **CONFIRMED.** Committing on `feat/nav-redesign-phase-4`.
+
+### Deferred findings backlog (to address in their phases)
+- F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
+- F-P4: `finanzplanung-guard` uses non-seeded key `module:finanzplanung:read` — Phase 6.
+- F-P5: finanzplanung `updateInvoiceMatch` same-tenant over-broad write — Phase 6.
+- F-P6: `reviewBankDataChange`/`approve` likely no-op (no company UPDATE policy on supplier_bank_change_requests) — Phase 6.
+- Legacy/v2 holding_admins table duality + `014` is_holding_admin ORs both — Phase 6 consolidation candidate.
+- processes/templates gates `isHoldingAdmin || isSuperUser` (company-super_user↔holding cross-tier) — Phase 5/6.
+- Systemic: 13 (dashboard) files use service client on user-facing paths (CLAUDE.md §15 tension) — tracked, compensated by explicit company_id scoping.
 
 ### Decision D-003 — operator's uncommitted layout edit
 Operator chose "Fold it into the redesign." Their `(holding)/admin/layout.tsx` nav edit is preserved; Phase 2

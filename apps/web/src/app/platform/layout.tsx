@@ -2,16 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { getSession } from '@/lib/session'
 import { homeFor } from '@/lib/authz/policy'
+import { NAV_CONFIG, filterNav } from '@/lib/nav/nav-config'
 import { PlatformShell } from '@/components/platform-shell'
-
-const PLATFORM_NAV_ITEMS = [
-  { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
-  { label: 'Übersicht', href: '/platform', icon: 'overview' },
-  { label: 'Neue Holding', href: '/platform/holdings/new', icon: 'building' },
-  { label: 'Add-ons', href: '/admin/settings/addons', icon: 'puzzle' },
-  { label: 'Gesundheit', href: '/platform/health', icon: 'health' },
-  { label: 'Audit', href: '/platform/audit', icon: 'audit' },
-]
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -40,11 +32,15 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     .filter(Boolean)
     .join(' ') || session.profile.display_name
 
-  // Hide the "← Dashboard" link for admins with no company — it would only
-  // bounce them straight back to a console.
-  const navItems = session.companyId
-    ? PLATFORM_NAV_ITEMS
-    : PLATFORM_NAV_ITEMS.filter((item) => item.href !== '/dashboard')
+  // Policy-filtered: "visible ⇔ accessible" (see lib/nav/nav-config.ts). The
+  // "← Dashboard" item is included in NAV_CONFIG.platform but, per OD-1, no
+  // session reaching this shell can ever hold Company tier — so it never
+  // shows here now, which is a deliberate correction (see nav-config.ts note).
+  const navItems = filterNav(NAV_CONFIG.platform, session).map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: item.icon ?? 'default',
+  }))
 
   return (
     <PlatformShell navItems={navItems} userName={displayName}>

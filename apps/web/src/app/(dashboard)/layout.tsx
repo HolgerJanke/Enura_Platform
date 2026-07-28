@@ -3,17 +3,10 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { getSession, authGateRedirect } from '@/lib/session'
 import { canEnterTier, homeFor } from '@/lib/authz/policy'
+import { NAV_CONFIG, filterNav } from '@/lib/nav/nav-config'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DashboardShell } from '@/components/dashboard-shell'
-
-const SUPER_USER_NAV = [
-  { label: 'Prozesse', href: '/settings/call-script' },
-  { label: 'Integrationen', href: '/settings/connectors' },
-  { label: 'Benutzer', href: '/settings/users' },
-  { label: 'Branding', href: '/settings/branding' },
-  { label: 'Berichte', href: '/settings/reports' },
-]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -108,6 +101,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const isSuperUser = session.roles.some(r => r.key === 'super_user')
 
+  // Policy-filtered: "visible ⇔ accessible" (see lib/nav/nav-config.ts). Each
+  // Company-Admin link in the dashboard-shell modal is shown iff the session
+  // actually holds the module permission its route requires — replacing the
+  // bare `isSuperUser` gate on the section (kept above the modal itself,
+  // since a super_user without every module:admin:* grant can still see a
+  // (possibly shorter) list; an empty list simply hides the section).
+  const companyAdminNavItems = filterNav(NAV_CONFIG.companyAdmin, session).map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: item.icon ?? 'default',
+  }))
+
   return (
     <>
       <DashboardShell
@@ -116,6 +121,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         userRole={roleLabel}
         isHoldingAdmin={session.isHoldingAdmin}
         isSuperUser={isSuperUser}
+        companyAdminNavItems={companyAdminNavItems}
       >
         {criticalAnomalyCount > 0 && (
         <div className="border-b border-red-300 bg-red-600 px-4 py-2.5 text-white">
