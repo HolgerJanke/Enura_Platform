@@ -1,0 +1,71 @@
+
+> enura-platform@ lint /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform
+> turbo run lint
+
+• turbo 2.8.20
+
+   • Packages in scope: @enura/api, @enura/config, @enura/types, @enura/ui, @enura/web
+   • Running lint in 5 packages
+   • Remote caching disabled
+
+@enura/types:lint: cache miss, executing a232a9ed258d4645
+@enura/ui:build: cache hit, replaying logs 8a8cf78a3e7283aa
+@enura/ui:lint: cache miss, executing a312e8892fb4de2a
+@enura/ui:build: 
+@enura/ui:build: > @enura/ui@0.0.0 build /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/ui
+@enura/ui:build: > tsc
+@enura/ui:build: 
+@enura/types:build: cache hit, replaying logs fa115f487c87f8e4
+@enura/types:build: 
+@enura/types:build: > @enura/types@0.0.0 build /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/types
+@enura/types:build: > tsc
+@enura/types:build: 
+@enura/web:lint: cache miss, executing 0e9ab4be52530f73
+@enura/api:lint: cache miss, executing dc4b4df3b8d33f9a
+@enura/api:lint: 
+@enura/api:lint: > @enura/api@0.0.0 lint /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/api
+@enura/api:lint: > eslint src/ --ext .ts,.tsx
+@enura/api:lint: 
+@enura/web:lint: 
+@enura/web:lint: > @enura/web@0.0.0 lint /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web
+@enura/web:lint: > next lint
+@enura/web:lint: 
+@enura/ui:lint: 
+@enura/ui:lint: > @enura/ui@0.0.0 lint /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/ui
+@enura/ui:lint: > eslint src/ --ext .ts,.tsx
+@enura/ui:lint: 
+@enura/types:lint: 
+@enura/types:lint: > @enura/types@0.0.0 lint /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/types
+@enura/types:lint: > eslint src/ --ext .ts
+@enura/types:lint: 
+@enura/api:lint: 
+@enura/api:lint: Oops! Something went wrong! :(
+@enura/api:lint: 
+@enura/api:lint: ESLint: 8.57.1
+@enura/api:lint: 
+@enura/api:lint: ReferenceError: Cannot read config file: /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/api/.eslintrc.js
+@enura/api:lint: Error: module is not defined in ES module scope
+@enura/api:lint: This file is being treated as an ES module because it has a '.js' file extension and '/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/api/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+@enura/api:lint:     at file:///Users/holgerjanke/Documents/Schweiz/Code%20Base/Enura_Gruppe/Enura_Platform/apps/api/.eslintrc.js:1:1
+@enura/api:lint:     at ModuleJobSync.runSync (node:internal/modules/esm/module_job:450:37)
+@enura/api:lint:     at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:429:47)
+@enura/api:lint:     at loadESMFromCJS (node:internal/modules/cjs/loader:1519:24)
+@enura/api:lint:     at Module._compile (node:internal/modules/cjs/loader:1670:5)
+@enura/api:lint:     at Object..js (node:internal/modules/cjs/loader:1820:10)
+@enura/api:lint:     at Module.load (node:internal/modules/cjs/loader:1423:32)
+@enura/api:lint:     at Function._load (node:internal/modules/cjs/loader:1246:12)
+@enura/api:lint:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+@enura/api:lint:     at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+@enura/web:lint: 
+@enura/web:lint:  ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/basic-features/eslint#migrating-existing-config
+@enura/api:lint:  ELIFECYCLE  Command failed with exit code 2.
+ ERROR  @enura/api#lint: command (/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/api) /Users/holgerjanke/Library/pnpm/store/v11/links/@/pnpm/9.15.4/e6a2d0dd119b7b1581d6bc6a677e4b12487c65f8fd1e7f9b26d6a481dbb2e654/bin/pnpm run lint exited (2)
+
+ Tasks:    2 successful, 6 total
+Cached:    2 cached, 6 total
+  Time:    1.052s 
+Failed:    @enura/api#lint
+
+ ERROR  run failed: command  exited (2)
+ ELIFECYCLE  Command failed with exit code 2.
+EXIT=2

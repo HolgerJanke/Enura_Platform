@@ -1,0 +1,61 @@
+
+> enura-platform@ typecheck /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform
+> turbo run typecheck
+
+• turbo 2.8.20
+
+   • Packages in scope: @enura/api, @enura/config, @enura/types, @enura/ui, @enura/web
+   • Running typecheck in 5 packages
+   • Remote caching disabled
+
+@enura/ui:typecheck: cache hit, replaying logs 524c3952cdd9accb
+@enura/ui:typecheck: 
+@enura/types:typecheck: cache hit, replaying logs d3ae66beac512060
+@enura/ui:typecheck: > @enura/ui@0.0.0 typecheck /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/ui
+@enura/ui:typecheck: > tsc --noEmit
+@enura/ui:typecheck: 
+@enura/types:typecheck: 
+@enura/types:typecheck: > @enura/types@0.0.0 typecheck /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/types
+@enura/types:typecheck: > tsc --noEmit
+@enura/types:typecheck: 
+@enura/ui:build: cache hit, replaying logs 8a8cf78a3e7283aa
+@enura/ui:build: 
+@enura/ui:build: > @enura/ui@0.0.0 build /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/ui
+@enura/ui:build: > tsc
+@enura/ui:build: 
+@enura/types:build: cache hit, replaying logs fa115f487c87f8e4
+@enura/types:build: 
+@enura/types:build: > @enura/types@0.0.0 build /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/packages/types
+@enura/types:build: > tsc
+@enura/types:build: 
+@enura/api:typecheck: cache miss, executing 9ab68a6d00d3b70d
+@enura/web:typecheck: cache miss, executing e3d4e7f97d09d798
+@enura/api:typecheck: 
+@enura/api:typecheck: > @enura/api@0.0.0 typecheck /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/api
+@enura/api:typecheck: > tsc --noEmit
+@enura/api:typecheck: 
+@enura/web:typecheck: 
+@enura/web:typecheck: > @enura/web@0.0.0 typecheck /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web
+@enura/web:typecheck: > tsc --noEmit
+@enura/web:typecheck: 
+@enura/api:typecheck: src/workers/finanzplanung/email-incomer.ts(101,31): error TS2307: Cannot find module 'imapflow' or its corresponding type declarations.
+@enura/api:typecheck: src/workers/finanzplanung/email-incomer.ts(104,30): error TS2307: Cannot find module 'imapflow' or its corresponding type declarations.
+@enura/api:typecheck: src/workers/finanzplanung/invoice-extraction-worker.ts(14,1): error TS6133: 'callClaude' is declared but its value is never read.
+@enura/api:typecheck: src/workers/finanzplanung/invoice-extraction-worker.ts(167,7): error TS2345: Argument of type '{ recipient: { name: string | null; address: string | null; registration_number: string | null; }; sender: { name: string | null; email: string | null; address: string | null; registration_number: string | null; vat_number: string | null; contact_name: string | null; contact_phone: string | null; }; header: { ...; }...' is not assignable to parameter of type '{ recipient: { name: string | null; address: string | null; registration_number: string | null; }; sender: { name: string | null; email: string | null; address: string | null; registration_number: string | null; vat_number: string | null; contact_name: string | null; contact_phone: string | null; }; header: { ...; }...'.
+@enura/api:typecheck:   The types of 'totals.currency' are incompatible between these types.
+@enura/api:typecheck:     Type 'string | undefined' is not assignable to type 'string'.
+@enura/api:typecheck:       Type 'undefined' is not assignable to type 'string'.
+@enura/api:typecheck: src/workers/finanzplanung/invoice-matching-worker.ts(239,3): error TS6133: 'invoiceDate' is declared but its value is never read.
+@enura/api:typecheck: src/workers/finanzplanung/invoice-matching-worker.ts(255,11): error TS6133: 'budgetDate' is declared but its value is never read.
+@enura/api:typecheck: src/workers/finanzplanung/whatsapp-approval.ts(17,39): error TS6133: 'WhatsAppClientConfig' is declared but its value is never read.
+@enura/api:typecheck:  ELIFECYCLE  Command failed with exit code 2.
+ ERROR  @enura/api#typecheck: command (/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/api) /Users/holgerjanke/Library/pnpm/store/v11/links/@/pnpm/9.15.4/e6a2d0dd119b7b1581d6bc6a677e4b12487c65f8fd1e7f9b26d6a481dbb2e654/bin/pnpm run typecheck exited (2)
+
+ Tasks:    5 successful, 6 total
+Cached:    4 cached, 6 total
+  Time:    6.813s 
+Failed:    @enura/api#typecheck
+
+ ERROR  run failed: command  exited (2)
+ ELIFECYCLE  Command failed with exit code 2.
+EXIT=2

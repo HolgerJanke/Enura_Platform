@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { requirePermission, checkPermission } from '@/lib/permissions'
+import { checkPermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -19,7 +20,7 @@ import { RecentCallsTable } from '@/components/calls/recent-calls-table'
 import { TeamMemberFilter } from '@/components/team-member-filter'
 
 export default async function SetterPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  await requirePermission('module:setter:read')
+  await enforceModule(['module:setter:read'])
   const session = await getSession()
   if (!session?.companyId) return null
 

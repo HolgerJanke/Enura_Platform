@@ -39,7 +39,11 @@ async function _getSession(): Promise<UserSession | null> {
         role_id,
         roles ( id, company_id, holding_id, key, label, description, is_system, created_at, updated_at )
       `).eq('profile_id', user.id),
-      supabase.from('holding_admins').select('id').eq('profile_id', user.id).maybeSingle(),
+      // F-P3: read holding_admins_v2 (the current table). The legacy `holding_admins`
+      // table has no self-read RLS policy since migration 013, so a pure holding
+      // admin reading it under their own JWT gets zero rows → isHoldingAdmin wrongly
+      // false. v2 has a proper self-read policy and every grant path writes it.
+      supabase.from('holding_admins_v2').select('id').eq('profile_id', user.id).maybeSingle(),
       supabase.from('enura_admins').select('id').eq('profile_id', user.id).maybeSingle(),
     ])
 

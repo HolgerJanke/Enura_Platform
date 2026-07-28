@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { getDataAccess } from '@/lib/data-access'
 import { formatNumber, formatDate, KPI_SNAPSHOT_TYPES } from '@enura/types'
@@ -8,7 +8,7 @@ import type { ProjectsDailyMetrics } from '@enura/types'
 import type { ProjectRow, PhaseDefinitionRow } from '@enura/types'
 
 export default async function ProjectsPage() {
-  await requirePermission('module:bau:read')
+  await enforceModule(['module:bau:read'])
   const session = await getSession()
   if (!session?.companyId) return null
 

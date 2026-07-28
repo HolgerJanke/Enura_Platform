@@ -1,9 +1,11 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 
 export default async function AnalyticsLandingPage() {
+  await enforceModule(['module:reports:read'])
   const session = await getSession()
   if (!session?.companyId) {
     return (

@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 
 export default async function InnendienstPage() {
-  await requirePermission('module:innendienst:read')
+  await enforceModule(['module:innendienst:read'])
 
   return (
     <div className="p-6">

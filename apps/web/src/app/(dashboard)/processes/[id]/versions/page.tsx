@@ -17,20 +17,24 @@ export default async function ProcessVersionsPage({
   const session = await getSession()
   if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 
-  // Must be super_user or holding admin
+  // Version history is a super_user surface. Real redirect on denial, not the
+  // former inert 200 (C4 pattern; `redirect` was imported but never called).
   const isSuperUser = session.roles.some((r) => r.key === 'super_user')
-  if (!isSuperUser && !session.isHoldingAdmin) {
-  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
+  if (!isSuperUser) {
+    redirect('/dashboard')
   }
 
   const supabase = createSupabaseServerClient()
   const processId = params.id
 
-  // Fetch process name
+  // Fetch process name — scoped to the caller's company (closes the same
+  // backwards-guard cross-tenant hole fixed in processes/[id]/page.tsx). A
+  // process of another company resolves to null → "nicht gefunden".
   const { data: processDef } = await supabase
     .from('process_definitions')
     .select('id, name, company_id')
     .eq('id', processId)
+    .eq('company_id', session.companyId ?? '')
     .single()
 
   if (!processDef) {
@@ -46,14 +50,6 @@ export default async function ProcessVersionsPage({
   }
 
   const defRow = processDef as Record<string, unknown>
-
-  // Verify company ownership
-  if (
-    session.companyId &&
-    (defRow['company_id'] as string | null) !== session.companyId
-  ) {
-  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
-  }
 
   // Fetch versions with creator profile
   const { data: versionsData } = await supabase

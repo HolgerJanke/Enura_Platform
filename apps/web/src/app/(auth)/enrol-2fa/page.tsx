@@ -62,7 +62,10 @@ export default function EnrolTwoFactorPage() {
     setError(null)
     setVerifying(true)
     const result = await verifyEnrolmentAction(enrolmentData.factorId, code)
-    if (result.error) {
+    // On success the action calls redirect('/'), so it returns nothing to the
+    // client — `result` is undefined and navigation is already under way. Only a
+    // failure returns an object, so guard before reading .error.
+    if (result?.error) {
       setError(result.error)
       setCode('')
       codeInputRef.current?.focus()

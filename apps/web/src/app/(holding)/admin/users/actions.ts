@@ -463,6 +463,20 @@ export async function resetUser2fa(
     return { success: false, error: `Fehler beim Zurücksetzen der 2FA: ${error.message}` }
   }
 
+  // Flipping the DB flag alone leaves the user's verified TOTP factor attached in
+  // Supabase Auth. Since enrolment reuses a fixed friendlyName, that orphan would
+  // make the user's next enroll() fail and trap them at the 2FA gate. Remove the
+  // factors here so the reset is complete. (profiles.id == the auth user id.)
+  const serviceClient = createSupabaseServiceClient()
+  const { data: adminFactors } = await serviceClient.auth.admin.mfa.listFactors({
+    userId: profileId,
+  })
+  for (const factor of adminFactors?.factors ?? []) {
+    if (factor.factor_type === 'totp') {
+      await serviceClient.auth.admin.mfa.deleteFactor({ id: factor.id, userId: profileId })
+    }
+  }
+
   await writeAuditLog({
     companyId: null,
     actorId: userId,

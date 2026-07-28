@@ -1,0 +1,126 @@
+
+> @enura/web@0.0.0 build /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web
+> next build
+
+  ▲ Next.js 14.2.21
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/64) ...
+   Generating static pages (16/64) 
+   Generating static pages (32/64) 
+   Generating static pages (48/64) 
+ ✓ Generating static pages (64/64)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                            Size     First Load JS
+┌ ƒ /                                                  180 B          87.6 kB
+├ ƒ /_not-found                                        180 B          87.6 kB
+├ ƒ /admin                                             3.97 kB        98.2 kB
+├ ƒ /admin/analytics                                   2.33 kB        89.7 kB
+├ ƒ /admin/billing                                     180 B          87.6 kB
+├ ƒ /admin/companies/[id]/branding                     2.83 kB        97.1 kB
+├ ƒ /admin/companies/new                               4.33 kB        91.7 kB
+├ ƒ /admin/compliance                                  4.09 kB        98.3 kB
+├ ƒ /admin/compliance/certifications                   228 B          94.5 kB
+├ ƒ /admin/finance                                     228 B          94.5 kB
+├ ƒ /admin/processes                                   228 B          94.5 kB
+├ ƒ /admin/processes/[id]                              24.9 kB         119 kB
+├ ƒ /admin/processes/[id]/deploy                       1.84 kB        96.1 kB
+├ ƒ /admin/processes/[id]/deployments/[deploymentId]   3.51 kB        97.7 kB
+├ ƒ /admin/processes/[id]/kpis                         1.81 kB          96 kB
+├ ƒ /admin/processes/[id]/versions                     228 B          94.5 kB
+├ ƒ /admin/processes/house                             3.33 kB        97.6 kB
+├ ƒ /admin/processes/new                               2.29 kB        96.5 kB
+├ ƒ /admin/processes/templates                         2.77 kB          97 kB
+├ ƒ /admin/secrets                                     2.22 kB        96.4 kB
+├ ƒ /admin/secrets/[id]                                2.96 kB        97.2 kB
+├ ƒ /admin/secrets/new                                 2.54 kB        96.8 kB
+├ ƒ /admin/settings/addons                             1.72 kB        95.9 kB
+├ ƒ /admin/settings/branding                           3.56 kB          91 kB
+├ ƒ /admin/settings/permissions                        2.51 kB        89.9 kB
+├ ƒ /admin/settings/roles                              2.77 kB          97 kB
+├ ƒ /admin/tenants/[slug]                              5.51 kB        99.7 kB
+├ ƒ /admin/tenants/new                                 4.48 kB        98.7 kB
+├ ƒ /admin/tools                                       2.19 kB        96.4 kB
+├ ƒ /admin/tools/[id]                                  3.08 kB        97.3 kB
+├ ƒ /admin/tools/new                                   2.51 kB        96.7 kB
+├ ƒ /admin/users                                       4.15 kB        98.4 kB
+├ ƒ /admin/users/invite                                3.15 kB        97.4 kB
+├ ƒ /analytics                                         228 B          94.5 kB
+├ ƒ /anomalies                                         228 B          94.5 kB
+├ ƒ /api/admin/connectors/health                       0 B                0 B
+├ ƒ /api/admin/impersonate                             0 B                0 B
+├ ƒ /api/auth/login                                    0 B                0 B
+├ ƒ /api/cron/step-kpi-snapshot                        0 B                0 B
+├ ƒ /api/help/feedback                                 0 B                0 B
+├ ƒ /api/help/search                                   0 B                0 B
+├ ƒ /api/help/snippets/[locationKey]                   0 B                0 B
+├ ƒ /api/process-house/steps                           0 B                0 B
+├ ƒ /api/projects/search                               0 B                0 B
+├ ƒ /berater                                           741 B            95 kB
+├ ƒ /cashflow-gantt                                    3.84 kB        98.1 kB
+├ ƒ /controlling                                       228 B          94.5 kB
+├ ƒ /dashboard                                         4.55 kB        91.9 kB
+├ ƒ /debug                                             180 B          87.6 kB
+├ ƒ /enrol-2fa                                         2.48 kB        89.9 kB
+├ ƒ /finance                                           2 kB           96.2 kB
+├ ƒ /finanzplanung                                     2.58 kB        96.8 kB
+├ ƒ /finanzplanung/bankdaten-genehmigung               1.56 kB        95.8 kB
+├ ƒ /finanzplanung/eingang                             3.86 kB        98.1 kB
+├ ƒ /finanzplanung/eingang/[id]                        2.15 kB        96.4 kB
+├ ƒ /finanzplanung/genehmigung                         228 B          94.5 kB
+├ ƒ /finanzplanung/lieferanten                         228 B          94.5 kB
+├ ƒ /finanzplanung/lieferanten/[id]                    228 B          94.5 kB
+├ ƒ /finanzplanung/lieferanten/[id]/bankdaten-aendern  4.96 kB        99.2 kB
+├ ƒ /finanzplanung/planung                             3.85 kB        98.1 kB
+├ ƒ /finanzplanung/planung/[runId]                     2.55 kB        96.8 kB
+├ ƒ /finanzplanung/upload                              228 B          94.5 kB
+├ ƒ /help                                              2.85 kB        97.1 kB
+├ ƒ /help/[level]/[...slug]                            1.01 kB        95.2 kB
+├ ƒ /innendienst                                       180 B          87.6 kB
+├ ƒ /invite/[token]                                    1.6 kB           89 kB
+├ ƒ /leads                                             228 B          94.5 kB
+├ ƒ /liquidity                                         553 B          87.9 kB
+├ ƒ /liquidity/[companyId]                             110 kB          243 kB
+├ ƒ /liquidity/[companyId]/upload                      2.5 kB         89.9 kB
+├ ƒ /login                                             1.73 kB        89.1 kB
+├ ƒ /platform                                          228 B          94.5 kB
+├ ƒ /platform/audit                                    180 B          87.6 kB
+├ ƒ /platform/billing                                  180 B          87.6 kB
+├ ƒ /platform/health                                   180 B          87.6 kB
+├ ƒ /platform/holdings/[id]                            5.88 kB         100 kB
+├ ƒ /platform/holdings/new                             4.84 kB        92.2 kB
+├ ƒ /platform/reports                                  180 B          87.6 kB
+├ ƒ /privacy                                           180 B          87.6 kB
+├ ƒ /processes/[id]                                    9.11 kB         103 kB
+├ ƒ /processes/[id]/versions                           228 B          94.5 kB
+├ ƒ /projects                                          180 B          87.6 kB
+├ ƒ /projects/[id]                                     6.71 kB         101 kB
+├ ƒ /reports                                           228 B          94.5 kB
+├ ƒ /reports/[id]                                      228 B          94.5 kB
+├ ƒ /reset-password                                    2.01 kB        89.4 kB
+├ ƒ /setter                                            4.65 kB         138 kB
+├ ƒ /settings/branding                                 6.16 kB         133 kB
+├ ƒ /settings/call-script                              2.75 kB        90.1 kB
+├ ƒ /settings/connectors                               3.34 kB        97.6 kB
+├ ƒ /settings/connectors/[type]                        4.98 kB        99.2 kB
+├ ƒ /settings/reports                                  2.77 kB        90.2 kB
+├ ƒ /settings/users                                    6.75 kB         101 kB
+└ ƒ /verify-2fa                                        1.62 kB          89 kB
++ First Load JS shared by all                          87.4 kB
+  ├ chunks/8861-a6eedde03896f4cb.js                    31.7 kB
+  ├ chunks/d44c5769-f73ea5d33f271e72.js                53.6 kB
+  └ other shared chunks (total)                        2.01 kB
+
+
+ƒ Middleware                                           113 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
+EXIT=0

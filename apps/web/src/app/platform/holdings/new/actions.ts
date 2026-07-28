@@ -261,13 +261,19 @@ export async function completeWizard(
 
   const userId = authUser.user.id
 
-  // 7. Create profile record
+  // 7. Create profile record.
+  // F-P2 / OD-1 / CLAUDE.md §7: a holding admin is NOT a tenant user and must
+  // have NO company_id. The first company's super_user is a separate account the
+  // holding admin invites afterward (see step 9). Setting company_id here would
+  // fuse the two tiers into one identity, which the authz policy already refuses
+  // to honor (sessionTiers excludes admins from company tier) — but the data must
+  // not carry the §7-violating shape either.
   await serviceClient
     .from('profiles')
     .upsert({
       id: userId,
       holding_id: holdingId,
-      company_id: companyId,
+      company_id: null,
       first_name: input.adminFirstName,
       last_name: input.adminLastName,
       must_reset_password: true,
@@ -287,24 +293,12 @@ export async function completeWizard(
       { onConflict: 'holding_id,profile_id' },
     )
 
-  // 9. Assign super_user role for the first company
-  if (companyId) {
-    const { data: superRole } = await serviceClient
-      .from('roles')
-      .select('id')
-      .eq('company_id', companyId)
-      .eq('key', 'super_user')
-      .single()
-
-    if (superRole) {
-      await serviceClient
-        .from('profile_roles')
-        .upsert(
-          { profile_id: userId, role_id: (superRole as { id: string }).id },
-          { onConflict: 'profile_id,role_id' },
-        )
-    }
-  }
+  // 9. F-P2 / OD-1 (Option A): do NOT assign a company super_user role to the
+  // holding admin — a holding admin is not a company user. The holding admin
+  // creates/invites the first company's super_user afterward via the tenant
+  // user-management UI, and uses impersonation (CLAUDE.md §7) to act inside the
+  // tenant for support. (Previously this block granted the holding admin the
+  // first company's super_user role, producing the §7-violating dual identity.)
 
   // 10. Create invitation record (for tracking)
   await serviceClient

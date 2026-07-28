@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { FinanceCashflowChart } from './finance-chart'
 
 export default async function FinancePage() {
+  await enforceModule(['module:finance:read'])
   const session = await getSession()
   if (!session?.companyId) return null
 

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDate } from '@enura/types'
@@ -51,7 +51,7 @@ interface PageProps {
 }
 
 export default async function LiquidityCompanyPage({ params }: PageProps) {
-  await requirePermission('module:finance:read')
+  await enforceModule(['module:finance:read'])
   const session = await getSession()
   if (!session) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht angemeldet.</p><a href="/login" className="text-blue-600 underline">Zur Anmeldung</a></div>)
 

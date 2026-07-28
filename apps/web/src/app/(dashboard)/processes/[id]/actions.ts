@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/lib/session'
+import { enforceCapability } from '@/lib/authz/capabilities'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
@@ -114,21 +115,18 @@ export async function saveRedactionalEdits(
     return { success: false, error: 'Keine Berechtigung für diesen Prozess.' }
   }
 
-  // Check holding permission_matrix for process_edit_redactional
-  if (session.holdingId) {
-    const { data: holding } = await supabase
-      .from('holdings')
-      .select('permission_matrix')
-      .eq('id', session.holdingId)
-      .single()
-
-    if (holding) {
-      const holdingRow = holding as Record<string, unknown>
-      const matrix = holdingRow['permission_matrix'] as Record<string, unknown> | null
-      if (matrix && matrix['process_edit_redactional'] === false) {
-        return { success: false, error: 'Redaktionelle Bearbeitung ist deaktiviert.' }
-      }
-    }
+  // OD-3: holding permission-matrix ceiling. Editorial process editing (which
+  // bumps the process version) is governed by the canonical `process.version`
+  // capability — a Holding admin can disable it for the whole holding. The old
+  // inline read checked a key ('process_edit_redactional') that does not exist in
+  // PERMISSION_DEFINITIONS, so it never fired; this uses the wired ceiling helper.
+  const cap = await enforceCapability(
+    session,
+    'process.version',
+    'Redaktionelle Bearbeitung ist für Ihre Holding deaktiviert.',
+  )
+  if (!cap.ok) {
+    return { success: false, error: cap.error }
   }
 
   const currentVersion = (defRow['version'] as string) ?? '1.0'

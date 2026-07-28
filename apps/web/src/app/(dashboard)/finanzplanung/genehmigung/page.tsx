@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
@@ -39,6 +40,7 @@ interface PaymentRunRow {
 }
 
 export default async function GenehmigungPage() {
+  await enforceModule(['module:finanzplanung:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

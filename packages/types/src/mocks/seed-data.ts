@@ -295,6 +295,8 @@ const permissionDefs: Array<{ key: string; label: string; description: string }>
   { key: 'module:reports:write', label: 'Berichte schreiben', description: 'Berichte erstellen' },
   { key: 'module:reports:export', label: 'Berichte exportieren', description: 'Berichte exportieren' },
   { key: 'module:reports:admin', label: 'Berichte administrieren', description: 'Berichts-Modul verwalten' },
+
+  { key: 'module:anomalies:read', label: 'Anomalien lesen', description: 'Anomalie-Dashboard anzeigen (Management)' },
   // AI module
   { key: 'module:ai:read', label: 'KI lesen', description: 'KI-Analysen anzeigen' },
   { key: 'module:ai:write', label: 'KI schreiben', description: 'KI-Analysen ausl\u00f6sen' },
@@ -340,47 +342,40 @@ const rolePermMap: Record<string, string[]> = {
     'module:bau:read', 'module:bau:write', 'module:bau:export', 'module:bau:admin',
     'module:finance:read', 'module:finance:write', 'module:finance:export', 'module:finance:admin',
     'module:reports:read', 'module:reports:write', 'module:reports:export', 'module:reports:admin',
+    'module:anomalies:read',
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
+  // F-P7: matches the DB seed (026 + 048) — gf holds every module:%:read (reads
+  // only, incl. module:admin:read), teamleiter holds 4 module reads.
   geschaeftsfuehrung: [
-    'module:setter:read', 'module:setter:export',
-    'module:berater:read', 'module:berater:export',
-    'module:leads:read', 'module:leads:export',
-    'module:innendienst:read', 'module:innendienst:export',
-    'module:bau:read', 'module:bau:export',
-    'module:finance:read', 'module:finance:export',
-    'module:reports:read', 'module:reports:write', 'module:reports:export',
-    'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read',
+    'module:innendienst:read', 'module:bau:read', 'module:finance:read',
+    'module:reports:read', 'module:ai:read', 'module:admin:read', 'module:anomalies:read',
   ],
   teamleiter: [
-    'module:setter:read', 'module:setter:export',
-    'module:berater:read', 'module:berater:export',
-    'module:leads:read',
-    'module:reports:read',
-    'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read', 'module:reports:read',
   ],
+  // F-P1: setter/berater/innendienst do NOT hold leads:read — matches the DB seed
+  // (026_fix_role_permissions.sql), so /leads is leadkontrolle + management only.
   setter: [
     'module:setter:read',
-    'module:leads:read',
   ],
   berater: [
     'module:berater:read',
-    'module:leads:read',
   ],
   innendienst: [
     'module:innendienst:read', 'module:innendienst:write',
     'module:bau:read',
-    'module:leads:read',
   ],
   bau: [
     'module:bau:read', 'module:bau:write',
   ],
   buchhaltung: [
-    'module:finance:read', 'module:finance:write', 'module:finance:export',
+    'module:finance:read', 'module:finance:write',
   ],
   leadkontrolle: [
-    'module:leads:read', 'module:leads:write', 'module:leads:export',
+    'module:leads:read', 'module:leads:write',
   ],
 }
 

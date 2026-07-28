@@ -2,10 +2,14 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
+import { enforceModule } from '@/lib/authz/enforce'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ProjectDetailTabs } from './project-detail-tabs'
 
 export default async function ProjectDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // C1: enforce the /projects module permission server-side (redirects on deny)
+  // as the very first statement — before params/searchParams or any fetch.
+  await enforceModule(['module:bau:read'])
   const { id } = await params
   const sp = await searchParams
   const session = await getSession()
@@ -15,11 +19,16 @@ export default async function ProjectDetailPage({ params, searchParams }: { para
 
   const db = createSupabaseServiceClient()
 
-  // Fetch project
+  // Fetch project. C2 (IDOR): this uses the service client (RLS-bypassing), so it
+  // MUST be scoped to the caller's own company explicitly. Without the company_id
+  // predicate any authenticated user could read another tenant's project (and all
+  // its related data below) by guessing the UUID. A project of another company
+  // resolves to null → "nicht gefunden", leaking nothing.
   const { data: project } = await db
     .from('projects')
     .select('*')
     .eq('id', id)
+    .eq('company_id', session.companyId)
     .single()
 
   if (!project) {

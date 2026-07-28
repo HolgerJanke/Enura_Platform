@@ -2,17 +2,11 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { getSession, authGateRedirect } from '@/lib/session'
+import { canEnterTier, homeFor } from '@/lib/authz/policy'
+import { NAV_CONFIG, filterNav } from '@/lib/nav/nav-config'
 import { getCompanyContext } from '@/lib/tenant'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DashboardShell } from '@/components/dashboard-shell'
-
-const SUPER_USER_NAV = [
-  { label: 'Prozesse', href: '/settings/call-script' },
-  { label: 'Integrationen', href: '/settings/connectors' },
-  { label: 'Benutzer', href: '/settings/users' },
-  { label: 'Branding', href: '/settings/branding' },
-  { label: 'Berichte', href: '/settings/reports' },
-]
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -58,6 +52,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
     )
   }
 
+  // Company-tier gate (OD-1 / finding C1). Only Company users belong in the
+  // (dashboard) shell. A holding/enura admin is NOT a Company user (sessionTiers
+  // excludes them even with a stray company_id) and is routed to their own
+  // console. Middleware gates /admin and /platform; this gates the company section
+  // on entry (tier cannot change on soft-nav within the (dashboard) group, so an
+  // entry-time check is sufficient for the tier boundary — per-module RBAC is
+  // enforced per page).
+  if (!canEnterTier(session, 'company')) {
+    const target = homeFor(session)
+    return (
+      <>
+        <script dangerouslySetInnerHTML={{ __html: `window.location.href="${target}"` }} />
+        <div className="min-h-screen flex items-center justify-center bg-brand-background">
+          <div className="text-center">
+            <p className="text-brand-text-secondary mb-4">Weiterleitung...</p>
+            <a href={target} className="text-brand-primary underline text-sm">Fortfahren</a>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   const { companyName: rawCompanyName } = getCompanyContext()
   // Enura admins with no company see neutral branding
   const companyName = session.isEnuraAdmin && !session.companyId
@@ -83,7 +99,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Finanzplanung is now accessed via Process House (M2), not sidebar
 
-  const isSuperUser = session.roles.some(r => r.key === 'super_user')
+  // Policy-filtered: "visible ⇔ accessible" (see lib/nav/nav-config.ts). Each
+  // Company-Admin link in the dashboard-shell modal is shown iff the session
+  // actually holds the module permission its route requires. The Admin-Konsole
+  // button + section are shown iff this list is non-empty — so e.g. gf (which
+  // holds module:admin:read → /settings/call-script, /settings/reports) gets a
+  // link even though it is not super_user (finding: gf accessible-but-not-visible).
+  const companyAdminNavItems = filterNav(NAV_CONFIG.companyAdmin, session).map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: item.icon ?? 'default',
+  }))
 
   return (
     <>
@@ -91,8 +117,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         companyName={companyName}
         userName={displayName}
         userRole={roleLabel}
-        isHoldingAdmin={session.isHoldingAdmin}
-        isSuperUser={isSuperUser}
+        companyAdminNavItems={companyAdminNavItems}
       >
         {criticalAnomalyCount > 0 && (
         <div className="border-b border-red-300 bg-red-600 px-4 py-2.5 text-white">

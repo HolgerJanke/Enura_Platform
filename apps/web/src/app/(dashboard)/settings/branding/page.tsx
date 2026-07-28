@@ -1,11 +1,12 @@
 export const dynamic = 'force-dynamic'
 
-import { requirePermission, checkPermission } from '@/lib/permissions'
+import { checkPermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getCompanyDesign } from './actions'
 import DesignModuleClient from './design-module-client'
 
 export default async function BrandingSettingsPage() {
-  await requirePermission('module:admin:branding')
+  await enforceModule(['module:admin:branding'])
 
   const { data, error } = await getCompanyDesign()
   // canEdit = true for Super Users AND Holding Admins

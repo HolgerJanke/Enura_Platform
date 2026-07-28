@@ -27,16 +27,26 @@ export async function initiateEnrolmentAction(): Promise<EnrolmentResult> {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // An interrupted enrolment leaves an unverified TOTP factor behind. Because the
-  // friendlyName below is fixed, Supabase then rejects every retry as a duplicate,
-  // which permanently traps the user at the mandatory 2FA gate. Clear only the
-  // unverified leftovers first — verified factors must never be touched here.
-  const { data: factorsData } = await supabase.auth.mfa.listFactors()
-  const staleFactors = (factorsData?.all ?? []).filter(
-    (factor) => factor.factor_type === 'totp' && factor.status === 'unverified',
-  )
-  for (const factor of staleFactors) {
-    await supabase.auth.mfa.unenroll({ factorId: factor.id })
+  // A user only reaches this action when profiles.totp_enabled = false (the auth
+  // gate in middleware.ts / session.ts). That means the app does NOT treat them
+  // as 2FA-protected, so ANY TOTP factor still attached to their Supabase Auth
+  // account is stale: either an interrupted enrolment (unverified) or an orphan
+  // left behind by an admin 2FA reset (verified). Because the friendlyName below
+  // is fixed, any such leftover makes enroll() fail with a name conflict, which
+  // permanently traps the user at the mandatory 2FA gate.
+  //
+  // Clear every leftover TOTP factor before enrolling. This uses the service-role
+  // admin API, scoped strictly to the verified current user's own id, because the
+  // user-scoped mfa.unenroll() cannot remove a VERIFIED factor from an AAL1
+  // session — exactly the state a freshly-signed-in, just-reset user is in.
+  const serviceClient = createSupabaseServiceClient()
+  const { data: adminFactors } = await serviceClient.auth.admin.mfa.listFactors({
+    userId: user.id,
+  })
+  for (const factor of adminFactors?.factors ?? []) {
+    if (factor.factor_type === 'totp') {
+      await serviceClient.auth.admin.mfa.deleteFactor({ id: factor.id, userId: user.id })
+    }
   }
 
   const { data, error } = await supabase.auth.mfa.enroll({
@@ -45,6 +55,9 @@ export async function initiateEnrolmentAction(): Promise<EnrolmentResult> {
   })
 
   if (error || !data) {
+    // Never surface the raw Supabase error to the client (CLAUDE.md §13), but log
+    // it server-side so a genuine misconfiguration is diagnosable.
+    console.error('[enrol-2fa] mfa.enroll failed:', error?.message ?? 'no data returned')
     return { error: 'Fehler beim Einrichten der 2-Faktor-Authentifizierung.' }
   }
 

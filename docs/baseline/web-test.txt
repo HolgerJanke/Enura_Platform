@@ -1,0 +1,13 @@
+
+> @enura/web@0.0.0 test /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web
+> vitest run --passWithNoTests
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web
+
+include: src/**/*.test.{ts,tsx}
+exclude:  tests/e2e/**, node_modules/**
+No test files found, exiting with code 0
+
+EXIT=0

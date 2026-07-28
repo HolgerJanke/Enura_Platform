@@ -1,14 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { UserListClient } from './user-list-client'
 import { Require2faToggle } from './require-2fa-toggle'
 
 export default async function UsersSettingsPage() {
-  await requirePermission('module:admin:users')
+  await enforceModule(['module:admin:users'])
 
   const session = await getSession()
   if (!session) return null

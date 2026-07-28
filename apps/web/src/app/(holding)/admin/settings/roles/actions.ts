@@ -32,7 +32,8 @@ export interface PermissionItem {
 async function requireAdmin() {
   const session = await getSession()
   if (!session) throw new Error('Nicht authentifiziert')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) {
+  // OD-2: holding-tier mutation — isHoldingAdmin only (pure Enura admin excluded).
+  if (!session.isHoldingAdmin) {
     throw new Error('Keine Berechtigung')
   }
   return session

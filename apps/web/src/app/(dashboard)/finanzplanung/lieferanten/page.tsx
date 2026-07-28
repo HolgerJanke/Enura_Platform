@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
@@ -20,6 +21,7 @@ interface SupplierRow {
 }
 
 export default async function LieferantenPage() {
+  await enforceModule(['module:finanzplanung:read'])
   const canManage = await hasFinanzplanungPermission('module:finanzplanung:manage_suppliers')
   if (!canManage) {
     return (

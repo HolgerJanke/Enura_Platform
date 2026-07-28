@@ -12,7 +12,10 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 async function requireHoldingSession() {
   const session = await getSession()
   if (!session) throw new Error('Nicht angemeldet')
-  if (!session.isHoldingAdmin && !session.isEnuraAdmin) throw new Error('Kein Zugriff')
+  // OD-2: holding-tier mutation — isHoldingAdmin only. A pure Enura admin must not
+  // act on holding data; the write layer enforces this independently of the
+  // pathname-based middleware tier-gate (Server Actions POST to the current path).
+  if (!session.isHoldingAdmin) throw new Error('Kein Zugriff')
   if (!session.holdingId) {
     throw new Error('Kein Holding zugewiesen.')
   }

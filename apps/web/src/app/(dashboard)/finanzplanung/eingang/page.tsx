@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { requireFinanzplanung, hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
@@ -7,6 +8,7 @@ import { InvoiceKanban } from './invoice-kanban'
 export const dynamic = 'force-dynamic'
 
 export default async function EingangPage() {
+  await enforceModule(['module:finanzplanung:read'])
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {
     return (

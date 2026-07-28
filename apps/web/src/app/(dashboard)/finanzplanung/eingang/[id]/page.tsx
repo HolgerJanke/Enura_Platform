@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireFinanzplanung } from '@/lib/finanzplanung-guard'
@@ -54,6 +55,7 @@ interface LineItem {
 }
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await enforceModule(['module:finanzplanung:read'])
   const { id } = await params
   const hasAccess = await requireFinanzplanung()
   if (!hasAccess) {

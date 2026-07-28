@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { requirePermission } from '@/lib/permissions'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ConnectorForm } from './connector-form'
@@ -36,7 +36,7 @@ export default async function ConnectorConfigPage({
 }: {
   params: { type: string }
 }) {
-  await requirePermission('module:admin:read')
+  await enforceModule(['module:admin:connectors'])
 
   const { type } = params
   if (!isValidType(type)) return (<div className="p-8 text-center"><p className="text-gray-500">Nicht gefunden.</p><a href="/" className="text-blue-600 underline">Zurück</a></div>)

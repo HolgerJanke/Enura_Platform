@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { enforceModule } from '@/lib/authz/enforce'
 import { getSession } from '@/lib/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { hasFinanzplanungPermission } from '@/lib/finanzplanung-guard'
@@ -11,6 +12,7 @@ interface PageProps {
 }
 
 export default async function SupplierDetailPage({ params }: PageProps) {
+  await enforceModule(['module:finanzplanung:read'])
   const canManage = await hasFinanzplanungPermission('module:finanzplanung:manage_suppliers')
   if (!canManage) {
     return (
@@ -25,11 +27,14 @@ export default async function SupplierDetailPage({ params }: PageProps) {
   const supabase = createSupabaseServerClient()
   const { id } = params
 
-  // Fetch supplier
+  // Fetch supplier — belt-and-suspenders company_id scope on top of RLS (V6:
+  // every other detail page carries this; keeps supplier PII/IBAN scoped even
+  // if the suppliers RLS policy ever lapses).
   const { data: supplierRaw } = await supabase
     .from('suppliers')
     .select('*')
     .eq('id', id)
+    .eq('company_id', session?.companyId ?? '')
     .single()
 
   if (!supplierRaw) {
