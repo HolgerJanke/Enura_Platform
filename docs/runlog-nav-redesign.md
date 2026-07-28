@@ -457,7 +457,34 @@ claimed green. **STOPPING at the merge boundary per mandate — no merge to main
 - F-P2: onboarding dual-identity data-shape (bootstrap decision).
 - F-P4/5/6, dead isHoldingAdmin branches, legacy/v2 table consolidation, F-B1 lint config, client-JS
   company-tier bounce (edge-gate symmetry) — cleanup/robustness backlog.
-Committing on `feat/nav-redesign-phase-8`.
+Committing on `feat/nav-redesign-phase-8`. Phase 8 committed: `58e52fa`. Draft PR #18 opened (base main).
+
+### Post-DoD operator decisions implemented (2026-07-28, on `feat/nav-redesign-phase-8`)
+**F-P1 — operator: "tighten the seed for /leads & /anomalies".**
+- Key discovery: the real DB seed `026_fix_role_permissions.sql` is ALREADY tighter than the mock —
+  setter/berater/innendienst do NOT hold `module:leads:read`. So `/leads` was correct in PRODUCTION; the
+  over-permissiveness was purely MOCK/TEST drift. Fixed: removed `module:leads:read` from those roles in the
+  mock `rolePermMap` + both test fixtures. `/leads` = {super_user, gf, teamleiter, leadkontrolle}. No migration.
+- `/anomalies`: in the DB, gf and teamleiter BOTH hold only `reports:read`, so no existing key separates them.
+  Added a dedicated `module:anomalies:read` (migration `048`): super_user auto-holds it (all perms), gf
+  auto-holds it (seed `module:%:read` pattern), teamleiter does NOT (explicit list) — no trigger change.
+  Policy `/anomalies` → `module:anomalies:read`; **also updated the anomalies PAGE `enforceModule`** to match
+  (the page is the real gate). `/anomalies` = {super_user, gf}. 397 tests pass (generated matrix auto-derived).
+**F-P2 — operator: "Option A" (separate identities).**
+- `platform/holdings/new/actions.ts`: onboarding now sets the holding admin's `company_id = null` and no
+  longer assigns the first company's `super_user` role. The holding admin invites the company super_user
+  separately (existing user-mgmt UI) + uses impersonation for tenant support. Forward fix only.
+- Existing-data cleanup: `scripts/remediate-holding-admin-dual-identity.sql` — a DELIBERATELY-run
+  (non-auto-applied) script to null `company_id` + drop company roles on existing holding-admin profiles.
+  Touches live identities → operator applies after provisioning real company super_users.
+Gates after both: web typecheck 0 / test 397 / build green ✅.
+**New finding F-P7 (recorded, not fixed):** the test fixtures still drift from DB seed 026 in ways the
+operator did NOT decide on — gf holds `module:%:read` incl. `module:admin:read` (→ could reach /settings),
+innendienst lacks `bau:read` in DB (mock/tests say it can reach /projects), teamleiter lacks `ai:read` in DB.
+The generated matrix reflects the MOCK, not the DB, for these. Reconciling the fixtures to the DB as the single
+source of truth (or fixing the DB to §5.6) is a dedicated follow-up needing per-cell operator rulings.
+Also minor: the (dashboard) critical-anomaly BANNER link to /anomalies shows to any company user (page bounces
+non-management) — a tiny visible⇔accessible gap, not security.
 
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
