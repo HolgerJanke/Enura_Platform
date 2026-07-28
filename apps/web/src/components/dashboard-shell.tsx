@@ -31,7 +31,6 @@ type DashboardShellProps = {
    * It has been removed; the prop was removed with it. The Company section
    * below (super_user-only) is untouched.
    */
-  isSuperUser?: boolean
   /**
    * The Company-Admin link list, pre-filtered by the server layout via
    * `filterNav(NAV_CONFIG.companyAdmin, session)` (lib/nav/nav-config.ts) —
@@ -51,7 +50,6 @@ export function DashboardShell({
   companyName,
   userName,
   userRole,
-  isSuperUser = false,
   companyAdminNavItems = [],
   children,
 }: DashboardShellProps) {
@@ -108,7 +106,7 @@ export function DashboardShell({
           </Link>
 
           {/* Admin Console */}
-          {isSuperUser && (
+          {companyAdminNavItems.length > 0 && (
             <button
               type="button"
               onClick={() => setAdminModalOpen(true)}
@@ -151,7 +149,7 @@ export function DashboardShell({
             <h2 className="text-lg font-bold text-gray-900 mb-2">Admin Konsole</h2>
             <p className="text-sm text-gray-500 mb-6">Wählen Sie den Verwaltungsbereich:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {isSuperUser && (
+              {companyAdminNavItems.length > 0 && (
                 <div className="rounded-xl border-2 border-gray-200 bg-white p-5">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Company Admin</h3>
                   <div className="space-y-2">

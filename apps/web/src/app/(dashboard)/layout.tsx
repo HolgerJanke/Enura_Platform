@@ -99,14 +99,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Finanzplanung is now accessed via Process House (M2), not sidebar
 
-  const isSuperUser = session.roles.some(r => r.key === 'super_user')
-
   // Policy-filtered: "visible ⇔ accessible" (see lib/nav/nav-config.ts). Each
   // Company-Admin link in the dashboard-shell modal is shown iff the session
-  // actually holds the module permission its route requires — replacing the
-  // bare `isSuperUser` gate on the section (kept above the modal itself,
-  // since a super_user without every module:admin:* grant can still see a
-  // (possibly shorter) list; an empty list simply hides the section).
+  // actually holds the module permission its route requires. The Admin-Konsole
+  // button + section are shown iff this list is non-empty — so e.g. gf (which
+  // holds module:admin:read → /settings/call-script, /settings/reports) gets a
+  // link even though it is not super_user (finding: gf accessible-but-not-visible).
   const companyAdminNavItems = filterNav(NAV_CONFIG.companyAdmin, session).map((item) => ({
     label: item.label,
     href: item.href,
@@ -119,7 +117,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         companyName={companyName}
         userName={displayName}
         userRole={roleLabel}
-        isSuperUser={isSuperUser}
         companyAdminNavItems={companyAdminNavItems}
       >
         {criticalAnomalyCount > 0 && (
