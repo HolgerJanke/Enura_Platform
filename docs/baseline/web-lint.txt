@@ -1,0 +1,798 @@
+
+> @enura/web@0.0.0 lint /Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web
+> next lint
+
+
+ ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/basic-features/eslint#migrating-existing-config
+
+./src/app/(auth)/enrol-2fa/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/enrol-2fa/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/invite/[token]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/invite/[token]/invite-form-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/invite/[token]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(auth)/layout.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(auth)/login/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/login/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/logout/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/reset-password/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/reset-password/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/verify-2fa/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(auth)/verify-2fa/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/analytics/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/anomalies/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/berater/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/cashflow-gantt/gantt-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/cashflow-gantt/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/controlling/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/dashboard/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finance/finance-chart.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finance/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/bankdaten-genehmigung/bank-approval-actions.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/bankdaten-genehmigung/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/eingang/[id]/invoice-validation-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/eingang/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/eingang/invoice-kanban.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/eingang/page.tsx
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/finanzplanung-approvals-popup.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/genehmigung/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/lieferanten/[id]/bankdaten-aendern/bank-data-change-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/lieferanten/[id]/bankdaten-aendern/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/lieferanten/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/lieferanten/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/page.tsx
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/planung/[runId]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/planung/[runId]/payment-run-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/planung/cashout-calendar-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/planung/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/finanzplanung/planung/planung-tabs.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/finanzplanung/upload/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/innendienst/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/layout.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/leads/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/liquidity/[companyId]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/liquidity/[companyId]/liquidity-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/liquidity/[companyId]/manual-entry-drawer.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/liquidity/[companyId]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/liquidity/[companyId]/upload/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/liquidity/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/liquidity/redirect-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/processes/[id]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/processes/[id]/edit-mode.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/processes/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/processes/[id]/process-detail-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/processes/[id]/process-view-client.tsx
+9:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/processes/[id]/step-detail-drawer.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/processes/[id]/versions/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/projects/[id]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/projects/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/projects/[id]/project-detail-tabs.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/projects/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/reports/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/reports/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/setter/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/branding/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/branding/design-module-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/branding/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/call-script/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/call-script/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/call-script/script-editor.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/connectors/[type]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/connectors/[type]/connector-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/connectors/[type]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/connectors/[type]/sync-history.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/connectors/connector-list-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/connectors/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/language/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/reports/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/reports/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/reports/report-settings-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/users/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/users/create-user-modal.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/users/edit-roles-panel.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/users/edit-user-panel.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/users/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(dashboard)/settings/users/require-2fa-toggle.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(dashboard)/settings/users/user-list-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/admin-tabs.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/analytics/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/analytics/analytics-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/analytics/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/billing/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/companies/[id]/branding/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/companies/[id]/branding/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/companies/new/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/companies/new/company-wizard-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/companies/new/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/compliance/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/compliance/certifications/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/compliance/compliance-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/compliance/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/finance/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/layout.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/[id]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/deploy/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/deploy/deploy-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/deploy/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/[id]/deployments/[deploymentId]/approval-controls.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/deployments/[deploymentId]/diff-viewer.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/deployments/[deploymentId]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/[id]/kpis/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/kpis/kpi-editor-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/[id]/kpis/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/[id]/versions/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/house/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/house/house-editor-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/house/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/new/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/new/new-process-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/new/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/templates/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/processes/templates/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/processes/templates/template-upload-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/secrets/[id]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/secrets/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/secrets/[id]/secret-detail-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/secrets/new/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/secrets/new/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/secrets/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/secrets/secrets-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/addons/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/addons/addons-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/addons/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/settings/branding/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/branding/branding-editor-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/branding/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/settings/permissions/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/permissions/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/settings/permissions/permission-matrix-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/roles/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/settings/roles/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/settings/roles/roles-matrix-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tenants/[slug]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tenants/[slug]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/tenants/[slug]/tenant-detail-tabs.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tenants/new/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tenants/new/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tools/[id]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tools/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/tools/[id]/tool-edit-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tools/new/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tools/new/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/tools/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/tools/tools-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/users/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/users/invite/page.tsx
+4:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/(holding)/admin/users/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/(holding)/admin/users/users-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/actions/help.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/api/admin/connectors/health/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/admin/impersonate/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/auth/login/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/cron/step-kpi-snapshot/route.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/api/help/feedback/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/help/search/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/help/snippets/[locationKey]/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/process-house/steps/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/api/projects/search/route.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/debug/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/help/[level]/[...slug]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/help/data.ts
+2:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/help/help-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/help/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/layout.tsx
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/not-found.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/audit/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/billing/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/health/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/holdings/[id]/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/platform/holdings/[id]/holding-admin-manager.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/platform/holdings/[id]/holding-detail-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/platform/holdings/[id]/holding-users-manager.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/platform/holdings/[id]/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/holdings/new/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/platform/holdings/new/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/holdings/new/wizard-client.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/app/platform/layout.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/platform/reports/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/app/privacy/page.tsx
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/components/AdminBar.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/CookieBanner.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/EnuraAdminBar.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/LanguageSwitcher.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/calls/actions.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/calls/call-analysis-panel.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/calls/recent-calls-table.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/calls/score-override-form.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/charts/area-chart.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/charts/bar-chart.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/charts/index.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/components/charts/kanban-board.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/charts/line-chart.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/charts/stat-trend.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/dashboard-shell.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/help/GuidedTour.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/help/HelpFeedback.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/help/HelpTip.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/help/OnboardingBanner.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/help/TourTooltip.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/holding-shell.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/platform-shell.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/FieldMappingEditor.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/FlowchartView.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/InterfacesPanel.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/LiquidityPanel.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/ListView.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/ProcessBuilder.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/ProcessHeader.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/SourcesPanel.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/StepCard.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-builder/StepList.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-house/ProcessHouseClientWrapper.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-house/ProcessHouseContainer.tsx
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-house/ProcessHouseView.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/process-house/ProcessKanbanPopup.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/project-search.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/components/team-member-filter.tsx
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/i18n/config.ts
+9:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/i18n/request.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/audit.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/auth.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/content.ts
+6:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/css-sanitizer.ts
+1:1  Error: Parsing error: The keyword 'const' is reserved
+
+./src/lib/data-access.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/email.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/finanzplanung-guard.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/landing.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/mock-users.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/onboarding-tours.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/password.ts
+6:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/lib/permissions.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/platform.ts
+11:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/lib/process-nav.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/rate-limit.ts
+1:6  Error: Parsing error: Unexpected token RateLimitEntry
+
+./src/lib/search-index.ts
+5:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/session.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/supabase/client.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/supabase/index.ts
+1:1  Error: Parsing error: The keyword 'export' is reserved
+
+./src/lib/supabase/middleware.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/supabase/server.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/supabase/service.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/lib/tenant.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/middleware.ts
+1:1  Error: Parsing error: The keyword 'import' is reserved
+
+./src/stores/session.ts
+3:1  Error: Parsing error: The keyword 'import' is reserved
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+/Users/holgerjanke/Documents/Schweiz/Code Base/Enura_Gruppe/Enura_Platform/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @enura/web@0.0.0 lint: `next lint`
+Exit status 1
+EXIT=1
