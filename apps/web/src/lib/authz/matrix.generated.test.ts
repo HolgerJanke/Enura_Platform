@@ -33,23 +33,22 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
+  // F-P7: reconciled to DB seed (026 + 048). gf = every module:%:read (incl.
+  // module:admin:read -> /settings; D2). teamleiter = 4 module reads (no ai:read).
   geschaeftsfuehrung: [
-    'module:setter:read', 'module:setter:export', 'module:berater:read', 'module:berater:export',
-    'module:leads:read', 'module:leads:export', 'module:innendienst:read', 'module:innendienst:export',
-    'module:bau:read', 'module:bau:export', 'module:finance:read', 'module:finance:export',
-    'module:reports:read', 'module:reports:write', 'module:reports:export',
-    'module:anomalies:read', 'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read',
+    'module:innendienst:read', 'module:bau:read', 'module:finance:read',
+    'module:reports:read', 'module:ai:read', 'module:admin:read', 'module:anomalies:read',
   ],
   teamleiter: [
-    'module:setter:read', 'module:setter:export', 'module:berater:read', 'module:berater:export',
-    'module:leads:read', 'module:reports:read', 'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read', 'module:reports:read',
   ],
   setter: ['module:setter:read'],
   berater: ['module:berater:read'],
   innendienst: ['module:innendienst:read', 'module:innendienst:write', 'module:bau:read'],
   bau: ['module:bau:read', 'module:bau:write'],
-  buchhaltung: ['module:finance:read', 'module:finance:write', 'module:finance:export'],
-  leadkontrolle: ['module:leads:read', 'module:leads:write', 'module:leads:export'],
+  buchhaltung: ['module:finance:read', 'module:finance:write'],
+  leadkontrolle: ['module:leads:read', 'module:leads:write'],
 }
 const ROLES = Object.keys(ROLE_PERMISSIONS)
 

@@ -486,6 +486,24 @@ source of truth (or fixing the DB to §5.6) is a dedicated follow-up needing per
 Also minor: the (dashboard) critical-anomaly BANNER link to /anomalies shows to any company user (page bounces
 non-management) — a tiny visible⇔accessible gap, not security.
 
+### F-P7 — RESOLVED: reconcile the matrix to the authoritative DB seed (2026-07-28)
+Derived the authoritative role→permission map from migrations 026 + 048 for the 9 §7 roles and reconciled all
+three fixture sources (policy.test ROLE_PERMS, matrix.generated ROLE_PERMISSIONS, mock rolePermMap) to it, so the
+generated matrix now reflects PRODUCTION. Only TWO cells changed route access; operator ruled on both:
+- **D1 (grant innendienst /projects):** migration `049` adds `module:bau:read` to innendienst (back-fill +
+  seed_company_roles trigger). /projects = {super_user, gf, innendienst, bau}. Fixtures already had it; DB now matches.
+- **D2 (accept DB — gf reaches /settings/call-script + /settings/reports):** gf holds `module:admin:read` via the
+  seed `module:%:read` pattern. Reconciled fixtures (gf gains admin:read) + EXPECTED /settings = {super_user, gf}.
+  No migration. The pages already gate on module:admin:read (gf passes).
+Non-route-affecting drift aligned to the DB (truthful fixtures, no behavior change): teamleiter −ai:read;
+buchhaltung −finance:export; leadkontrolle −leads:export; gf reduced to reads-only (+admin:read). Gates: web
+typecheck 0 / test 397 / build green ✅.
+**Minor follow-ups noted (not blocking):** (a) gf now has *accessible-but-not-visible* /settings/call-script &
+/settings/reports — the dashboard-shell "Admin Konsole" button is still gated by isSuperUser, so gf has no nav
+link (access is correct; nav is a UX nicety). (b) SEPARATE larger gap: migration 028 creates 4 finanzplanung
+roles + a `module:finanzplanung:*` scheme NOT represented in the matrix at all — a distinct reconciliation
+needing its own pass (relates to F-P4).
+
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
 - F-P4: `finanzplanung-guard` uses non-seeded key `module:finanzplanung:read` — Phase 6.

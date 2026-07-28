@@ -33,30 +33,24 @@ const ROLE_PERMS: Record<string, string[]> = {
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
+  // F-P7: reconciled to the authoritative DB seed (026 + 048). gf is seeded EVERY
+  // module:%:read (reads only) — which sweeps in module:admin:read, so gf reaches
+  // /settings/call-script + /settings/reports (D2: operator accepted the DB). No
+  // writes/exports. teamleiter is reads on 4 modules only (no ai:read in the DB).
   geschaeftsfuehrung: [
-    'module:setter:read', 'module:setter:export',
-    'module:berater:read', 'module:berater:export',
-    'module:leads:read', 'module:leads:export',
-    'module:innendienst:read', 'module:innendienst:export',
-    'module:bau:read', 'module:bau:export',
-    'module:finance:read', 'module:finance:export',
-    'module:reports:read', 'module:reports:write', 'module:reports:export',
-    'module:anomalies:read',
-    'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read',
+    'module:innendienst:read', 'module:bau:read', 'module:finance:read',
+    'module:reports:read', 'module:ai:read', 'module:admin:read', 'module:anomalies:read',
   ],
   teamleiter: [
-    'module:setter:read', 'module:setter:export',
-    'module:berater:read', 'module:berater:export',
-    'module:leads:read',
-    'module:reports:read',
-    'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read', 'module:reports:read',
   ],
   setter: ['module:setter:read'],
   berater: ['module:berater:read'],
   innendienst: ['module:innendienst:read', 'module:innendienst:write', 'module:bau:read'],
   bau: ['module:bau:read', 'module:bau:write'],
-  buchhaltung: ['module:finance:read', 'module:finance:write', 'module:finance:export'],
-  leadkontrolle: ['module:leads:read', 'module:leads:write', 'module:leads:export'],
+  buchhaltung: ['module:finance:read', 'module:finance:write'],
+  leadkontrolle: ['module:leads:read', 'module:leads:write'],
 }
 
 const BASE_PROFILE: ProfileRow = {
@@ -196,7 +190,7 @@ const EXPECTED: Record<string, string[]> = {
   '/reports': ['super_user', 'geschaeftsfuehrung', 'teamleiter'],
   '/anomalies': ['super_user', 'geschaeftsfuehrung'],
   '/analytics': ['super_user', 'geschaeftsfuehrung', 'teamleiter'],
-  '/settings': ['super_user'],
+  '/settings': ['super_user', 'geschaeftsfuehrung'], // D2: gf holds admin:read via the seed module:%:read pattern
   '/settings/users': ['super_user'],
   '/settings/branding': ['super_user'],
   '/settings/connectors': ['super_user'],

@@ -346,23 +346,15 @@ const rolePermMap: Record<string, string[]> = {
     'module:ai:read', 'module:ai:write', 'module:ai:admin',
     'module:admin:read', 'module:admin:write', 'module:admin:branding', 'module:admin:users', 'module:admin:connectors',
   ],
+  // F-P7: matches the DB seed (026 + 048) — gf holds every module:%:read (reads
+  // only, incl. module:admin:read), teamleiter holds 4 module reads.
   geschaeftsfuehrung: [
-    'module:setter:read', 'module:setter:export',
-    'module:berater:read', 'module:berater:export',
-    'module:leads:read', 'module:leads:export',
-    'module:innendienst:read', 'module:innendienst:export',
-    'module:bau:read', 'module:bau:export',
-    'module:finance:read', 'module:finance:export',
-    'module:reports:read', 'module:reports:write', 'module:reports:export',
-    'module:anomalies:read',
-    'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read',
+    'module:innendienst:read', 'module:bau:read', 'module:finance:read',
+    'module:reports:read', 'module:ai:read', 'module:admin:read', 'module:anomalies:read',
   ],
   teamleiter: [
-    'module:setter:read', 'module:setter:export',
-    'module:berater:read', 'module:berater:export',
-    'module:leads:read',
-    'module:reports:read',
-    'module:ai:read',
+    'module:setter:read', 'module:berater:read', 'module:leads:read', 'module:reports:read',
   ],
   // F-P1: setter/berater/innendienst do NOT hold leads:read — matches the DB seed
   // (026_fix_role_permissions.sql), so /leads is leadkontrolle + management only.
@@ -380,10 +372,10 @@ const rolePermMap: Record<string, string[]> = {
     'module:bau:read', 'module:bau:write',
   ],
   buchhaltung: [
-    'module:finance:read', 'module:finance:write', 'module:finance:export',
+    'module:finance:read', 'module:finance:write',
   ],
   leadkontrolle: [
-    'module:leads:read', 'module:leads:write', 'module:leads:export',
+    'module:leads:read', 'module:leads:write',
   ],
 }
 
