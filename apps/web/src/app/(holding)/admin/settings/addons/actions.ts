@@ -5,36 +5,15 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 // ---------------------------------------------------------------------------
-// Enura Admin: toggle finanzplanung for a holding
-// ---------------------------------------------------------------------------
-
-export async function toggleHoldingFinanzplanung(
-  holdingId: string,
-  enabled: boolean,
-): Promise<{ success: boolean; error?: string }> {
-  const session = await getSession()
-  if (!session?.isEnuraAdmin) {
-    return { success: false, error: 'Nur Enura-Admins können Holdings lizenzieren.' }
-  }
-
-  const supabase = createSupabaseServerClient()
-
-  const { error } = await supabase
-    .from('holding_subscriptions')
-    .update({
-      finanzplanung_enabled: enabled,
-      finanzplanung_activated_at: enabled ? new Date().toISOString() : null,
-    })
-    .eq('holding_id', holdingId)
-
-  if (error) return { success: false, error: error.message }
-
-  revalidatePath('/admin/settings/addons')
-  return { success: true }
-}
-
-// ---------------------------------------------------------------------------
 // Holding Admin: toggle finanzplanung for a company
+//
+// The Enura cross-holding `toggleHoldingFinanzplanung` action that used to
+// live here was moved to `apps/web/src/app/platform/addons/actions.ts`
+// (finding C5) alongside its relocated Enura-only page. This action is
+// Holding-tier only — tightened from `!isHoldingAdmin && !isEnuraAdmin` to
+// `!isHoldingAdmin`, since a pure Enura admin is not a Holding user (OD-2)
+// and has no reason to mutate a specific holding's company activation flags
+// from here.
 // ---------------------------------------------------------------------------
 
 export async function toggleCompanyFinanzplanung(
@@ -42,7 +21,7 @@ export async function toggleCompanyFinanzplanung(
   enabled: boolean,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await getSession()
-  if (!session?.isHoldingAdmin && !session?.isEnuraAdmin) {
+  if (!session?.isHoldingAdmin) {
     return { success: false, error: 'Keine Berechtigung.' }
   }
 

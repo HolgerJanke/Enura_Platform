@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -12,42 +11,28 @@ const NAV_ITEMS = [
   { label: 'Gesundheit', href: '/platform/health' },
 ]
 
+interface EnuraAdminBarProps {
+  /** Server-verified via `getSession()` in the root layout. */
+  isEnuraAdmin: boolean
+  userName: string
+}
+
 /**
- * Self-loading Enura admin bar.
- * Checks on mount (client-side) whether the current user is an Enura admin.
- * If not, renders nothing. This avoids any server-side DB queries in the root layout.
+ * Presentational Enura admin bar (finding C7).
+ *
+ * Visibility is decided entirely server-side by the caller (the root
+ * layout, a Server Component that calls `getSession()`) and passed in as
+ * `isEnuraAdmin` — this component simply renders null unless that prop is
+ * true. It no longer reads `document.cookie` / decodes the auth token /
+ * matches the email against an "enura-group.com" substring in a
+ * `useEffect`: that heuristic diverged from the real server-verified
+ * session and rendered (briefly, client-side) on every tier, including
+ * tenant/company pages — a brand-isolation risk (CLAUDE.md §4.4).
  */
-export function EnuraAdminBar() {
-  const [visible, setVisible] = useState(false)
-  const [userName, setUserName] = useState('')
+export function EnuraAdminBar({ isEnuraAdmin, userName }: EnuraAdminBarProps) {
   const pathname = usePathname()
 
-  useEffect(() => {
-    // Check the auth cookie client-side to see if we should show the bar
-    try {
-      const cookies = document.cookie.split(';').map(c => c.trim())
-      const authCookie = cookies.find(c => c.includes('auth-token'))
-      if (!authCookie) return
-
-      const value = authCookie.split('=').slice(1).join('=')
-      const decoded = atob(value.replace('base64-', ''))
-      const parsed = JSON.parse(decoded)
-      const email = parsed?.user?.email
-
-      if (!email) return
-
-      // For now, show the bar if the email is from enura-group.com
-      // This is a client-side heuristic — the server enforces the real check
-      if (email.includes('enura-group.com') || email.includes('enura-gruppe.com')) {
-        setVisible(true)
-        setUserName(email.split('@')[0] ?? 'Admin')
-      }
-    } catch {
-      // Cookie not readable or not present — don't show bar
-    }
-  }, [])
-
-  if (!visible) return null
+  if (!isEnuraAdmin) return null
 
   return (
     <>

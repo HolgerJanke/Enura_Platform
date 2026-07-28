@@ -345,7 +345,45 @@ test 200 ✅ / build green ✅. No server-side access check altered (confirmed: 
 untouched). Known deferred: Add-ons item is `always:true` and still points at the Holding route (visible to
 Enura admins but middleware-blocked) — Phase 5 relocates it; EnuraAdminBar + dashboard-shell Holding-admin
 section untouched (Phase 5). Behavioral correction: platform "← Dashboard" no longer shows for Enura admins
-(OD-1-consistent). **CONFIRMED.** Committing on `feat/nav-redesign-phase-4`.
+(OD-1-consistent). **CONFIRMED.** Committing on `feat/nav-redesign-phase-4`. Phase 4 committed: `d0fab66`.
+
+### Phase 5 — tier-leak & brand-isolation remediation: IN PROGRESS (branch will be `feat/nav-redesign-phase-5`)
+Security-relevant → full 2-pass adversarial verification. Delegated to sonnet implementer:
+- C5: addons has TWO legit branches (Enura per-holding LICENSING; Holding per-company ACTIVATION). Split:
+  Enura view → new `/platform/addons` (+ move `toggleHoldingFinanzplanung` there); `/admin/settings/addons`
+  keeps Holding view only, gated isHoldingAdmin. nav-config PLATFORM_NAV 'Add-ons' → `/platform/addons` tier:enura.
+- C7: EnuraAdminBar → presentational, driven by server-verified `isEnuraAdmin` prop from root `app/layout.tsx`
+  (remove client cookie/email-substring heuristic). Fixes client-trust divergence + brand isolation (only real
+  Enura admins see it; they're bounced from tenant (dashboard) pages by the P3 tier gate).
+- C8: remove the dashboard-shell embedded Holding-admin console section (OD-1; dead under the P3 company-tier
+  gate). Keep the Phase-4 policy-filtered company super-user section.
+Awaiting implementer, then 2 adversarial passes (tier-isolation of the addons split + EnuraAdminBar/brand).
+
+**Adversarial verification (2 passes):**
+- V7 (addons split): **CLAIM HOLDS**. Tier isolation enforced at 4 layers each side (middleware 307 →
+  layout → page → action), no `||` escape hatch, no orphaned imports/duplicate defs, scoping + functionality
+  preserved. Only cosmetic: help/data.ts has no /platform/addons entry (consistent w/ other /platform routes).
+- V8 (EnuraAdminBar/C8): **C7 fully resolved** (no cookie/email heuristic; server-verified from enura_admins),
+  **C8 fully resolved** (no /admin/* in company shell; isHoldingAdmin prop gone). **Found: brand-isolation
+  corollary not airtight** — the (dashboard) tier gate is a CLIENT-side `<script>` bounce, so the root layout's
+  tenant brand CSS + EnuraAdminBar SSR before it fires; middleware branding is admin-unaware. Latent (no code
+  path writes isEnuraAdmin+company_id today) but the F-P2 sibling shape is live.
+  - **FIXED (orchestrator):** root `app/layout.tsx` now forces NEUTRAL branding for any admin session
+    (`isEnuraAdmin || isHoldingAdmin`) — admins never receive a tenant's brand CSS/custom CSS, closing the
+    §4.4 concern at the one place that knows both branding and admin flags. Gates green.
+
+### Phase 5 — SIGN-OFF ✅ (branch `feat/nav-redesign-phase-5`)
+Acceptance (runbook §8 Phase 5): Add-ons relocated to Enura-owned /platform/addons (C5) ✅; EnuraAdminBar
+server-verified + brand-isolated (C7) ✅; dashboard-shell Holding console removed per OD-1 (C8) ✅; brand
+isolation robustly enforced (admin ⇒ neutral branding) ✅. Two adversarial passes; both objectives confirmed;
+brand corollary fixed. Gates web typecheck 0 / test 200 / build green ✅. **CONFIRMED.**
+Committing on `feat/nav-redesign-phase-5`.
+**Deferred (recorded):** (a) make the (dashboard) company-tier gate server-side/edge (perf-sensitive — needs
+admin flags in JWT claims or a hot-path lookup); acute risk already neutralized by neutral-branding + per-page
+enforceModule. (b) **F-P2 onboarding data-shape** (holdings/new creates holding_admin + company_id + super_user)
+— needs an operator bootstrap decision (how the first company super_user is seeded); policy + branding defenses
+in place meanwhile. (c) ~30 dead `session.isHoldingAdmin` branches in (dashboard) code (unreachable post P3
+tier gate) — cleanup debt for Phase 6.
 
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.

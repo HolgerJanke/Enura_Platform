@@ -119,7 +119,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         companyName={companyName}
         userName={displayName}
         userRole={roleLabel}
-        isHoldingAdmin={session.isHoldingAdmin}
         isSuperUser={isSuperUser}
         companyAdminNavItems={companyAdminNavItems}
       >

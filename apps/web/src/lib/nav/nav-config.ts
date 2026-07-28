@@ -49,16 +49,19 @@ export interface NavItemConfig {
  * to /platform (the (dashboard) layout's own company-tier gate would bounce
  * it straight back). Flagged for confirmation — see task report.
  *
- * NOTE on 'Add-ons': marked `always: true` per explicit instruction. Its
- * real route ('/admin/settings/addons') is Holding-tier in `ROUTE_RULES`,
- * which is not yet the right gate for an Enura admin — that reconciliation
- * is Phase 5's job (alongside `EnuraAdminBar`). Do not "fix" it here.
+ * NOTE on 'Add-ons' (resolved in Phase 5, finding C5): the Enura cross-
+ * holding licensing view now lives at its own Enura-owned route,
+ * '/platform/addons' (see apps/web/src/app/platform/addons/page.tsx),
+ * separate from the Holding per-company activation view that stays at
+ * '/admin/settings/addons'. The item is therefore no longer `always: true`
+ * — it is a plain `tier: 'enura'` entry like its siblings, since its real
+ * route is now genuinely Enura-tier in `ROUTE_RULES`.
  */
 export const PLATFORM_NAV: readonly NavItemConfig[] = [
   { label: '← Dashboard', href: '/dashboard', icon: 'arrow-left' },
   { label: 'Übersicht', href: '/platform', icon: 'overview', tier: 'enura' },
   { label: 'Neue Holding', href: '/platform/holdings/new', icon: 'building', tier: 'enura' },
-  { label: 'Add-ons', href: '/admin/settings/addons', icon: 'puzzle', always: true },
+  { label: 'Add-ons', href: '/platform/addons', icon: 'puzzle', tier: 'enura' },
   { label: 'Gesundheit', href: '/platform/health', icon: 'health', tier: 'enura' },
   { label: 'Audit', href: '/platform/audit', icon: 'audit', tier: 'enura' },
 ]
