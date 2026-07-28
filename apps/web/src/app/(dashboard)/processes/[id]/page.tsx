@@ -77,7 +77,12 @@ export default async function TenantProcessPage({
   const supabase = createSupabaseServerClient()
   const processId = params.id
 
-  // Fetch the process definition -- must be deployed and belong to user's company
+  // Fetch the process definition -- must be deployed AND belong to the caller's
+  // company. Scoping the query by company_id (the projects/[id] pattern) closes
+  // the prior cross-tenant hole: the old code used the RLS-bypassing service
+  // client with a backwards guard (`if (session.companyId && ...)`) that was
+  // SKIPPED for a null companyId, and an inert `return <div>` denial. A process
+  // of another company (or a null-company admin session) now resolves to null.
   const { data: process } = await supabase
     .from('process_definitions')
     .select(
@@ -85,6 +90,7 @@ export default async function TenantProcessPage({
     )
     .eq('id', processId)
     .eq('status', 'deployed')
+    .eq('company_id', session.companyId ?? '')
     .single()
 
   if (!process) {
@@ -101,23 +107,13 @@ export default async function TenantProcessPage({
 
   const processRow = process as Record<string, unknown>
 
-  // Guard: process must belong to user's company
-  if (
-    session.companyId &&
-    (processRow['company_id'] as string | null) !== session.companyId
-  ) {
-  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
-  }
-
-  // Guard: user's role must be in visible_roles (holding admins bypass)
+  // Per-process role visibility (intra-company). A real redirect on denial, not
+  // the former inert 200 (C4 pattern; `redirect` was imported but never called).
   const visibleRoles = (processRow['visible_roles'] as string[]) ?? []
-  if (!session.isHoldingAdmin && visibleRoles.length > 0) {
+  if (visibleRoles.length > 0) {
     const userRoleKeys = session.roles.map((r) => r.key)
-    const hasVisibleRole = visibleRoles.some((vr) =>
-      userRoleKeys.includes(vr),
-    )
-    if (!hasVisibleRole) {
-  return (<div className="p-8 text-center"><a href="/dashboard" className="text-blue-600 underline">Zum Dashboard</a></div>)
+    if (!visibleRoles.some((vr) => userRoleKeys.includes(vr))) {
+      redirect('/dashboard')
     }
   }
 

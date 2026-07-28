@@ -419,7 +419,45 @@ Committing on `feat/nav-redesign-phase-6`. Phase 6 committed: `04a54a6`.
   documented with exact activation steps. Committed as docs (not a live spec — would break `**/*.ts` typecheck
   without the dep).
 Gates: web typecheck 0 / test 397 / build green. **CONFIRMED** (matrix test executable+passing; a11y authored/gated).
-Committing on `feat/nav-redesign-phase-7`.
+Committing on `feat/nav-redesign-phase-7`. Phase 7 committed: `602e539`.
+
+### Phase 8 — full gate run + final adversarial verification + DoD sign-off (branch `feat/nav-redesign-phase-8`)
+**Full gate run vs Phase-0 baseline — ZERO new failures:** web typecheck 0 (was 0), web test **397 pass**
+(was 0/vacuous), web build green (was green), `@enura/api` typecheck **7** (baseline 7 — frozen, out of scope,
+none added). lint = F-B1 config-broken (no NEW rule violations; +new files hit same parser bug, −3 deleted).
+e2e / test:db / a11y = ENV-GATED (unchanged from baseline; need Supabase + deps this sandbox lacks).
+
+**Two final holistic adversarial passes:**
+- FV1 (integrated bypass hunt): probes 1,3,4,5,6,7,9 BLOCKED cleanly at cited server-side gates; probe 2
+  (projects/[id] IDOR) BLOCKED. **Found: processes/[id] + versions residual** — the C4 pattern (redirect
+  imported, never called; inert `<div>` denial) + a backwards ownership guard (`if (companyId && …)` skipped
+  when companyId null). **FIXED (orchestrator):** both pages now scope the query by `company_id` (foreign/
+  admin-null → not-found, projects/[id] pattern) and call a real `redirect()` on denial. Gates re-green.
+- FV2 (DoD completeness + regression critic): **every §6 item MET or correctly ENV-GATED**; no fabricated
+  green, no dropped [SEC] finding, no branch-hygiene violation (main/origin/main contain zero redesign commits).
+  Regression critic: no over-restriction, no lockout, no redirect loops, dead-code removal clean.
+
+**DEFINITION OF DONE (§6) — final status:**
+1. Test gates, zero new failures vs baseline — **MET** (runnable) / **ENV-GATED** (e2e, test:db).
+2. Generated Role×Route matrix test, every cell — **MET** (195 generated, 397 total pass).
+3. Two adversarial passes confirm canonical probes — **MET** (FV1 all-blocked after processes fix; encoded in tests).
+4. All [SEC] findings (C1-C4,C6,C7,C9) remediated + verified — **MET**.
+5. Nav policy-derived, no dead arrays, visible ⇔ accessible — **MET**.
+6. No cross-tier leaks (addons/EnuraAdminBar/dashboard-shell/brand) — **MET**.
+7. axe a11y no new violations — **ENV-GATED** (authored scaffold; no baseline; not runnable here — NOT claimed green).
+8. No non-negotiable violated — **MET** (no any/@ts-ignore/raw SQL/new hardcoded hex; service client scoped).
+9. All on feat/nav-redesign-phase-N; nothing merged to main — **MET**.
+
+**VERDICT:** DoD fully PROVEN for everything executable in this environment. Items 1(e2e/db) & 7(a11y) are
+ENV-GATED — they need the operator's Supabase-connected CI + a11y dep; authored/wired but honestly not
+claimed green. **STOPPING at the merge boundary per mandate — no merge to main without explicit approval.**
+
+**Operator decisions still open (non-blocking for the branch, required before/at merge):**
+- F-P1: /leads, /anomalies seed-permissiveness ruling (§5.6 vs seed). 
+- F-P2: onboarding dual-identity data-shape (bootstrap decision).
+- F-P4/5/6, dead isHoldingAdmin branches, legacy/v2 table consolidation, F-B1 lint config, client-JS
+  company-tier bounce (edge-gate symmetry) — cleanup/robustness backlog.
+Committing on `feat/nav-redesign-phase-8`.
 
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
