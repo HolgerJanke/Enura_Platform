@@ -171,7 +171,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   // --- Company tier: BI modules ---
   { prefix: '/setter', tier: 'company', anyOf: ['module:setter:read'] },
   { prefix: '/berater', tier: 'company', anyOf: ['module:berater:read'] },
-  { prefix: '/leads', tier: 'company', anyOf: ['module:leads:read'], note: 'F-P1: seed grants leads:read broadly' },
+  { prefix: '/leads', tier: 'company', anyOf: ['module:leads:read'], note: 'Lead Control: leadkontrolle + management (setter/berater/innendienst do NOT hold leads:read per DB seed 026)' },
   { prefix: '/innendienst', tier: 'company', anyOf: ['module:innendienst:read'] },
   { prefix: '/projects', tier: 'company', anyOf: ['module:bau:read'], note: 'Bau & Montage 27-phase' },
   { prefix: '/finance', tier: 'company', anyOf: ['module:finance:read'] },
@@ -181,7 +181,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/controlling', tier: 'company', anyOf: ['module:finance:read'] },
   { prefix: '/reports', tier: 'company', anyOf: ['module:reports:read'] },
   { prefix: '/analytics', tier: 'company', anyOf: ['module:reports:read'] },
-  { prefix: '/anomalies', tier: 'company', anyOf: ['module:reports:read'], note: 'F-P1: management-level view' },
+  { prefix: '/anomalies', tier: 'company', anyOf: ['module:anomalies:read'], note: 'F-P1: management-only (super_user + geschaeftsfuehrung). Dedicated key so teamleiter — who holds reports:read for /reports — is excluded here. gf auto-holds it via the seed module:%:read pattern; teamleiter does not. Migration 048.' },
 
   // --- Company tier: shared surfaces available to any authenticated company user ---
   { prefix: '/processes', tier: 'company', note: 'Process House; per-process visible_roles enforced separately' },
