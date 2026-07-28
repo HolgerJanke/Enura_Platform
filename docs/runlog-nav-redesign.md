@@ -385,6 +385,28 @@ enforceModule. (b) **F-P2 onboarding data-shape** (holdings/new creates holding_
 in place meanwhile. (c) ~30 dead `session.isHoldingAdmin` branches in (dashboard) code (unreachable post P3
 tier gate) — cleanup debt for Phase 6.
 
+### Phase 6 — permission-matrix wire-up (OD-3) + dead-code removal (OD-5): SIGN-OFF ✅ (branch `feat/nav-redesign-phase-6`)
+- **OD-3 wire-up (feature):** `lib/authz/capabilities.ts` — `loadHoldingMatrix(session)` (reads
+  `holdings.permission_matrix` for the caller's own holding; company users can read their own holding row
+  per RLS `holding_admin_own_holding`; default-allow / non-breaking on null), `checkCapability`,
+  `enforceCapability` (server-action envelope). Fixed the broken read-site
+  `(dashboard)/processes/[id]/actions.ts` (checked non-existent key `process_edit_redactional`) → now
+  `enforceCapability(session,'process.version',…)` — a real tenant super_user capability (editorial process
+  editing) genuinely constrained by the holding matrix. Admin UI already persists the matrix
+  (`savePermissionMatrix`), so the loop is closed end-to-end. Tests: +2 proving the ceiling both directions
+  for the wired keys. **Extensible:** other capability keys wire in by calling `enforceCapability` at their
+  action sites (mechanism handles the rest) — documented as follow-up (not all 18 keys wired this pass).
+- **OD-5 dead-code removal:** deleted the mock-auth cluster `lib/auth.ts` + `stores/session.ts` +
+  `lib/mock-users.ts` (zero live consumers — confirmed via grep incl. a relative `./auth` import in
+  mock-users that typecheck caught). MOCK_AUTH now survives only as a stale comment in `lib/tenant.ts` (harmless).
+- Verification: PROPORTIONATE (narrowing ceiling — cannot cause cross-tenant/cross-role leak; pure ceiling
+  unit-proven both directions). Gates: web typecheck 0 / test 202 / build green ✅. **CONFIRMED.**
+- Deferred (recorded, not blocking DoD): F-P4 (finanzplanung-guard non-seeded `module:finanzplanung:*` keys —
+  needs a finanzplanung-permission-model pass); F-P5/F-P6 (finanzplanung write-granularity / no-op review action);
+  ~30 dead `isHoldingAdmin` branches in (dashboard) code; legacy/v2 holding_admins table consolidation. These
+  are cleanup/robustness items, not security gaps in the redesigned surface.
+Committing on `feat/nav-redesign-phase-6`.
+
 ### Deferred findings backlog (to address in their phases)
 - F-P1: /leads, /anomalies seed-permissiveness (matrix-cell review) — Phase 7/operator.
 - F-P4: `finanzplanung-guard` uses non-seeded key `module:finanzplanung:read` — Phase 6.

@@ -311,6 +311,24 @@ describe('isCapabilityAllowed (holding matrix ceiling)', () => {
   it('unknown key defaults to allowed', () => {
     expect(isCapabilityAllowed('nonexistent.key', {})).toBe(true)
   })
+
+  // OD-3 wire-up: the exact capability keys enforced at action sites. Proves a
+  // holding matrix toggle changes a tenant super_user's server-side authorization
+  // in BOTH directions (the wired sites call checkCapability → isCapabilityAllowed).
+  it('OD-3 wired key process.version: holding can disable editorial process editing', () => {
+    // No matrix / not disabled → super_user may edit (RBAC baseline preserved).
+    expect(isCapabilityAllowed('process.version', null)).toBe(true)
+    expect(isCapabilityAllowed('process.version', {})).toBe(true)
+    // Holding disabled it → denied even for a super_user with module:admin:* RBAC.
+    expect(isCapabilityAllowed('process.version', { 'process.version': false })).toBe(false)
+    // Re-enabled → allowed again.
+    expect(isCapabilityAllowed('process.version', { 'process.version': true })).toBe(true)
+  })
+  it('OD-3: other governed capabilities honor the same ceiling', () => {
+    expect(isCapabilityAllowed('connector.credentials', { 'connector.credentials': false })).toBe(false)
+    expect(isCapabilityAllowed('user.impersonate', { 'user.impersonate': false })).toBe(false)
+    expect(isCapabilityAllowed('connector.credentials', {})).toBe(true)
+  })
 })
 
 describe('hasModulePermission (no admin auto-grant under OD-1)', () => {
