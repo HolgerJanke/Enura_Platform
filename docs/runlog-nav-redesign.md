@@ -169,3 +169,48 @@ reading raw output (doctrine §4a/b). Baseline to protect / freeze:
 Route inventory: 98 files (captured Phase 0 start). Findings F-B1..F-B4 recorded in SUMMARY.
 **Acceptance:** baseline captured, raw output read & archived, findings reproduced with file:line. CONFIRMED.
 Committing Phase 0 docs (only redesign artifacts; operator's uncommitted work left untouched).
+Phase 0 committed: `41962e9`.
+
+### Phase 1 — authorization policy core: IN PROGRESS (branch `feat/nav-redesign-phase-0`)
+Built (orchestrator-authored; authz design = fable tier per §3.1):
+- `apps/web/src/lib/authz/policy.ts` — PURE single-source-of-truth: `Tier`, `sessionTiers`/`canEnterTier`
+  (OD-1/OD-2 encoded: enura⊄holding, admins are not company users), `hasModulePermission` (NO admin
+  auto-grant, unlike legacy `permissions.ts`), `isCapabilityAllowed` (OD-3 holding ceiling, default-allow),
+  `ROUTE_RULES` table + `matchRouteRule` (longest-prefix), `decideAccess` (the one decision), `homeFor`.
+  Route→permission map derived faithfully from seed `rolePermMap`.
+- `apps/web/src/lib/authz/enforce.ts` — server-only wrappers `enforceAccess`/`enforceModule`/`getAccessDecision`
+  that REALLY `redirect()` on deny (fixes C1 no-op pattern). Additive; call sites adopt in Phase 3.
+- `apps/web/src/lib/authz/policy.test.ts` — 129 tests: full Role×Route matrix (9 roles × company routes),
+  tier denials, longest-prefix, public paths, unauth, ceiling. Fixtures copied from seed.
+Gates (raw in /tmp during session): web **typecheck 0 err ✅**, **test 129 pass ✅** (was vacuous),
+web **build green ✅**. Additive-only PROVEN (no import of lib/authz outside authz/ → no route behavior changed).
+**F-B1 root cause found:** `apps/web/.eslintrc.js` has `extends: []` (empty) → ESLint uses script-mode
+parser → "import reserved" on every file; `eslint-config-next@14.2.21` IS installed. One-line fix
+(`extends:['next/core-web-vitals']`) DEFERRED to a dedicated tooling step to avoid a codebase-wide lint
+flood mid-authz-phase. Lint treated as non-functional-at-baseline; typecheck is the stronger guarantee.
+**Adversarial verification (2 independent passes, sonnet/high):**
+- V2 spec-conformance: **CONFIRMED**. No fixture drift (ROLE_PERMS == seed rolePermMap, all 9 roles),
+  no incorrect matrix cell, OD-1/OD-2/§7 conform. Flagged: 6 coverage gaps + a runbook §5.1 doc-drift
+  line — both **fixed** (test now 192→194; §5.1 reconciled to §7/OD-2).
+- V1 correctness/bypass: no bypass in decideAccess/matchRouteRule/isPublicPath/enforce (prefix
+  boundaries, longest-prefix, control-flow all sound). Found **F-P2 (real)**.
+
+### F-P2 — dual-identity escalation (found by V1, FIXED)
+`platform/holdings/new/actions.ts:264-307` (New-Holding onboarding) provisions a holding admin whose
+profile ALSO has a `company_id` + `super_user` role — a shape that violates CLAUDE.md §7 ("holding
+admins have no tenant_id") and OD-1. Original `sessionTiers` reflected the data → granted such a session
+full Company-tier super_user access.
+- **Fix (Phase 1, defense-in-depth):** `sessionTiers` now enforces the invariant — an `isHoldingAdmin`/
+  `isEnuraAdmin` session is NEVER a Company-tier member, even with a stray `company_id`. Monotonic
+  (strictly more restrictive → cannot create a bypass). Proven by new tests (`DUAL_IDENTITY_ADMIN` →
+  denied /dashboard,/finance,/settings/users,/processes, routed to /admin). CLAUDE.md wins on conflict.
+- **Deferred to Phase 5 (OD-1 data side):** correct the onboarding flow so it stops creating the
+  §7-violating dual-identity shape (needs a small bootstrap decision: how the first company super_user
+  is seeded). Policy guard neutralizes the escalation in the meantime.
+
+### Phase 1 — SIGN-OFF ✅
+Acceptance (runbook §8 Phase 1): policy + primitive exist ✅, unit-tested ✅ (**194 pass**), web
+typecheck ✅ / build ✅ green, no route behavior changed ✅ (additive-only proven). Lint = F-B1
+broken-at-baseline (deferred, not a regression). Both adversarial passes resolved (V2 confirmed; V1's
+sole real finding fixed+tested). Will be re-attacked in Phase 8's final two-pass. **CONFIRMED.**
+Committing on `feat/nav-redesign-phase-1`.

@@ -120,7 +120,7 @@ no service-role client on user-facing paths. Work on branches; no merge to `main
 | Tier | Shell / routes | Identity source | Entry gate (target) |
 |------|----------------|-----------------|---------------------|
 | **Enura Group** (top) | `app/platform/*` | row in `enura_admins` (`session.isEnuraAdmin`) | server redirect if `!isEnuraAdmin` |
-| **Holding** (mid) | `(holding)/admin/*` | row in `holding_admins` (`session.isHoldingAdmin`) — **plus** Enura per OD-2 | server redirect per approved OD-2 rule |
+| **Holding** (mid) | `(holding)/admin/*` | row in `holding_admins` (`session.isHoldingAdmin`) **only** (OD-2: Enura admins do NOT get implicit Holding entry; Enura-only surfaces live under `/platform`) | server redirect if `!isHoldingAdmin` |
 | **Company** (leaf) | `(dashboard)/*` | `company_id` + `roles[]` from `profile_roles` | session + reset/2FA gate **+ per-route RBAC** |
 
 ### 5.2 Identity / flags / roles model
