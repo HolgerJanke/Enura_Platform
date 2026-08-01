@@ -10,7 +10,9 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // One local retry absorbs Next.js dev first-compile flakes (a route's first hit
+  // can be slow); CI keeps 2.
+  retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
 
@@ -35,6 +37,7 @@ export default defineConfig({
     command: 'pnpm --filter @enura/web dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    // Next.js dev cold-start (first compile) can exceed 30s.
+    timeout: 120_000,
   },
 })
