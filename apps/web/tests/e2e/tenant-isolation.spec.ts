@@ -101,6 +101,16 @@ test.describe('Admin Konsole visibility (nav ⇔ access)', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Tenant branding', () => {
+  // NOTE on host: bare `localhost` is treated as the HOLDING-ADMIN console when
+  // DEV_HOLDING_ADMIN=true (a common local dev flag) — the middleware then renders
+  // neutral branding by design (isAdminHost() short-circuits). To assert the *tenant*
+  // branding path independently of that flag, drive a real tenant host: `*.localhost`
+  // resolves to loopback in both bundled browsers, does NOT start with "localhost" (so
+  // isAdminHost() is false), and a signed-in user resolves their own company's brand via
+  // resolveBrandByCompanyId(sessionCompanyId). Login + assertion share this host so the
+  // session cookie stays valid.
+  test.use({ baseURL: 'http://alpen-energie.localhost:3000' })
+
   test('dashboard renders with the alpen-energie brand-primary', async ({ page }) => {
     await loginAs(page, SETTER.email, SETTER.pw)
     // Wait for the brand var to be present, then assert its value.
