@@ -42,9 +42,9 @@ interface ProcessHouseViewProps {
 // ---------------------------------------------------------------------------
 
 function TrendArrow({ trend, value }: { trend?: 'up' | 'down' | 'same'; value: number }) {
-  if (trend === 'up') return <span className="text-green-600 font-semibold">↑{value}</span>
-  if (trend === 'down') return <span className="text-red-600 font-semibold">↓{value}</span>
-  return <span className="text-gray-400 font-medium">→{value}</span>
+  if (trend === 'up') return <span className="text-green-700 font-semibold">↑{value}</span>
+  if (trend === 'down') return <span className="text-red-700 font-semibold">↓{value}</span>
+  return <span className="text-gray-600 font-medium">→{value}</span>
 }
 
 // ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ export function ProcessHouseView({
               </button>
 
               {/* Phases on white background */}
-              <div className="divide-y divide-gray-100">
+              <div className="bg-white divide-y divide-gray-100">
                 {proc.phases.length > 0 ? (
                   proc.phases.map((ph, pi) => (
                     <button
@@ -126,7 +126,7 @@ export function ProcessHouseView({
                       className="w-full text-left px-4 py-2 hover:bg-white/60 transition-colors group"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-gray-400 shrink-0">
+                        <span className="text-xs font-mono text-gray-600 shrink-0">
                           P{i + 1}.{pi + 1}
                         </span>
                         <span className="text-[13px] text-gray-900 font-medium group-hover:text-blue-700 group-hover:underline leading-tight">
@@ -135,8 +135,8 @@ export function ProcessHouseView({
                         {/* KPIs inline */}
                         {(ph.inCount != null || ph.outCount != null) && (
                           <span className="flex items-center gap-2 ml-auto text-[11px] shrink-0">
-                            <span className="text-gray-400">In:</span><TrendArrow trend={ph.inTrend} value={ph.inCount ?? 0} />
-                            <span className="text-gray-400">Out:</span><TrendArrow trend={ph.outTrend} value={ph.outCount ?? 0} />
+                            <span className="text-gray-600">In:</span><TrendArrow trend={ph.inTrend} value={ph.inCount ?? 0} />
+                            <span className="text-gray-600">Out:</span><TrendArrow trend={ph.outTrend} value={ph.outCount ?? 0} />
                             {(ph.portfolioValue ?? 0) > 0 && (
                               <span className="text-gray-500 font-mono">
                                 {currency} {(ph.portfolioValue ?? 0).toLocaleString('de-CH', { maximumFractionDigits: 0 })}
@@ -148,7 +148,7 @@ export function ProcessHouseView({
                     </button>
                   ))
                 ) : (
-                  <p className="text-xs text-gray-400 px-4 py-3">Keine Phasen</p>
+                  <p className="text-xs text-gray-600 px-4 py-3">Keine Phasen</p>
                 )}
               </div>
             </div>
@@ -171,12 +171,12 @@ export function ProcessHouseView({
                 className={`w-full px-4 py-2.5 text-left transition-opacity ${hoveredId === proc.id ? 'opacity-90' : ''}`}
                 style={{ background: 'var(--brand-accent, #F3A917)' }}
               >
-                <p className="text-sm font-bold text-white">S{i + 1} — {proc.menuLabel}</p>
+                <p className="text-sm font-bold text-gray-900">S{i + 1} — {proc.menuLabel}</p>
               </button>
 
               {/* Steps on white background */}
               {proc.phases.length > 0 && (
-                <div className="divide-y divide-gray-100">
+                <div className="bg-white divide-y divide-gray-100">
                   {proc.phases.map((ph, pi) => (
                     <button
                       key={ph.id}
@@ -185,7 +185,7 @@ export function ProcessHouseView({
                       className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors group"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-gray-400 shrink-0">
+                        <span className="text-xs font-mono text-gray-600 shrink-0">
                           S{i + 1}.{pi + 1}
                         </span>
                         <span className="text-[13px] text-gray-900 font-medium group-hover:text-blue-700 group-hover:underline leading-tight">
