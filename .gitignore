@@ -16,3 +16,7 @@ coverage/
 .vercel/
 .cache/
 .vercel
+
+# Playwright e2e output
+playwright-report/
+test-results/

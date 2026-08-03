@@ -13,8 +13,9 @@ export async function loginAs(
   await page.fill('input[name="email"]', email)
   await page.fill('input[name="password"]', password)
   await page.click('button[type="submit"]')
-  // Wait for redirect away from login (auth gate will send to dashboard or onboarding)
+  // Wait for redirect away from login (auth gate will send to dashboard or onboarding).
+  // Generous timeout: Next.js dev compiles routes on first hit, which can exceed 10s.
   await page.waitForURL((url) => !url.pathname.includes('/login'), {
-    timeout: 10_000,
+    timeout: 45_000,
   })
 }
