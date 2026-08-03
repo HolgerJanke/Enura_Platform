@@ -1,10 +1,28 @@
 # Axe a11y scan — the three shells (Phase 7 deliverable)
 
-**Status: authored scaffold, environment-gated.** This scan cannot run in the build sandbox
-(it needs `@axe-core/playwright` installed **and** a running app + Supabase test tenants +
-authenticated sessions per tier) — the same class of environment gate as `test:e2e` / `test:db`
-(see `docs/baseline/SUMMARY.md`, F-B3). There was no a11y baseline at Phase 0 (no a11y infra
-existed), so "no new violations vs. baseline" is measured from first run in a proper environment.
+**Status: LIVE (2026-08-03).** Implemented as `apps/web/tests/e2e/a11y-shells.spec.ts`, runs as
+part of `pnpm test:e2e` (Chromium-scoped — axe violations are DOM-based, so one engine suffices).
+`@axe-core/playwright` is installed. Current coverage:
+- **company `/dashboard`** (session: `m.krings@alpen-energie.ch`) — PASSES.
+- **enura `/platform`** (session: `admin@enura-group.com`, an `enura_admins` row) — PASSES.
+- **holding `/admin`** — SKIPPED: no holding-admin account with known creds. The seed writes the
+  admin to legacy `holding_admins`, but the app reads `holding_admins_v2` (F-P3), and the only v2
+  holding admin (`h.janke@enura-energie.de`) has no seeded password. Enable once a holding-admin
+  fixture with known creds exists in `holding_admins_v2`.
+
+**First-run findings (all fixed in the same change):**
+- `meta-viewport`: `maximumScale: 1` removed from `app/layout.tsx` (WCAG 1.4.4 — pinch-zoom).
+- `color-contrast` in `ProcessHouseView.tsx`: phase/step rows were missing `bg-white` (the code
+  comment already said "on white background"), so muted text sat on the 20% brand-tint. Added
+  `bg-white`; darkened `text-gray-400`→`600`, `TrendArrow` green/red→`700` and its flat case→`600`;
+  accent-process header switched from white to `text-gray-900` on the amber accent.
+
+Note the scan runs on `localhost` where `DEV_HOLDING_ADMIN=true` forces the neutral/default brand
+palette; the fixes above are robust because they hold on white / any light tint. A future pass
+could also assert contrast under a real tenant palette (see [[hosted-dev-db-stale-seed]] on the host flag).
+
+_Original scaffold notes (kept for reference):_ There was no a11y baseline at Phase 0, so
+"no new violations vs. baseline" is measured from this first run.
 
 ## Activate
 
