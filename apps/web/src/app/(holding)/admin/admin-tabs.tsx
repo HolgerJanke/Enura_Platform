@@ -250,7 +250,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{tenant.name}</p>
-                          <p className="text-xs text-gray-400 font-mono">{tenant.slug}</p>
+                          <p className="text-xs text-gray-600 font-mono">{tenant.slug}</p>
                         </div>
                       </div>
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${badge.classes}`}>
@@ -288,7 +288,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
                         })}
                       </div>
                       {totalConnectors > 0 && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-600">
                           {activeConnectors}/{totalConnectors}
                         </span>
                       )}
@@ -307,7 +307,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
                     )}
 
                     {/* Last activity */}
-                    <div className="text-xs text-gray-400 border-t border-gray-100 pt-2 mt-2">
+                    <div className="text-xs text-gray-600 border-t border-gray-100 pt-2 mt-2">
                       Letzte Aktivitaet:{' '}
                       {tenant.lastActivityAt ? formatRelativeTime(tenant.lastActivityAt) : 'Keine'}
                     </div>
@@ -378,7 +378,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
                                 {display.symbol}
                               </div>
                               {display.time && (
-                                <div className="text-xs text-gray-400 mt-0.5">{display.time}</div>
+                                <div className="text-xs text-gray-600 mt-0.5">{display.time}</div>
                               )}
                             </td>
                           )
@@ -392,7 +392,7 @@ export function AdminTabs({ tenantStats, aiUsage, summary }: AdminTabsProps) {
           </div>
 
           {/* Legend */}
-          <div className="mt-4 flex items-center gap-6 text-xs text-gray-400">
+          <div className="mt-4 flex items-center gap-6 text-xs text-gray-600">
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
               Synchron ({'<'}20 Min.)

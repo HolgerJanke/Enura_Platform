@@ -247,7 +247,7 @@ export default async function HoldingAdminPage() {
       />
 
       {/* Footer info */}
-      <p className="mt-6 text-xs text-gray-400">
+      <p className="mt-6 text-xs text-gray-600">
         Datenstand: {formatDate(new Date())}
       </p>
     </div>

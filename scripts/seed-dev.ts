@@ -1070,23 +1070,44 @@ async function main() {
   // ─── Ensure holding exists ───
   await ensureHolding()
 
-  // ─── Holding Admin ───
-  console.log('\n📋 Creating holding admin...')
-  const holdingAdminId = await createUser({
+  // ─── Enura (platform) super-admin — top tier, reaches /platform ───
+  console.log('\n📋 Creating Enura platform admin...')
+  const enuraAdminId = await createUser({
     email: 'admin@enura-group.com',
     password: 'Admin@Enura2026!',
     firstName: 'System',
     lastName: 'Admin',
+    roleKey: 'holding_admin', // ignored by createUser — platform admins have no company role
+  })
+  await supabase
+    .from('enura_admins')
+    .upsert({ profile_id: enuraAdminId }, { onConflict: 'profile_id' })
+  console.log('  ✓ admin@enura-group.com (enura_admins → /platform)')
+
+  // ─── Holding admin — reaches /admin. MUST land in holding_admins_v2: the app reads v2
+  // (legacy holding_admins has had no self-read RLS since migration 013 — the F-P3 gap),
+  // so a holding admin written only to the legacy table can never reach /admin. ───
+  console.log('\n📋 Creating holding admin...')
+  const holdingAdminId = await createUser({
+    email: 'holding@alpen-gruppe.ch',
+    password: 'Holding@Alpen2026!',
+    firstName: 'Holding',
+    lastName: 'Admin',
     roleKey: 'holding_admin',
   })
-
-  // Insert into holding_admins table
-  await supabase.from('holding_admins').upsert(
-    { profile_id: holdingAdminId },
-    { onConflict: 'profile_id' },
-  )
-
-  console.log('  ✓ admin@enura-group.com')
+  await supabase
+    .from('holding_admins_v2')
+    .upsert(
+      { profile_id: holdingAdminId, holding_id: holdingId, is_owner: true },
+      { onConflict: 'holding_id,profile_id' },
+    )
+  // The v2 self-read RLS policy is `holding_id = current_holding_id() AND is_holding_admin()`,
+  // and current_holding_id() reads profiles.holding_id — so the admin's profile MUST point at
+  // their holding or they cannot read their own admin row, and the app never sees them as a
+  // holding admin (they get bounced from /admin). createUser leaves holding_id null for a
+  // no-company user, so set it explicitly here.
+  await supabase.from('profiles').update({ holding_id: holdingId }).eq('id', holdingAdminId)
+  console.log('  ✓ holding@alpen-gruppe.ch (holding_admins_v2 + profiles.holding_id → /admin)')
 
   // ─── Tenant: Alpen Energie GmbH ───
   console.log('\n🏢 Creating tenant: Alpen Energie GmbH...')
@@ -1207,9 +1228,12 @@ async function main() {
   console.log('\n⚠️  DEV SEED COMPLETE — These credentials are for development only.')
   console.log('    Never use this script against a production database.\n')
   console.log('📋 Credentials:\n')
-  console.log('  HOLDING ADMIN:')
+  console.log('  ENURA PLATFORM ADMIN (/platform):')
   console.log('    Email:    admin@enura-group.com')
   console.log('    Password: Admin@Enura2026!\n')
+  console.log('  HOLDING ADMIN (/admin):')
+  console.log('    Email:    holding@alpen-gruppe.ch')
+  console.log('    Password: Holding@Alpen2026!\n')
   console.log('  ALPEN ENERGIE GmbH (slug: alpen-energie):')
   console.log('    Super User:    m.krings@alpen-energie.ch / Super@Alpen2026!')
   console.log('    Setter:        l.weber@alpen-energie.ch / Test@2026!setter')

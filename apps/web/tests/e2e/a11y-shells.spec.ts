@@ -11,7 +11,7 @@ import { loginAs } from './helpers/auth'
  * Sessions (scripts/seed-dev.ts):
  *   - company: m.krings@alpen-energie.ch  (super_user)      → /dashboard
  *   - enura:   admin@enura-group.com       (enura admin)     → /platform
- *   - holding: (none seeded with known creds — see the skipped test below)
+ *   - holding: holding@alpen-gruppe.ch     (holding admin)   → /admin
  *
  * There was no a11y baseline before the redesign, so this is the first measurement:
  * treat any violation as a real finding.
@@ -59,9 +59,9 @@ test.describe('A11y — redesigned tier shells', () => {
     expect(violations, summarize(violations)).toEqual([])
   })
 
-  // The holding /admin shell needs a holding-admin session. The dev seed writes the admin
-  // to LEGACY holding_admins, but the app reads holding_admins_v2 (F-P3), and the only v2
-  // holding admin (h.janke@enura-energie.de) has no seeded password. Enable this once a
-  // holding-admin fixture with known creds exists in holding_admins_v2.
-  test.skip('holding admin shell has no axe violations', async () => {})
+  test('holding admin shell has no axe violations', async ({ page }) => {
+    await loginAs(page, 'holding@alpen-gruppe.ch', 'Holding@Alpen2026!')
+    const violations = await shellViolations(page, '/admin')
+    expect(violations, summarize(violations)).toEqual([])
+  })
 })
